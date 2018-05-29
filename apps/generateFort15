@@ -1,0 +1,73 @@
+#! /usr/bin/env python
+import argparse
+import os
+from datetime import datetime
+from FCEMPy.ADCIRC import Mesh
+from FCEMPy.ADCIRC import Fort15
+
+cwd = os.getcwd()
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Program to generate ADCIRC fort.15 input files. Arguments passed to the command line override\
+                    arguments found in configuration file.",
+        epilog="Example usage: generateFort15 /path/to/mesh/filename m1,k2,t5,p1 {} {}"\
+            .format(datetime.today().strftime('%Y-%m-%d'), datetime.today().strftime('%Y-%m-%d')))
+    
+    parser.add_argument("config_file", nargs="?", #default= cwd + "/fort15.config",
+                        help="Path to fort15 configuration file. Defaults to $PWD/fort15.conf")
+
+    parser.add_argument("--mesh-path", '-mesh', '-m', default = cwd + "/fort.14",
+                        help="ADCIRC mesh file path. Defaults to $PWD/fort.14")
+
+    parser.add_argument("--output-filepath", "-o", "-output", "-of", default= cwd + "/fort.15", 
+                        help="Filepath for output. Defaults to $PWD/fort.15")
+    
+    parser.add_argument("--tidal-constituents", "-const", "-tc", default="K1,O1,P1,Q1,N2,M2,Mf,Mm,M4,MS4,MN4", 
+                        help="Comma delimited list of constituents. Defaults to K1,O1,P1,Q1,N2,M2,Mf,Mm,M4,MS4,MN4")
+
+    parser.add_argument("--run-days", "-refday", help="Total number of days to run with respect to reference-date.\
+                                            Can be a negative number in the case of hindcasts.")
+    
+    parser.add_argument("--reference-date", "-refdate", help="Reference date with respect to --run-days. Format YYYY-MM-DD e.g. {}".format(datetime.today().date))
+
+    parser.add_argument("--reference-time", "-reftime", help="Reference time in UTC. Format HH:MM")
+
+    # parser.add_argument("end_date", help="Model final timestep date after hotstart. Format is YYYY-MM-DD. Example: {}"\
+    #                                 .format(datetime.today().strftime('%Y-%m-%d')))
+    
+    return parser.parse_args()
+
+
+def parse_config_file(path):
+    if path is not None:
+        config = dict()
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip(' \t\n\r').split("=")
+                line = [x.strip(' ') for x in line]
+                # skip line if it's a comment or empty
+                if len(line[0])<2:
+                    continue
+                if '#' in line[0][0]:
+                    continue
+                if 'constituent_list' in line[0]:
+                    line[1]=line[1].split(',')
+                config[line[0]]=line[1]
+        return config
+    
+def update_config_with_args(config, args):
+    return config
+
+def main():
+    
+    args   = parse_args()
+    config = parse_config_file(args.config_file)
+    config = update_config_with_args(config, args)
+    fort15 = Fort15(**config)
+    fort15.generate_forcing_from_TPXO(args.mesh_path)
+    fort15.generate_equlibrium_factors(args.start_date, args.end_date)
+
+    # fort15.write_to_file(args.output_filepath)
+
+if __name__ == '__main__': main()
