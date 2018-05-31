@@ -11,8 +11,7 @@ def vdatum(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
     try: os.makedirs('vdatum_tmp/input')
     except: pass
     
-    np.savetxt('vdatum_tmp/input/vdatum.txt', xyz)
-
+    np.savetxt('vdatum_tmp/input/vdatum.txt', xyz, fmt='%.18f')
     ihorz = 'ihorz:'+ihorz
     ivert = 'ivert:'+ivert
     ohorz = 'ohorz:'+ohorz
@@ -29,6 +28,7 @@ def vdatum(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
     Popen_list.append(overt)
     Popen_list.append('-nodata')
     Popen_list.append("-file:txt:space,0,1,2:vdatum_tmp/input/vdatum.txt:vdatum_tmp/output")
+    # Popen_list.append("-file:txt:space,0,1,2:{}/vdatum_tmp/input/vdatum.txt:{}/vdatum_tmp/output".format(os.getcwd(),os.getcwd()))
 
     if verbose==True:
         print(' '.join(Popen_list))
@@ -40,5 +40,5 @@ def vdatum(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
     p.terminate()
 
     xyz = np.loadtxt('vdatum_tmp/output/vdatum.txt')
-    shutil.rmtree('vdatum_tmp')
+    # shutil.rmtree('vdatum_tmp')
     return xyz

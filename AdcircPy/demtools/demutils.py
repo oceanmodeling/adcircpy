@@ -11,7 +11,7 @@ import pyproj
 import utm
 import psycopg2
 import getpass
-from AdcircPy import DEM
+from AdcircPy import demtools
 gdal.UseExceptions()
 
 def read_tile (path):
@@ -40,10 +40,11 @@ def read_tile (path):
     if inproj.IsGeographic() == 1:
         epsg = 4326
     else:
-        epsg = inproj.GetAttrValue('PROJCS')
-        if epsg is None:
-            epsg = inproj.GetAttrValue('PROJCS|AUTHORITY', 1)
-        
+        epsg = inproj.GetAttrValue('PROJCS|AUTHORITY', 1)
+        # Hack to force identification of WGS84 on certain files.
+        if epsg is None and geo.GetGeoTransform()[2]<10**-4:
+            epsg=4326
+    
     geoTransform  = geo.GetGeoTransform()
     x    = np.linspace(geoTransform[0], 
                         geoTransform[0] + geo.RasterXSize * geoTransform[1],
@@ -53,7 +54,7 @@ def read_tile (path):
                         num = geo.RasterYSize)
     values = geo.ReadAsArray()
     values = np.ma.masked_equal(values, geo.GetRasterBand(1).GetNoDataValue())
-    return DEM.DEM(x, y, values, geoTransform, epsg, vertical_datum)
+    return demtools.DEM(x, y, values, geoTransform, epsg, vertical_datum)
 
 
 def circular_filter(self, radius):
@@ -162,14 +163,17 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None):
     x, y = np.meshgrid(self.x, self.y)
     x  = x.reshape(x.size)
     y  = np.flipud(y.reshape(y.size))
-    
+   
     if epsg is None:
         epsg = self.epsg
-    
+
     if self.epsg != epsg:
-        tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
         target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
-        x, y = pyproj.transform(tile_proj, target_proj, x, y)
+        if self.epsg!=4326:
+            tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
+            x, y = pyproj.transform(tile_proj, target_proj, x, y)
+        elif self.epsg==4326:
+            x, y = target_proj(x, y)
         x = np.asarray(x).flatten()
         y = np.asarray(y).flatten()
 
@@ -218,13 +222,14 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
             tile_max_x, tile_max_y = pyproj.transform(tile_proj, target_proj, tile_max_x, tile_max_y)
         if (extent[0] <= tile_max_x and extent[1] >= tile_min_x) and \
             (extent[2] <= tile_max_y and extent[3] >= tile_min_y):
-            tile = DEM.read_tile(file)
+            tile = demtools.read_tile(file)
             xyz.append(tile.get_xyz(epsg=epsg))
 
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
 def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
+
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
         for file in files:
@@ -250,10 +255,14 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
         tile_max_y = geoTransform[3]
 
         if tile_epsg != epsg:
-            tile_proj = pyproj.Proj(init='epsg:{}'.format(tile_epsg))
             target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
-            tile_min_x, tile_min_y = pyproj.transform(tile_proj, target_proj, tile_min_x, tile_min_y)
-            tile_max_x, tile_max_y = pyproj.transform(tile_proj, target_proj, tile_max_x, tile_max_y)
+            if tile_epsg != 4326:
+                tile_proj = pyproj.Proj(init='epsg:{}'.format(tile_epsg))
+                tile_min_x, tile_min_y = pyproj.transform(tile_proj, target_proj, tile_min_x, tile_min_y)
+                tile_max_x, tile_max_y = pyproj.transform(tile_proj, target_proj, tile_max_x, tile_max_y)
+            elif tile_epsg==4326:
+                tile_min_x, tile_min_y = target_proj(tile_min_x, tile_min_y)
+                tile_max_x, tile_max_y = target_proj(tile_max_x, tile_max_y)
 
         tile_path = matplotlib.path.Path([(tile_min_x, tile_min_y),
                                             (tile_max_x, tile_min_y),
@@ -262,7 +271,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
                                             (tile_min_x, tile_min_y)], closed=True)
         
         if Path_instance.intersects_path(tile_path):
-            tile = DEM.read_tile(file)
+            tile = demtools.read_tile(file)
             xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
@@ -310,8 +319,8 @@ def scatter_to_geoTransform(xyz, geoTransform, epsg, shape, **kwargs):
 
 
 def build_DEM_from_files(rootdir, file_extension, extent, dx, dy):
-    xyz = DEM.demutils.concatenate_tiles(rootdir, file_extension, extent)
-    return DEM.demutils.scatter_to_tile(xyz, extent, dx, dy)
+    xyz = demtools.demutils.concatenate_tiles(rootdir, file_extension, extent)
+    return demtools.demutils.scatter_to_tile(xyz, extent, dx, dy)
 
 
         
