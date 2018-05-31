@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.path import Path
 from scipy.interpolate import griddata
-from AdcircPy import DEM
+from AdcircPy import demtools
 
 
 def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
@@ -84,7 +84,7 @@ def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
         zt[idx] = padding[idx]
     
     zt = zt.reshape(shape)
-    return DEM.DEM(x, y, zt, geoTransform, self.epsg, self.datum)
+    return demtools.DEM(x, y, zt, geoTransform, self.epsg, self.datum)
 
 def get_raster_from_extent(self, extent , dx, dy, epsg, padding=None):
     """
@@ -134,5 +134,5 @@ def get_raster_from_extent(self, extent , dx, dy, epsg, padding=None):
     depth = np.ma.masked_array(zt, mask).reshape(_shape)
     if padding is not None:
         depth = adcpy.adcirc.raster._apply_padding(x, y, depth, padding)
-    DEM = DEM.DEM()
+    DEM = demtools.DEM()
     return DEM(x, y, depth, geoTransform, 4326, self.datum)

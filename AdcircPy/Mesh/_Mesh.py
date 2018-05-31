@@ -64,23 +64,20 @@ def get_mean_value(self, extent=None, step=0):
         values = self.values[idx]
     return np.mean(values)
 
-def surface_animation(self, extent=None, axes=None, title=None, **kwargs):
-    axes, idx = fig._init_fig(self, axes, extent, title)
-    start_slice = kwargs.pop("start_slice", 0)
-    stop_slice  = kwargs.pop("stop_slice", len(self.timestep))
-    vals = list()
-    for values in self.values[start_slice:stop_slice]:
-        vals.append(values[idx])
-    vals = np.asarray(vals)
-    vals = np.ma.masked_where(vals==-99999.0, vals)
-    vmin = kwargs.pop("vmin", np.min(vals))
-    vmax = kwargs.pop("vmax", np.max(vals))
-    return axes
-def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewidth=0.5, alpha=0.4):
-    axes, idx = fig._init_fig(self, axes, extent, title)
-    axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
-    return axes
+def get_values_under_Path(self, path, **kwargs):
+    xin = self.x
+    yin = self.y
+    if len(self.values.shape) == 3:
+        zin = self.values[:,0,timestep]
+    else:
+        zin = self.values
+    idx, = np.where(np.logical_and(
+        np.logical_and(xin>=np.min(path.vertices[:,0]), xin<=np.max(path.vertices[:,0])),
+        np.logical_and(yin>=np.min(path.vertices[:,1]), yin<=np.max(path.vertices[:,1]))))
+    return griddata((xin[idx], yin[idx]), zin[idx], (path.vertices[:,0],path.vertices[:,1]))
 
+
+    
 def interpolate_DEM(self, tile, **kwargs):
     channel_polygons = kwargs.pop("channel_polygons", None)
     bar_polygons = kwargs.pop("bar_polygons", None)

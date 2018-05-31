@@ -133,8 +133,8 @@ def parse_fort14(path):
     grid['inflow_boundaries']  = inflow_boundaries
     grid['outflow_boundaries'] = outflow_boundaries
     grid['culvert_boundaries'] = culvert_boundaries
-    grid['fort14_description'] = description
-    grid['fort14_path']        = path
+    grid['description']        = description
+    # grid['fort14_path']        = path
     # grid['levels'] = np.negative(np.flip([-40,-30,-20,-10,-5,0,2,4,6,8,10,15,20,30,40,50,100,200,300,400,500,550], axis=0))
     return grid
 
@@ -142,120 +142,120 @@ def write_fort14(self, path):
     if self.datum != 'MSL':
         self.values = self.values + self.datum_offset
     f = open(path, 'w')
-    f.write(self.fort14_description + '\n')
+    f.write(self.description + '\n')
     f.write("{}  {}\n".format(self.elements.shape[0], self.values.size))
     for i in range(self.values.size):
         f.write("{:>10} {:15.10f} {:15.10f} {:15.10f}\n".format(
             self.nodeID[i]+1, self.x[i], self.y[i], -self.values[i]))
     for i in range(self.elements.shape[0]):
         f.write("{:5d}{:5d} {:5d} {:5d} {:5d}\n".format(self.elementID[i], 3,self.elements[i,0]+1, self.elements[i,1]+1, self.elements[i,2]+1))
-    if self.oceanBoundaries is None:
-        oceanBoundaries = []
+    if self.ocean_boundaries is None:
+        ocean_boundaries = []
     else:
-        oceanBoundaries = self.oceanBoundaries
+        ocean_boundaries = self.ocean_boundaries
     _sum=0
-    for i in range(len(oceanBoundaries)):
-        _sum +=  oceanBoundaries[i].size
-    f.write("{:d} = Number of open boundaries\n".format(len(oceanBoundaries)))
+    for i in range(len(ocean_boundaries)):
+        _sum +=  ocean_boundaries[i].size
+    f.write("{:d} = Number of open boundaries\n".format(len(ocean_boundaries)))
     f.write("{:d} = Total number of open boundary nodes\n".format(_sum))
-    if self.oceanBoundaries is not None:
-        for i in range(len(self.oceanBoundaries)):
-            f.write("{:d} = Number of nodes for open boundary {:d}\n".format(oceanBoundaries[i].size, i+1))
-            for j in range(oceanBoundaries[i].size):
-                f.write("{:d}\n".format(oceanBoundaries[i][j]+1))
+    if self.ocean_boundaries is not None:
+        for i in range(len(self.ocean_boundaries)):
+            f.write("{:d} = Number of nodes for open boundary {:d}\n".format(ocean_boundaries[i].size, i+1))
+            for j in range(ocean_boundaries[i].size):
+                f.write("{:d}\n".format(ocean_boundaries[i][j]+1))
     remainingBoundaries = 0
     _sum=0
-    if self.landBoundaries is not None:
-        remainingBoundaries+=len(self.landBoundaries)
-        for i in range(len(self.landBoundaries)):
-            _sum +=  self.landBoundaries[i][0].size
+    if self.land_boundaries is not None:
+        remainingBoundaries+=len(self.land_boundaries)
+        for i in range(len(self.land_boundaries)):
+            _sum +=  self.land_boundaries[i][0].size
    
-    if self.innerBoundaries is not None:
-        remainingBoundaries+=len(self.innerBoundaries)
-        for i in range(len(self.innerBoundaries)):
-            _sum +=  self.innerBoundaries[i][0].size
+    if self.inner_boundaries is not None:
+        remainingBoundaries+=len(self.inner_boundaries)
+        for i in range(len(self.inner_boundaries)):
+            _sum +=  self.inner_boundaries[i][0].size
     
-    if self.inflowBoundaries is not None:
-        remainingBoundaries+=len(self.inflowBoundaries)
-        for i in range(len(self.inflowBoundaries)):
-            _sum +=  self.inflowBoundaries[i][0].size
+    if self.inflow_boundaries is not None:
+        remainingBoundaries+=len(self.inflow_boundaries)
+        for i in range(len(self.inflow_boundaries)):
+            _sum +=  self.inflow_boundaries[i][0].size
     
-    if self.outflowBoundaries is not None:
-        remainingBoundaries+=len(self.outflowBoundaries)
-        for i in range(len(self.outflowBoundaries)):
-            _sum +=  self.outflowBoundaries[i][0].size
+    if self.outflow_boundaries is not None:
+        remainingBoundaries+=len(self.outflow_boundaries)
+        for i in range(len(self.outflow_boundaries)):
+            _sum +=  self.outflow_boundaries[i][0].size
             
-    if self.weirBoundaries is not None:
-        remainingBoundaries+=len(self.weirBoundaries)
-        for i in range(len(self.weirBoundaries)):
-            _sum +=  self.weirBoundaries[i]['front_face'].size
-            _sum +=  self.weirBoundaries[i]['back_face'].size
+    if self.weir_boundaries is not None:
+        remainingBoundaries+=len(self.weir_boundaries)
+        for i in range(len(self.weir_boundaries)):
+            _sum +=  self.weir_boundaries[i]['front_face'].size
+            _sum +=  self.weir_boundaries[i]['back_face'].size
     
-    if self.culvertBoundaries is not None:
-        remainingBoundaries+=len(self.culvertBoundaries)
-        for i in range(len(self.culvertBoundaries)):
-            _sum +=  self.culvertBoundaries[i]['front_face'].size
-            _sum +=  self.culvertBoundaries[i]['back_face'].size
+    if self.culvert_boundaries is not None:
+        remainingBoundaries+=len(self.culvert_boundaries)
+        for i in range(len(self.culvert_boundaries)):
+            _sum +=  self.culvert_boundaries[i]['front_face'].size
+            _sum +=  self.culvert_boundaries[i]['back_face'].size
     
     f.write("{:d} = Number of land boundaries\n".format(remainingBoundaries))
     f.write("{:d} = Total number of land boundary nodes\n".format(_sum))
     
     _cnt = 1
-    if self.landBoundaries is not None:
-        for i in range(len(self.landBoundaries)):
+    if self.land_boundaries is not None:
+        for i in range(len(self.land_boundaries)):
             f.write("{:d} {:d} = Number of nodes for land boundary {:d}\n".format(
-                        self.landBoundaries[i][0].size, self.landBoundaries[i][-1], _cnt))
+                        self.land_boundaries[i][0].size, self.land_boundaries[i][-1], _cnt))
             _cnt+=1
-            for j in range(self.landBoundaries[i][0].size):
-                f.write("{:d}\n".format(self.landBoundaries[i][0][j]+1))
+            for j in range(self.land_boundaries[i][0].size):
+                f.write("{:d}\n".format(self.land_boundaries[i][0][j]+1))
     
-    if self.innerBoundaries is not None:
-        for i in range(len(self.innerBoundaries)):
+    if self.inner_boundaries is not None:
+        for i in range(len(self.inner_boundaries)):
             f.write("{:d} {:d} = Number of nodes for closed (\"island\")  boundary (land boundary {:d})\n".format(
-                        self.innerBoundaries[i][0].size, self.innerBoundaries[i][-1], _cnt))
+                        self.inner_boundaries[i][0].size, self.inner_boundaries[i][-1], _cnt))
             _cnt+=1
-            for j in range(self.innerBoundaries[i][0].size):
-                f.write("{:d}\n".format(self.innerBoundaries[i][0][j]+1))
+            for j in range(self.inner_boundaries[i][0].size):
+                f.write("{:d}\n".format(self.inner_boundaries[i][0][j]+1))
         
-    if self.inflowBoundaries is not None:
-        for i in range(len(self.inflowBoundaries)):
+    if self.inflow_boundaries is not None:
+        for i in range(len(self.inflow_boundaries)):
             f.write("{:d} {:d} = Number of nodes for inflow boundary (land boundary {:d})\n".format(
-                        self.inflowBoundaries[i][0].size, self.inflowBoundaries[i][-1], _cnt))
+                        self.inflow_boundaries[i][0].size, self.inflow_boundaries[i][-1], _cnt))
             _cnt+=1
-            for j in range(self.inflowBoundaries[i][0].size):
-                f.write("{:d}\n".format(self.inflowBoundaries[i][0][j]+1))
+            for j in range(self.inflow_boundaries[i][0].size):
+                f.write("{:d}\n".format(self.inflow_boundaries[i][0][j]+1))
                 
-    if self.outflowBoundaries is not None:
-        for i in range(len(self.outflowBoundaries)):
+    if self.outflow_boundaries is not None:
+        for i in range(len(self.outflow_boundaries)):
             f.write("{:d} {:d} = Number of nodes for outflow boundary (land boundary {:d})\n".format(
-                        self.outflowBoundaries[i][0].size, self.outflowBoundaries[i][-1], _cnt))
+                        self.outflow_boundaries[i][0].size, self.outflow_boundaries[i][-1], _cnt))
             _cnt+=1
-            for j in range(self.outflowBoundaries[i][0].size):
-                f.write("{:d} {:.3f} {:.3f}\n".format(self.outflowBoundaries[i][0][j]+1, self.outflowBoundaries[i][1][j],
-                self.outflowBoundaries[i][2][j]))
+            for j in range(self.outflow_boundaries[i][0].size):
+                f.write("{:d} {:.3f} {:.3f}\n".format(self.outflow_boundaries[i][0][j]+1, self.outflow_boundaries[i][1][j],
+                self.outflow_boundaries[i][2][j]))
                 
-    if self.weirBoundaries is not None:
-        for i in range(len(self.weirBoundaries)):
+    if self.weir_boundaries is not None:
+        for i in range(len(self.weir_boundaries)):
             f.write("{:d} {:d} = Number of node pairs for weir (land boundary {:d})\n".format(
-                        self.weirBoundaries[i]['front_face'].size, self.weirBoundaries[i]['btype'], _cnt))
+                        self.weir_boundaries[i]['front_face'].size, self.weir_boundaries[i]['btype'], _cnt))
             _cnt+=1
-            for j in range(self.weirBoundaries[i]['front_face'].size):
+            for j in range(self.weir_boundaries[i]['front_face'].size):
                 f.write("{:d} {:d} {:.3f} {:.3f} {:.3f}\n".format(
-                self.weirBoundaries[i]['front_face'][j]+1, self.weirBoundaries[i]['back_face'][j]+1,
-                self.weirBoundaries[i]['height'][j], self.weirBoundaries[i]['subcritical_flow_coefficient'][j],
-                self.weirBoundaries[i]['supercritical_flow_coefficient'][j]))
+                self.weir_boundaries[i]['front_face'][j]+1, self.weir_boundaries[i]['back_face'][j]+1,
+                self.weir_boundaries[i]['height'][j], self.weir_boundaries[i]['subcritical_flow_coefficient'][j],
+                self.weir_boundaries[i]['supercritical_flow_coefficient'][j]))
                 
-    if self.culvertBoundaries is not None:
-        for i in range(len(self.culvertBoundaries)):
+    if self.culvert_boundaries is not None:
+        for i in range(len(self.culvert_boundaries)):
             f.write("{:d} {:d} = Number of nodes pairs for culvert boundary (land boundary {:d})\n".format(
-                        len(self.culvertBoundaries[i]['front_face']), self.culvertBoundaries[i]['btype'], _cnt))
+                        len(self.culvert_boundaries[i]['front_face']), self.culvert_boundaries[i]['btype'], _cnt))
             _cnt+=1
-            for j in range(self.culvertBoundaries[i]['front_face'].size):
+            for j in range(self.culvert_boundaries[i]['front_face'].size):
                 f.write("{:d} {:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(
-                self.culvertBoundaries[i]['front_face'][j]+1, self.culvertBoundaries[i]['back_face'][j]+1,
-                self.culvertBoundaries[i]['height'][j],     self.culvertBoundaries[i]['subcritical_flow_coefficient'][j],
-                self.culvertBoundaries[i]['supercritical_flow_coefficient'][j],     self.culvertBoundaries[i]['cross_barrier_pipe_height'][j],
-                self.culvertBoundaries[i]['friction_factor'][j],     self.culvertBoundaries[i]['pipe_diameter'][j]))
+                self.culvert_boundaries[i]['front_face'][j]+1, self.culvert_boundaries[i]['back_face'][j]+1,
+                self.culvert_boundaries[i]['height'][j],     self.culvert_boundaries[i]['subcritical_flow_coefficient'][j],
+                self.culvert_boundaries[i]['supercritical_flow_coefficient'][j],     self.culvert_boundaries[i]['cross_barrier_pipe_height'][j],
+                self.culvert_boundaries[i]['friction_factor'][j],     self.culvert_boundaries[i]['pipe_diameter'][j]))
     f.close()
 
     if self.datum != 'MSL':

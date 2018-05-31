@@ -38,7 +38,10 @@ def get_extent_idx(self, extent=None):
     idx, = np.where(bound_box)
     return idx
 
-
+def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewidth=0.5, alpha=0.4):
+    axes, idx = fig._init_fig(self, axes, extent, title)
+    axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
+    return axes
 
 def get_xyz(self, extent=None, radius=None):
 
@@ -51,19 +54,6 @@ def get_xyz(self, extent=None, radius=None):
 
 def get_xy(self, min_x=None, min_y=None, max_x=None, max_y=None, epsg=None):
     return np.vstack((self.x[idx], self.y[idx], self.values[idx])).T
-
-def get_values_under_Path(self, path, **kwargs):
-    xin = self.x
-    yin = self.y
-    if len(self.values.shape) == 3:
-        zin = self.values[:,0,timestep]
-    else:
-        zin = self.values
-    idx, = np.where(np.logical_and(
-        np.logical_and(xin>=np.min(path.vertices[:,0]), xin<=np.max(path.vertices[:,0])),
-        np.logical_and(yin>=np.min(path.vertices[:,1]), yin<=np.max(path.vertices[:,1]))))
-    return griddata((xin[idx], yin[idx]), zin[idx], (path.vertices[:,0],path.vertices[:,1]))
-
 
 
 def get_elements_surrounding_node(self, node_index):

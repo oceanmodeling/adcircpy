@@ -1,4 +1,4 @@
-from AdcircPy.Mesh    import Trimesh, Boundaries
+from AdcircPy.Mesh    import Trimesh, Boundaries, ScalarSurface
 from AdcircPy.Datum   import Datum
 from AdcircPy.Outputs import _Outputs
 
@@ -7,7 +7,19 @@ class Outputs(object):
     def read_outputs(path, **kwargs):
         return _Outputs.read_outputs(path, **kwargs)
 
-class Maxele(Trimesh, Boundaries, Datum):
+        
+class ScalarOutput(ScalarSurface):
+    def __init__(self, **kwargs):      
+        Trimesh.__init__(self, **kwargs)
+        Boundaries.__init__(self, **kwargs)
+        Datum.__init__(self, **kwargs)
+        self.values = kwargs.pop("values", None)
+
+class VectorOutput(object):
+    pass
+        
+        
+class Maxele(ScalarOutput):
     
     def __init__(self, **kwargs):      
         Trimesh.__init__(self, **kwargs)

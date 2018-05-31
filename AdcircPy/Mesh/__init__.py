@@ -69,20 +69,10 @@ class Boundaries(object):
     def plot_outerBoundary(self):
         return _Boundaries.plot_outerBoundary(self)
 
-class ScalarSurface(Trimesh, Boundaries):
-    def __init__(self, **kwargs):
-        self.values = kwargs.pop("values", None)
-        Trimesh.__init__(self, **kwargs)
-        Boundaries.__init__(self, **kwargs)
+class Surface(Trimesh, Boundaries):
 
-    def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
-        return _raster.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
 
-    def get_values_at_lonlat(self, lon, lat, **kwargs):
-        """
-        Returns numpy array of values at coordinates or list of coordinates give by lon lat
-        """
-        return _Mesh.get_values_at_lonlat(self, lon, lat, **kwargs)
+
 
     def get_values_under_Path(self, Path, **kwargs):
         """
@@ -91,6 +81,42 @@ class ScalarSurface(Trimesh, Boundaries):
         """
         return _Trimesh.get_values_under_Path(self, Path, **kwargs)
 
+class NodalAttributes(Surface):
+    def __init__(self, **kwargs):
+        pass
+
+class Mesh(Surface, Datum):
+    def __init__(self, **kwargs):
+        Trimesh.__init__(self, **kwargs)
+        Boundaries.__init__(self, **kwargs)
+        self.values = kwargs.pop("values", None)
+        self.description = kwargs.pop("description", None)
+
+    @staticmethod
+    def init_from_fort14(fort14, datum='MSL', epsg=4326):
+        return _Mesh.init_from_fort14(fort14, datum, epsg)
+      
+    def reproject(self, epsg):
+        return _Mesh.reproject(self, epsg)
+
+    def make_plot(self, **kwargs):
+        return _Mesh.plot_bathy(self, **kwargs)
+
+    def interpolate_DEM(self, DEM, **kwargs):
+        _Mesh.interpolate_DEM(self, DEM, **kwargs)
+    
+    def get_values_at_lonlat(self, lon, lat, **kwargs):
+        """
+        Returns numpy array of values at coordinates or list of coordinates give by lon lat
+        """
+        return _Mesh.get_values_at_lonlat(self, lon, lat, **kwargs)
+        
+    def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
+        return _raster.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
+    
+    def write_fort14(self, path):
+        _fort14.write_fort14(self, path)
+    
     def __sub__(self, other):
         """
         Used in the case where two different grids are subtracted directly.
@@ -102,32 +128,8 @@ class ScalarSurface(Trimesh, Boundaries):
             diff.make_plot(show=True)
         """
         return _SurfaceDifference.get_difference(self, other)
-
-class vectorSurface(Trimesh, Boundaries):
-    pass
-
-class Mesh(ScalarSurface, Datum):
-    def __init__(self, **kwargs):
-        ScalarSurface.__init__(self, **kwargs)
-        Datum.__init__(self, **kwargs)
-        self.description = kwargs.pop("description", None)
-
-    @staticmethod
-    def init_from_fort14(fort14,  datum='MSL', epsg=4326):
-        return _Mesh.init_from_fort14(fort14, datum, epsg)
-      
-    def reproject(self, epsg):
-        return _Mesh.reproject(self, epsg)
-
-    def make_plot(self, **kwargs):
-        return _Mesh.plot_bathy(self, **kwargs)
-
-    def interpolate_DEM(self, DEM, **kwargs):
-        _Mesh.interpolate_DEM(self, DEM, **kwargs)
-
-    def write_fort14(self, path):
-        _fort14.write_fort14(self, path)
-
+        
 class SurfaceDifference(ScalarSurface):
     def make_plot(self, **kwargs):
         return _SurfaceDifference.plot_diff(self, **kwargs)
+
