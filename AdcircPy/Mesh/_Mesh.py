@@ -3,7 +3,7 @@ from matplotlib.path import Path
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from haversine import haversine
-from AdcircPy import fig
+from AdcircPy.Surface import _fig
 from AdcircPy import Mesh
 from AdcircPy.Mesh import _fort14
 
@@ -11,7 +11,7 @@ def init_from_fort14(fort14, datum='MSL', epsg=4326):
     return Mesh.Mesh(**_fort14.parse_fort14(fort14))
 
 def plot_bathy(self, extent=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
-    axes, idx = fig._init_fig(self, axes, extent, title)
+    axes, idx = _fig.init_fig(self, axes, extent, title)
     vmin = kwargs.pop("vmin", np.min(self.values[idx]))
     vmax = kwargs.pop("vmax", np.max(self.values[idx]))
     if vmax < 0.:
@@ -43,7 +43,7 @@ def plot_bathy(self, extent=None, axes=None, title=None, total_colors=256, cbar_
     return axes
 
 def plot_shoreline(self, extent=None, axes=None, title=None, color='black', linewidth=0.5):
-    axes, idx = fig._init_fig(self, axes, extent, title)
+    axes, idx = _fig.init_fig(self, axes, extent, title)
     if type(self.values) is list:
         if self.bathymetry is None:
             raise TypeError("fort.14 required to plot shoreline")
@@ -75,8 +75,6 @@ def get_values_under_Path(self, path, **kwargs):
         np.logical_and(xin>=np.min(path.vertices[:,0]), xin<=np.max(path.vertices[:,0])),
         np.logical_and(yin>=np.min(path.vertices[:,1]), yin<=np.max(path.vertices[:,1]))))
     return griddata((xin[idx], yin[idx]), zin[idx], (path.vertices[:,0],path.vertices[:,1]))
-
-
     
 def interpolate_DEM(self, tile, **kwargs):
     channel_polygons = kwargs.pop("channel_polygons", None)
@@ -297,3 +295,4 @@ def interpolate_DEM(self, tile, **kwargs):
     # # changes back from MSL to original datum
     # if self.datum != 'MSL': self.values = self.values - self.datum_offset
     
+

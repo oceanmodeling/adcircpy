@@ -1,8 +1,118 @@
 import numpy as np
-from matplotlib.path import Path
-from scipy.interpolate import griddata
-from AdcircPy import demtools
+from matplotlib.tri import Triangulation
+import matplotlib.pyplot as plt
+from AdcircPy import Surface
+from AdcircPy.Surface import _fig
 
+def make_plot(self, extent=None, axes=None, title=None, step=0, total_colors=256, cbar_label=None, **kwargs):
+    axes, idx = _fig.init_fig(self, axes, extent, title)
+    if isinstance(self.values, list):
+        values = self.values[step]
+    else:
+        values = self.values
+    vmin = kwargs.pop("vmin", np.min(values))
+    vmax = kwargs.pop("vmax", np.max(values))
+    cmap = kwargs.pop("cmap", "jet")
+    levels = kwargs.pop("levels", np.linspace(vmin, vmax, total_colors))
+    if np.ma.is_masked(values):
+        trimask = np.any(values.mask[self.elements], axis=1)
+        Tri = Triangulation(self.x, self.y, self.elements, trimask)
+        axes.tricontourf(Tri, values, levels=levels, cmap=cmap, extend='both')
+    else:
+        axes.tricontourf(self.x, self.y, self.elements, values, levels=levels, cmap=cmap, extend='both')
+    cbar = _fig.init_colorbar(axes, cmap, vmin, vmax)
+    if cbar_label is not None:
+        cbar.set_label(cbar_label)
+    cbar.set_ticks([vmin,
+                    vmin+(1./4.)*(vmax-vmin),
+                    vmin+(1./2.)*(vmax-vmin),
+                    vmin+(3./4.)*(vmax-vmin),
+                    vmax])
+    cbar.set_ticklabels([np.around(vmin, 2), 
+                            np.around(vmin+(1./4.)*(vmax-vmin), 2),
+                            np.around(vmin+(1./2.)*(vmax-vmin), 2),
+                            np.around(vmin+(3./4.)*(vmax-vmin), 2),
+                            np.around(vmax, 2)])
+    return axes
+
+def plot_velocity(self, **kwargs):
+    raise NotImplementedError("Coming soon!")
+    start_timestep = kwargs.pop('start_timestep', 0)
+    stop_timestep  = kwargs.pop('stop_timestep', len(self.time))
+    if axes is None:                
+        fig = plt.figure()
+        axes  = fig.add_subplot(111)
+    ax = axes.quiver(self.x, self.y, self.u[0,:], self.v[:,0], vmin=vmin, vmax=vmax, **kwargs)
+    axes.axis('scaled')
+    def update(i):
+       ax.set_array(self.Dataset['zs'][i,:-1,:-1].ravel())
+       return ax
+    
+    anim = FuncAnimation(fig, update, frames=np.arange(start_timestep+1, stop_timestep), interval=interval)
+    if colorbar==True:
+        plt.colorbar(ax)
+    if show is True:
+        plt.show()
+    return anim
+
+def get_difference(self, other, step=0):
+    
+
+    if isinstance(self.values, list):
+        self_values = self.values[step]
+    else:
+        self_values = self.values
+
+    if isinstance(other.values, list):
+        other_values = other.values[step]
+    else:
+        other_values = other.values
+
+    if np.ma.is_masked(self_values):
+        print(np.ma.filled(self_values, 0.))
+        BREAKME
+
+    if np.ma.is_masked(other.values):
+        print("other.values is masked")
+
+    BREAKME
+
+    params = {  'x'                   : self.x,
+                'y'                   : self.y,
+                'elements'            : self.elements,
+                'values'              : self.values - other.values,
+                'nodeID'              : self.nodeID,
+                'elementID'           : self.elementID, 
+                "ocean_boundaries"    : self.ocean_boundaries,
+                "land_boundaries"     : self.land_boundaries,
+                "inner_boundaries"    : self.inner_boundaries,
+                "weir_boundaries"     : self.weir_boundaries,
+                "inflow_boundaries"   : self.inflow_boundaries,
+                "outflow_boundaries"  : self.outflow_boundaries,
+                "culvert_boundaries"  : self.culvert_boundaries}
+    return Surface.SurfaceDifference(**params)
+
+def plot_diff(self, extent=None, axes=None, vmin=None, vmax=None, title=None, **kwargs):
+    axes, idx = _fig.init_fig(self, axes, extent, title)
+    if vmin is None:
+        vmin = np.min(self.values[idx])
+    if vmax is None:
+        np.max(self.values[idx])
+
+    cmap = plt.get_cmap(kwargs.pop("cmap", "seismic"))
+    levels = kwargs.pop("levels", np.linspace(np.min(self.values[idx]), np.max(self.values[idx]), 256))
+    norm = _fig.FixPointNormalize(sealevel=0, vmax=vmax, vmin=vmin, col_val=0.5)
+    if np.ma.is_masked(self.values):
+        trimask = np.any(self.values.mask[self.elements], axis=1)
+        Tri = Triangulation(self.x, self.y, self.elements, trimask)
+        axes.tricontourf(Tri, self.values, levels=levels, cmap=cmap, extend='both', norm=norm)
+    else:
+        axes.tricontourf(self.x, self.y, self.elements, self.values, levels=levels, cmap=cmap, extend='both', norm=norm)
+    cbar = _fig.init_colorbar(axes, cmap, vmin, vmax)
+    cbar.set_ticks([vmin, vmin + 0.5*(vmax-vmin), vmax])
+    cbar.set_ticklabels([np.around(vmin, 2), 0.0, np.around(vmax, 2)])
+    cbar.set_label(r'elevation [$\Delta$ m]')
+    return axes
 
 def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
     """

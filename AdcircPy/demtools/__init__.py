@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 from . import demutils
 from . import demplots
-from . import vdatum as _vdatum
+
 
 def read_tile(path):
     """
@@ -83,25 +83,6 @@ def get_xyz_from_Path_instance(rootdir, Path, epsg, file_format):
     """
     return demutils.get_xyz_from_Path_instance(rootdir, Path, epsg, file_format)
 
-def vdatum(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs):
-    """
-    This function calls the VDatum Java executables over a subprocess pipe.
-    You must specify the directory your copy of VDatum using the argument vdatumdir.
-    Running this function on a remote server may require the connection to have
-    trusted X11 enabled, and VDatum may crash over screen. Sometimes java may throw
-    X11 related warnings over ssh but the execution will succeed normally.
-    Keep in mind that this function  *is very slow* because it needs to write the
-    numpy array to a text file on the hard drive. There is no direct way of interacting
-    with vdatum at this moment.
-    
-    VDatum requires to have Java 8 installed. Other version of Java will not work.
-
-    Alternative methods for reliable and efficient tidal datums conversions are
-    being considered, please, consider submitting your ideas for more efficient
-    tidal datum conversions to the authors!
-    """
-    # Check if vdatum.jar exists
-    return _vdatum.vdatum(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs)
 
 class DEM(object):
     """

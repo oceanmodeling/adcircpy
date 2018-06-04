@@ -16,17 +16,5 @@ def read_outputs(path, **kwargs):
         return _netcdf.read_netcdf_output(path, **kwargs)
     elif nc == False:
         return _ascii.read_ascii_output(path, **kwargs)
-        
-        
-def surface_animation(self, extent=None, axes=None, title=None, **kwargs):
-    axes, idx = fig._init_fig(self, axes, extent, title)
-    start_slice = kwargs.pop("start_slice", 0)
-    stop_slice  = kwargs.pop("stop_slice", len(self.timestep))
-    vals = list()
-    for values in self.values[start_slice:stop_slice]:
-        vals.append(values[idx])
-    vals = np.asarray(vals)
-    vals = np.ma.masked_where(vals==-99999.0, vals)
-    vmin = kwargs.pop("vmin", np.min(vals))
-    vmax = kwargs.pop("vmax", np.max(vals))
-    return axes
+
+

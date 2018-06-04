@@ -1,47 +1,29 @@
-from AdcircPy.Mesh    import Trimesh, Boundaries, ScalarSurface
-from AdcircPy.Datum   import Datum
+from AdcircPy.Surface import Surface
 from AdcircPy.Outputs import _Outputs
 
+# Factory class
 class Outputs(object):
     @staticmethod
     def read_outputs(path, **kwargs):
         return _Outputs.read_outputs(path, **kwargs)
 
-        
-class ScalarOutput(ScalarSurface):
-    def __init__(self, **kwargs):      
-        Trimesh.__init__(self, **kwargs)
-        Boundaries.__init__(self, **kwargs)
-        Datum.__init__(self, **kwargs)
-        self.values = kwargs.pop("values", None)
+# Generic outputs classes
+class SurfaceTimeseries(Surface):
+    def __init__(self, **kwargs):
+        Surface.__init__(self, **kwargs)
 
-class VectorOutput(object):
-    pass
-        
-        
-class Maxele(ScalarOutput):
-    
-    def __init__(self, **kwargs):      
-        Trimesh.__init__(self, **kwargs)
-        Boundaries.__init__(self, **kwargs)
-        Datum.__init__(self, **kwargs)
-        self.values = kwargs.pop("values", None)
+    def make_animation(self, **kwargs):
+        return _SurfaceTimeseries.make_animation(self, **kwargs)
 
-    def make_plot(self, **kwargs):
-        return Surface.make_plot(self, **kwargs)
+class StationTimeseries(Surface):
+    def __init__(self, **kwargs):
+        Surface.__init__(self, **kwargs)
 
-class Velocity(Trimesh, Boundaries):
-    pass
+class SurfaceExtrema(Surface):
+    def __init__(self, **kwargs):
+        Surface.__init__(self, **kwargs)
 
-class TidalAmplitudes(Trimesh, Boundaries, Datum):
-    """docstring for ClassName"""
-    def __init__(self, arg):
-        super(ClassName, self).__init__()
-        self.arg = arg
-        
-class Elevation(Trimesh, Boundaries, Datum):
-    """docstring for ClassName"""
-    def __init__(self, arg):
-        super(ClassName, self).__init__()
-        self.arg = arg
-
+# Specific output classes derived from generic output classes
+class Maxele(SurfaceExtrema):
+    def __init__(self, **kwargs):
+        SurfaceExtrema.__init__(self, **kwargs)

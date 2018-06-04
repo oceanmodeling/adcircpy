@@ -23,7 +23,7 @@ class FixPointNormalize(Normalize):
         x, y = [self.vmin, self.sealevel, self.vmax], [0, self.col_val, 1]
         return np.ma.masked_where(value.mask, np.interp(value, x, y))
 
-def _init_fig(self, axes, extent, title):
+def init_fig(self, axes, extent, title):
     if axes is None:                
         fig = plt.figure()
         axes  = fig.add_subplot(111)
@@ -36,7 +36,7 @@ def _init_fig(self, axes, extent, title):
     axes.axis(extent) 
     return axes, idx
 
-def _init_colorbar(axes, cmap, vmin, vmax):
+def init_colorbar(axes, cmap, vmin, vmax):
     mappable = ScalarMappable(cmap=cmap)
     divider = make_axes_locatable(axes)
     cax = divider.append_axes("bottom", size="2%", pad=0.5)

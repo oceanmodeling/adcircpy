@@ -52,49 +52,6 @@ def read_output(path, **kwargs):
     """
     return Outputs.read_outputs(path, **kwargs)
 
-# Begin main class definitions
-    
-class Surface(object):
-    def __init__(self, **kwargs):
-        self.x         = kwargs.pop("x", None)
-        self.y         = kwargs.pop("y", None)
-        self.nodeID    = kwargs.pop("nodeID", None)
-        self.elements  = kwargs.pop("elements",  None)
-        self.elementID = kwargs.pop("elementID", None)
-
-    def plot_trimesh(self, **kwargs):
-        return _Trimesh.plot_trimesh(self, **kwargs)    
-
-    def get_xyz(self, extent=None, **kwargs):
-        """
-        Returns numpy array of dimension [D,3] with columns <x, y, values>
-        """
-        return _Trimesh.get_xyz(self, **kwargs)
-    
-    def get_xy(self, extent=None, **kwargs):
-        """
-        Returns numpy array of dimension [D,2] with columns <x, y>
-        """
-        return _Trimesh.get_xy(self, extent, **kwargs)
-
-    def get_elements_as_Path_list(self, extent=None):
-        return _Trimesh.get_element_as_Path_list(self, extent)
-
-    def get_elements_surrounding_node(self, node_index):
-        return _Trimesh.get_elements_surrounding_node(self, node_index)
-      
-    def get_extent_idx(self, extent):
-        """
-        Finds the indices of the mesh nodes inside a bounding box.
-        kwargs:
-            extent : list of the form [min_x, max_x, min_y, max_y]
-        """
-        return _Trimesh.get_extent_idx(self, extent)
-
-    def get_extent(self):
-        return _Trimesh.get_extent(self)
-
-
 
 
 

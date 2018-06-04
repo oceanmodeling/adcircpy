@@ -1,13 +1,29 @@
-from AdcircPy.Datum import _Datum
+from AdcircPy.Surface import Surface
+from AdcircPy.Datum import _DatumGrid
 
 
-class Datum(object):
+class DatumGrid(object):
+
     def __init__(self, **kwargs):
-        self.epsg                = kwargs.pop("epsg", 4326)
-        self.datum               = kwargs.pop("datum", "MSL")
+        self.x = kwargs.pop("x", None)
+        self.y = kwargs.pop("y", None)
+        self.values = kwargs.pop("values", None)
+        self._type = kwargs.pop("_type", None)
 
-    def msl_to_navd88(self, datum_grid):
-    	_Datum.msl_to_navd88(self, datum_grid)
+    @staticmethod
+    def msl_to_navd88(Datum_grid):
+        return _DatumGrid.msl_to_navd88(Datum_grid)
 
-    def navd88_to_msl(self):
-    	_Datum.navd88_to_msl(self)
+    def convert(self, Mesh, **kwargs):
+        return _DatumGrid.convert(self, Mesh, **kwargs)
+
+
+class VDatum(object):
+    """
+    This class calls the VDatum Java executables over a subprocess pipe.
+    You must specify the directory your copy of VDatum using the argument vdatumdir.
+    VDatum requires to have Java 8 installed. Other version of Java will not work.
+    """
+    @staticmethod
+    def convert(Mesh, **kwargs):
+        return _vdatum.convert(Mesh, **kwargs)
