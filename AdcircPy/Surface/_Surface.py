@@ -1,11 +1,14 @@
 import numpy as np
 from matplotlib.tri import Triangulation
 import matplotlib.pyplot as plt
+from matplotlib.path import Path
+from scipy.interpolate import griddata
 from AdcircPy import Surface
+from AdcircPy import demtools
 from AdcircPy.Surface import _fig
 
-def make_plot(self, extent=None, axes=None, title=None, step=0, total_colors=256, cbar_label=None, **kwargs):
-    axes, idx = _fig.init_fig(self, axes, extent, title)
+def make_plot(self, extent=None, epsg=None, axes=None, title=None, step=0, total_colors=256, cbar_label=None, **kwargs):
+    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     if isinstance(self.values, list):
         values = self.values[step]
     else:
@@ -55,6 +58,22 @@ def plot_velocity(self, **kwargs):
         plt.show()
     return anim
 
+def get_dict(self):
+    return {  'x'                   : self.x,
+              'y'                   : self.y,
+              'elements'            : self.elements,
+              'values'              : self.values,
+              'nodeID'              : self.nodeID,
+              'elementID'           : self.elementID, 
+              "ocean_boundaries"    : self.ocean_boundaries,
+              "land_boundaries"     : self.land_boundaries,
+              "inner_boundaries"    : self.inner_boundaries,
+              "weir_boundaries"     : self.weir_boundaries,
+              "inflow_boundaries"   : self.inflow_boundaries,
+              "outflow_boundaries"  : self.outflow_boundaries,
+              "culvert_boundaries"  : self.culvert_boundaries}
+
+
 def get_difference(self, other, step=0):
     
 
@@ -69,31 +88,29 @@ def get_difference(self, other, step=0):
         other_values = other.values
 
     if np.ma.is_masked(self_values):
-        print(np.ma.filled(self_values, 0.))
-        BREAKME
+        self_values = np.ma.filled(self_values, 0.)
 
     if np.ma.is_masked(other.values):
-        print("other.values is masked")
+        other_values = np.ma.filled(other_values, 0.)
 
-    BREAKME
+    values = np.ma.masked_equal(self_values - other_values, 0.)
+    kwargs = self.get_dict()
+    kwargs['values'] = values
+    return Surface.SurfaceDifference(**kwargs)
 
-    params = {  'x'                   : self.x,
-                'y'                   : self.y,
-                'elements'            : self.elements,
-                'values'              : self.values - other.values,
-                'nodeID'              : self.nodeID,
-                'elementID'           : self.elementID, 
-                "ocean_boundaries"    : self.ocean_boundaries,
-                "land_boundaries"     : self.land_boundaries,
-                "inner_boundaries"    : self.inner_boundaries,
-                "weir_boundaries"     : self.weir_boundaries,
-                "inflow_boundaries"   : self.inflow_boundaries,
-                "outflow_boundaries"  : self.outflow_boundaries,
-                "culvert_boundaries"  : self.culvert_boundaries}
-    return Surface.SurfaceDifference(**params)
+def get_mean_value(self, **kwargs):
+    epsg   = kwargs.pop("epsg", self.epsg)
+    extent = kwargs.pop("extent", self.get_extent(epsg=epsg))
+    step   = kwargs.pop("step", 0)
+    idx = self.get_extent_idx(extent, epsg)
+    if isinstance(self.values, list):
+        values = self.values[step]
+    else:
+        values = self.values
+    return np.nanmean(values[idx])
 
-def plot_diff(self, extent=None, axes=None, vmin=None, vmax=None, title=None, **kwargs):
-    axes, idx = _fig.init_fig(self, axes, extent, title)
+def plot_diff(self, extent=None, epsg=None, axes=None, vmin=None, vmax=None, title=None, **kwargs):
+    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     if vmin is None:
         vmin = np.min(self.values[idx])
     if vmax is None:
@@ -141,58 +158,45 @@ def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
     """
     epsg = kwargs.pop("epsg", self.epsg)
     padding = kwargs.pop("padding", None)
-    
     xpixels, ypixels = shape
-
     x = np.linspace(geoTransform[0], geoTransform[0] + xpixels*geoTransform[1], xpixels)
     y = np.linspace(geoTransform[3] + ypixels*geoTransform[5], geoTransform[3], ypixels)
-
     xt, yt = np.meshgrid(x, y)
-    
     xt = xt.reshape(xt.size)
     yt = np.flipud(yt.reshape(yt.size))
-
     xyt = np.vstack((xt,yt)).T
-
     # create path object of target bounding box
     bbox_path = Path([(np.min(xt), np.min(yt)),
                     (np.max(xt), np.min(yt)),
                     (np.max(xt), np.max(yt)),
                     (np.min(xt), np.max(yt)),
                     (np.min(xt), np.min(yt))], closed=True)
-
     # interpolate mesh information to bounding box grid.
-    xyz = self.get_xyz(extent=bbox_path)#, radius=0.2)
+    xyz = self.get_xyz(extent=bbox_path)
     zt = griddata((xyz[:,0], xyz[:,1]), xyz[:,2], (xt, yt), method='linear', fill_value=np.nan)
-    
     # Generate boundary masks.
     outerBoundary = self.build_outer_polygon()
     outerBoundary = outerBoundary.clip_to_bbox((np.min(xt), np.min(yt), np.max(xt), np.max(yt)))
     mask = np.logical_or(np.isin(zt, np.nan), ~outerBoundary.contains_points(xyt))
     zt = np.ma.masked_array(zt, mask)
-    
     innerBoundaries = self.build_inner_polygons()
     for innerBoundary in innerBoundaries:
         if outerBoundary.intersects_path(innerBoundary):
             innerBoundary = innerBoundary.clip_to_bbox((np.min(xt), np.min(yt), np.max(xt), np.max(yt)))
             mask = np.logical_or(zt.mask, innerBoundary.contains_points(xyt))
             zt = np.ma.masked_array(zt.data, mask)
-
     #TODO: Compound mask for other boundaries.
     if self.weir_boundaries is not None:
         for boundary in self.weir_boundaries:
             pass
-    
     if self.culvert_boundaries is not None:
         for boundary in self.culvert_boundaries:
             pass
-
     if padding is not None:
         padding = griddata((padding[:,0], padding[:,1]), padding[:,2], (xt, yt), method='nearest')
         idx, = np.where(zt.mask)
         zt = np.ma.filled(zt, np.nan)
         zt[idx] = padding[idx]
-    
     zt = zt.reshape(shape)
     return demtools.DEM(x, y, zt, geoTransform, self.epsg, self.datum)
 

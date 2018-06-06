@@ -1,17 +1,19 @@
-from AdcircPy import Mesh
-from AdcircPy.Outputs import _Outputs
+import numpy as np
+from AdcircPy.Mesh import Mesh
+from AdcircPy import Outputs
 
 def read_ascii_output(path, fort14=None, datum='MSL', epsg=4326, output_type=None):
     # Error checking for input args
     if fort14 is None:
         raise IOError("A fort.14 file is required to parse ASCII outputs.")
     if isinstance(fort14, ("".__class__, u"".__class__)):
-        fort14 = Mesh.Mesh.init_from_fort14(fort14, datum, epsg)
-    elif isinstance(fort14, Mesh.Mesh):
+        fort14 = Mesh.init_from_fort14(fort14, datum, epsg)
+    elif isinstance(fort14, Mesh):
         pass
     else:
         raise IOError("fort14 keyword provided is neither a path to a fort.14 ASCII file nor an AdcircPy.Mesh instance!")
-
+    _shape = fort14.values.shape
+    fort14 = fort14.get_dict()
     f = open(path)
     description          = f.readline().strip()
     line                 = f.readline().split()
@@ -22,20 +24,22 @@ def read_ascii_output(path, fort14=None, datum='MSL', epsg=4326, output_type=Non
     record_type          = int(line[4]) # 1 for elevation, 2 for velocity, 3 for 3D
     
     # This is probably a gridded output
-    if number_of_datapoints==fort14.values.shape[0] and num_of_datasets!=2:
-        time=list()
-        timestep=list()
-        values=list()
+    if number_of_datapoints==_shape[0] and number_of_datasets>2:
+        time     = list()
+        timestep = list()
+        values   = list()
+        nodeID   = list()
         for i in range(number_of_datasets):
             line = f.readline().split()
             time.append(float(line[0]))
             timestep.append(int(line[1]))
             for i in range(number_of_datapoints):
                 _values = list()
+                line = f.readline().split()
+                nodeID.append(int(line[0]))
                 if record_type == 1:
-                    _values.append(float(f.readline().split()[1]))
+                    _values.append(float(line[1]))
                 elif record_type == 2:
-                    line = f.readline().split()
                     _values.append((float(line[1]),float(line[2])))
                 elif record_type == 3:
                     line = f.readline().split()
@@ -44,15 +48,15 @@ def read_ascii_output(path, fort14=None, datum='MSL', epsg=4326, output_type=Non
             _values = np.ma.masked_equal(_values, -99999.0)
             values.append(_values)
         f.close()
-
-        return Outputs.SurfaceTimeseries()
+        fort14['values'] = values
+        return Outputs.SurfaceTimeseries(**fort14)
     
     # this is probably a station timeseries
-    elif number_of_datapoints!=fort14.values.shape[0] and num_of_datasets!=2:
+    elif number_of_datapoints<_shape[0] and number_of_datasets>2:
         stations = dict()
         time=list()
         timestep=list()
-        for i in range(num_of_datasets):
+        for i in range(number_of_datasets):
             line = f.readline().split()
             time.append(float(line[0]))
             timestep.append(int(line[1]))
@@ -64,8 +68,29 @@ def read_ascii_output(path, fort14=None, datum='MSL', epsg=4326, output_type=Non
         return Outputs.StationTimeseries()
     
     # this is probably an extrema file (*.63)
-    elif num_of_datasets==2: 
+    elif number_of_datasets==1: 
+        nodeID = list()
+        values = list()
+        for i in range(number_of_datasets):
+            line = f.readline().split()
+            for i in range(number_of_datapoints):
+                line = f.readline().split()
+                nodeID.append(int(line[0]))
+                if record_type == 1:
+                    values.append(float(line[1]))
+                elif record_type == 2:
+                    values.append((float(line[1]),float(line[2])))
+                elif record_type == 3:
+                    values.append((float(line[1]), float(line[2]), float(line[3])))
+            values = np.asarray(values)
+            values = np.ma.masked_equal(values, -99999.0)
+        fort14['values'] = values
         f.close()
-        return Outputs.SurfaceExtrema()
+        return Outputs.SurfaceExtrema(**fort14)
+    
+    elif number_of_datasets==2:
+        pass
+
+        
 
     

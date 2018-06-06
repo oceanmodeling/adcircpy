@@ -10,8 +10,8 @@ from AdcircPy.Mesh import _fort14
 def init_from_fort14(fort14, datum='MSL', epsg=4326):
     return Mesh.Mesh(**_fort14.parse_fort14(fort14))
 
-def plot_bathy(self, extent=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
-    axes, idx = _fig.init_fig(self, axes, extent, title)
+def plot_bathy(self, extent=None, epsg=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
+    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     vmin = kwargs.pop("vmin", np.min(self.values[idx]))
     vmax = kwargs.pop("vmax", np.max(self.values[idx]))
     if vmax < 0.:
@@ -33,17 +33,17 @@ def plot_bathy(self, extent=None, axes=None, title=None, total_colors=256, cbar_
         wlevels = np.linspace(vmin, mlevel, wet_count, endpoint=False)
         dlevels = np.linspace(mlevel, vmax, dry_count)
         levels = np.hstack((wlevels, dlevels))
-    norm = fig.FixPointNormalize(sealevel=mlevel, vmax=vmax, vmin=vmin, col_val=col_val)
+    norm = _fig.FixPointNormalize(sealevel=mlevel, vmax=vmax, vmin=vmin, col_val=col_val)
     axes.tricontourf(self.x, self.y, self.elements, self.values,
                     levels=levels, cmap=cmap, norm=norm, extend='both', **kwargs)
-    cbar = fig._init_colorbar(axes, cmap, vmin, vmax)
+    cbar = _fig.init_colorbar(axes, cmap, vmin, vmax)
     cbar.set_label(cbar_label)
     cbar.set_ticks([vmin, vmin + col_val *(vmax-vmin), vmax])
     cbar.set_ticklabels([np.around(vmin, 2), mlevel, np.around(vmax, 2)])
     return axes
 
-def plot_shoreline(self, extent=None, axes=None, title=None, color='black', linewidth=0.5):
-    axes, idx = _fig.init_fig(self, axes, extent, title)
+def plot_shoreline(self, extent=None, epsg=None, axes=None, title=None, color='black', linewidth=0.5):
+    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     if type(self.values) is list:
         if self.bathymetry is None:
             raise TypeError("fort.14 required to plot shoreline")
@@ -77,12 +77,13 @@ def get_values_under_Path(self, path, **kwargs):
     return griddata((xin[idx], yin[idx]), zin[idx], (path.vertices[:,0],path.vertices[:,1]))
     
 def interpolate_DEM(self, tile, **kwargs):
+    method = kwargs.pop("method", "FVM")
     channel_polygons = kwargs.pop("channel_polygons", None)
     bar_polygons = kwargs.pop("bar_polygons", None)
     tile_extent = tile.get_extent()
-    idxs_of_points_in_tile = self.get_extent_idx(extent=tile_extent)
+    idxs_of_points_in_tile = self.get_extent_idx(tile_extent, tile.epsg)
     xyz = tile.get_xyz(epsg=self.epsg)
-   
+
     for i, obs_point_idx in enumerate(idxs_of_points_in_tile):
 
         adjacent_elements = self.get_elements_surrounding_node(obs_point_idx)
@@ -145,9 +146,15 @@ def interpolate_DEM(self, tile, **kwargs):
                             np.logical_and(xyz[:,0]>=np.min(points[:,0]), xyz[:,0]<=np.max(points[:,0])),
                             np.logical_and(xyz[:,1]>=np.min(points[:,1]), xyz[:,1]<=np.max(points[:,1]))))
         values = xyz[idx,:]
-        values = values[np.where(path.contains_points(values[:,0:2])),2]
-        self.values[obs_point_idx] = np.mean(values)
-        
+        if method=="FVM":
+            values = values[np.where(path.contains_points(values[:,0:2])),2]
+            self.values[obs_point_idx] = np.mean(values)
+        else:
+            values = griddata((xyz[:,0], xyz[:,1]), xyz[:,2], (self.x[idxs_of_points_in_tile], self.y[idxs_of_points_in_tile]),method=method)
+            for i, idx in enumerate(idxs_of_points_in_tile):
+                self.values[idx] = values[i]
+
+                
         if channel_polygons is not None:
             for channel_polygon in channel_polygons:
                 if channel_polygon.contains_point((self.x[obs_point_idx], self.y[obs_point_idx])):#path.intersects_path(channel_polygon):
@@ -156,7 +163,7 @@ def interpolate_DEM(self, tile, **kwargs):
         if bar_polygons is not None:
             for bar_polygon in bar_polygons:
                 if bar_polygon.contains_point((self.x[obs_point_idx], self.y[obs_point_idx])):#path.intersects_path(bar):
-                    self.values[obs_point_idx] = np.max(values)     
+                    self.values[obs_point_idx] = np.max(values)   
         
         
         # # Uncomment here to make a plot of the calculations we just made.

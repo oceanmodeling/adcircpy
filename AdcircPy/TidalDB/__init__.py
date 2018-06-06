@@ -10,9 +10,9 @@ TPXO_path = os.path.dirname(os.path.abspath(__file__)) + '/h_tpxo9.v1.nc'
 
 class TidalDB(object):
     def __init__(self):
-        self.orbital_frequency   = orbital_frequency
-        self.doodson_coefficient = doodson_coefficient
-        self.tidal_potential_amplitude = tidal_potential_amplitude
+        self.orbital_frequency                      = orbital_frequency
+        self.doodson_coefficient                    = doodson_coefficient
+        self.tidal_potential_amplitude              = tidal_potential_amplitude
         self.earth_tidal_potential_reduction_factor = earth_tidal_potential_reduction_factor
 
     def generate_equilibrium_factors(self, start_date, end_date):

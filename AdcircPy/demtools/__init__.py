@@ -117,6 +117,8 @@ class DEM(object):
         return demplots.plot_bathy(self, axes, vmin, vmax, title, colors)
     
     def get_extent(self, epsg=None):
+        print("am i?")
+        BREAKME
         return demutils.get_extent(self, epsg)
         
     def get_dx(self, meters=False):
@@ -125,7 +127,7 @@ class DEM(object):
     def get_dy(self, meters=False):
         return demutils.get_dy(self, meters)
 
-    def export_raster(self, path, driver='Gtiff'):
+    def export_to_file(self, path, driver='Gtiff'):
         """
         Exports DEM object to raster file using GDAL.
         Uses GeoTiff as default. 
@@ -141,7 +143,7 @@ class DEM(object):
             driver (str) <'Gtiff'> : Specifies export file format supported by GDAL.
 
         """
-        demutils.export_to_raster(self, path, driver)
+        demutils.export_to_file(self, path, driver)
     
     def get_resolution(self):
         return demutils.resolution_in_meters(self)

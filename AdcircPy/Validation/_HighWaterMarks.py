@@ -3,6 +3,7 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+import psycopg2
 from osgeo import ogr, osr
 from AdcircPy import Validation
 
@@ -11,9 +12,10 @@ def from_csv(path):
     f = csv.reader(csvfile)
     header = next(f)
     hwm_stations = dict()
-    for line in f:
-        station_id = line[header.index('hwm_id')]
+    for i, line in enumerate(f):
+        station_id = str(i)
         hwm_stations[station_id] = dict()
+        hwm_stations[station_id]['hwm_id'] = line[header.index('hwm_id')]
         hwm_stations[station_id]['lat']=float(line[header.index('site_latitude')])
         hwm_stations[station_id]['lon']=float(line[header.index('site_longitude')])
         hwm_stations[station_id]['state'] = line[header.index('stateName')]
@@ -149,10 +151,43 @@ def export_shapefile(self, path, layer_name='High Water Marks', epsg=4326):
         layer.CreateFeature(feature)
         feature = None
 
+def export_to_PostGIS(self, dbname, **kwargs):
+    user        = kwargs.pop('user', 'postgres')
+    password    = kwargs.pop('password', True)
+    host        = kwargs.pop('host', 'localhost')
+    port        = kwargs.pop('port', 5432)
+    overwrite   = kwargs.pop('overwrite', False)
+    schema      = kwargs.pop('schema', 'ADCIRC')
+    table       = kwargs.pop('table', 'high_water_marks')
+    if password==True:
+        password = getpass.getpass('Password: ')
+    con = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
+    cur  = con.cursor()
+    cur.execute('CREATE SCHEMA IF NOT EXISTS {};'.format(schema))
+    con.commit()
+    cur.execute("SELECT to_regclass('{}.{}');".format(schema, table))
+    table_existance = cur.fetchall()[0][0]
+    if table_existance is None or overwrite==True:
+        if table_existance is not None and overwrite==True:
+            cur.execute('DROP TABLE {}.{};'.format(schema, table))
+            con.commit()
+        cur.execute('CREATE TABLE IF NOT EXISTS {}.{} (id SERIAL PRIMARY KEY, geom geometry(Multipoint, {}));'.format(schema, table, self.epsg))
+        geom = "ST_GeomFromText('Multipoint("
+        for key in self.keys():
+            geom += '({:f} {:f}), '.format(self[key]['longitude'], self[key]['latitude'])
+        geom = geom[:-2]
+        geom += ")', {})".format(self.epsg)
+        cur.execute("INSERT INTO {}.{} (geom) VALUES ({});".format(schema, table, geom))
+        con.commit()
+        cur.execute("CREATE INDEX sidx_{}_geom ON {}.{} USING GIST (geom);".format(table, schema, table))
+        con.commit()
+    elif table_existance is not None and overwrite==False:
+        raise Exception("Table {}.{} exists in database. Manually delete or use overwrite=True".format(schema, table))
+
+
 def clip_from_shapefile(self, path, return_count=False):
     shapefile = ogr.Open(path)
     layer = shapefile.GetLayer()
-    
     polygons=list()
     for area in layer: 
         area_shape = area.GetGeometryRef() 
@@ -167,19 +202,16 @@ def clip_from_shapefile(self, path, return_count=False):
         vertices.append(vertices[0])
         codes[-1] = Path.CLOSEPOLY
         polygons.append(Path(vertices, codes))
-    
     to_remove=list()
     for station in self.keys():
         coords = (self[station]['lon'], self[station]['lat'])
         for polygon in polygons:
             if polygon.contains_point(coords):
                 to_remove.append(station)
-
     _hwm = copy.deepcopy(self)
     for station in self.keys():
         if station in to_remove:
             del _hwm[station]
-    
     if return_count==True:
         return _hwm, len(to_remove)
     else:

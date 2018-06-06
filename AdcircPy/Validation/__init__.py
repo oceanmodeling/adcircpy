@@ -3,8 +3,9 @@ from AdcircPy.Validation import _HighWaterMarks
 class HighWaterMarks(dict):
     
     def __init__(self, **kwargs):
+        self.epsg = kwargs.pop("epsg", 4326)
         dict.__init__(self, **kwargs)
-
+ 
     @staticmethod
     def from_csv(path):
         return _HighWaterMarks.from_csv(path)
@@ -47,6 +48,9 @@ class HighWaterMarks(dict):
 
     def export_shapefile(self, path):
         _HighWaterMarks.export_shapefile(self, path)
+
+    def export_to_PostGIS(self, dbname, **kwargs):
+        _HighWaterMarks.export_to_PostGIS(self, dbname, **kwargs)
 
     def make_plot(self, **kwargs):
         return _HighWaterMarks.make_plot(self, **kwargs)

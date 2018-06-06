@@ -88,7 +88,7 @@ def circular_pixel_filter(self, radius):
     kernel[mask] = 1
     self.values = generic_filter(self.values, np.mean, footprint=kernel)
 
-def export_to_raster(self, path, driver='Gtiff'):  
+def export_to_file(self, path, driver='Gtiff'):  
     gdal.UseExceptions()
     driver = gdal.GetDriverByName(driver)
     ds = driver.Create(path, self.x.size, self.y.size, 1, gdal.GDT_Float32)
@@ -97,11 +97,13 @@ def export_to_raster(self, path, driver='Gtiff'):
     ds.SetProjection(srs.ExportToWkt())
     ds.SetGeoTransform(self.geoTransform)
     outband=ds.GetRasterBand(1)
-    values =  np.ma.filled(self.values, np.nan)                       
-    outband.SetStatistics(float(np.min(values)), float(np.max(values)),
-                    float(np.average(values)), float(np.std(values)))
+    outband.SetStatistics(float(np.min(self.values)), float(np.max(self.values)),
+                    float(np.average(self.values)), float(np.std(self.values)))
     outband.SetNoDataValue(-99999.0)
-    values = np.ma.fix_invalid(self.values, fill_value=-99999.0)
+    if np.ma.is_masked(self.values):
+        values =  np.ma.filled(self.values, -99999.0)
+    else:
+        values = self.values
     outband.WriteArray(values)
 
 

@@ -1,9 +1,20 @@
 import numpy as np
 from matplotlib.path import Path
 from scipy.interpolate import griddata
+import pyproj
 
-def get_extent(self):
-    return [np.min(self.x), np.max(self.x), np.min(self.y), np.max(self.y)]
+def get_extent(self, **kwargs):
+    epsg = kwargs.pop("epsg", self.epsg)
+
+    if epsg != self.epsg:
+        self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+        target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+        x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+    else:
+        x = self.x
+        y = self.y
+
+    return [np.min(x), np.max(x), np.min(y), np.max(y)]
 
 def get_values_at_lonlat(self, lon, lat, list_idx=0, method='linear'):
     if isinstance(self.values, list):
@@ -22,20 +33,23 @@ def get_values_at_lonlat(self, lon, lat, list_idx=0, method='linear'):
         return griddata((self.x[idx], self.y[idx]), values[idx], (lon, lat), method='nearest')
 
 
-def get_extent_idx(self, extent=None):
-    if extent is None:
-        extent = self.get_extent()
-    bound_box = np.logical_and(
-                    np.logical_and(self.x>=extent[0], self.x<=extent[1]),
-                    np.logical_and(self.y>=extent[2], self.y<=extent[3]))
-    # if remove_values is not None:
-    #     if np.ma.is_masked(self.values):
-    #         _values = self.values.data
-    #     else:
-    #         _values = self.values
-    #     idx, = np.where(np.logical_and(bound_box, _values!=remove_values))
-    # else:
-    idx, = np.where(bound_box)
+def get_extent_idx(self, extent, epsg, **kwargs):
+    # epsg   = kwargs.pop("epsg", self.epsg)
+    # extent = kwargs.pop("extent", self.get_extent(epsg=epsg))
+    if epsg != self.epsg:
+        self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+        target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+        x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+    else:
+        x = self.x
+        y = self.y
+    if isinstance(extent, list) or isinstance(extent, tuple):
+        bound_box = np.logical_and(
+                        np.logical_and(x>=extent[0], x<=extent[1]),
+                        np.logical_and(y>=extent[2], y<=extent[3]))
+        idx, = np.where(bound_box)
+    elif isinstance(extent, Path):
+        idx, = np.where(extent.contains_points(np.vstack((x,y)).T))
     return idx
 
 def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewidth=0.5, alpha=0.4):
@@ -43,17 +57,14 @@ def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewi
     axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
     return axes
 
-def get_xyz(self, extent=None, radius=None):
-
-    if isinstance(extent, Path):
-        idx, = np.where(extent.contains_points(self.get_xy(), radius=radius))
-    else:
-        idx = self.get_extent_idx(extent)
+def get_xyz(self, **kwargs):
+    idx = self.get_extent_idx(self.get_extent(), self.epsg)
     return np.vstack((self.x[idx], self.y[idx], self.values[idx])).T
 
 
-def get_xy(self, min_x=None, min_y=None, max_x=None, max_y=None, epsg=None):
-    return np.vstack((self.x[idx], self.y[idx], self.values[idx])).T
+def get_xy(self, **kwargs):
+    idx = self.get_extent_idx(self.get_extent(), self.epsg)
+    return np.vstack((self.x[idx], self.y[idx])).T
 
 
 def get_elements_surrounding_node(self, node_index):

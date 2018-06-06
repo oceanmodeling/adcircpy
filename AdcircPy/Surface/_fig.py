@@ -23,15 +23,21 @@ class FixPointNormalize(Normalize):
         x, y = [self.vmin, self.sealevel, self.vmax], [0, self.col_val, 1]
         return np.ma.masked_where(value.mask, np.interp(value, x, y))
 
-def init_fig(self, axes, extent, title):
+def init_fig(self, axes=None, extent=None, title=None, epsg=None):
+
     if axes is None:                
         fig = plt.figure()
         axes  = fig.add_subplot(111)
+
     if title is not None:
         axes.set_title(title)
+
     if extent is None:
         extent = self.get_extent()
-    idx = self.get_extent_idx(extent=extent)
+
+    if epsg is None:
+        epsg = self.epsg
+    idx = self.get_extent_idx(extent, epsg)
     axes.axis('scaled')
     axes.axis(extent) 
     return axes, idx

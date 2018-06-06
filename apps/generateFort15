@@ -8,6 +8,7 @@ from FCEMPy.ADCIRC import Fort15
 cwd = os.getcwd()
 
 def parse_args():
+    global args
     parser = argparse.ArgumentParser(
         description="Program to generate ADCIRC fort.15 input files. Arguments passed to the command line override\
                     arguments found in configuration file.",
@@ -36,7 +37,7 @@ def parse_args():
     # parser.add_argument("end_date", help="Model final timestep date after hotstart. Format is YYYY-MM-DD. Example: {}"\
     #                                 .format(datetime.today().strftime('%Y-%m-%d')))
     
-    return parser.parse_args()
+    args = parser.parse_args()
 
 
 def parse_config_file(path):
@@ -60,8 +61,7 @@ def update_config_with_args(config, args):
     return config
 
 def main():
-    
-    args   = parse_args()
+    parse_args()
     config = parse_config_file(args.config_file)
     config = update_config_with_args(config, args)
     fort15 = Fort15(**config)

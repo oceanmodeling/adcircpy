@@ -27,3 +27,4 @@ class SurfaceExtrema(Surface):
 class Maxele(SurfaceExtrema):
     def __init__(self, **kwargs):
         SurfaceExtrema.__init__(self, **kwargs)
+        self.datum = kwargs.pop("datum", "MSL")

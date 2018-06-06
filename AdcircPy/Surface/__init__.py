@@ -7,6 +7,7 @@ class Trimesh(object):
         self.nodeID    = kwargs.pop("nodeID", None)
         self.elements  = kwargs.pop("elements",  None)
         self.elementID = kwargs.pop("elementID", None)
+        self.epsg      = kwargs.pop("epsg", 4326)
 
     def plot_trimesh(self, **kwargs):
         return _Trimesh.plot_trimesh(self, **kwargs)    
@@ -29,16 +30,16 @@ class Trimesh(object):
     def get_elements_surrounding_node(self, node_index):
         return _Trimesh.get_elements_surrounding_node(self, node_index)
       
-    def get_extent_idx(self, extent):
+    def get_extent_idx(self, extent, epsg, **kwargs):
         """
         Finds the indices of the mesh nodes inside a bounding box.
         kwargs:
             extent : list of the form [min_x, max_x, min_y, max_y]
         """
-        return _Trimesh.get_extent_idx(self, extent)
+        return _Trimesh.get_extent_idx(self, extent, epsg, **kwargs)
 
-    def get_extent(self):
-        return _Trimesh.get_extent(self)
+    def get_extent(self, **kwargs):
+        return _Trimesh.get_extent(self, **kwargs)
 
 
 class Boundaries(object):
@@ -70,6 +71,8 @@ class Surface(Trimesh, Boundaries):
         Boundaries.__init__(self, **kwargs)
         self.values = kwargs.pop("values", None)
 
+    def get_mean_value(self, **kwargs):
+        return _Surface.get_mean_value(self, **kwargs)
 
     def get_values_under_Path(self, Path, **kwargs):
         """
@@ -81,15 +84,17 @@ class Surface(Trimesh, Boundaries):
     def make_plot(self, **kwargs):
         return _Surface.make_plot(self, **kwargs)
 
-
+    def get_dict(self):
+        return _Surface.get_dict(self)
+    
     def get_values_at_lonlat(self, lon, lat, **kwargs):
         """
         Returns numpy array of values at coordinates or list of coordinates give by lon lat
         """
-        return _Mesh.get_values_at_lonlat(self, lon, lat, **kwargs)
+        return _Surface.get_values_at_lonlat(self, lon, lat, **kwargs)
         
     def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
-        return _raster.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
+        return _Surface.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
 
     def __sub__(self, other):
         """

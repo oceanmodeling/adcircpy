@@ -2,7 +2,7 @@ import numpy as np
 from AdcircPy.Surface import _fig
 
 def make_animation(self, **kwargs)
-    axes, idx = _fig.init_fig(self, axes, extent, title)
+    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     start_slice = kwargs.pop("start_slice", 0)
     stop_slice  = kwargs.pop("stop_slice", len(self.timestep))
     vals = list()

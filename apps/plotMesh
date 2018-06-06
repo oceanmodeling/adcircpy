@@ -14,7 +14,7 @@ def parse_args():
     
 def main():
     parse_args()
-    mesh = Mesh.init_from_files(args.meshPath)
+    mesh = Mesh.init_from_fort14(args.meshPath)
     mesh.make_plot()
     plt.show()
 
