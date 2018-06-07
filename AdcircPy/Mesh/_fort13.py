@@ -1,7 +1,7 @@
 import numpy as np
 from AdcircPy import Mesh
 
-def init_fort13(self, path):
+def parse_fort13(path):
     fort13={}
     with open(path, 'r') as f:
         f.readline().strip()
@@ -32,5 +32,5 @@ def init_fort13(self, path):
                 j+=1
             values[np.where(np.isnan(values[:,0])),:] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
-    self.NodalAttributes = Mesh.NodalAttributes(**fort13)
+    return fort13
     

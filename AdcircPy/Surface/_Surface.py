@@ -92,8 +92,8 @@ def get_difference(self, other, step=0):
 
     if np.ma.is_masked(other.values):
         other_values = np.ma.filled(other_values, 0.)
-
-    values = np.ma.masked_equal(self_values - other_values, 0.)
+    values = self_values - other_values
+    # values = np.ma.masked_equal(values, 0.)
     kwargs = self.get_dict()
     kwargs['values'] = values
     return Surface.SurfaceDifference(**kwargs)

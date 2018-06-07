@@ -9,6 +9,9 @@ class Trimesh(object):
         self.elementID = kwargs.pop("elementID", None)
         self.epsg      = kwargs.pop("epsg", 4326)
 
+    def get_finite_volume_Path(self, point_idx):
+        return _Trimesh.get_finite_volume_Path(self, point_idx)
+
     def plot_trimesh(self, **kwargs):
         return _Trimesh.plot_trimesh(self, **kwargs)    
 

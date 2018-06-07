@@ -117,8 +117,6 @@ class DEM(object):
         return demplots.plot_bathy(self, axes, vmin, vmax, title, colors)
     
     def get_extent(self, epsg=None):
-        print("am i?")
-        BREAKME
         return demutils.get_extent(self, epsg)
         
     def get_dx(self, meters=False):

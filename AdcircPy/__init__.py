@@ -2,7 +2,7 @@ name = "AdcircPy"
 from AdcircPy.Mesh   import Mesh
 from AdcircPy.Outputs import Outputs
 
-def read_mesh(fort14, datum=None, epsg=4326):
+def read_mesh(fort14, datum=None, epsg=4326, fort13=None):
     """
     Reads ADCIRC input files.
     
@@ -23,7 +23,7 @@ def read_mesh(fort14, datum=None, epsg=4326):
     -------
         AdcirPy.Mesh instance.
     """
-    return Mesh.init_from_fort14(fort14, datum, epsg)
+    return Mesh.init_from_files(fort14, datum, epsg, fort13)
     
 
 def read_output(path, **kwargs):

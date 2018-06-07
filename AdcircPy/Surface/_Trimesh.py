@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib.path import Path
 from scipy.interpolate import griddata
 import pyproj
+from haversine import haversine
 
 def get_extent(self, **kwargs):
     epsg = kwargs.pop("epsg", self.epsg)
@@ -16,9 +17,9 @@ def get_extent(self, **kwargs):
 
     return [np.min(x), np.max(x), np.min(y), np.max(y)]
 
-def get_values_at_lonlat(self, lon, lat, list_idx=0, method='linear'):
+def get_values_at_lonlat(self, lon, lat, step=0, method='linear'):
     if isinstance(self.values, list):
-        values = self.values[list_idx]
+        values = self.values[step]
     else:
         values = self.values
     if np.ma.is_masked(values):
@@ -89,3 +90,56 @@ def get_element_paths(self, extent=None):
         codes[-1] = Path.CLOSEPOLY
         paths.append(Path(vertex, codes))
     return paths
+
+def get_finite_volume_Path(self, idx, radius=None):
+    midpoints = list()
+    centroids = list()
+    adjacent_elements = self.get_elements_surrounding_node(idx)
+    # Iterate over surrounding elements
+    for j, element in enumerate(adjacent_elements):
+        _element = list(element)
+        _element.append(_element[0])
+        _midpoints = list()
+        # Calculate element midpoints and centroid
+        for i, point_idx in enumerate(element):         
+            dx =  self.x[_element[i+1]] - self.x[_element[i]]
+            dy =  self.y[_element[i+1]] - self.y[_element[i]]
+            if np.isin(idx, [_element[i], _element[i+1]]):
+                midpoints.append((self.x[_element[i]] + 0.5*dx, self.y[_element[i]] + 0.5*dy))
+            _midpoints.append((self.x[_element[i]] + 0.5*dx, self.y[_element[i]] + 0.5*dy))
+        _midpoints = np.array(_midpoints)
+        centroids.append((np.mean(_midpoints[:,0]),np.mean(_midpoints[:,1])))
+        _element = list(element)
+        while _element[0] != idx:
+            _element = list(np.roll(_element,1))
+        adjacent_elements[j] = _element
+    adjacent_elements = np.array(adjacent_elements)
+    lateral_indexes, counts = np.unique(adjacent_elements, return_counts=True)
+    vertices = list()
+    for centroid in centroids:
+        vertices.append(centroid)
+    for midpoint in midpoints:
+        vertices.append(midpoint)    
+    ordered_vertices = list()
+    if 1 in counts: # means that this node is at a boundary and need to be included in the polygon.
+        ordered_vertices.append((self.x[idx], self.y[idx]))
+        index = list(np.delete(lateral_indexes, np.where(counts>1))).pop()
+        x = self.x[idx]
+        y = self.y[idx]
+        dx = self.x[index] - self.x[idx]
+        dy = self.y[index] - self.y[idx]
+        ordered_vertices.append(vertices.pop(vertices.index((x+0.5*dx,y+0.5*dy))))
+    else: # means that this is node is fully surrounded by elements so the obs point is not included in polygon.
+        ordered_vertices.append(vertices.pop())
+    lon = ordered_vertices[-1][0]
+    lat = ordered_vertices[-1][1]
+    while vertices:
+        diff = list()
+        for vertex in vertices:
+            _diff = haversine((vertex[1], vertex[0]), (lat, lon))
+            diff.append(_diff)
+        ordered_vertices.append(vertices.pop(diff.index(min(diff))))
+        lon = ordered_vertices[-1][0]
+        lat = ordered_vertices[-1][1]
+    ordered_vertices.append(ordered_vertices[0])
+    return Path(ordered_vertices, closed=True)

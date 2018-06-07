@@ -171,13 +171,10 @@ def export_to_PostGIS(self, dbname, **kwargs):
         if table_existance is not None and overwrite==True:
             cur.execute('DROP TABLE {}.{};'.format(schema, table))
             con.commit()
-        cur.execute('CREATE TABLE IF NOT EXISTS {}.{} (id SERIAL PRIMARY KEY, geom geometry(Multipoint, {}));'.format(schema, table, self.epsg))
-        geom = "ST_GeomFromText('Multipoint("
+        cur.execute('CREATE TABLE IF NOT EXISTS {}.{} (id SERIAL PRIMARY KEY, geom geometry(Point, {}), value REAL);'.format(schema, table, self.epsg))
         for key in self.keys():
-            geom += '({:f} {:f}), '.format(self[key]['longitude'], self[key]['latitude'])
-        geom = geom[:-2]
-        geom += ")', {})".format(self.epsg)
-        cur.execute("INSERT INTO {}.{} (geom) VALUES ({});".format(schema, table, geom))
+            geom = "ST_GeomFromText('Point({:f} {:f})', {})".format(self[key]['lon'], self[key]['lat'], self.epsg)
+            cur.execute("INSERT INTO {}.{} (geom, value) VALUES ({}, {});".format(schema, table, geom, self[key]['value']))
         con.commit()
         cur.execute("CREATE INDEX sidx_{}_geom ON {}.{} USING GIST (geom);".format(table, schema, table))
         con.commit()
