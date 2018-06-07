@@ -1,5 +1,6 @@
 from AdcircPy.Surface import Surface
 from AdcircPy.Datum import _DatumGrid
+from AdcircPy.Datum import _vdatum
 
 
 class DatumGrid(object):
@@ -24,6 +25,12 @@ class VDatum(object):
     You must specify the directory your copy of VDatum using the argument vdatumdir.
     VDatum requires to have Java 8 installed. Other version of Java will not work.
     """
+    # @staticmethod
+    # def convert(Mesh, **kwargs):
+    #     return _vdatum.convert(Mesh, **kwargs)
+
     @staticmethod
-    def convert(Mesh, **kwargs):
-        return _vdatum.convert(Mesh, **kwargs)
+    def convert(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs):
+        return _vdatum.convert(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs)
+
+    
