@@ -158,7 +158,7 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
@@ -187,7 +187,7 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None):
     if include_invalid==False:
         xyz = xyz[np.where(~np.isnan(xyz[:,2]))]
     if path is not None:
-        xyz = xyz[np.where(path.contains_points(xyz[:,0:2]))]
+        xyz = xyz[np.where(path.contains_points(xyz[:,0:2], radius=radius))]
     return xyz
 
 def transform_to_epsg(self, epsg):
@@ -232,7 +232,7 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
-def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
+def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None):
 
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
@@ -244,7 +244,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
         tile = demtools.read_tile(file)
         tile_path = tile.get_bbox_as_Path(epsg=epsg)
         if Path_instance.intersects_path(tile_path):
-            xyz.append(tile.get_xyz(epsg=epsg))#, path=Path_instance))
+            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
