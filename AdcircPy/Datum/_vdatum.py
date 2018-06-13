@@ -40,5 +40,5 @@ def convert(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
     p.terminate()
 
     xyz = np.loadtxt('vdatum_tmp/output/vdatum.txt')
-    # shutil.rmtree('vdatum_tmp')
+    shutil.rmtree('vdatum_tmp')
     return xyz

@@ -6,6 +6,7 @@ from matplotlib.path import Path
 import psycopg2
 from osgeo import ogr, osr
 from AdcircPy import Validation
+from AdcircPy.Surface import _fig
 
 def from_csv(path):
     csvfile = open(path, 'r')
@@ -215,18 +216,32 @@ def clip_from_shapefile(self, path, return_count=False):
         return _hwm
 
 
-def plot_HWM(self, HWM, extent=None, axes=None, vmin=None, vmax=None, title=None):
-    if extent is None:
-        extent = self.get_extent()
-    idx, = np.where(np.logical_and(
-                    np.logical_and(self.x>=extent[0], self.x<=extent[1]),
-                    np.logical_and(self.y>=extent[2], self.y<=extent[3])))
-    if vmin is None:
-        vmin = np.min(self.values[idx])
-    if vmax is None:
-        vmax = np.max(self.values[idx])
-    cmap = plt.get_cmap('jet')
-    axes = self.make_plot(extent=extent, axes=axes, vmin=vmin, vmax=vmax, title=title)
-    xyz = HWM.get_xyz()
-    axes.scatter(xyz[:,0], xyz[:,1], c=xyz[:,2], vmin=vmin, vmax=vmax, cmap='jet')
+def make_plot(self, axes=None, vmin=None, vmax=None, extent=None, epsg=None, **kwargs):
+    if axes is None:                
+        fig = plt.figure()
+        axes  = fig.add_subplot(111)
+    for station in self.keys():
+        axes.scatter(self[station]['lon'], self[station]['lat'], c=self[station]['value'], vmin=vmin, vmax=vmax, **kwargs)
     return axes
+
+def get_from_extent(self, extent, epsg):
+    hwm = copy.deepcopy(self)
+    path = Path([(extent[0], extent[2]),
+                 (extent[1], extent[2]),
+                 (extent[1], extent[3]),
+                 (extent[0], extent[3]),
+                 (extent[0], extent[2])], closed=True)
+
+    if epsg != 4326:
+        target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+    
+    for station in list(hwm.keys()):
+        x = hwm[station]['lon']
+        y = hwm[station]['lat']
+        if epsg != 4326:
+            x, y = target_proj(x, y, inverse=True)
+        if path.contains_point((x, y))==False:
+            hwm.pop(station)
+    return hwm
+
+
