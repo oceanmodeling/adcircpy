@@ -44,8 +44,8 @@ def read_tile (path):
         # Hack to force identification of WGS84 on certain files.
         if epsg is None and geo.GetGeoTransform()[2]<10**-4:
             epsg=4326
-        elif epsg in None:
-            raise Exception("Could not auto identify tile EPSG.")
+        elif epsg is None:
+            raise Exception("Could not auto identify tile EPSG. wkt is {}".format(inproj))
     
     geoTransform  = geo.GetGeoTransform()
     x    = np.linspace(geoTransform[0], 
