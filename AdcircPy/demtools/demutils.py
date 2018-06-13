@@ -44,6 +44,8 @@ def read_tile (path):
         # Hack to force identification of WGS84 on certain files.
         if epsg is None and geo.GetGeoTransform()[2]<10**-4:
             epsg=4326
+        elif epsg in None:
+            raise Exception("Could not auto identify tile EPSG.")
     
     geoTransform  = geo.GetGeoTransform()
     x    = np.linspace(geoTransform[0], 
@@ -237,46 +239,15 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format):
         for file in files:
             if file.endswith(file_format):# or file.endswith('_dem.img.xml'):
                 tile_list.append(root+"/"+file)
-
     xyz = list()
     for file in tile_list:
-        # reading headers only for faster performance.
-        geo  = gdal.Open(file)
-        wkt = geo.GetProjection()
-        
-        inproj = osr.SpatialReference()
-        inproj.ImportFromWkt(wkt)
-        tile_epsg = inproj.GetAuthorityCode('PROJCS')
-
-        if tile_epsg is None:
-            tile_epsg = 4326
-        geoTransform  = geo.GetGeoTransform()
-        tile_min_x = geoTransform[0]
-        tile_max_x = geoTransform[0] + geo.RasterXSize * geoTransform[1]
-        tile_min_y = geoTransform[3] + geo.RasterYSize * geoTransform[5]
-        tile_max_y = geoTransform[3]
-
-        if tile_epsg != epsg:
-            target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
-            if tile_epsg != 4326:
-                tile_proj = pyproj.Proj(init='epsg:{}'.format(tile_epsg))
-                tile_min_x, tile_min_y = pyproj.transform(tile_proj, target_proj, tile_min_x, tile_min_y)
-                tile_max_x, tile_max_y = pyproj.transform(tile_proj, target_proj, tile_max_x, tile_max_y)
-            elif tile_epsg==4326:
-                tile_min_x, tile_min_y = target_proj(tile_min_x, tile_min_y)
-                tile_max_x, tile_max_y = target_proj(tile_max_x, tile_max_y)
-
-        tile_path = matplotlib.path.Path([(tile_min_x, tile_min_y),
-                                            (tile_max_x, tile_min_y),
-                                            (tile_max_x, tile_max_y),
-                                            (tile_min_x, tile_max_y),
-                                            (tile_min_x, tile_min_y)], closed=True)
-        
+        tile = demtools.read_tile(file)
+        tile_path = tile.get_bbox_as_Path(epsg=epsg)
         if Path_instance.intersects_path(tile_path):
-            tile = demtools.read_tile(file)
-            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance))
+            xyz.append(tile.get_xyz(epsg=epsg))#, path=Path_instance))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
+
 
 def get_bbox_as_Path(self, **kwargs):
     target_epsg = kwargs.pop("epsg", self.epsg)
