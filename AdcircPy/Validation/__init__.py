@@ -42,6 +42,9 @@ class HighWaterMarks(dict):
         
     def get_counties(self):
         return _HighWaterMarks.get_counties(self)
+
+    def get_from_extent(self, extent, epsg):
+        return _HighWaterMarks.get_from_extent(self, extent, epsg)
         
     def still_water_only(self, **kwargs):
         return _HighWaterMarks.still_water_only(self, **kwargs)
@@ -52,5 +55,5 @@ class HighWaterMarks(dict):
     def export_to_PostGIS(self, dbname, **kwargs):
         _HighWaterMarks.export_to_PostGIS(self, dbname, **kwargs)
 
-    def make_plot(self, **kwargs):
-        return _HighWaterMarks.make_plot(self, **kwargs)
+    def make_plot(self, axes=None, vmin=None, vmax=None, extent=None, epsg=None,**kwargs):
+        return _HighWaterMarks.make_plot(self, axes, vmin, vmax, extent, epsg, **kwargs)
