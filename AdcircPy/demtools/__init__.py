@@ -77,11 +77,11 @@ def build_DEM_from_files(rootdir, extent, dx, dy, file_format):
     """
     return demutils.build_DEM_from_files(rootdir, extent, dx, dy, file_format)
 
-def get_xyz_from_Path_instance(rootdir, Path, epsg, file_format, radius=None):
+def get_xyz_from_Path_instance(rootdir, Path, epsg, file_format, radius=None, transform=False):
     """
     Will return the data on the same EPSG code as the EPSG code of the Path instance specified.
     """
-    return demutils.get_xyz_from_Path_instance(rootdir, Path, epsg, file_format, radius)
+    return demutils.get_xyz_from_Path_instance(rootdir, Path, epsg, file_format, radius, transform)
 
 
 class DEM(object):

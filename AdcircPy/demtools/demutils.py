@@ -158,7 +158,7 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, transform=False):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
@@ -167,19 +167,20 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
     x, y = np.meshgrid(self.x, self.y)
     x  = x.reshape(x.size)
     y  = np.flipud(y.reshape(y.size))
-   
-    if epsg is None:
-        epsg = self.epsg
 
-    if self.epsg != epsg:
-        target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
-        if self.epsg!=4326:
-            tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
-            x, y = pyproj.transform(tile_proj, target_proj, x, y)
-        elif self.epsg==4326:
-            x, y = target_proj(x, y)
-        x = np.asarray(x).flatten()
-        y = np.asarray(y).flatten()
+    if transform == True:
+        if epsg is None:
+            epsg = self.epsg
+
+        if self.epsg != epsg:
+            target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
+            if self.epsg!=4326:
+                tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
+                x, y = pyproj.transform(tile_proj, target_proj, x, y)
+            elif self.epsg==4326:
+                x, y = target_proj(x, y)
+            x = np.asarray(x).flatten()
+            y = np.asarray(y).flatten()
 
     z = self.values.reshape(self.values.size)
     z = np.ma.filled(z, fill_value=np.nan)
@@ -232,7 +233,7 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
-def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None):
+def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None, transform=False):
 
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
@@ -244,7 +245,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius
         tile = demtools.read_tile(file)
         tile_path = tile.get_bbox_as_Path(epsg=epsg)
         if Path_instance.intersects_path(tile_path):
-            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius))
+            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius, transform=transform))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
