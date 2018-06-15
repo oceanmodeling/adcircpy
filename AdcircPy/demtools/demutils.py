@@ -14,7 +14,7 @@ import getpass
 from AdcircPy import demtools
 gdal.UseExceptions()
 
-def read_tile (path):
+def read_tile (path, force_epsg=None):
     """
     Reads any DEM readable by GDAL and sets the attributes described in the 
     following list:
@@ -37,15 +37,18 @@ def read_tile (path):
     wkt = geo.GetProjection()
     inproj = osr.SpatialReference(wkt=wkt)
     vertical_datum = inproj.GetAttrValue('datum')
-    if inproj.IsGeographic() == 1:
-        epsg = 4326
+    if force_epsg!=None:
+        self.epsg=epsg
     else:
-        epsg = inproj.GetAttrValue('PROJCS|AUTHORITY', 1)
-        # Hack to force identification of WGS84 on certain files.
-        if epsg is None and geo.GetGeoTransform()[2]<10**-4:
-            epsg=4326
-        elif epsg is None:
-            raise Exception("Could not auto identify tile EPSG. wkt is {}".format(inproj))
+        if inproj.IsGeographic() == 1:
+            epsg = 4326
+        else:
+            epsg = inproj.GetAttrValue('PROJCS|AUTHORITY', 1)
+            # Hack to force identification of WGS84 on certain files.
+            if epsg is None and geo.GetGeoTransform()[2]<10**-4:
+                epsg=4326
+            elif epsg is None:
+                raise Exception("Could not auto identify tile EPSG. You can use the force_epg kwarg.\nwkt is {}".format(inproj))
     
     geoTransform  = geo.GetGeoTransform()
     x    = np.linspace(geoTransform[0], 
@@ -158,7 +161,7 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, transform=False):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
@@ -168,19 +171,18 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tran
     x  = x.reshape(x.size)
     y  = np.flipud(y.reshape(y.size))
 
-    if transform == True:
-        if epsg is None:
-            epsg = self.epsg
+    if epsg is None:
+        epsg = self.epsg
 
-        if self.epsg != epsg:
-            target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
-            if self.epsg!=4326:
-                tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
-                x, y = pyproj.transform(tile_proj, target_proj, x, y)
-            elif self.epsg==4326:
-                x, y = target_proj(x, y)
-            x = np.asarray(x).flatten()
-            y = np.asarray(y).flatten()
+    if self.epsg != epsg:
+        target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
+        if self.epsg!=4326:
+            tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
+            x, y = pyproj.transform(tile_proj, target_proj, x, y)
+        elif self.epsg==4326:
+            x, y = target_proj(x, y)
+        x = np.asarray(x).flatten()
+        y = np.asarray(y).flatten()
 
     z = self.values.reshape(self.values.size)
     z = np.ma.filled(z, fill_value=np.nan)
@@ -233,7 +235,7 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
-def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None, transform=False):
+def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None):
 
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
@@ -245,7 +247,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius
         tile = demtools.read_tile(file)
         tile_path = tile.get_bbox_as_Path(epsg=epsg)
         if Path_instance.intersects_path(tile_path):
-            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius, transform=transform))
+            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
