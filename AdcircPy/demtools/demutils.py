@@ -182,7 +182,7 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tran
             tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
             _x, _y = pyproj.transform(tile_proj, target_proj, x, y)
         elif self.epsg==4326:
-            _x, _y = target_proj(_x, _y)
+            _x, _y = target_proj(x, y)
         _x = np.asarray(_x).flatten()
         _y = np.asarray(_y).flatten()
 
