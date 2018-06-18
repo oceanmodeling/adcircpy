@@ -161,7 +161,7 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tansform=False):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, transform=False):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
