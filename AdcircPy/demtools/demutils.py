@@ -161,15 +161,17 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tansform=False):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
     'xyz' dataset or scattered point dataset.
     """
     x, y = np.meshgrid(self.x, self.y)
-    x  = x.reshape(x.size)
+    x  = _x.reshape(x.size)
     y  = np.flipud(y.reshape(y.size))
+    z = self.values.reshape(self.values.size)
+    z = np.ma.filled(z, fill_value=np.nan)
 
     if epsg is None:
         epsg = self.epsg
@@ -178,20 +180,27 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None):
         target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
         if self.epsg!=4326:
             tile_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
-            x, y = pyproj.transform(tile_proj, target_proj, x, y)
+            _x, _y = pyproj.transform(tile_proj, target_proj, x, y)
         elif self.epsg==4326:
-            x, y = target_proj(x, y)
-        x = np.asarray(x).flatten()
-        y = np.asarray(y).flatten()
+            _x, _y = target_proj(_x, _y)
+        _x = np.asarray(_x).flatten()
+        _y = np.asarray(_y).flatten()
 
-    z = self.values.reshape(self.values.size)
-    z = np.ma.filled(z, fill_value=np.nan)
-    xyz = np.vstack((x, y, z)).T
-    if include_invalid==False:
-        xyz = xyz[np.where(~np.isnan(xyz[:,2]))]
-    if path is not None:
-        xyz = xyz[np.where(path.contains_points(xyz[:,0:2], radius=radius))]
-    return xyz
+    _xyz = np.vstack((_x, _y, z)).T
+      
+    if path is not None and include_invalid==False:
+        idx, = np.where(np.logical_and(path.contains_points(_xyz[:,0:2], radius=radius), ~np.isnan(_xyz[:,2])))
+    elif path is not None and include_invalid==True:
+        idx, = np.where(path.contains_points(_xyz[:,0:2], radius=radius))
+    elif path is None and include_invalid==False:
+        idx, = np.where(~np.isnan(_xyz[:,2]))
+    else:
+        idx = np.arange(_xyz.shape[0])
+    
+    if transform==True:
+        return _xyz[idx]  
+    else:
+        return np.vstack((x[idx], y[idx], z[idx])).T
 
 def transform_to_epsg(self, epsg):
     self_proj = pyproj.Proj(init='epsg:{}'.format(self.epsg))
@@ -235,7 +244,7 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
-def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None):
+def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius=None, transform=False):
 
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
@@ -247,7 +256,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, radius
         tile = demtools.read_tile(file)
         tile_path = tile.get_bbox_as_Path(epsg=epsg)
         if Path_instance.intersects_path(tile_path):
-            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius))
+            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, radius=radius, transform=transform))
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
