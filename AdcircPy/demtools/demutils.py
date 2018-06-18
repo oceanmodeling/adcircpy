@@ -168,7 +168,7 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tran
     'xyz' dataset or scattered point dataset.
     """
     x, y = np.meshgrid(self.x, self.y)
-    x  = _x.reshape(x.size)
+    x  = x.reshape(x.size)
     y  = np.flipud(y.reshape(y.size))
     z = self.values.reshape(self.values.size)
     z = np.ma.filled(z, fill_value=np.nan)
