@@ -161,7 +161,7 @@ def resize_tile(self, dsfact):
     self.y = new_y
     self.values = new_z
 
-def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, transform=False):
+def get_xyz(self, epsg=None, include_invalid=False, path=None, transform=False):
     """
     Reshapes a DEM tile to a ndarray representing xyz coordinates.
     Output is a numpy array of shape (mx3) representing a "typical"
@@ -189,9 +189,9 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, radius=None, tran
     _xyz = np.vstack((_x, _y, z)).T
       
     if path is not None and include_invalid==False:
-        idx, = np.where(np.logical_and(path.contains_points(_xyz[:,0:2], radius=radius), ~np.isnan(_xyz[:,2])))
+        idx, = np.where(np.logical_and(path.contains_points(_xyz[:,0:2]), ~np.isnan(_xyz[:,2])))
     elif path is not None and include_invalid==True:
-        idx, = np.where(path.contains_points(_xyz[:,0:2], radius=radius))
+        idx, = np.where(path.contains_points(_xyz[:,0:2]))
     elif path is None and include_invalid==False:
         idx, = np.where(~np.isnan(_xyz[:,2]))
     else:
