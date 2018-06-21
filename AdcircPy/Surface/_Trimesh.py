@@ -4,6 +4,14 @@ from scipy.interpolate import griddata
 import pyproj
 from haversine import haversine
 
+def transform_to_epsg(self, epsg):
+    self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+    target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+    x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+    self.x = np.asarray(x).flatten()
+    self.y = np.asarray(y).flatten()
+    self.epsg = epsg
+
 def get_extent(self, **kwargs):
     epsg = kwargs.pop("epsg", self.epsg)
 
@@ -16,23 +24,6 @@ def get_extent(self, **kwargs):
         y = self.y
 
     return [np.min(x), np.max(x), np.min(y), np.max(y)]
-
-def get_values_at_lonlat(self, lon, lat, step=0, method='linear'):
-    if isinstance(self.values, list):
-        values = self.values[step]
-    else:
-        values = self.values
-    if np.ma.is_masked(values):
-        values = np.ma.filled(values, 0.0)
-    elif np.isin(values, -99999.0).any():
-        idx = np.where(np.isin(values, -99999.0))
-        values[idx] = 0.0    
-    if method != 'force':
-        return griddata((self.x,self.y),values,(lon,lat), method=method)
-    else:
-        idx = np.where(~np.isin(values, 0.0))
-        return griddata((self.x[idx], self.y[idx]), values[idx], (lon, lat), method='nearest')
-
 
 def get_extent_idx(self, extent, epsg, **kwargs):
     # epsg   = kwargs.pop("epsg", self.epsg)

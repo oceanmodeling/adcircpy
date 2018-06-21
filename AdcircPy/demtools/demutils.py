@@ -196,11 +196,13 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, transform=False):
         idx, = np.where(path.contains_points(_xyz[:,0:2]))
     elif path is None and include_invalid==False:
         idx, = np.where(~np.isnan(_xyz[:,2]))
-    else:
+    elif path is None and include_invalid==True:
         idx = np.arange(_xyz.shape[0])
+    else:
+        raise Exception("This line should never be reached. Something is wrong with the code.")
     
     if transform==True:
-        return _xyz[idx]
+        return _xyz[idx,:]
     else:
         return np.vstack((x[idx], y[idx], z[idx])).T
 

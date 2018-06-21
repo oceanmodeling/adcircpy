@@ -44,6 +44,9 @@ class Trimesh(object):
     def get_extent(self, **kwargs):
         return _Trimesh.get_extent(self, **kwargs)
 
+    def transform_to_epsg(self, epsg):
+        _Trimesh.transform_to_epsg(self, epsg)
+
 
 class Boundaries(object):
     def __init__(self, **kwargs):
@@ -76,6 +79,9 @@ class Surface(Trimesh, Boundaries):
 
     def get_mean_value(self, **kwargs):
         return _Surface.get_mean_value(self, **kwargs)
+
+    def get_contours(self, levels, **kwargs):
+        return _Surface.get_contours(self, levels, **kwargs)
 
     def get_values_under_Path(self, Path, **kwargs):
         """

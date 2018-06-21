@@ -1,8 +1,10 @@
+from collections import defaultdict
 import numpy as np
 from matplotlib.tri import Triangulation
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from scipy.interpolate import griddata
+import pyproj
 from AdcircPy import Surface
 from AdcircPy import demtools
 from AdcircPy.Surface import _fig
@@ -250,3 +252,49 @@ def get_raster_from_extent(self, extent , dx, dy, epsg, padding=None):
         depth = adcpy.adcirc.raster._apply_padding(x, y, depth, padding)
     DEM = demtools.DEM()
     return DEM(x, y, depth, geoTransform, 4326, self.datum)
+
+
+def get_contours(self, levels, **kwargs):
+    epsg = kwargs.pop("epsg", self.epsg)
+
+    if epsg != self.epsg:
+        self_proj   = pyproj.Proj(init='epsg:{}'.format(self.epsg))
+        target_proj = pyproj.Proj(init='epsg:{}'.format(epsg))
+        x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+
+    else:
+        x = self.x
+        y = self.y
+
+    if np.ma.is_masked(self.values):
+        mask = np.where(self.values.mask)
+        trimask = np.any(np.in1d(self.elements, mask).reshape(-1, 3), axis=1)
+        Tri = Triangulation(x, y, self.elements, trimask)
+    else:
+        Tri = Triangulation(x, y, self.elements)
+    fig = plt.figure()
+    axes = fig.add_subplot(111)
+    ax = axes.tricontour(Tri, self.values, levels=levels)
+    plt.close(fig)
+
+    contours = defaultdict(list)
+    for i, LineCollection in enumerate(ax.collections):
+        for Path in LineCollection.get_paths():
+            contours[ax.levels[i]].append(Path)
+    return dict(contours)
+
+def get_values_at_lonlat(self, lon, lat, step=0, method='linear'):
+    if isinstance(self.values, list):
+        values = self.values[step]
+    else:
+        values = self.values
+    if np.ma.is_masked(values):
+        values = np.ma.filled(values, 0.0)
+    elif np.isin(values, -99999.0).any():
+        idx = np.where(np.isin(values, -99999.0))
+        values[idx] = 0.0    
+    if method != 'force':
+        return griddata((self.x,self.y),values,(lon,lat), method=method)
+    else:
+        idx = np.where(~np.isin(values, 0.0))
+        return griddata((self.x[idx], self.y[idx]), values[idx], (lon, lat), method='nearest')
