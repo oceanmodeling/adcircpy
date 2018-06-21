@@ -62,22 +62,35 @@ def remove(self, type_list, return_count=False):
     cnt=0
     for station in self.keys():
         if 'excellent' in type_list and self[station]['quality_id']==1:
-            del _HWM[station]
-            cnt+=1
+            try:
+                del _HWM[station]
+                cnt+=1
+            except:
+                pass
         if 'good' in type_list and self[station]['quality_id']==2:
-            del _HWM[station]
-            cnt+=1
+            try:
+                del _HWM[station]
+                cnt+=1
+            except:
+                pass
         if 'fair' in type_list and self[station]['quality_id']==3:
-            del _HWM[station]
-            cnt+=1
+            try:
+                del _HWM[station]
+                cnt+=1
+            except:
+                pass
         if 'poor' in type_list and self[station]['quality_id']==4:
-            del _HWM[station]
-            cnt+=1
-        
+            try:   
+                del _HWM[station]
+                cnt+=1
+            except:
+                pass
         if 'riverine' in type_list and self[station]['environment_type'].lower()=='riverine':
-            del _HWM[station]
-            cnt+=1
-    
+            try:
+                del _HWM[station]
+                cnt+=1
+            except:
+                pass
     if return_count:
         return _HWM, cnt
     else:

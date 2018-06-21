@@ -185,9 +185,11 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, transform=False):
             _x, _y = target_proj(x, y)
         _x = np.asarray(_x).flatten()
         _y = np.asarray(_y).flatten()
+        _xyz = np.vstack((_x, _y, z)).T
+    
+    elif self.epsg==epsg:
+        _xyz = np.vstack((x,y,z)).T
 
-    _xyz = np.vstack((_x, _y, z)).T
-      
     if path is not None and include_invalid==False:
         idx, = np.where(np.logical_and(path.contains_points(_xyz[:,0:2]), ~np.isnan(_xyz[:,2])))
     elif path is not None and include_invalid==True:
@@ -198,7 +200,7 @@ def get_xyz(self, epsg=None, include_invalid=False, path=None, transform=False):
         idx = np.arange(_xyz.shape[0])
     
     if transform==True:
-        return _xyz[idx]  
+        return _xyz[idx]
     else:
         return np.vstack((x[idx], y[idx], z[idx])).T
 

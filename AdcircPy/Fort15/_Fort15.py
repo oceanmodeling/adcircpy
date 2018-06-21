@@ -1,28 +1,6 @@
 from AdcircPy.Mesh   import Mesh
-from AdcircPy.Fort15 import TidalDB
+from AdcircPy import TidalDB
 
-def __init__(self, **kwargs):
-    self.header_1         = kwargs.pop("header_1", None)
-    self.header_2         = kwargs.pop("header_2", None)
-    self.reference_date   = kwargs.pop("reference_date", None)
-    self.reference_time   = kwargs.pop("reference_time", None)
-    self.RNDAY            = kwargs.pop("RNDAY", None)
-    self.DRAMP            = kwargs.pop("DRAMP", None)
-    self.nodal_attributes = kwargs.pop("nodal_attributes", None)
-    self.constituent_list = kwargs.pop("constituent_list", None)
-    self.boundary_TPXO    = kwargs.pop("boundary_TPXO", None)
-    self._mode            = kwargs.pop("mode", None)
-    self.eta_stations     = kwargs.pop("eta_stations", None)
-    self.met_stations     = kwargs.pop("met_stations", None)
-    self.vel_stations     = kwargs.pop("vel_stations", None)
-    self.eta_start        = kwargs.pop("eta_start", None)
-    self.eta_stop         = kwargs.pop("eta_stop", None)
-    self.eta_steps        = kwargs.pop("eta_steps", None)
-    self.vel_start        = kwargs.pop("vel_start", None)
-    self.vel_stop         = kwargs.pop("vel_stop", None)
-    self.vel_steps        = kwargs.pop("vel_steps", None)
-    self.hotstart_steps   = kwargs.pop("hotstart_steps", None)
-    self.output_filepath  = kwargs.pop("output_filepath", None)
 
 def generate_forcing_from_TPXO(self, Mesh):
     
@@ -46,28 +24,28 @@ def parse_fort15(path):
     else:
         fort15 = dict()
         f = open(path)
-        fort15['run_description']=f.readline().split('!')[0].strip()
-        fort15['run_id']=f.readline().split('!')[0].strip()
-        fort15['error_override_flag'] = int(f.readline().split('!')[0])
-        fort15['log_level_flag'] = int(f.readline().split('!')[0])
-        fort15['verbose_level_flag'] = int(f.readline().split('!')[0])
-        fort15['hotstart_flag'] = int(f.readline().split('!')[0]) # required input
-        fort15['coordinate_system_flag'] = int(f.readline().split('!')[0]) # required input
-        fort15['model_type_flag'] = int(f.readline().split('!')[0]) # required input
-        if fort15['model_type_flag'] == 21:
-            fort15['form_of_density_forcing_flag'] = int(f.readline().split('!')[0])
-        fort15['bottom_stress_parameterization_flag'] = int(f.readline().split('!')[0])
-        fort15['finite_amplitude_flag'] = int(f.readline().split('!')[0])
-        fort15['advective_terms_flag'] = int(f.readline().split('!')[0])
-        fort15['time_derivative_of_advective_terms_flag'] = int(f.readline().split('!')[0])
+        fort15['RUNDES']=f.readline().split('!')[0].strip()
+        fort15['RUNID']=f.readline().split('!')[0].strip()
+        fort15['NFOVER'] = int(f.readline().split('!')[0])
+        fort15['NABOUT'] = int(f.readline().split('!')[0])
+        fort15['NSCREEN'] = int(f.readline().split('!')[0])
+        fort15['IHOT'] = int(f.readline().split('!')[0]) # required input
+        fort15['ICS'] = int(f.readline().split('!')[0]) # required input
+        fort15['IM'] = int(f.readline().split('!')[0]) # required input
+        if fort15['IM'] == 21:
+            fort15['IDEN'] = int(f.readline().split('!')[0])
+        fort15['NOLIBF'] = int(f.readline().split('!')[0])
+        fort15['NOLIFA'] = int(f.readline().split('!')[0])
+        fort15['NOLICA'] = int(f.readline().split('!')[0])
+        fort15['NOLICAT'] = int(f.readline().split('!')[0])
         number_of_nodal_attributes = int(f.readline().split('!')[0]) # skip total number of nodal attributes
         if number_of_nodal_attributes > 0:
-            fort15['nodal_attributes'] = list()
+            fort15['AttrName'] = list()
             for i in range(number_of_nodal_attributes):
-                fort15['nodal_attributes'].append(f.readline().split('!')[0].split()[0])
+                fort15['AttrName'].append(f.readline().split('!')[0].split()[0])
         else:
-            fort15['nodal_attributes'] = None
-        fort15['coriolis_flag'] = int(f.readline().split('!')[0])
+            fort15['AttrName'] = None
+        fort15['NCOR'] = int(f.readline().split('!')[0])
         fort15['tidal_potential_and_self_attraction_flag'] = int(f.readline().split('!')[0])
         fort15['wind_forcing_type_flag'] = int(f.readline().split('!')[0])
         fort15['ramping_flag'] = int(f.readline().split('!')[0])
