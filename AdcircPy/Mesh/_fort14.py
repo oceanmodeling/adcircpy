@@ -26,91 +26,100 @@ def parse_fort14(path):
         elements.append([int(line[2])-1, int(line[3])-1, int(line[4])-1])
     elementID = np.squeeze(elementID)
     elements  = np.array(elements)
-    number_of_ocean_boundaries = int(f.readline().split()[0])
-    total_number_of_ocean_boundary_nodes = int(f.readline().split()[0])
-    ocean_boundaries = list()
-    for i in range(number_of_ocean_boundaries):
-        Number_of_nodes_for_ocean_boundary_x = int(f.readline().split()[0])
-        node_index=list()
-        for j in range(Number_of_nodes_for_ocean_boundary_x):
-            node_index.append(int(f.readline())-1)
-        node_index = np.asarray(node_index).flatten()
-        ocean_boundaries.append(node_index)
+    try:
+        number_of_ocean_boundaries = int(f.readline().split()[0])
+        total_number_of_ocean_boundary_nodes = int(f.readline().split()[0])
+        ocean_boundaries = list()
+        for i in range(number_of_ocean_boundaries):
+            Number_of_nodes_for_ocean_boundary_x = int(f.readline().split()[0])
+            node_index=list()
+            for j in range(Number_of_nodes_for_ocean_boundary_x):
+                node_index.append(int(f.readline())-1)
+            node_index = np.asarray(node_index).flatten()
+            ocean_boundaries.append(node_index)
 
-    number_of_land_boundaries = int(f.readline().split()[0])
-    total_number_of_land_boundary_nodes = int(f.readline().split()[0])
-    
-    land_boundaries = list()
-    inner_boundaries  = list()
-    inflow_boundaries = list()
-    outflow_boundaries = list()
-    weir_boundaries = list()
-    culvert_boundaries = list()
-    for i in range(number_of_land_boundaries):
-        line = f.readline().split()
-        number_of_nodes_for_land_boundary_x = int(line[0])
-        btype = int(line[1])
-        node_index=list()
-        weir0 = list()
-        weir1 = list()
-        weir2 = list()
-        weir3 = list()
-        weir4 = list()
-        weir5 = list()
-        weir6 = list()
-        weir7 = list()
-        for j in range(number_of_nodes_for_land_boundary_x):
+        number_of_land_boundaries = int(f.readline().split()[0])
+        total_number_of_land_boundary_nodes = int(f.readline().split()[0])
+        
+        land_boundaries = list()
+        inner_boundaries  = list()
+        inflow_boundaries = list()
+        outflow_boundaries = list()
+        weir_boundaries = list()
+        culvert_boundaries = list()
+        for i in range(number_of_land_boundaries):
             line = f.readline().split()
-            if btype in [0, 1, 2, 10, 11, 12, 20, 21, 22, 30, 102, 122]:
-                node_index.append(int(line[0])-1)
+            number_of_nodes_for_land_boundary_x = int(line[0])
+            btype = int(line[1])
+            node_index=list()
+            weir0 = list()
+            weir1 = list()
+            weir2 = list()
+            weir3 = list()
+            weir4 = list()
+            weir5 = list()
+            weir6 = list()
+            weir7 = list()
+            for j in range(number_of_nodes_for_land_boundary_x):
+                line = f.readline().split()
+                if btype in [0, 1, 2, 10, 11, 12, 20, 21, 22, 30, 102, 122]:
+                    node_index.append(int(line[0])-1)
+                elif btype in [3, 13, 23]:
+                    node_index.append([int(line[0])-1, -float(line[1]), float(line[2])])
+                elif btype in [4, 24]:
+                    weir0.append(int(line[0])-1)
+                    weir1.append(int(line[1])-1)
+                    weir2.append(float(line[2]))
+                    weir3.append(float(line[3]))
+                    weir4.append(float(line[4]))   
+                elif btype in [5, 25]:
+                    weir0.append(int(line[0])-1)
+                    weir1.append(int(line[1])-1)
+                    weir2.append(float(line[2]))
+                    weir3.append(float(line[3]))
+                    weir4.append(float(line[4]))
+                    weir5.append(float(line[5]))
+                    weir6.append(float(line[6]))
+                    weir7.append(float(line[7]))
+                    
+            if btype in [0, 10, 20]:
+                land_boundaries.append([np.asarray(node_index).flatten(), btype])
+            elif btype in [1, 11, 21]:
+                inner_boundaries.append([np.asarray(node_index).flatten(), btype])
+            elif btype in [2, 12, 22, 102, 122]:
+                inflow_boundaries.append([np.asarray(node_index).flatten(), btype])
             elif btype in [3, 13, 23]:
-                node_index.append([int(line[0])-1, -float(line[1]), float(line[2])])
+                outflow_boundaries.append([node_index, btype])
             elif btype in [4, 24]:
-                weir0.append(int(line[0])-1)
-                weir1.append(int(line[1])-1)
-                weir2.append(float(line[2]))
-                weir3.append(float(line[3]))
-                weir4.append(float(line[4]))   
+                _weir_boundaries = dict()
+                _weir_boundaries['front_face'] = np.asarray(weir0).flatten()
+                _weir_boundaries['back_face']  = np.asarray(weir1).flatten()
+                _weir_boundaries['height']     = np.asarray(weir2).flatten()
+                _weir_boundaries['subcritical_flow_coefficient'] = np.asarray(weir3).flatten()
+                _weir_boundaries['supercritical_flow_coefficient'] = np.asarray(weir4).flatten()
+                _weir_boundaries['btype'] = btype
+                weir_boundaries.append(_weir_boundaries)
             elif btype in [5, 25]:
-                weir0.append(int(line[0])-1)
-                weir1.append(int(line[1])-1)
-                weir2.append(float(line[2]))
-                weir3.append(float(line[3]))
-                weir4.append(float(line[4]))
-                weir5.append(float(line[5]))
-                weir6.append(float(line[6]))
-                weir7.append(float(line[7]))
-                
-        if btype in [0, 10, 20]:
-            land_boundaries.append([np.asarray(node_index).flatten(), btype])
-        elif btype in [1, 11, 21]:
-            inner_boundaries.append([np.asarray(node_index).flatten(), btype])
-        elif btype in [2, 12, 22, 102, 122]:
-            inflow_boundaries.append([np.asarray(node_index).flatten(), btype])
-        elif btype in [3, 13, 23]:
-            outflow_boundaries.append([node_index, btype])
-        elif btype in [4, 24]:
-            _weir_boundaries = dict()
-            _weir_boundaries['front_face'] = np.asarray(weir0).flatten()
-            _weir_boundaries['back_face']  = np.asarray(weir1).flatten()
-            _weir_boundaries['height']     = np.asarray(weir2).flatten()
-            _weir_boundaries['subcritical_flow_coefficient'] = np.asarray(weir3).flatten()
-            _weir_boundaries['supercritical_flow_coefficient'] = np.asarray(weir4).flatten()
-            _weir_boundaries['btype'] = btype
-            weir_boundaries.append(_weir_boundaries)
-        elif btype in [5, 25]:
-            _culvert_boundaries = dict()
-            _culvert_boundaries['front_face'] = np.asarray(weir0).flatten()
-            _culvert_boundaries['back_face']  = np.asarray(weir1).flatten()
-            _culvert_boundaries['height'] = np.asarray(weir2).flatten()
-            _culvert_boundaries['subcritical_flow_coefficient'] = np.asarray(weir3).flatten()
-            _culvert_boundaries['supercritical_flow_coefficient'] = np.asarray(weir4).flatten()
-            _culvert_boundaries['cross_barrier_pipe_height'] = np.asarray(weir5).flatten()
-            _culvert_boundaries['friction_factor'] = np.asarray(weir6).flatten()
-            _culvert_boundaries['pipe_diameter'] = np.asarray(weir7).flatten()
-            _culvert_boundaries['btype'] = btype
-            culvert_boundaries.append(_culvert_boundaries)
-            
+                _culvert_boundaries = dict()
+                _culvert_boundaries['front_face'] = np.asarray(weir0).flatten()
+                _culvert_boundaries['back_face']  = np.asarray(weir1).flatten()
+                _culvert_boundaries['height'] = np.asarray(weir2).flatten()
+                _culvert_boundaries['subcritical_flow_coefficient'] = np.asarray(weir3).flatten()
+                _culvert_boundaries['supercritical_flow_coefficient'] = np.asarray(weir4).flatten()
+                _culvert_boundaries['cross_barrier_pipe_height'] = np.asarray(weir5).flatten()
+                _culvert_boundaries['friction_factor'] = np.asarray(weir6).flatten()
+                _culvert_boundaries['pipe_diameter'] = np.asarray(weir7).flatten()
+                _culvert_boundaries['btype'] = btype
+                culvert_boundaries.append(_culvert_boundaries)
+    except:
+        ocean_boundaries = None
+        land_boundaries = None
+        inner_boundaries = None
+        inflow_boundaries = None
+        outflow_boundaries = None
+        weir_boundaries = None
+        culvert_boundaries = None
+        
     if not ocean_boundaries: ocean_boundaries = None
     if not land_boundaries: land_boundaries   = None
     if not inner_boundaries: inner_boundaries = None

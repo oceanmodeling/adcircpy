@@ -248,19 +248,22 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 
-def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, file_format, transform=False):
+def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, transform=False):
 
     tile_list = list()
     for root, dirs, files in os.walk(rootdir):
         for file in files:
-            if file.endswith(file_format):# or file.endswith('_dem.img.xml'):
-                tile_list.append(root+"/"+file)
+            tile_list.append(root+"/"+file)
+
     xyz = list()
     for file in tile_list:
-        tile = demtools.read_tile(file)
-        tile_path = tile.get_bbox_as_Path(epsg=epsg)
-        if Path_instance.intersects_path(tile_path):
-            xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, transform=transform))
+        try:
+            tile = demtools.read_tile(file)
+            tile_path = tile.get_bbox_as_Path(epsg=epsg)
+            if Path_instance.intersects_path(tile_path):
+                xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, transform=transform))
+        except:
+            continue
     if len(xyz) > 0:
         return np.concatenate(tuple(xyz), axis=0)
 

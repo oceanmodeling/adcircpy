@@ -16,7 +16,7 @@ def init_from_files(fort14, datum='MSL', epsg=4326, fort13=None):
         kwargs['fort13'] = _fort13.parse_fort13(fort13)
     return Mesh.Mesh(**kwargs)
 
-def make_plot(self, surface='bathy', **kwargs):
+def make_plot(self, surface='bathy', fort13=None, **kwargs):
     if fort13 is not None:
         surface_types = [ x for x in self.fort13.keys() ]
         surface_types.append('bathy')
@@ -37,6 +37,7 @@ def plot_bathy(self, extent=None, epsg=None, axes=None, title=None, total_colors
     axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
     vmin = kwargs.pop("vmin", np.min(self.values[idx]))
     vmax = kwargs.pop("vmax", np.max(self.values[idx]))
+    show = kwargs.pop("show", False)
     if vmax < 0.:
 
         levels = kwargs.pop("levels", np.linspace(vmin, vmax, total_colors))
@@ -63,6 +64,8 @@ def plot_bathy(self, extent=None, epsg=None, axes=None, title=None, total_colors
     cbar.set_label(cbar_label)
     cbar.set_ticks([vmin, vmin + col_val *(vmax-vmin), vmax])
     cbar.set_ticklabels([np.around(vmin, 2), mlevel, np.around(vmax, 2)])
+    if show == True:
+        plt.show()
     return axes
 
 def plot_shoreline(self, extent=None, epsg=None, axes=None, title=None, color='black', linewidth=0.5):
