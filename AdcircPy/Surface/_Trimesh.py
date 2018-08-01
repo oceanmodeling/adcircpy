@@ -50,12 +50,20 @@ def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewi
     return axes
 
 def get_xyz(self, **kwargs):
-    idx = self.get_extent_idx(self.get_extent(), self.epsg)
+    if extent is None:
+        extent = self.get_extent()
+    if epsg is None:
+        epsg = self.epsg
+    idx = self.get_extent_idx(extent, epsg)
     return np.vstack((self.x[idx], self.y[idx], self.values[idx])).T
 
 
 def get_xy(self, **kwargs):
-    idx = self.get_extent_idx(self.get_extent(), self.epsg)
+    if extent is None:
+        extent = self.get_extent()
+    if epsg is None:
+        epsg = self.epsg
+    idx = self.get_extent_idx(extent, epsg)
     return np.vstack((self.x[idx], self.y[idx])).T
 
 

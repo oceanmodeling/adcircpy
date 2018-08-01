@@ -21,11 +21,11 @@ class Trimesh(object):
         """
         return _Trimesh.get_xyz(self, **kwargs)
     
-    def get_xy(self, extent=None, **kwargs):
+    def get_xy(self, extent=None, epsg=None):
         """
         Returns numpy array of dimension [D,2] with columns <x, y>
         """
-        return _Trimesh.get_xy(self, extent, **kwargs)
+        return _Trimesh.get_xy(self, extent, epsg)
 
     def get_elements_as_Path_list(self, extent=None):
         return _Trimesh.get_element_as_Path_list(self, extent)
@@ -96,11 +96,11 @@ class Surface(Trimesh, Boundaries):
     def get_dict(self):
         return _Surface.get_dict(self)
     
-    def get_values_at_lonlat(self, lon, lat, **kwargs):
+    def get_values_at_xy(self, x, y, **kwargs):
         """
         Returns numpy array of values at coordinates or list of coordinates give by lon lat
         """
-        return _Surface.get_values_at_lonlat(self, lon, lat, **kwargs)
+        return _Surface.get_values_at_xy(self, x, y, **kwargs)
         
     def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
         return _Surface.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)

@@ -283,7 +283,7 @@ def get_contours(self, levels, **kwargs):
             contours[ax.levels[i]].append(Path)
     return dict(contours)
 
-def get_values_at_lonlat(self, lon, lat, step=0, method='linear'):
+def get_values_at_xy(self, x, y, step=0, method='linear'):
     if isinstance(self.values, list):
         values = self.values[step]
     else:
@@ -294,7 +294,7 @@ def get_values_at_lonlat(self, lon, lat, step=0, method='linear'):
         idx = np.where(np.isin(values, -99999.0))
         values[idx] = 0.0    
     if method != 'force':
-        return griddata((self.x,self.y),values,(lon,lat), method=method)
+        return griddata((self.x,self.y),values,(x,y), method=method)
     else:
         idx = np.where(~np.isin(values, 0.0))
-        return griddata((self.x[idx], self.y[idx]), values[idx], (lon, lat), method='nearest')
+        return griddata((self.x[idx], self.y[idx]), values[idx], (x, y), method='nearest')
