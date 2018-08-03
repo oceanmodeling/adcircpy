@@ -1,8 +1,9 @@
 from AdcircPy.Mesh import _Mesh
 from AdcircPy.Mesh import _fort13
 from AdcircPy.Mesh import _fort14
-from AdcircPy.Surface import Surface
-    
+from AdcircPy.core import Surface
+
+
 class Mesh(Surface):
     def __init__(self, **kwargs):
         Surface.__init__(self, **kwargs)
