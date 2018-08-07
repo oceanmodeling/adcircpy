@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from scipy.interpolate import griddata
 import pyproj
-from AdcircPy import Surface
-from AdcircPy import demtools
-from AdcircPy.Surface import _fig
+from AdcircPy.core import UnstructuredGrid
+from AdcircPy.core import demtools
+
 
 def make_plot(self, extent=None, epsg=None, axes=None, title=None, step=0, total_colors=256, cbar_label=None, **kwargs):
     axes, idx = _fig.init_fig(self, axes, extent, title, epsg)

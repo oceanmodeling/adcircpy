@@ -1,4 +1,6 @@
-from AdcircPy.Validation import _HighWaterMarks
+#! /usr/bin/env python
+
+from AdcircPy.core.Validation import _HighWaterMarks
 
 class HighWaterMarks(dict):
     
@@ -13,6 +15,9 @@ class HighWaterMarks(dict):
     @staticmethod
     def from_event_id(event_id):
         _HighWaterMarks.from_event_id(event_id)
+
+    def Validate(self, Mesh):
+        return _HighWaterMarks._Validate(self, Mesh)
 
     def remove(self, type_list, **kwargs):
         """
@@ -57,3 +62,13 @@ class HighWaterMarks(dict):
 
     def make_plot(self, axes=None, vmin=None, vmax=None, extent=None, epsg=None,**kwargs):
         return _HighWaterMarks.make_plot(self, axes, vmin, vmax, extent, epsg, **kwargs)
+
+    @staticmethod
+    def main():
+        _HighWaterMarks._main()
+
+    def _parse_args(self):
+        _HighWaterMarks._parse_args(self)
+
+if __name__ == "__main__":
+    HighWaterMarks.main()

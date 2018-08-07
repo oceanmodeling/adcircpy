@@ -11,7 +11,7 @@ import pyproj
 import utm
 import psycopg2
 import getpass
-from AdcircPy import demtools
+from AdcircPy.core import demtools
 gdal.UseExceptions()
 
 def read_tile (path, force_epsg=None):

@@ -1,6 +1,6 @@
-from AdcircPy.Fort15 import _Fort15
+# from AdcircPy.Fort15 import _Fort15
 
-class Fort15(object):
+class fort15(object):
     
     def __init__(self, **kwargs):
         self.RUNDES           = kwargs.pop("RUNDES", None)
@@ -38,7 +38,7 @@ class Fort15(object):
         self.hotstart_steps   = kwargs.pop("hotstart_steps", None)
         self.output_filepath  = kwargs.pop("output_filepath", None)
 
-    def generate_forcing_from_TPXO(self, Mesh):
-        return _Fort15.generate_forcing_from_TPXO(self, Mesh)
+    # def generate_forcing_from_TPXO(self, Mesh):
+    #     return _Fort15.generate_forcing_from_TPXO(self, Mesh)
 
     

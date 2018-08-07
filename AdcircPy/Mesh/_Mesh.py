@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
 from haversine import haversine
-from AdcircPy.Surface import _fig
+from AdcircPy.core import Figures
 from AdcircPy import Mesh
 from AdcircPy.Mesh import _fort14
 from AdcircPy.Mesh import _fort13
 
-def init_from_files(fort14, datum='MSL', epsg=4326, fort13=None):
+def _from_fort14(fort14, datum='MSL', epsg=4326, fort13=None):
     kwargs = _fort14.parse_fort14(fort14)
     kwargs['datum'] = datum
     kwargs['epsg']  = epsg
@@ -34,7 +34,7 @@ def make_plot(self, surface='bathy', fort13=None, **kwargs):
 
 
 def plot_bathy(self, extent=None, epsg=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
-    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
+    axes, idx = Figures._init_fig(self, axes, extent, title, epsg)
     vmin = kwargs.pop("vmin", np.min(self.values[idx]))
     vmax = kwargs.pop("vmax", np.max(self.values[idx]))
     show = kwargs.pop("show", False)
@@ -69,7 +69,7 @@ def plot_bathy(self, extent=None, epsg=None, axes=None, title=None, total_colors
     return axes
 
 def plot_shoreline(self, extent=None, epsg=None, axes=None, title=None, color='black', linewidth=0.5):
-    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
+    axes, idx = Figures._init_fig(self, axes, extent, title, epsg)
     if type(self.values) is list:
         if self.bathymetry is None:
             raise TypeError("fort.14 required to plot shoreline")

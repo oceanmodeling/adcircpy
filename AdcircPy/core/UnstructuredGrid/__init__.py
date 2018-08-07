@@ -1,4 +1,4 @@
-from AdcircPy.Surface import _Surface, _Trimesh, _Boundaries
+from AdcircPy.core.UnstructuredGrid import _Surface, _Trimesh, _Boundaries
 
 class Trimesh(object):
     def __init__(self, **kwargs):
@@ -70,7 +70,7 @@ class Boundaries(object):
     def plot_outerBoundary(self):
         return _Boundaries.plot_outerBoundary(self)
 
-class Surface(Trimesh, Boundaries):
+class UnstructuredGrid(Trimesh, Boundaries):
     
     def __init__(self, **kwargs):
         Trimesh.__init__(self, **kwargs)
@@ -117,6 +117,6 @@ class Surface(Trimesh, Boundaries):
         """
         return _Surface.get_difference(self, other)
 
-class SurfaceDifference(Surface):
+class SurfaceDifference(UnstructuredGrid):
     def make_plot(self, **kwargs):
         return _Surface.plot_diff(self, **kwargs)

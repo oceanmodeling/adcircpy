@@ -4,7 +4,7 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-class FixPointNormalize(Normalize):
+class _FixPointNormalize(Normalize):
     """ 
     Inspired by https://stackoverflow.com/questions/20144529/shifted-colorbar-matplotlib
     Subclassing Normalize to obtain a colormap with a fixpoint 
@@ -23,7 +23,7 @@ class FixPointNormalize(Normalize):
         x, y = [self.vmin, self.sealevel, self.vmax], [0, self.col_val, 1]
         return np.ma.masked_where(value.mask, np.interp(value, x, y))
 
-def init_fig(self, axes=None, extent=None, title=None, epsg=None):
+def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
 
     if axes is None:                
         fig = plt.figure()
@@ -42,7 +42,7 @@ def init_fig(self, axes=None, extent=None, title=None, epsg=None):
     axes.axis(extent) 
     return axes, idx
 
-def init_colorbar(axes, cmap, vmin, vmax):
+def _init_colorbar(axes, cmap, vmin, vmax):
     mappable = ScalarMappable(cmap=cmap)
     divider = make_axes_locatable(axes)
     cax = divider.append_axes("bottom", size="2%", pad=0.5)

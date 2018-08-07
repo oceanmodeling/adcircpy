@@ -1,12 +1,13 @@
+import argparse
 import csv
 import copy
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+
 import psycopg2
 from osgeo import ogr, osr
 from AdcircPy import Validation
-from AdcircPy.Surface import _fig
 
 def from_csv(path):
     csvfile = open(path, 'r')
@@ -41,6 +42,9 @@ def from_csv(path):
         hwm_stations[station_id]['still_water'] = still_water
     csvfile.close()
     return Validation.HighWaterMarks(**hwm_stations)
+
+def _Validate(self, Mesh):
+    raise NotImplementedError
 
 def from_event_id(id):
 	raise NotImplementedError("Coming soon!")
@@ -257,4 +261,28 @@ def get_from_extent(self, extent, epsg):
             hwm.pop(station)
     return hwm
 
+def _parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('wavemodel', choices=['surfbeat', 'nonh'], help='Wave model type: surfbeat or non-hydrostatic')
+    parser.add_argument('grid_id', type=str, help='Grid grid id')
+    parser.add_argument('CAT', choices=[1,2,3,4,5], type=int, help='Hurricane Category')
+    parser.add_argument('--SLR', '-s', choices=[0., 0.5, 1.], dest='SLR', type=float, default=0., help='Sea Level Rise Value')
+    parser.add_argument('--wavedir', '-wd', type=float, help='Optional wave direction in Nautical Coordinates. Wavemaker aligned to offshore boundary assumed when not given.')
+    parser.add_argument('--tma', choices=[0, 1], default=1, type=int, help='TMA vs Jonswap spectrum. 0 for Jonswap, 1 for TMA (default)')
+    parser.add_argument('--dx', '-dx', default=None, type=float, help='Zonal resolution in meters. Defaults to 3 meters for nonh and 10 meters for surfbeat.')
+    parser.add_argument('--dy', '-dy', default=None, type=float, help='Meridional resolution in meters. Defaults to 3 meters for nonh and 10 meters for surfbeat.')
+    parser.add_argument('--epsg', '-e', default=32620, type=int, help='EPSG code')
+    parser.add_argument('--spread', '-sp', default=15., type=float, help='Wave angular spreading in degrees.')
+    parser.add_argument('--ncpu', '-n', default=600, type=int, help='Total number of CPUs to use.')
+    parser.add_argument('--filter', '-f', default=2, type=int, dest='sigma', help='Apply gaussian filter to bathy.')
+    parser.add_argument('--thetanaut', choices=[0,1], type=int, default=1, help='Advanced option. Wave direction given in nautical convention (1) or angle wrt to grid x-axis (0).')
+    parser.add_argument('--thetamin', type=float,  help='Advanced option. Thetamin directional bin for surfbeat model')
+    parser.add_argument('--thetamax', type=float, help='Advanced option. Thetamax directional bin for surfbeat model')
+    parser.add_argument('--dtheta', default=10., type=float, help='Advanced option. Thetamax for directional bin for surfbeat model')
+    parser.add_argument('--ts-length', '-rt', type=int, dest='rt', help='Advanced option. Time series record length rt.')
+    self.args = parser.parse_args()
+
+
+def _main():
+    self._parse_args()
 

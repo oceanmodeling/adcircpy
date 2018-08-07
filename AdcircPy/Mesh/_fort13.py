@@ -1,7 +1,7 @@
 import numpy as np
 from AdcircPy import Mesh
 
-def parse_fort13(path):
+def _from_fort13(path):
     fort13={}
     with open(path, 'r') as f:
         f.readline().strip()
