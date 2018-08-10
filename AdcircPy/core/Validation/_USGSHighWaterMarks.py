@@ -34,7 +34,10 @@ def _get_event_id(eventName):
     for item in json_data:
         events[item['eventName'].split()[0].lower()]=item['event_id']
     events = dict(events)
-    return events[eventName]
+    if eventName in events.keys():
+        return events[eventName]
+    else:
+        raise Exception('eventName not Found! Valid event names are: {}'.format(list(events.keys())))
 
 def from_event_name(eventName):
     params['Event'] = Validation.USGSHighWaterMarks._get_event_id(eventName.lower())

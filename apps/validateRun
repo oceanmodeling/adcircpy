@@ -25,11 +25,8 @@ def _radial_validation(self, maxele, multiplier=1.):
     number_of_points = list()
     for i, xyz in enumerate(_xyz):
         number_of_points.append(len(tree.query_ball_point(xyz[0:2], multiplier*distances[i])))
-    # maximum number of points to be averaged for a single station
+    # print maximum number of points to be averaged for a single station
     print(np.max(number_of_points))
-
-
-
 
 def _finite_volume_validation(self, maxele):
     # find closest node to each HWM
@@ -72,7 +69,7 @@ def _finite_volume_validation(self, maxele):
         # ax.axis('scaled')
         # plt.show()
 
-        # Filter out repeated elements from list (make it a mathematical topology)
+        # Filter out repeated elements from list (make the volume a mathematical topology)
         final_indexes = set()
         for elements_touching_one_idx in elements_surrounding_hwm:
             for element in elements_touching_one_idx:
@@ -81,8 +78,9 @@ def _finite_volume_validation(self, maxele):
 
         _values = maxele.values[list(final_indexes)].filled(fill_value=np.nan)
         ModelValues.append(np.nanmean(_values))
+    
     ModelValues = np.ma.masked_invalid(ModelValues)
-    HWMValues = np.ma.masked_where(ModelValues.mask, _xyz[:,2])
+    HWMValues   = np.ma.masked_where(ModelValues.mask, _xyz[:,2])
     return ModelValues, HWMValues
 
 def _get_linear_regression(ModelValues, HWMValues):
@@ -94,7 +92,6 @@ def _make_validation_plots(ModelValues, HWMValues, **kwargs):
 
 def main():
     _parse_args()
-    
     HWM = USGSHighWaterMarks.from_event_name(args.eventName)
     HWM, rejectCount  = HWM.filter(fair=True, poor=True, riverine=True, non_still_water=True, return_count=True)
     maxele = Maxele.from_netcdf(args.maxeleFile)
