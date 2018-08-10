@@ -16,14 +16,26 @@ def _parse_args():
     parser.add_argument('maxeleFile', help='Path to model output file.')
     args =  parser.parse_args()
 
-def _finite_volume_validation(self, maxele):
+def _radial_validation(self, maxele, multiplier=1.):
+    # TODO: Inverse distance weighting matrix
+    #       Detect and eliminate points outside the mesh boundaries?
+    tree = spatial.KDTree(maxele.get_xy())
+    _xyz = self.get_xyz()
+    distances, points = tree.query(_xyz[:,0:2])
+    number_of_points = list()
+    for i, xyz in enumerate(_xyz):
+        number_of_points.append(len(tree.query_ball_point(xyz[0:2], multiplier*distances[i])))
+    # maximum number of points to be averaged for a single station
+    print(np.max(number_of_points))
 
+
+
+
+def _finite_volume_validation(self, maxele):
     # find closest node to each HWM
-    
     tree = spatial.KDTree(maxele.get_xy())
     _xyz = self.get_xyz()
     distance, idx = tree.query(_xyz[:,0:2])
-   
     # For each HWM...
     ModelValues = list()
     for i, closest_node_idx in enumerate(idx):
@@ -69,23 +81,34 @@ def _finite_volume_validation(self, maxele):
 
         _values = maxele.values[list(final_indexes)].filled(fill_value=np.nan)
         ModelValues.append(np.nanmean(_values))
-    
     ModelValues = np.ma.masked_invalid(ModelValues)
     HWMValues = np.ma.masked_where(ModelValues.mask, _xyz[:,2])
+    return ModelValues, HWMValues
+
+def _get_linear_regression(ModelValues, HWMValues):
+    pass
+
+def _make_validation_plots(ModelValues, HWMValues, **kwargs):
     plt.scatter(ModelValues, HWMValues)
-    plt.savefig('validation.png')
-        
+    
 
 def main():
     _parse_args()
+    
     HWM = USGSHighWaterMarks.from_event_name(args.eventName)
     HWM, rejectCount  = HWM.filter(fair=True, poor=True, riverine=True, non_still_water=True, return_count=True)
-    # for key in HWM.keys():
-    #     if HWM[key]['elev_m'] > 4:
-    #         print(HWM[key])
-    #         BREAKME
     maxele = Maxele.from_netcdf(args.maxeleFile)
-    _finite_volume_validation(HWM, maxele)
+    
+    ModelValuesRadial, HWMValuesRadial = _radial_validation(HWM, maxele, multiplier=2.)
+    ModelValuesFV, HWMValuesFV = _finite_volume_validation(HWM, maxele)
+    
+    # _get_linear_regression()
+
+    _make_validation_plots(ModelValuesRadial, HWMValuesRadial)
+    plt.savefig('radial_validation.png')
+    
+    _make_validation_plots(ModelValuesFV, HWMValuesFV)
+    plt.savefig('fv_validation.png')
 
 if __name__ == '__main__':
     main()
