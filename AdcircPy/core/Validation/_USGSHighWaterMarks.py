@@ -6,7 +6,7 @@ import json
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import numpy as np
-from osgeo import ogr, osr
+# from osgeo import ogr, osr
 import psycopg2
 import requests
 from AdcircPy.Mesh import AdcircMesh
