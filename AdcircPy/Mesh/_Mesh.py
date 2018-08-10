@@ -3,18 +3,20 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
 from haversine import haversine
-from AdcircPy.core import Figures
+# from AdcircPy.core import Figures
 from AdcircPy import Mesh
 from AdcircPy.Mesh import _fort14
 from AdcircPy.Mesh import _fort13
 
-def _from_fort14(fort14, datum='MSL', epsg=4326, fort13=None):
+def _from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
     kwargs = _fort14.parse_fort14(fort14)
     kwargs['datum'] = datum
     kwargs['epsg']  = epsg
     if fort13 is not None:
         kwargs['fort13'] = _fort13.parse_fort13(fort13)
-    return Mesh.Mesh(**kwargs)
+    if fort15 is not None:
+        kwargs['fort15'] = _fort15.parse_fort15(fort15)
+    return Mesh.AdcircMesh(**kwargs)
 
 def make_plot(self, surface='bathy', fort13=None, **kwargs):
     if fort13 is not None:

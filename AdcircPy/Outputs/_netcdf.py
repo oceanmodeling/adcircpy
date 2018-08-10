@@ -1,7 +1,7 @@
 from netCDF4 import Dataset
 from AdcircPy import Outputs
 
-def _check_netcdf(self):
+def _set__nc(self):
     try:
         Dataset(self._path)
         self._nc = True
@@ -16,6 +16,9 @@ def _get_output(self):
 def _read_netcdf(self):
     self.Dataset = Dataset(self._path)
     return self._get_netcdf_output()
+
+def _add_fort14_data(self, params):
+    pass
 
 
 

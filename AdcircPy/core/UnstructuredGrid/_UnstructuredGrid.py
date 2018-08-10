@@ -3,42 +3,72 @@ import numpy as np
 from matplotlib.tri import Triangulation
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.cm import ScalarMappable
 from scipy.interpolate import griddata
 import pyproj
+from haversine import haversine
 from AdcircPy.core import UnstructuredGrid
 from AdcircPy.core import demtools
 
+def get_xyz(self, extent=None, epsg=None):
+  if extent is None:
+    extent = self.get_extent()
+  if epsg is None:
+    epsg = self.epsg
+  idx = self._get_extent_idx(extent, epsg)
+  return np.vstack((self.x[idx], self.y[idx], self.values[idx])).T
 
-def make_plot(self, extent=None, epsg=None, axes=None, title=None, step=0, total_colors=256, cbar_label=None, **kwargs):
-    axes, idx = _fig.init_fig(self, axes, extent, title, epsg)
-    if isinstance(self.values, list):
-        values = self.values[step]
-    else:
-        values = self.values
-    vmin = kwargs.pop("vmin", np.min(values))
-    vmax = kwargs.pop("vmax", np.max(values))
-    cmap = kwargs.pop("cmap", "jet")
-    levels = kwargs.pop("levels", np.linspace(vmin, vmax, total_colors))
-    if np.ma.is_masked(values):
-        trimask = np.any(values.mask[self.elements], axis=1)
-        Tri = Triangulation(self.x, self.y, self.elements, trimask)
-        axes.tricontourf(Tri, values, levels=levels, cmap=cmap, extend='both')
-    else:
-        axes.tricontourf(self.x, self.y, self.elements, values, levels=levels, cmap=cmap, extend='both')
-    cbar = _fig.init_colorbar(axes, cmap, vmin, vmax)
-    if cbar_label is not None:
-        cbar.set_label(cbar_label)
-    cbar.set_ticks([vmin,
-                    vmin+(1./4.)*(vmax-vmin),
-                    vmin+(1./2.)*(vmax-vmin),
-                    vmin+(3./4.)*(vmax-vmin),
-                    vmax])
-    cbar.set_ticklabels([np.around(vmin, 2), 
-                            np.around(vmin+(1./4.)*(vmax-vmin), 2),
-                            np.around(vmin+(1./2.)*(vmax-vmin), 2),
-                            np.around(vmin+(3./4.)*(vmax-vmin), 2),
-                            np.around(vmax, 2)])
-    return axes
+def get_xy(self, extent=None, epsg=None):
+  if extent is None:
+    extent = self.get_extent()
+  if epsg is None:
+    epsg = self.epsg
+  idx = self._get_extent_idx(extent, epsg)
+  return np.vstack((self.x[idx], self.y[idx])).T
+
+def transform_to_epsg(self, epsg):
+  self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+  target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+  x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+  self.x = np.asarray(x).flatten()
+  self.y = np.asarray(y).flatten()
+  self.epsg = epsg
+
+def make_plot(self, extent=None, epsg=None, axes=None, title=None, **kwargs):
+  step = kwargs.pop("step", 0)  # TODO: replace with self._get__step() 
+  total_colors=256
+  cbar_label=None
+
+  axes, idx = self._init_fig(axes, extent, title, epsg)
+  if isinstance(self.values, list):
+    values = self.values[step]
+  else:
+    values = self.values
+  vmin = kwargs.pop("vmin", np.min(values))
+  vmax = kwargs.pop("vmax", np.max(values))
+  cmap = kwargs.pop("cmap", "jet")
+  levels = kwargs.pop("levels", np.linspace(vmin, vmax, total_colors))
+  if np.ma.is_masked(values):
+    trimask = np.any(values.mask[self.elements], axis=1)
+    Tri = Triangulation(self.x, self.y, self.elements, trimask)
+    axes.tricontourf(Tri, values, levels=levels, cmap=cmap, extend='both')
+  else:
+    axes.tricontourf(self.x, self.y, self.elements, values, levels=levels, cmap=cmap, extend='both')
+  cbar = self._init_cbar(axes, cmap, vmin, vmax)
+  if cbar_label is not None:
+    cbar.set_label(cbar_label)
+  cbar.set_ticks([vmin,
+                  vmin+(1./4.)*(vmax-vmin),
+                  vmin+(1./2.)*(vmax-vmin),
+                  vmin+(3./4.)*(vmax-vmin),
+                  vmax])
+  cbar.set_ticklabels([np.around(vmin, 2), 
+                          np.around(vmin+(1./4.)*(vmax-vmin), 2),
+                          np.around(vmin+(1./2.)*(vmax-vmin), 2),
+                          np.around(vmin+(3./4.)*(vmax-vmin), 2),
+                          np.around(vmax, 2)])
+  return axes
 
 def plot_velocity(self, **kwargs):
     raise NotImplementedError("Coming soon!")
@@ -59,22 +89,6 @@ def plot_velocity(self, **kwargs):
     if show is True:
         plt.show()
     return anim
-
-def get_dict(self):
-    return {  'x'                   : self.x,
-              'y'                   : self.y,
-              'elements'            : self.elements,
-              'values'              : self.values,
-              'nodeID'              : self.nodeID,
-              'elementID'           : self.elementID, 
-              "ocean_boundaries"    : self.ocean_boundaries,
-              "land_boundaries"     : self.land_boundaries,
-              "inner_boundaries"    : self.inner_boundaries,
-              "weir_boundaries"     : self.weir_boundaries,
-              "inflow_boundaries"   : self.inflow_boundaries,
-              "outflow_boundaries"  : self.outflow_boundaries,
-              "culvert_boundaries"  : self.culvert_boundaries}
-
 
 def get_difference(self, other, step=0):
     
@@ -127,7 +141,7 @@ def plot_diff(self, extent=None, epsg=None, axes=None, vmin=None, vmax=None, tit
         axes.tricontourf(Tri, self.values, levels=levels, cmap=cmap, extend='both', norm=norm)
     else:
         axes.tricontourf(self.x, self.y, self.elements, self.values, levels=levels, cmap=cmap, extend='both', norm=norm)
-    cbar = _fig.init_colorbar(axes, cmap, vmin, vmax)
+    cbar = self._init_cbar(axes, cmap, vmin, vmax)
     cbar.set_ticks([vmin, vmin + 0.5*(vmax-vmin), vmax])
     cbar.set_ticklabels([np.around(vmin, 2), 0.0, np.around(vmax, 2)])
     cbar.set_label(r'elevation [$\Delta$ m]')
@@ -253,7 +267,6 @@ def get_raster_from_extent(self, extent , dx, dy, epsg, padding=None):
     DEM = demtools.DEM()
     return DEM(x, y, depth, geoTransform, 4326, self.datum)
 
-
 def get_contours(self, levels, **kwargs):
     epsg = kwargs.pop("epsg", self.epsg)
 
@@ -298,3 +311,168 @@ def get_values_at_xy(self, x, y, step=0, method='linear'):
     else:
         idx = np.where(~np.isin(values, 0.0))
         return griddata((self.x[idx], self.y[idx]), values[idx], (x, y), method='nearest')
+
+def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
+  if axes is None:                
+    fig = plt.figure()
+    axes  = fig.add_subplot(111)
+  if title is not None:
+    axes.set_title(title)
+  if extent is None:
+    extent = self.get_extent()
+  if epsg is None:
+    epsg = self.epsg
+    idx  = self._get_extent_idx(extent, epsg)
+    axes.axis('scaled')
+    axes.axis(extent) 
+    return axes, idx
+
+def _init_cbar(self, axes, cmap, vmin, vmax):
+  divider = make_axes_locatable(axes)
+  cax     = divider.append_axes("bottom", size="2%", pad=0.5)
+  mappable = ScalarMappable(cmap=cmap)
+  mappable.set_array([])
+  mappable.set_clim(vmin, vmax)
+  return plt.colorbar(mappable, cax=cax, extend='both', orientation='horizontal')
+
+def get_extent(self, **kwargs):
+    epsg = kwargs.pop("epsg", self.epsg)
+
+    if epsg != self.epsg:
+        self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+        target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+        x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+    else:
+        x = self.x
+        y = self.y
+
+    return [np.min(x), np.max(x), np.min(y), np.max(y)]
+
+def _get_extent_idx(self, extent, epsg, **kwargs):
+    # epsg   = kwargs.pop("epsg", self.epsg)
+    # extent = kwargs.pop("extent", self.get_extent(epsg=epsg))
+    if epsg != self.epsg:
+        self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
+        target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
+        x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
+    else:
+        x = self.x
+        y = self.y
+    if isinstance(extent, list) or isinstance(extent, tuple):
+        bound_box = np.logical_and(
+                        np.logical_and(x>=extent[0], x<=extent[1]),
+                        np.logical_and(y>=extent[2], y<=extent[3]))
+        idx, = np.where(bound_box)
+    elif isinstance(extent, Path):
+        idx, = np.where(extent.contains_points(np.vstack((x,y)).T))
+    return idx
+
+def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewidth=0.5, alpha=0.4):
+    axes, idx = fig._init_fig(self, axes, extent, title)
+    axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
+    return axes
+
+def get_elements_surrounding_index(self, index, return_Paths=False):
+    connected_element_idxs, = np.where(np.any(np.isin(self.elements, index), axis=1))
+    return self.elements[connected_element_idxs]
+
+def _get_Path_from_element_indexes(self, element):
+    return Path([[self.x[element[0]], self.y[element[0]]],
+                 [self.x[element[1]], self.y[element[1]]],
+                 [self.x[element[2]], self.y[element[2]]],
+                 [self.x[element[0]], self.y[element[0]]]], closed=True)
+    
+
+
+
+
+
+def get_elements_in_extent(self, extent):
+    if extent is None: extent = self.get_extent()
+    mask_x  = np.logical_and(self.x > extent[0], self.x < extent[1])
+    mask_y  = np.logical_and(self.y > extent[2], self.y < extent[3])
+    masked  = np.ma.masked_where(np.logical_and(mask_x, mask_y), self.values)
+    trimask = np.all(masked.mask[self.elements], axis=1)
+    idx,  = np.where(trimask) 
+    paths = list()
+    for i in idx:
+        vertex = list()
+        codes = [Path.MOVETO]
+        for j in [0,1,2]:
+            vertex.append((self.x[self.elements[i][j]], self.y[self.elements[i][j]]))
+            codes.append(Path.LINETO)
+        vertex.append(vertex[0])
+        codes[-1] = Path.CLOSEPOLY
+        paths.append(Path(vertex, codes))
+    return paths
+
+def _get_finite_volume_interp(self, idx, radius=None):
+    midpoints = list()
+    centroids = list()
+    adjacent_elements = self.get_elements_surrounding_node(idx)
+    # Iterate over surrounding elements
+    for j, element in enumerate(adjacent_elements):
+        _element = list(element)
+        _element.append(_element[0])
+        _midpoints = list()
+        # Calculate element midpoints and centroid
+        for i, point_idx in enumerate(element):         
+            dx =  self.x[_element[i+1]] - self.x[_element[i]]
+            dy =  self.y[_element[i+1]] - self.y[_element[i]]
+            if np.isin(idx, [_element[i], _element[i+1]]):
+                midpoints.append((self.x[_element[i]] + 0.5*dx, self.y[_element[i]] + 0.5*dy))
+            _midpoints.append((self.x[_element[i]] + 0.5*dx, self.y[_element[i]] + 0.5*dy))
+        _midpoints = np.array(_midpoints)
+        centroids.append((np.mean(_midpoints[:,0]),np.mean(_midpoints[:,1])))
+        _element = list(element)
+        while _element[0] != idx:
+            _element = list(np.roll(_element,1))
+        adjacent_elements[j] = _element
+    adjacent_elements = np.array(adjacent_elements)
+    lateral_indexes, counts = np.unique(adjacent_elements, return_counts=True)
+    vertices = list()
+    for centroid in centroids:
+        vertices.append(centroid)
+    for midpoint in midpoints:
+        vertices.append(midpoint)    
+    ordered_vertices = list()
+    if 1 in counts: # means that this node is at a boundary and need to be included in the polygon.
+        ordered_vertices.append((self.x[idx], self.y[idx]))
+        index = list(np.delete(lateral_indexes, np.where(counts>1))).pop()
+        x = self.x[idx]
+        y = self.y[idx]
+        dx = self.x[index] - self.x[idx]
+        dy = self.y[index] - self.y[idx]
+        ordered_vertices.append(vertices.pop(vertices.index((x+0.5*dx,y+0.5*dy))))
+    else: # means that this is node is fully surrounded by elements so the obs point is not included in polygon.
+        ordered_vertices.append(vertices.pop())
+    lon = ordered_vertices[-1][0]
+    lat = ordered_vertices[-1][1]
+    while vertices:
+        diff = list()
+        for vertex in vertices:
+            _diff = haversine((vertex[1], vertex[0]), (lat, lon))
+            diff.append(_diff)
+        ordered_vertices.append(vertices.pop(diff.index(min(diff))))
+        lon = ordered_vertices[-1][0]
+        lat = ordered_vertices[-1][1]
+    ordered_vertices.append(ordered_vertices[0])
+    return Path(ordered_vertices, closed=True)
+
+
+
+
+# def get_dict(self):
+#     return {  'x'                   : self.x,
+#               'y'                   : self.y,
+#               'elements'            : self.elements,
+#               'values'              : self.values,
+#               'nodeID'              : self.nodeID,
+#               'elementID'           : self.elementID, 
+#               "ocean_boundaries"    : self.ocean_boundaries,
+#               "land_boundaries"     : self.land_boundaries,
+#               "inner_boundaries"    : self.inner_boundaries,
+#               "weir_boundaries"     : self.weir_boundaries,
+#               "inflow_boundaries"   : self.inflow_boundaries,
+#               "outflow_boundaries"  : self.outflow_boundaries,
+#               "culvert_boundaries"  : self.culvert_boundaries}

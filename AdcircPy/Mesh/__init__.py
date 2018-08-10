@@ -5,8 +5,11 @@ from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
 
 class AdcircMesh(UnstructuredGrid):
   def __init__(self, **kwargs):
-    UnstructuredGrid.__init__(self, **kwargs)
-    self.datum       = kwargs.pop('datum', None)
+    UnstructuredGrid.__init__(self, kwargs.pop('x'),
+                                       kwargs.pop('y'),
+                                       kwargs.pop('elements'),
+                                       kwargs.pop('values'),
+                                       **kwargs)
     self.description = kwargs.pop('description', None)
     self.fort13      = kwargs.pop('fort13', None)
     if ~isinstance(self.fort13, fort13) and self.fort13 is not None:
@@ -16,7 +19,7 @@ class AdcircMesh(UnstructuredGrid):
       self.fort15    = fort15.from_fort15(self.fort13)
 
   @staticmethod
-  def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None):
+  def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
     return _Mesh._from_fort14(fort14, datum=datum, epsg=epsg, fort13=fort13)
 
   def make_plot(self, surface='bathy', **kwargs):
