@@ -98,17 +98,12 @@ def main():
     HWM = USGSHighWaterMarks.from_event_name(args.eventName)
     HWM, rejectCount  = HWM.filter(fair=True, poor=True, riverine=True, non_still_water=True, return_count=True)
     maxele = Maxele.from_netcdf(args.maxeleFile)
-    
-    ModelValuesRadial, HWMValuesRadial = _radial_validation(HWM, maxele, multiplier=2.)
-    ModelValuesFV, HWMValuesFV = _finite_volume_validation(HWM, maxele)
-    
-    # _get_linear_regression()
-
-    _make_validation_plots(ModelValuesRadial, HWMValuesRadial)
-    plt.savefig('radial_validation.png')
-    
-    _make_validation_plots(ModelValuesFV, HWMValuesFV)
-    plt.savefig('fv_validation.png')
+    # ModelValues, HWMValues = _radial_validation(HWM, maxele, multiplier=2.)
+    ModelValues, HWMValues = _finite_volume_validation(HWM, maxele)
+    _get_linear_regression(ModelValues, HWMValues)
+    _make_validation_plots(ModelValues, HWMValues)
+    plt.show()
+    plt.close(plt.gcf())
 
 if __name__ == '__main__':
     main()
