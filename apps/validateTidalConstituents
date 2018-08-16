@@ -1,0 +1,41 @@
+#! /usr/bin/env python
+import argparse
+import matplotlib.pyplot as plt 
+import numpy as np
+from scipy import spatial
+import sys
+sys.path.append('..')
+from AdcircPy.Outputs import HarmonicConstituentsStations
+from AdcircPy.core.Validation import COOPS
+
+def _parse_args():
+    global args
+    parser = argparse.ArgumentParser(description='Program for validating model data against USGS High Water Mark data.\n \
+                                                   Event names can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+    parser.add_argument('fort51', help='fort.51')
+    # parser.add_argument('fort53', help='fort.53')
+    parser.add_argument('fort14', help='Event name can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+    parser.add_argument('fort15', help='Event name can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+    args =  parser.parse_args()
+
+def _plot_validation(fort51, coops):
+    for key in fort51.keys():
+        for constituent in fort51[key].keys():
+            print(coops[key])
+            BREAKME
+            print(coops[key][constituent])
+            print(fort51[key][constituent])
+            BREAKME
+
+
+
+
+
+def main():
+    _parse_args()
+    fort51 = HarmonicConstituentsStations.from_fort51(args.fort51, args.fort14, args.fort15)
+    coops = COOPS.HarmonicConstituents.from_stations_list(fort51.keys())
+    _plot_validation(fort51, coops)
+
+if __name__ == "__main__":
+    main()

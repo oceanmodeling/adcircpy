@@ -12,10 +12,8 @@ def _from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
     kwargs = _fort14.parse_fort14(fort14)
     kwargs['datum'] = datum
     kwargs['epsg']  = epsg
-    if fort13 is not None:
-        kwargs['fort13'] = _fort13.parse_fort13(fort13)
-    if fort15 is not None:
-        kwargs['fort15'] = _fort15.parse_fort15(fort15)
+    kwargs['fort13'] = fort13
+    kwargs['fort15'] = fort15
     return Mesh.AdcircMesh(**kwargs)
 
 def make_plot(self, surface='bathy', fort13=None, **kwargs):

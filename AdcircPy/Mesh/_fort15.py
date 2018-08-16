@@ -1,81 +1,163 @@
-from AdcircPy.Mesh   import Mesh
-from AdcircPy import TidalDB
+from collections import OrderedDict
+from datetime import datetime
+import numpy as np
+from AdcircPy import Mesh
+# from AdcircPy.core import TidalDB
 
-def from_fort15(path):
-    fort15 = dict()
-    f = open(path)
-    fort15['RUNDES']=f.readline().split('!')[0].strip()
-    fort15['RUNID']=f.readline().split('!')[0].strip()
-    fort15['NFOVER'] = int(f.readline().split('!')[0])
-    fort15['NABOUT'] = int(f.readline().split('!')[0])
-    fort15['NSCREEN'] = int(f.readline().split('!')[0])
-    fort15['IHOT'] = int(f.readline().split('!')[0]) # required input
-    fort15['ICS'] = int(f.readline().split('!')[0]) # required input
-    fort15['IM'] = int(f.readline().split('!')[0]) # required input
-    if fort15['IM'] == 21:
-        fort15['IDEN'] = int(f.readline().split('!')[0])
-    fort15['NOLIBF'] = int(f.readline().split('!')[0])
-    fort15['NOLIFA'] = int(f.readline().split('!')[0])
-    fort15['NOLICA'] = int(f.readline().split('!')[0])
-    fort15['NOLICAT'] = int(f.readline().split('!')[0])
-    number_of_nodal_attributes = int(f.readline().split('!')[0]) # skip total number of nodal attributes
+def _init_fort15(self, path):
+    _f = open(path)
+    def __line():
+        return _f.readline().split('!')[0].strip()
+    f = dict()
+    f['RUNDES'] = __line()
+    f['RUNID'] = __line()
+    f['NFOVER'] = int(__line())
+    f['NABOUT'] = int(__line())
+    f['NSCREEN'] = int(__line())
+    f['IHOT'] = int(__line()) # required input
+    f['ICS'] = int(__line()) # required input
+    f['IM'] = int(__line()) # required input
+    if f['IM'] == 21:
+        f['IDEN'] = int(__line())
+    f['NOLIBF'] = int(__line())
+    f['NOLIFA'] = int(__line())
+    f['NOLICA'] = int(__line())
+    f['NOLICAT'] = int(__line())
+    number_of_nodal_attributes = int(__line()) # skip total number of nodal attributes
     if number_of_nodal_attributes > 0:
-        fort15['AttrName'] = list()
+        f['AttrName'] = list()
         for i in range(number_of_nodal_attributes):
-            fort15['AttrName'].append(f.readline().split('!')[0].split()[0])
-    else:
-        fort15['AttrName'] = None
-    fort15['NCOR'] = int(f.readline().split('!')[0])
-    fort15['tidal_potential_and_self_attraction_flag'] = int(f.readline().split('!')[0])
-    fort15['wind_forcing_type_flag'] = int(f.readline().split('!')[0])
-    fort15['ramping_flag'] = int(f.readline().split('!')[0])
-    fort15['gravitational_constant'] = float(f.readline().split('!')[0])
-    fort15['GWCE_weighting_factor_flag'] = int(f.readline().split('!')[0])
+            f['AttrName'].append(__line().split()[0])
+    f['NCOR'] = int(__line())
+    f['NTIP'] = int(__line())
+    f['NWS'] = int(__line())
+    f['NRAMP'] = int(__line())
+    f['G'] = float(__line())
+    f['TAU0'] = int(__line())
     # Untested!
-    if fort15['GWCE_weighting_factor_flag'] == -5:
-        line = f.readline().split('!')
-        fort15['Tau0FullDomainMin'] = float(line[0])
-        fort15['Tau0FullDomainMax'] = float(line[1])
-    fort15['timestep'] = float(f.readline().split('!')[0])
-    fort15['offset_days'] = float(f.readline().split('!')[0])
-    fort15['reference_time'] = float(f.readline().split('!')[0])
+    if f['TAU0'] == -5:
+        line = _f.readline().split('!')
+        f['Tau0FullDomainMin'] = float(line[0])
+        f['Tau0FullDomainMax'] = float(line[1])
+    f['DTDP'] = float(__line())
+    f['STATIM'] = float(__line())
+    f['REFTIM'] = float(__line())
+    if f['NWS'] > 0:
+        if f['NWS']==11 or f['NWS']==9:
+            raise Exception('Invalid NWS number.')
+        f['WTIMNC'] = _f.readline()
+    f['RNDAY'] = float(__line())
+    f['DRAMP'] = _f.readline()
+    f['A00, B00, C00'] = _f.readline()
+    if f['NOLIFA'] in [0,1]:
+        f['H0'] = _f.readline()
+    elif f['NOLIFA'] in [2,3]:
+        f['H0, INTEGER, INTEGER, VELMIN'] = _f.readline()
+    f['SLAM0, SFEA0'] = _f.readline()
+    if f['NOLIBF']==0:
+        f['TAU'] = _f.readline()
+    elif f['NOLIBF']==1:
+        f['CF'] = _f.readline()
+    elif f['NOLIBF']==2:
+        f['CF, HBREAK, FTHETA, FGAMMA'] = _f.readline()
+    if f['IM'] in [0,1,2]:
+        f['ESLM'] = _f.readline()
+    elif f['IM'] == 10:
+        f['ESLM, ESLC'] = _f.readline()
+    f['CORI'] = float(__line())
+    f['NTIF'] = int(__line())
+    _constituents = list()
+    for i in range(f['NTIF']):
+        _constituents.append(__line()); __line()
+    f['NTIF'] = {'NTIF'         : f['NTIF'],
+                 'constituents' : _constituents}
+    _NBFR = int(__line())
+    _parameters=list()
+    for i in range(_NBFR):
+        _parameters.append((__line(), _f.readline()))
+    f['BOUNTAG'] = OrderedDict()
+    for _constituent, _constants in _parameters:
+        _c = _constants.split()
+        f['BOUNTAG'][_constituent] = {
+            'forcing_frequency'     : float(_c[0]),
+            'nodal_factor'          : float(_c[1]),
+            'equilibrium_arguments' : float(_c[2]),
+            'amplitude'             : list(),
+            'phase'                 : list()}
 
-    if fort15['wind_forcing_type_flag'] > 1 and \
-        (fort15['wind_forcing_type_flag']!=11 or fort15['wind_forcing_type_flag']!=9):
-        
-        fort15['meteorological_parameters'] = dict()
-        
-        if np.abs(fort15['wind_forcing_type_flag']) in [101, 301, 401, 111, 311, 411]:
-            fort15['meteorological_parameters']['time_interval_rad_stress'] = float(f.readline().split('!')[0])
-        
-        elif np.abs(fort15['wind_forcing_type_flag']) in [2, 4, 5, 7, 10, 12, 15, 16]:
-            fort15['meteorological_parameters']['time_interval_met_forcing'] = float(f.readline().split('!')[0])
-        
-        elif np.abs(fort15['wind_forcing_type_flag']) in [102, 302, 402, 104, 304, 404, 105, 305, 405, 107, 307, 407, 110, 310, 410, 112, 312, 412, 115, 315, 415, 116, 316, 416]:
-            line = f.readline().split('!')[0].split()
-            fort15['meteorological_parameters']['time_interval_met_forcing'] = float(line[0])
-            fort15['meteorological_parameters']['time_interval_rad_stress'] = float(line[1])
-        
-        elif np.abs(fort15['wind_forcing_type_flag']) in [3]:
-            line = f.readline().split('!')[0].split()
-            fort15['meteorological_parameters']['time_interval_met_forcing'] = float(line[0])
-            fort15['meteorological_parameters']['time_interval_rad_stress'] = float(line[1])
-    return fort15
+    for _constituent in list(f['BOUNTAG'].keys()):
+        __line()
+        for _boundary in self.Boundaries.ocean_boundaries:
+            for j in range(len(_boundary)):
+                line = _f.readline().split()
+                f['BOUNTAG'][_constituent]['amplitude'].append(float(line[0]))
+                f['BOUNTAG'][_constituent]['phase'].append(float(line[1]))
+        f['BOUNTAG'][_constituent]['amplitude'] = np.asarray(f['BOUNTAG'][_constituent]['amplitude'])
+        f['BOUNTAG'][_constituent]['phase'] = np.asarray(f['BOUNTAG'][_constituent]['phase'])
+    f['ANGINN'] = float(__line())
+    if self.Boundaries.inflow_boundaries is not None:
+        raise NotImplementedError('This fort.15 appears to include inflow boundaries which are not yet supported')
+    f['StationOutputs'] = dict()
+    def __stations():
+        line = __line().split()
+        _dict = { 'id'         : list(),
+                  'coords'     : list(),
+                  'format'     : int(line[0]),
+                  'start_days' : float(line[1]),
+                  'stop_days'  : float(line[2]),
+                  'interval'   : float(line[3])}
+        for i in range(int(__line())):
+            line = _f.readline().split('!')
+            if len(line)>1:
+                _id = line[-1].strip()
+            else:
+                _id = i
+            _dict['id'].append(_id)
+            line = line[0].split()
+            _dict['coords'].append((float(line[0]), float(line[1])))
+        return _dict
+    f['StationOutputs']['elevation'] = __stations()
+    f['StationOutputs']['velocity'] = __stations()
+    if f['IM'] == 10:
+        f['StationOutputs']['NSTAC'] = __stations()
+    if f['NWS'] != 0:
+        f['StationOutputs']['meteo'] = __stations()
+    f['NOUTGE, TOUTSGE, TOUTFGE, NSPOOLGE'] = _f.readline()
+    f['NOUTGV, TOUTSGV, TOUTFGV, NSPOOLGV'] = _f.readline()
+    if f['IM'] == 10:
+        f['NOUTGC, TOUTSGC, TOUTFGC, NSPOOLGC'] = _f.readline()
+    if f['NWS'] != 0:
+        f['NOUTGW, TOUTSGW, TOUTFGW, NSPOOLGW'] = _f.readline()
+    _NFREQ = int(__line())
+    if _NFREQ > 0:
+        for i in range(_NFREQ):
+            f['StationOutputs']['HarmonicConstituents'] = _f.readline()
+            _f.readline()
+    f['THAS, THAF, NHAINC, FMV'] = _f.readline()
+    f['NHASE, NHASV, NHAGE, NHAGV'] = _f.readline()
+    f['NHSTAR, NHSINC'] = _f.readline()
+    f['ITITER, ISLDIA, CONVCR, ITMAX'] = _f.readline()
+    if f['IM']>1:
+        raise Exception('3D not yet supported.')
+    f['NCPROJ'] = _f.readline()
+    f['NCINST'] = _f.readline()
+    f['NCSOUR'] = _f.readline()
+    f['NCHIST'] = _f.readline()
+    f['NCREF']  = _f.readline()
+    f['NCCOM']  = _f.readline()
+    f['NCHOST'] = _f.readline()
+    f['NCCONV'] = _f.readline()
+    f['NCCONT'] = _f.readline()
+    f['NCDATE'] = datetime.strptime(_f.readline().strip(), '%Y-%m-%d %H:%M:%S UTC')
+    self.fort15 = Mesh.fort15(**f)
 
-
-
-
-def generate_forcing_from_TPXO(self, Mesh):
-    
-    if isinstance(Mesh, ("".__class__, u"".__class__)):
-        fname = Mesh
-        Mesh  = Mesh.init_from_file(fname)
+def generate_forcing_from_TPXO(self):
     boundary_TPXO = list()
-    if Mesh.ocean_boundaries is not None:
+    if self.ocean_boundaries is not None:
         Tpxo = TidalDB.TPXO()
-        for boundary in Mesh.ocean_boundaries:
-            boundary_TPXO.append(Tpxo.get_constituents_at_lonlat(Mesh.x[boundary], Mesh.y[boundary], self.constituent_list))
-        self.boundary_TPXO = boundary_TPXO
+        for boundary in self.ocean_boundaries:
+            boundary_TPXO.append(Tpxo.get_constituents_at_lonlat(self.x[boundary], self.y[boundary], self.constituent_list))
+        self.fort15.boundary_TPXO = boundary_TPXO
     return self
 
 def generate_equilibrium_arguments(self, start_date, end_date):

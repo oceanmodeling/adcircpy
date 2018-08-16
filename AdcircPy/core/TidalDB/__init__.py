@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import netCDF4
-from AdcircPy.TidalDB._TidalDB import orbital_frequency,\
+from AdcircPy.core.TidalDB._TidalDB import orbital_frequency,\
                              doodson_coefficient,\
                              tidal_potential_amplitude,\
                              earth_tidal_potential_reduction_factor

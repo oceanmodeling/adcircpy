@@ -2,28 +2,26 @@ name = "AdcircPy"
 from AdcircPy.Mesh   import AdcircMesh
 from AdcircPy.Outputs import Outputs
 
-def read_mesh(fort14, datum=None, epsg=4326, fort13=None):
+# class AdcircPy(object):
+def read_mesh(fort14, **kwargs):
     """
     Reads ADCIRC input files.
     
-    -----------
     Parameters:
     -----------
         fort14 (string) :  Path to fort.14 file.
     
-    -------------------
     Optional arguments:
     -------------------
         fort13 (string) <None> : Path to optional fort.13 file.
         fort15 (string) <None> : Path to optional fort.15 file.
         datum  (string) <'MSL' (default)|'NAVD88'> : Mesh vertical datum.
     
-    -------
     return:
     -------
         AdcirPy.Mesh instance.
     """
-    return AdcircMesh.init_from_files(fort14, datum, epsg, fort13)
+    return AdcircMesh.init_from_files(fort14, **kwargs)
     
 
 def read_output(path, **kwargs):

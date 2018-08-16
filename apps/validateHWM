@@ -6,7 +6,7 @@ from scipy import spatial
 import sys
 sys.path.append('..')
 from AdcircPy.Outputs import Maxele
-from AdcircPy.core.Validation import USGSHighWaterMarks
+from AdcircPy.core.Validation import USGS
 
 def _parse_args():
     global args
@@ -92,8 +92,9 @@ def _make_validation_plots(ModelValues, HWMValues, **kwargs):
 
 def main():
     _parse_args()
-    HWM = USGSHighWaterMarks.from_event_name(args.eventName)
+    HWM = USGS.getHighWaterMarks(args.eventName)
     HWM, rejectCount  = HWM.filter(fair=True, poor=True, riverine=True, non_still_water=True, return_count=True)
+    print(rejectCount)
     maxele = Maxele.from_netcdf(args.maxeleFile)
     # ModelValues, HWMValues = _radial_validation(HWM, maxele, multiplier=2.)
     ModelValues, HWMValues = _finite_volume_validation(HWM, maxele)

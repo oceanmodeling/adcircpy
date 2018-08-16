@@ -24,16 +24,25 @@ class Boundaries(object):
     return _Boundaries.plot_outerBoundary(self)
 
 class UnstructuredGrid(object):   
-  def __init__(self, x, y, values, elements, **kwargs):
-    self.x          = x
-    self.y          = y
-    self.values = values
-    self.elements   = elements
-    self.nodeID     = kwargs.pop("nodeID", None)
-    self.elementID  = kwargs.pop("elementID", None)
-    self.datum      = kwargs.pop("datum", None)
-    self.epsg       = kwargs.pop("epsg", None)
-    self.Boundaries = Boundaries(**kwargs)
+  def __init__(self, x, y, values, elements, Dataset=None, **kwargs):
+    self.x           = x
+    self.y           = y
+    self._values     = values
+    self.elements    = elements
+    self.nodeID      = kwargs.pop("nodeID", None)
+    self.elementID   = kwargs.pop("elementID", None)
+    self.datum       = kwargs.pop("datum", None)
+    self.epsg        = kwargs.pop("epsg", None)
+    self.Boundaries  = Boundaries(**kwargs) 
+
+  @property
+  def values(self):
+    return self._values
+
+  @values.setter
+  def values(self, values):
+    self._values = values
+
 
   def __sub__(self, other):
     """
