@@ -3,7 +3,7 @@ import copy
 import warnings
 from scipy.interpolate import griddata
 from AdcircPy import Mesh as _Mesh
-from AdcircPy import Datum
+from AdcircPy.core import Datum
             
 def msl_to_navd88(Datum_grid):
     f  = open(Datum_grid) 
