@@ -1,4 +1,3 @@
-from AdcircPy.Surface import Surface
 from AdcircPy.Datum import _DatumGrid
 from AdcircPy.Datum import _vdatum
 
