@@ -21,7 +21,7 @@ def read_mesh(fort14, **kwargs):
     -------
         AdcirPy.Mesh instance.
     """
-    return AdcircMesh.init_from_files(fort14, **kwargs)
+    return AdcircMesh.from_fort14(fort14, **kwargs)
     
 
 def read_output(path, **kwargs):

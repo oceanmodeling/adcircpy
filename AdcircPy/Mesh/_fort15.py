@@ -5,6 +5,8 @@ from AdcircPy import Mesh
 # from AdcircPy.core import TidalDB
 
 def _init_fort15(self, path):
+    if path is None:
+        return
     _f = open(path)
     def __line():
         return _f.readline().split('!')[0].strip()

@@ -10,12 +10,11 @@ from AdcircPy.Outputs import _Maxele
 from AdcircPy.Outputs import _HarmonicConstituentsSurface
 
 class Outputs(object):
-  def __init__(self, path, fort14=None, fort15=None, fort13=None, datum=None, epsg=None):
-    self._path   = path
-    self._fort14 = fort14
-    self._fort15 = fort15
-    self._fort13 = fort13
-    self.datum   = datum
+  def __init__(self, path, fort14=None, fort15=None, datum=None, epsg=None):
+    self.path   = path
+    self.fort14 = fort14
+    self.fort15 = fort15
+    self.datum  = datum
     self.epsg    = epsg
 
   @staticmethod
@@ -35,9 +34,17 @@ class Outputs(object):
     """ """
     return _Outputs._read_netcdf(self)
 
-  def _read_ascii_type(self):
+  def _read_ascii(self, fort14, **kwargs):
     """ """
-    return _Outptuts._read_ascii_type(self)
+    return _Outputs._read_ascii(self, fort14, **kwargs)
+
+  def _parse_harmonic_constituent_output(self, f):
+    """  """
+    return _Outputs._parse_harmonic_constituent_output(self, f)
+
+  def _parse_ascii_output(self, f):
+    """  """
+    return _Outputs._parse_ascii_output(self, f)
     
 class _netCDF4(object):
   def __init__(self, Dataset, var, **kwargs):

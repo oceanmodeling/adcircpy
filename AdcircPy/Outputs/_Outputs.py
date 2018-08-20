@@ -11,67 +11,32 @@ def read_outputs(path, **kwargs):
     return Outputs.Outputs(path, **kwargs)._open_file()
 
 def _open_file(self):
-    if os.path.isfile(self._path)==False:
-        raise FileNotFoundError("No such file or directory: %s" % path)
-    self._check_netcdf()
-    if self._nc == True:
-        return self._read_netcdf()
-    else:
-        self._read_ascii_type()
-        if self._ascii_type == 'harmonic_constituents':
-            return Outputs.HarmonicConstituents.from_ascii(self._path, fort14=self._fort14, fort15=self._fort15, datum=self.datum, epsg=self.epsg)
-
-def _set__nc(self):
-    try:
-        Dataset(self._path)
-        self._nc = True
-    except:
-        self._nc = False
-
-def _get_output(self):
-    if 'station' in self.Dataset.dimensions.keys():
-        if 'zeta' in self.Dataset.variables.keys():
-            return Outputs.ElevationStationTimeSeries.from_netcdf(self._path)
+  if os.path.isfile(self.path)==False:
+    raise FileNotFoundError("No such file or directory: %s" % path)
+  try:
+    Dataset(self.path)
+    _nc = True
+  except:
+    _nc = False
+  if _nc == True:
+    return self._read_netcdf()
+  else:
+    if self.fort14 is None:
+      raise Exception('For reading ASCII outputs, a fort.14 is required. A fort.15 is optional.')
+    if isinstance(self.fort14, AdcircMesh)==False:
+      self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, fort15=self.fort15, datum=self.datum, epsg=self.epsg)
+    self._read_ascii()
 
 def _read_netcdf(self):
-    self.Dataset = Dataset(self._path)
-    return self._get_netcdf_output()
+  self.Dataset = Dataset(self._path)
+  if 'station' in self.Dataset.dimensions.keys():
+    if 'zeta' in self.Dataset.variables.keys():
+      return Outputs.ElevationStationTimeSeries.from_netcdf(self._path)
 
-def _add_fort14_data(self, params):
-    pass
-
-
-
-# def _set__type(self):
-#     if self._nc == True:
-#         _netcdf._set__type(self)
-#     else:
-#         _ascii._set__type(self)
-
-
-def _load_fort14(self):
-  if isinstance(self.fort14, ("".__class__, u"".__class__)):
-      self.fort14 = Mesh.init_from_fort14(fort14, datum, epsg)
-  
-  elif isinstance(fort14, Mesh):
-      pass
-
-def _read_ascii_type(self):
-  f = open(self._path)
+def _read_ascii(self):
+  f = open(self.path)
   line = f.readline().strip()
-  try:
-    _num = int(line)
-    self._ascii_type = 'harmonic_constituents' 
-  except:
-    self._ascii_type = None
-
-  if self._ascii_type == None:
-    # detect other than harmonic constituents
-    raise NotImplementedError('need to detect other than harmonic constituents')
   f.close()
-
-
-
 
 
   # Error checking for input args
