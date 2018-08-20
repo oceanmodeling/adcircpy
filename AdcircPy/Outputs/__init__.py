@@ -5,7 +5,7 @@ from AdcircPy.Outputs import _Outputs
 from AdcircPy.Outputs import _ElevationStations
 # from AdcircPy.Outputs import _VelocityStations
 from AdcircPy.Outputs import _HarmonicConstituentsStations
-from AdcircPy.Outputs import __OutputSurface
+from AdcircPy.Outputs import _OutputSurface
 from AdcircPy.Outputs import _Maxele
 from AdcircPy.Outputs import _HarmonicConstituentsSurface
 
@@ -78,7 +78,7 @@ class _OutputSurface(UnstructuredGrid, _netCDF4):
     _netCDF4.__init__(self, kwargs.pop('Dataset', None), **kwargs)
 
   def make_animation(self, **kwargs):
-    return __OutputSurface.make_animation(self, **kwargs)
+    return _OutputSurface.make_animation(self, **kwargs)
 
 class _Stations(dict, _netCDF4):
   def __init__(self, **kwargs):

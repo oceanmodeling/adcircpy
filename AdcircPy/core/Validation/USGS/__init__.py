@@ -1,17 +1,5 @@
-from AdcircPy.core.Validation import _HighWaterMarks
-
-class USGS(dict):
-  def __init__(self, **kwargs):
-    self.epsg   = kwargs.pop("epsg", None)
-    dict.__init__(self, **kwargs)
-  
-  @staticmethod
-  def getHighWaterMarks(eventName):
-    return _HighWaterMarks.from_event_name(eventName)
-
-  @staticmethod
-  def _get_event_id(eventName):
-    return _HighWaterMarks._get_event_id(eventName)
+from AdcircPy.core.Validation import USGS
+from AdcircPy.core.Validation.USGS import _HighWaterMarks
 
 class HighWaterMarks(USGS):
   def __init__(self, **kwargs):
@@ -30,8 +18,8 @@ class HighWaterMarks(USGS):
     return _HighWaterMarks.get_event_list()
 
 
-  def filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False, non_still_water=False, return_count=False, copy=True):
-    return _HighWaterMarks.filter(self, excellent, good, fair, poor, riverine, non_still_water, return_count, copy)
+  def filter(self, **kwargs):
+    return _HighWaterMarks.filter(self, **kwargs)
 
   def clip_from_shapefile(self, path, **kwargs):
     return _HighWaterMarks.clip_from_shapefile(self, path, **kwargs)
@@ -65,3 +53,7 @@ class HighWaterMarks(USGS):
 
   def _parse_args(self):
     _HighWaterMarks._parse_args(self)
+
+  @staticmethod
+  def _get_event_id(eventName):
+    return _HighWaterMarks._get_event_id(eventName)

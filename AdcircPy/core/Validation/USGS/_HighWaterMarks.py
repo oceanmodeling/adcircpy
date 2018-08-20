@@ -17,7 +17,7 @@ params['EventType'] = 2 # 2 for hurricane
 params['EventStatus'] = 0 # for completed
      
 def from_event_name(eventName):
-    params['Event'] = Validation.USGS._get_event_id(eventName.lower())
+    params['Event'] = Validation.USGS.HighWaterMarks._get_event_id(eventName.lower())
     response = requests.get(rest_url, params=params)
     response.raise_for_status()
     json_data = json.loads(response.text)
@@ -29,7 +29,7 @@ def from_event_name(eventName):
             for key in data.keys():
                 hwm_stations[station_id][key] = data[key]
             hwm_stations[station_id]['elev_m'] = hwm_stations[station_id]['elev_ft'] / 3.28084
-    return Validation.HighWaterMarks(**hwm_stations)
+    return Validation.USGS.HighWaterMarks(**hwm_stations)
 
 
 def from_csv(path):
@@ -53,7 +53,7 @@ def from_csv(path):
         hwm_stations[station_id]['hwm_environment'] = line[header.index('hwm_environment')].lower()
         hwm_stations[station_id]['elev_m'] = hwm_stations[station_id]['elev_ft'] / 3.28084
     csvfile.close()
-    return Validation.HighWaterMarks(**hwm_stations)
+    return Validation.USGS.HighWaterMarks(**hwm_stations)
 
 def get_environments(self):
     environment = list()
@@ -61,19 +61,24 @@ def get_environments(self):
         environment.append(self[station]['environment'])
     return environment
     
-def filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False, non_still_water=False, return_count=False, copy=True):
+def filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False, non_still_water=False, return_count=False, keep_undefined=False, copy=True):
   if copy==True:
     _self = self
     self = deepcopy(_self)
 
   stations_to_delete = set()
   for station in self.keys():
-
-    try:
+    if 'hwm_quality_id' in self[station].keys():
         qid = self[station]['hwm_quality_id']
-    except:
-        stations_to_delete.add(station)  
+        if qid not in [1,2,3,4]:
+            qid=None
+    else:
+        qid=None
 
+    if qid is None:         
+        if keep_undefined==False:
+            stations_to_delete.add(station)
+    
     if excellent == True and qid == 1:
       stations_to_delete.add(station)
 
@@ -87,14 +92,15 @@ def filter(self, excellent=False, good=False, fair=False, poor=False, riverine=F
       stations_to_delete.add(station)
 
     if riverine == True:
-      if 'environment_type' in self[station].keys():
-        if self[station]['environment_type'].lower() == 'riverine':
+      if 'hwm_environment' in self[station].keys():
+        if self[station]['hwm_environment'].lower() == 'riverine':
           stations_to_delete.add(station)
 
-    if non_still_water == True and 'still_water' in self[station].keys():
-      print('line 126 _USGSHighWaterMaks.py reports finding a still_water key.')
-      print(self[station]['still_water'])
-      stations_to_delete.add(station)        
+    if non_still_water == True:
+        if 'still_water' in self[station].keys():
+            print('line 126 _USGSHighWaterMaks.py reports finding a still_water key.')
+            print(self[station]['still_water'])
+            stations_to_delete.add(station)        
 
   for station in stations_to_delete:
     del self[station]
