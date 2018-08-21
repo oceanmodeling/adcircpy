@@ -5,15 +5,12 @@ from AdcircPy.Mesh import _fort15
 from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
 
 class AdcircMesh(UnstructuredGrid):
-  def __init__(self, **kwargs):
-    UnstructuredGrid.__init__(self, kwargs.pop('x'),
-                                       kwargs.pop('y'),
-                                       kwargs.pop('elements'),
-                                       kwargs.pop('values'),
-                                       **kwargs)
+  def __init__(self, x, y, values, elements, **kwargs):
+    UnstructuredGrid.__init__(self, x, y, values, elements,
+                              epsg=kwargs.pop('epsg', 4326), **kwargs)
     self.description = kwargs.pop('description', None)
     self._init_fort15(kwargs.pop('fort15', None))
-    # self._init_fort13(kwargs.pop('fort13', None))
+    self._init_fort13(kwargs.pop('fort13', None))
 
   @staticmethod
   def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
@@ -32,8 +29,11 @@ class AdcircMesh(UnstructuredGrid):
   def _init_fort15(self, fort15):
     _fort15._init_fort15(self, fort15)
 
+  def _init_fort13(self, fort13):
+    _fort13._init_fort13(self, fort13)    
 
-class _fort13(dict):
+
+class fort13(dict):
   def __init__(self, **kwargs):
     # self.primitive_weighting_in_continuity_equation = kwargs.pop("primitive_weighting_in_continuity_equation", None)
     # self.surface_submergence_state = kwargs.pop("surface_submergence_state", None)
@@ -56,5 +56,10 @@ class fort15(dict):
   def __init__(self, **kwargs):
     dict.__init__(self, **kwargs)
 
-  # def generate_forcing_from_TPXO(self, Mesh):
-  #     return _Fort15.generate_forcing_from_TPXO(self, Mesh)
+  def generate_forcing_from_TPXO(self):
+    """ """
+    return _fort15._generate_forcing_from_TPXO(self)
+
+  def generate_equilibrium_arguments(self, start_date, end_date):
+    """ """
+    return _fort15._generate_equilibrium_arguments(self, start_date, end_date)

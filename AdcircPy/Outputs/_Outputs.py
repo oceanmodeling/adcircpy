@@ -25,7 +25,7 @@ def _open_file(self):
       raise Exception('For reading ASCII outputs, a fort.14 is required. A fort.15 is optional.')
     if isinstance(self.fort14, AdcircMesh)==False:
       self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, fort15=self.fort15, datum=self.datum, epsg=self.epsg)
-    self._read_ascii()
+    return self._read_ascii()
 
 def _read_netcdf(self):
   self.Dataset = Dataset(self._path)
@@ -36,7 +36,25 @@ def _read_netcdf(self):
 def _read_ascii(self):
   f = open(self.path)
   line = f.readline().strip()
-  f.close()
+  try: int(line); _=True
+  except: pass; _=False
+  if _==True:
+    f.close()  
+    return self._harmonic_constituent_ascii()
+  line = f.readline().split()
+  number_of_datasets = int(line[0])
+  number_of_points = int(line[1])
+  if number_of_points == self.fort14.x.size:
+    f.close()
+    return Outputs.__OutputSurface.from_ascii(self.path, self.fort14, epsg=self.epsg)
+  else:
+    f.close()
+    return Outputs.__OutputStations.from_ascii(self.path, self.fort14)
+
+def _harmonic_constituent_ascii():
+  pass
+  
+
 
 
   # Error checking for input args

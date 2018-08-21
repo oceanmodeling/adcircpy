@@ -1,7 +1,9 @@
 import numpy as np
 from AdcircPy import Mesh
 
-def _from_fort13(path):
+def _init_fort13(self, path):
+    if path == None:
+        return
     fort13={}
     with open(path, 'r') as f:
         f.readline().strip()
@@ -32,5 +34,5 @@ def _from_fort13(path):
                 j+=1
             values[np.where(np.isnan(values[:,0])),:] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
-    return fort13
+    self.fort13 = Mesh.fort13(**fort13)
     

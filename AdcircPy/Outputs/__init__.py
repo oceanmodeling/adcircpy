@@ -1,7 +1,7 @@
 from AdcircPy.Mesh import AdcircMesh
 from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
 from AdcircPy.Outputs import _Outputs
-# from AdcircPy.Outputs import __Stations
+# from AdcircPy.Outputs import __OutputStations
 from AdcircPy.Outputs import _ElevationStations
 # from AdcircPy.Outputs import _VelocityStations
 from AdcircPy.Outputs import _HarmonicConstituentsStations
@@ -10,7 +10,7 @@ from AdcircPy.Outputs import _Maxele
 from AdcircPy.Outputs import _HarmonicConstituentsSurface
 
 class Outputs(object):
-  def __init__(self, path, fort14=None, fort15=None, datum=None, epsg=None):
+  def __init__(self, path, fort14=None, fort15=None, datum='MSL', epsg=4326):
     self.path   = path
     self.fort14 = fort14
     self.fort15 = fort15
@@ -34,9 +34,9 @@ class Outputs(object):
     """ """
     return _Outputs._read_netcdf(self)
 
-  def _read_ascii(self, fort14, **kwargs):
+  def _read_ascii(self, **kwargs):
     """ """
-    return _Outputs._read_ascii(self, fort14, **kwargs)
+    return _Outputs._read_ascii(self, **kwargs)
 
   def _parse_harmonic_constituent_output(self, f):
     """  """
@@ -72,23 +72,51 @@ class _netCDF4(object):
     self.__var = name
     self.values = self.Dataset[self._var][self._slice,:,:]
 
-class _OutputSurface(UnstructuredGrid, _netCDF4):
-  def __init__(self, x, y, values, elements, **kwargs):
-    UnstructuredGrid.__init__(self, **kwargs)
-    _netCDF4.__init__(self, kwargs.pop('Dataset', None), **kwargs)
+class _ASCII(object):
+  def __init__(self, f, **kwargs):
+    self._f = f
+    self.__slice = 0.
+  
+  @property
+  def _slice(self):
+    return self.__slice
 
+  @_slice.setter
+  def _slice(self, __slice):
+    self.__slice = __slice
+    values = list()
+    for i in range(self.x.size):
+      values.append(float(f.readline().split()[1]))
+    self.values = np.ma.masked_equal(values, -99999.)
+
+class __OutputSurface(AdcircMesh, _netCDF4, _ASCII):
+  def __init__(self, x, y, values, elements, **kwargs):
+    AdcircMesh.__init__(self, x, y, values, elements, **kwargs)
+    if 'Dataset' in kwargs.keys():
+      _netCDF4.__init__(self, kwargs.pop('Dataset'), **kwargs)
+    elif 'f' in kwargs.keys():
+      _ASCII.__init__(self, kwargs.pop('f'))
+
+  @staticmethod
+  def from_ascii(path, fort14, **kwargs):
+    return _OutputSurface._from_ascii(path, fort14, **kwargs)
+    
   def make_animation(self, **kwargs):
     return _OutputSurface.make_animation(self, **kwargs)
 
-class _Stations(dict, _netCDF4):
+class _OutputStations(dict, _netCDF4):
   def __init__(self, **kwargs):
     _netCDF4.__init__(self, Dataset = kwargs.pop('Dataset', None),
                             var = kwargs.pop('var', None), **kwargs)
     dict.__init__(self, **kwargs)
+  
+  @staticmethod
+  def from_ascii(path, **kwargs):
+    return _OutputStations._from_ascii(path, **kwargs)    
 
-class ElevationStations(_Stations):
+class ElevationStations(_OutputStations):
   def __init__(self, **kwargs):
-    _Stations.__init__(self, **kwargs)
+    _OutputStations.__init__(self, **kwargs)
 
   def make_plot(self, station, **kwargs):
     return _ElevationStations._make_plot(self, station, **kwargs)
@@ -97,29 +125,29 @@ class ElevationStations(_Stations):
   def from_netcdf(path):
     return _ElevationStations._from_netcdf(path)
 
-class HarmonicConstituentsStations(_Stations):
+class HarmonicConstituentsStations(_OutputStations):
   def __init__(self, **kwargs):
-    _Stations.__init__(self, **kwargs)
+    _OutputStations.__init__(self, **kwargs)
 
   @staticmethod
   def from_fort51(path, fort14, fort15):
     return _HarmonicConstituentsStations._from_fort51(path, fort14, fort15)
 
-class Maxele(_OutputSurface):
+class Maxele(__OutputSurface):
   def __init__(self, **kwargs):
     _OutputSurface.__init__(self, **kwargs)
 
-  @staticmethod
-  def from_ascii(path, fort14):
-    _Maxele._from_ascii(path, fort14)
+  # @staticmethod
+  # def from_ascii(path, fort14):
+  #   _Maxele._from_ascii(path, fort14)
     
   @staticmethod
   def from_netcdf(path, fort14=None):
     return _Maxele._from_netcdf(path, fort14)
 
-class VelocityStations(_Stations):
+class VelocityStations(_OutputStations):
   def __init__(self, **kwargs):
-    _Stations.__init__(self, **kwargs)
+    _OutputStations.__init__(self, **kwargs)
 
   def make_plot(self, station, **kwargs):
     return _VelocityStations._make_plot(self, station, **kwargs)

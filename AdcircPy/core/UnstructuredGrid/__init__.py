@@ -1,30 +1,8 @@
 from matplotlib.colors import Normalize
 from AdcircPy.core.UnstructuredGrid import _UnstructuredGrid, _Boundaries
 
-class Boundaries(object):
-  def __init__(self, **kwargs):
-    self.ocean_boundaries    = kwargs.pop("ocean_boundaries", None)
-    self.land_boundaries     = kwargs.pop("land_boundaries", None)
-    self.inner_boundaries    = kwargs.pop("inner_boundaries", None)
-    self.weir_boundaries     = kwargs.pop("weir_boundaries", None)
-    self.inflow_boundaries   = kwargs.pop("inflow_boundaries", None)
-    self.outflow_boundaries  = kwargs.pop("outflow_boundaries", None)
-    self.culvert_boundaries  = kwargs.pop("culvert_boundaries", None)
-
-  def get_land_boundaries(self, **kwargs):
-    return _Boundaries.get_land_boundaries(self, **kwargs)
-
-  def build_outer_polygon(self, **kwargs):
-    return _Boundaries.build_outer_polygon(self, **kwargs)
-
-  def build_inner_polygons(self, **kwargs):
-    return _Boundaries.build_inner_polygons(self, **kwargs)
-
-  def plot_outerBoundary(self):
-    return _Boundaries.plot_outerBoundary(self)
-
 class UnstructuredGrid(object):   
-  def __init__(self, x, y, values, elements, Dataset=None, **kwargs):
+  def __init__(self, x, y, values, elements, **kwargs):
     self.x           = x
     self.y           = y
     self._values     = values
@@ -33,7 +11,13 @@ class UnstructuredGrid(object):
     self.elementID   = kwargs.pop("elementID", None)
     self.datum       = kwargs.pop("datum", None)
     self.epsg        = kwargs.pop("epsg", None)
-    self.Boundaries  = Boundaries(**kwargs) 
+    self.ocean_boundaries    = kwargs.pop("ocean_boundaries", None)
+    self.land_boundaries     = kwargs.pop("land_boundaries", None)
+    self.inner_boundaries    = kwargs.pop("inner_boundaries", None)
+    self.weir_boundaries     = kwargs.pop("weir_boundaries", None)
+    self.inflow_boundaries   = kwargs.pop("inflow_boundaries", None)
+    self.outflow_boundaries  = kwargs.pop("outflow_boundaries", None)
+    self.culvert_boundaries  = kwargs.pop("culvert_boundaries", None)
 
   @property
   def values(self):
@@ -148,6 +132,18 @@ class UnstructuredGrid(object):
   def transform_to_epsg(self, epsg):
     """ """
     _UnstructuredGrid.transform_to_epsg(self, epsg)
+
+  def get_land_boundaries(self, **kwargs):
+    return _Boundaries.get_land_boundaries(self, **kwargs)
+
+  def build_outer_polygon(self, **kwargs):
+    return _Boundaries.build_outer_polygon(self, **kwargs)
+
+  def build_inner_polygons(self, **kwargs):
+    return _Boundaries.build_inner_polygons(self, **kwargs)
+
+  def plot_outerBoundary(self):
+    return _Boundaries.plot_outerBoundary(self)
 
 
 class _SurfaceDifference(UnstructuredGrid):

@@ -153,14 +153,13 @@ def _init_fort15(self, path):
     f['NCDATE'] = datetime.strptime(_f.readline().strip(), '%Y-%m-%d %H:%M:%S UTC')
     self.fort15 = Mesh.fort15(**f)
 
-def generate_forcing_from_TPXO(self):
+def _generate_forcing_from_TPXO(self):
     boundary_TPXO = list()
     if self.ocean_boundaries is not None:
         Tpxo = TidalDB.TPXO()
         for boundary in self.ocean_boundaries:
             boundary_TPXO.append(Tpxo.get_constituents_at_lonlat(self.x[boundary], self.y[boundary], self.constituent_list))
         self.fort15.boundary_TPXO = boundary_TPXO
-    return self
 
-def generate_equilibrium_arguments(self, start_date, end_date):
+def _generate_equilibrium_arguments(self, start_date, end_date):
     pass
