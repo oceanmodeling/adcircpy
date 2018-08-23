@@ -94,13 +94,11 @@ def main():
     _parse_args()
     HWM = HighWaterMarks.from_event_name(args.eventName)
     _start = len(HWM.keys())
-    print(_start)
     HWM, rejectCount  = HWM.filter(fair=True, poor=True,
                                    riverine=True,
                                    non_still_water=True,
                                    return_count=True)
     _end = _start - rejectCount
-    print(_end)
     maxele = Maxele.from_netcdf(args.maxeleFile)
     # ModelValues, HWMValues = _radial_validation(HWM, maxele, multiplier=2.)
     ModelValues, HWMValues = _finite_volume_validation(HWM, maxele)

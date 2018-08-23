@@ -2,7 +2,7 @@
 import os
 import argparse
 import matplotlib.pyplot as plt
-from AdcircPy import Mesh
+from AdcircPy.Mesh import AdcircMesh
 
 cwd = os.getcwd()
 
@@ -14,7 +14,7 @@ def parse_args():
     
 def main():
     parse_args()
-    mesh = Mesh.init_from_fort14(args.meshPath)
+    mesh = AdcircMesh.from_fort14(args.meshPath)
     mesh.make_plot()
     plt.show()
 
