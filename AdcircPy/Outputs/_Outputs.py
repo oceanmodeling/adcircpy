@@ -11,10 +11,10 @@ def read_outputs(path, **kwargs):
     return Outputs.Outputs(path, **kwargs)._open_file()
 
 def _open_file(self):
-  if os.path.isfile(self.path)==False:
+  if os.path.isfile(self._path)==False:
     raise FileNotFoundError("No such file or directory: %s" % path)
   try:
-    Dataset(self.path)
+    Dataset(self._path)
     _nc = True
   except:
     _nc = False
@@ -31,10 +31,10 @@ def _read_netcdf(self):
   self.Dataset = Dataset(self._path)
   if 'station' in self.Dataset.dimensions.keys():
     if 'zeta' in self.Dataset.variables.keys():
-      return Outputs.ElevationStationTimeSeries.from_netcdf(self._path)
+      return Outputs.ElevationStations.from_netcdf(self._path)
 
 def _read_ascii(self):
-  f = open(self.path)
+  f = open(self._path)
   line = f.readline().strip()
   try: int(line); _=True
   except: pass; _=False
@@ -46,10 +46,10 @@ def _read_ascii(self):
   number_of_points = int(line[1])
   if number_of_points == self.fort14.x.size:
     f.close()
-    return Outputs.__OutputSurface.from_ascii(self.path, self.fort14, epsg=self.epsg)
+    return Outputs.__OutputSurface.from_ascii(self._path, self.fort14, epsg=self.epsg)
   else:
     f.close()
-    return Outputs.__OutputStations.from_ascii(self.path, self.fort14)
+    return Outputs.__OutputStations.from_ascii(self._path, self.fort14)
 
 def _harmonic_constituent_ascii():
   pass

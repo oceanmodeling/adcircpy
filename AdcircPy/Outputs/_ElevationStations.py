@@ -6,18 +6,18 @@ from AdcircPy import Outputs
 
 def _from_netcdf(path):
     _Dataset      = Dataset(path)
-    station_name = list()
     start_datetime = datetime.strptime(_Dataset['time'].units, 'seconds since %Y-%m-%d %H:%M:%S UTC')
     time = [start_datetime + timedelta(seconds=x) for x in _Dataset['time'][:]]
+    station_ids = list()
     for station in _Dataset.variables['station_name'][:]:
-        station_name.append(station.tostring().strip().decode('utf-8'))
-    return Outputs.ElevationStationTimeSeries(
-                    _Dataset['x'][:],
-                    _Dataset['y'][:],
-                    _Dataset['zeta'][:],
-                    time,
-                    station_name,
-                    _Dataset)
+        station_ids.append(station.tostring().strip().decode('utf-8'))
+    station_data = dict()
+    for i, station in enumerate(station_ids):
+        station_data[station] = {
+        'longitude' : _Dataset['x'][i],
+        'latitude'  : _Dataset['y'][i],
+        'zeta'      : _Dataset['zeta'][:,i]}                                   
+    return Outputs.ElevationStations(time, **station_data)
     
 def _make_plot(self, station, **kwargs):
     axes    = kwargs.pop('axes', None)

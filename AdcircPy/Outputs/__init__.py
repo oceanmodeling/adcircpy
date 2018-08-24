@@ -1,7 +1,7 @@
 from AdcircPy.Mesh import AdcircMesh
 from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
 from AdcircPy.Outputs import _Outputs
-# from AdcircPy.Outputs import __OutputStations
+from AdcircPy.Outputs import _OutputStations
 from AdcircPy.Outputs import _ElevationStations
 # from AdcircPy.Outputs import _VelocityStations
 from AdcircPy.Outputs import _HarmonicConstituentsStations
@@ -11,11 +11,11 @@ from AdcircPy.Outputs import _HarmonicConstituentsSurface
 
 class Outputs(object):
   def __init__(self, path, fort14=None, fort15=None, datum='MSL', epsg=4326):
-    self.path   = path
-    self.fort14 = fort14
-    self.fort15 = fort15
-    self.datum  = datum
-    self.epsg    = epsg
+    self._path   = path
+    self._fort14 = fort14
+    self._fort15 = fort15
+    self._datum  = datum
+    self._epsg    = epsg
 
   @staticmethod
   def read_outputs(path, **kwargs):
@@ -89,7 +89,7 @@ class _ASCII(object):
       values.append(float(f.readline().split()[1]))
     self.values = np.ma.masked_equal(values, -99999.)
 
-class __OutputSurface(AdcircMesh, _netCDF4, _ASCII):
+class _OutputSurface(AdcircMesh, _netCDF4, _ASCII):
   def __init__(self, x, y, values, elements, **kwargs):
     AdcircMesh.__init__(self, x, y, values, elements, **kwargs)
     if 'Dataset' in kwargs.keys():
@@ -104,23 +104,15 @@ class __OutputSurface(AdcircMesh, _netCDF4, _ASCII):
   def make_animation(self, **kwargs):
     return _OutputSurface.make_animation(self, **kwargs)
 
-class _OutputStations(dict, _netCDF4):
-  def __init__(self, **kwargs):
-    _netCDF4.__init__(self, Dataset = kwargs.pop('Dataset', None),
-                            var = kwargs.pop('var', None), **kwargs)
-    dict.__init__(self, **kwargs)
-  
-  @staticmethod
-  def from_ascii(path, **kwargs):
-    return _OutputStations._from_ascii(path, **kwargs)    
+class _OutputStations(dict):
+  def __init__(self, time, **station_data):
+    self.time = time
+    dict.__init__(self, **station_data)
 
 class ElevationStations(_OutputStations):
-  def __init__(self, **kwargs):
-    _OutputStations.__init__(self, **kwargs)
-
-  def make_plot(self, station, **kwargs):
-    return _ElevationStations._make_plot(self, station, **kwargs)
-
+  def __init__(self, time, **station_data):
+    _OutputStations.__init__(self, time, **station_data)
+  
   @staticmethod
   def from_netcdf(path):
     return _ElevationStations._from_netcdf(path)
@@ -133,7 +125,7 @@ class HarmonicConstituentsStations(_OutputStations):
   def from_fort51(path, fort14, fort15):
     return _HarmonicConstituentsStations._from_fort51(path, fort14, fort15)
 
-class Maxele(__OutputSurface):
+class Maxele(_OutputSurface):
   def __init__(self, **kwargs):
     _OutputSurface.__init__(self, **kwargs)
 

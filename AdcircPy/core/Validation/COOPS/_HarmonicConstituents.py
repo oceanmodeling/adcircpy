@@ -17,15 +17,7 @@ if os.path.isfile(harmConstCache):
 else:
     harmConst = dict()
 
-rest_url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
-params = dict()
-params['format'] = 'json'
-params['unit'] = 'metric'
-params['application'] = 'AdcircPy'
-params['time_zone'] = 'gmt'
-
-
-def _from_stations_list(stations):
+def _from_station_list(stations):
   def __rebuild_cache():
     try:
       _rebuild_cache
@@ -57,7 +49,3 @@ def _from_stations_list(stations):
     _stations[station]=harmConst[station]
   __rebuild_cache()
   return _stations
-
-def _from_coops_id(station):
-    if station not in harmConst.keys():
-        pass

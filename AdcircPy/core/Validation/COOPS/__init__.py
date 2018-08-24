@@ -1,10 +1,20 @@
-from AdcircPy.core.Validation import COOPS
+from AdcircPy.core.Validation.COOPS import _COOPS
 from AdcircPy.core.Validation.COOPS import _HarmonicConstituents
 
-class HarmonicConstituents(COOPS):
+class COOPS(dict, _COOPS._REST):
   def __init__(self, **kwargs):
-    COOPS.__init__(self, **kwargs)
+    _COOPS._REST.__init__(self)
+    dict.__init__(self, **kwargs)
+
+  @staticmethod
+  def from_station_list(stations, start_date, end_date):
+    return _COOPS._from_station_list(stations, start_date, end_date)
+
+class HarmonicConstituents(dict):
+  def __init__(self, **kwargs):
+    dict.__init__(self, **kwargs)
   
   @staticmethod
-  def from_stations_list(stations):
-    return _HarmonicConstituents._from_stations_list(stations)
+  def from_station_list(stations):
+    return _HarmonicConstituents._from_station_list(stations)
+

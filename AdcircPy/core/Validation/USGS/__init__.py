@@ -1,6 +1,11 @@
 from AdcircPy.core.Validation import USGS
 from AdcircPy.core.Validation.USGS import _HighWaterMarks
 
+class USGS(dict):
+  def __init__(self, **kwargs):
+    self.epsg   = kwargs.pop("epsg", None)
+    dict.__init__(self, **kwargs)
+
 class HighWaterMarks(USGS):
   def __init__(self, **kwargs):
     USGS.__init__(self, **kwargs)
