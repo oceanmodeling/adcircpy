@@ -1,0 +1,23 @@
+#! /usr/bin/env python
+import sys
+sys.path.append('..')
+import argparse
+from datetime import datetime
+from AdcircPy.core.Winds import BestTrack
+
+def _parse_args():
+    global args
+    parser = argparse.ArgumentParser(description="Program to see a plot of an ADCIRC output.")
+    parser.add_argument("storm_id",  help="Storm id")
+    parser.add_argument("output_path",  help="output path for fort.22 file")
+    # parser.add_argument("--start-date")
+    # parser.add_argument("--end-date")
+    args =  parser.parse_args()
+
+def main():
+    _parse_args()
+    fort22 = BestTrack(args.storm_id)
+    fort22.dump(args.output_path)
+
+if __name__ == "__main__":
+    main()
