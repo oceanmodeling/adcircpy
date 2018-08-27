@@ -9,15 +9,15 @@ def _parse_args():
     global args
     parser = argparse.ArgumentParser(description="Program to see a plot of an ADCIRC output.")
     parser.add_argument("storm_id",  help="Storm id")
-    parser.add_argument("output_path",  help="output path for fort.22 file")
-    # parser.add_argument("--start-date")
-    # parser.add_argument("--end-date")
+    parser.add_argument("output_path", nargs="?",  help="output path for fort.22 file")
     args =  parser.parse_args()
 
 def main():
     _parse_args()
-    fort22 = BestTrack(args.storm_id)
-    fort22.dump(args.output_path)
+    fort22 = BestTrack(args.storm_id).printf()
+    if args.output_path is not None:
+        fort22.dump(args.output_path)
+        print('File written to: {}'.format(args.output_path))
 
 if __name__ == "__main__":
     main()

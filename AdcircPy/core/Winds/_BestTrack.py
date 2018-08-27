@@ -11,7 +11,7 @@ def _init_hurdat2(self, hurricane_id, start_date=None, end_date=None):
       if hurricane_id in line:
         line = [x.strip() for x in line]
         self._hurricane_id = hurricane_id
-        self._hurricane_name = line[1]
+        self._name = line[1]
         self._hurricane_number = int(line[2])
         self._datetime = list()
         self._record_identifier = list()
@@ -36,7 +36,6 @@ def _init_hurdat2(self, hurricane_id, start_date=None, end_date=None):
         self._wind_data['64']['SEQ']=list()
         self._wind_data['64']['SWQ']=list()
         self._wind_data['64']['NWQ']=list()
-
         if start_date is None:
           _date = datetime.min
           start_date = datetime.min
@@ -71,9 +70,12 @@ def _init_hurdat2(self, hurricane_id, start_date=None, end_date=None):
             self._wind_data['64']['SEQ'].append(float(data[17]))
             self._wind_data['64']['SWQ'].append(float(data[18]))
             self._wind_data['64']['NWQ'].append(float(data[19]))
+  self._generate_best_track_data()
 
-def _dump(self, path):
-  def _write_isotach_data(isotach):
+
+def _generate_best_track_data(self):
+  self._best_track=list()
+  def __isotach_data(isotach):
     #1 : basin
     string = "AL,"
     #2 : hurricane_no/hurricane_id
@@ -133,7 +135,7 @@ def _dump(self, path):
     #27 : speed, **aswip**
     string+= "{:>4},".format('')
     #28 : stormname
-    string+= "{:^12},".format(self._hurricane_name)
+    string+= "{:^12},".format(self._name)
     #29 : record number, **aswip**
     string+= "{:>4},".format('')
     #30 : number of isotachs reported
@@ -146,38 +148,46 @@ def _dump(self, path):
     string+= "{:>2},".format('')
     #34 : use NWQ isotach flag, **aswip**
     string+= "{:>2},".format('')
-    print(string)
-    f.write(string+"\n")
+    self._best_track.append(string)
   
-  with open(path, 'w') as f:
-    for i in range(len(self._datetime)):
-      for j, isotach in  enumerate(['34', '50', '64']):
-        _isotach=list()
-        for _isot in list(self._wind_data.keys()):
-          for quadrant in list(self._wind_data[_isot].keys()):
-            _isotach.append(self._wind_data[_isot][quadrant][i])
-        _34_iso = _isotach[0:4]
-        _50_iso = _isotach[4:8]
-        _64_iso = _isotach[8:12]
-        _cnt=0
-        if any(_34_iso) > 0:
-          _cnt+=1
-        if any(_50_iso) > 0:
-          _cnt+=1
-        if any(_64_iso) > 0:
-          _cnt+=1
-        if _cnt==0:
-          continue
-        if any(_34_iso)>0 and isotach=='34':
-          try: _record_start_time
-          except: _record_start_time = self._datetime[i]
-          _write_isotach_data(isotach)
-        if any(_50_iso)>0 and isotach=='50':
-          try: _record_start_time
-          except: _record_start_time = self._datetime[i]
-          _write_isotach_data(isotach)
-        if any(_64_iso)>0 and isotach=='64':
-          try: _record_start_time
-          except: _record_start_time = self._datetime[i]
-          _write_isotach_data(isotach)
-    # remove last carriage return?
+  for i in range(len(self._datetime)):
+    for j, isotach in  enumerate(['34', '50', '64']):
+      _isotach=list()
+      for _isot in list(self._wind_data.keys()):
+        for quadrant in list(self._wind_data[_isot].keys()):
+          _isotach.append(self._wind_data[_isot][quadrant][i])
+      _34_iso = _isotach[0:4]
+      _50_iso = _isotach[4:8]
+      _64_iso = _isotach[8:12]
+      _cnt=0
+      if any(_34_iso) > 0:
+        _cnt+=1
+      if any(_50_iso) > 0:
+        _cnt+=1
+      if any(_64_iso) > 0:
+        _cnt+=1
+      if _cnt==0:
+        continue
+      if any(_34_iso)>0 and isotach=='34':
+        try: _record_start_time
+        except: _record_start_time = self._datetime[i]
+        __isotach_data(isotach)
+      if any(_50_iso)>0 and isotach=='50':
+        try: _record_start_time
+        except: _record_start_time = self._datetime[i]
+        __isotach_data(isotach)
+      if any(_64_iso)>0 and isotach=='64':
+        try: _record_start_time
+        except: _record_start_time = self._datetime[i]
+        __isotach_data(isotach)
+
+def _dump(self, path):
+  with open(path,'w') as f:
+    for line in self._best_track:
+      f.write(line)
+      if line != self._best_track[-1]:
+        f.write('\n')
+
+def _printf(self):
+  for line in self._best_track:
+    print(line)
