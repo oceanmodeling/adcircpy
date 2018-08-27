@@ -14,7 +14,8 @@ def _parse_args():
 
 def main():
     _parse_args()
-    fort22 = BestTrack(args.storm_id).printf()
+    fort22 = BestTrack(args.storm_id)
+    fort22.printf()
     if args.output_path is not None:
         fort22.dump(args.output_path)
         print('File written to: {}'.format(args.output_path))
