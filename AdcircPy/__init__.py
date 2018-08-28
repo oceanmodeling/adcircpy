@@ -3,6 +3,7 @@ from AdcircPy.Mesh   import AdcircMesh
 from AdcircPy.Outputs import Outputs
 
 class AdcircPy(object):
+    @staticmethod
     def read_mesh(fort14, **kwargs):
         """
         Reads ADCIRC input files.
@@ -26,7 +27,7 @@ class AdcircPy(object):
         """
         return AdcircMesh.from_fort14(fort14, **kwargs)
         
-
+    @staticmethod
     def read_output(path, **kwargs):
         """
         Reads ADCIRC output files. Supports both ASCII and NetCDF.
