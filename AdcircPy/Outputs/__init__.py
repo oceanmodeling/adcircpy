@@ -117,9 +117,9 @@ class ElevationStations(_OutputStations):
   def from_netcdf(path):
     return _ElevationStations._from_netcdf(path)
 
-class HarmonicConstituentsStations(_OutputStations):
+class HarmonicConstituentsStations(dict):
   def __init__(self, **kwargs):
-    _OutputStations.__init__(self, **kwargs)
+    dict.__init__(self, **kwargs)
 
   @staticmethod
   def from_fort51(path, fort14, fort15):

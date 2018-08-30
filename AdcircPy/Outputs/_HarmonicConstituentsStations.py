@@ -1,7 +1,10 @@
+# from collections import OrderedDict
 from AdcircPy import Mesh
 from AdcircPy import Outputs
+from AdcircPy.core.Tides import TidalDB as _TidalDB
 
 def _from_fort51(path, fort14, fort15, **kwargs):
+  TidalDB = _TidalDB()
   if fort14 is not None:
     if isinstance(fort14, Mesh.AdcircMesh):
       if isinstance(fort14.fort15, Mesh.fort15):
@@ -32,8 +35,10 @@ def _from_fort51(path, fort14, fort15, **kwargs):
       line = __line().split()
       amplitude = float(line[0])
       phase = float(line[1])
-      stations[_id][_component] = { "amplitude"   : amplitude,
-                                      "phase"       : phase}
+      stations[_id][_component] = {
+              "orbital_frequency" : TidalDB[_component]["orbital_frequency"],
+              "amplitude"         : amplitude,
+              "phase"             : phase }
   _f.close()
   return Outputs.HarmonicConstituentsStations(**stations)
     

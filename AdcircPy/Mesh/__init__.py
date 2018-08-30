@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from AdcircPy.Mesh import _Mesh
 from AdcircPy.Mesh import _fort13
 from AdcircPy.Mesh import _fort14
@@ -9,12 +10,22 @@ class AdcircMesh(UnstructuredGrid):
     UnstructuredGrid.__init__(self, x, y, values, elements,
                               epsg=kwargs.pop('epsg', 4326), **kwargs)
     self.description = kwargs.pop('description', None)
+    self._boundary_forcing=OrderedDict()
+    self._init_TPXO()
     self._init_fort15(kwargs.pop('fort15', None))
     self._init_fort13(kwargs.pop('fort13', None))
 
   @staticmethod
   def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
     return _Mesh._from_fort14(fort14, datum, epsg, fort13, fort15)
+
+  @property
+  def boundary_forcing(self):
+    return self._boundary_forcing
+
+  @boundary_forcing.setter 
+  def boundary_forcing(self, constituent_list):
+    _Mesh._set_boundary_forcing(self, constituent_list) 
 
   def make_plot(self, surface='bathy', **kwargs):
     return _Mesh.make_plot(self, surface, **kwargs)
@@ -30,7 +41,12 @@ class AdcircMesh(UnstructuredGrid):
     _fort15._init_fort15(self, fort15)
 
   def _init_fort13(self, fort13):
-    _fort13._init_fort13(self, fort13)    
+    _fort13._init_fort13(self, fort13)
+
+  def _init_TPXO(self):
+    _Mesh._init_TPXO(self)
+
+
 
 
 class fort13(dict):
@@ -56,10 +72,5 @@ class fort15(dict):
   def __init__(self, **kwargs):
     dict.__init__(self, **kwargs)
 
-  def generate_forcing_from_TPXO(self):
-    """ """
-    return _fort15._generate_forcing_from_TPXO(self)
-
-  def generate_equilibrium_arguments(self, start_date, end_date):
-    """ """
+  def generate_equilibrium_arguments(self, tpxo_path, start_date, end_date):
     return _fort15._generate_equilibrium_arguments(self, start_date, end_date)
