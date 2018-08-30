@@ -1,9 +1,6 @@
-*sublime*
+# python precompiled
 __pycache__
 *.pyc
 
-# Large file
-AdcircPy/core/TidalDB/h_tpxo9.v1
-
-# Depends on osgeo
-../AdcircPy/core/demtools
+# Large files
+AdcircPy/core/Tides/h_tpxo9.v1
