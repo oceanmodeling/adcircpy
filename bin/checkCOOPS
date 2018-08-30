@@ -18,9 +18,12 @@ def _parse_args():
 def main():
     _parse_args()
     AdcStations = AdcircPy.read_output(args.fort61)
+    print('Downloading data from COOPS, please wait...')
     coops       = COOPS.from_station_list(list(AdcStations.keys()), AdcStations.time[0], AdcStations.time[-1])
     for station in AdcStations.keys():
-        plt.plot(coops[station]['time'], coops[station]['zeta'])
+        plt.figure(figsize=(11,15))
+        plt.subplot(111)
+        plt.plot(coops[station]['time'], coops[station]['zeta'], )
         plt.plot(AdcStations.time, AdcStations[station]['zeta'])
         plt.gca().set_title(coops[station]['metadata']['name'])
         plt.show()

@@ -1,0 +1,250 @@
+#! /usr/bin/env python
+import argparse
+import os
+from datetime import datetime
+from AdcircPy import Mesh
+from AdcircPy import Fort15
+
+cwd = os.getcwd()
+
+
+def parse_args():
+    global args
+    parser = argparse.ArgumentParser(
+        description="""Program to generate ADCIRC fort.15 input files. Arguments passed to the command line override arguments found in configuration file.""",
+
+        epilog="Example usage: generateFort15 /path/to/mesh/filename m1,k2,t5,p1 {} {}"\
+            .format(datetime.today().strftime('%Y-%m-%d'), datetime.today().strftime('%Y-%m-%d')),
+            #formatter_class=argparse.RawTextHelpFormatter
+            )
+    
+    parser.add_argument("config_file", nargs="?", #default= cwd + "/fort15.config",
+                        help="""Path to fort15 configuration file. Command Line arguments override configurations in conf file. Defaults to $PWD/fort15.conf""")
+
+
+    parser.add_argument("mesh", default = cwd + "/fort.14",
+                        help="ADCIRC mesh file path. Defaults to $PWD/fort.14")
+
+    parser.add_argument("--output-filepath", "-output",  "-o",  default= cwd + "/fort.15", 
+                        help="Filepath for output. Defaults to $PWD/fort.15")
+    
+    parser.add_argument("--header1", "--RUNDES", default=None, dest="RUNDES",
+                        help="alpha-numeric run description 1 (<=32 characters)")
+
+    parser.add_argument("--header2", "--RUNID", default=None, dest="RUNID",
+                        help="alpha-numeric run description 2 (<=32 characters)")
+
+    parser.add_argument("--non-fatal-error-override", "--NFOVER", default=0, dest="NFOVER",
+                        help="non-fatal error override option")
+
+    parser.add_argument("--log-level", "--NABOUT", default=1, dest="NABOUT",
+                        help="Logging level for output from ADCIRC to the screen ")
+
+    parser.add_argument("--verbose-level", "--NSCREEN", default=100, dest="NSCREEN",
+                        help="non-fatal error override option")
+
+    parser.add_argument("hotstart",
+                        help="""parameter controlling whether the model is hot started.
+The hotstart facility is available for 2D and 3D runs.
+The hotstart file will also contain harmonic analysis data if harmonic analysis was underway,
+so that the harmonic analysis can be hotstarted as well.
+= 0 cold start the model
+= 17 hot start from ascii file fort.17
+= 67 hot start model using input information in hot start file fort.67
+= 68 hot start model using input information in hot start file fort.68
+= 367 hot start model using input information in netCDF hot start file fort.67.nc
+= 368 hot start model using input information in netCDF hot start file fort.68.nc
+= 567 hot start model using input information in netCDF4 hot start file fort.67.nc
+= 568 hot start model using input information in netCDF4 hot start file fort.68.nc""")
+
+    parser.add_argument("--coordinate-system", "--ICS", default=2, dest="ICS",
+                        help="Input Coordinate System: 1 Cartesian, 2 Geographic")
+
+    parser.add_argument("--EPSG", "-EPSG", default=4386,
+                        help="EPSG code for ICS. Defaults to 4386 (Geographic).")
+
+    parser.add_argument("--model-type", "--IM", default=0, dest="IM",
+                        help="""model type
+= 0 Barotropic 2DDI run using New GWCE and Momentum equation formulations
+= 1 Barotropic 3D run using New GWCE and velocity based Momentum equations
+= 21 Baroclinic 3D run using New GWCE and velocity based Momentum equations
+= 111112 Barotropic 2DDI run using the lumped GWCE (instead of the default fully consistent GWCE).
+= 611112 Barotropic 3D run using the lumped GWCE (instead of the default fully consistent GWCE).""")
+    
+    parser.add_argument("--density-forcing-type", "--IDEN", default=0, dest="IDEN",
+                        help="""include this line only if IM = 21
+form of density forcing in a 3D run.
+=-4 Diagnostic Baroclinic ADCIRC run with Salinity and Temperature forcing
+=-3 Diagnostic Baroclinic ADCIRC run with Temperature forcing
+=-2 Diagnostic Baroclinic ADCIRC run with Salinity forcing
+=-1 Diagnostic Baroclinic ADCIRC run with Sigma T forcing
+=0 Barotropic model run
+=1 Prognostic Baroclinic ADCIRC run with Sigma T forcing
+=2  Prognostic Baroclinic ADCIRC run with Salinity forcing
+=3 Prognostic Baroclinic ADCIRC run with Temperature forcing
+=4 Prognostic Baroclinic ADCIRC run with Salinity and Temperature forcing""")
+
+    parser.add_argument("--bottom-friction-formulation-type", "--NOLIBF", default=0, dest="NOLIBF",
+                        help="""parameter controlling the type of bottom stress parameterization used in a 2DDI ADCIRC run.
+This parameter must be specified but is ignored in a 3D run.
+Note: In the NWP section, if the user selects quadratic_friction_coefficient_at_sea_floor,
+mannings_n_at_sea_floor, or chezy_friction_coefficient_at_sea_floor,
+then NOLIBF must be 1 (nonlinear friction formulation) since all those formulations are nonlinear.
+If the NOLIBF were anything other than 1, it is an error that will cause ADCIRC to stop.
+= 0 linear bottom friction law. The friction coefficient (FFACTOR) is specified below.
+= 1 quadratic bottom friction law. The friction coefficient (FFACTOR) is specified below.
+= 2 hybrid nonlinear bottom friction law.
+In deep water, the friction coefficient is constant and a quadratic bottom friction law results.
+In shallow water the friction coefficient increases as the depth decreases (e.g. as in a Manning-type friction law).
+The friction coefficient is determined as: FFACTOR=FFACTORMIN*[1+(HBREAK/H)**FTHETA]**(FGAMMA/FTHETA).
+For 3D ADCIRC runs, spatially varying bottom friction should be specified using the bottom_roughness_length nodal attribute.""")
+
+    parser.add_argument("--finite-amplitude-terms", "--NOLIFA", default=2, dest="NOLIFA",
+                        help="""parameter controlling the finite amplitude terms in ADCIRC. The value of NOLIFA effects the meaning of the minimum water depth parameter(H0) and requires the specification of additional parameters together with H0.
+When the finite amplitude terms are turned on, the time derivative portion of the advective terms should also be turned on for proper mass conservation and consistency (i.e. when NOLIFA>0, then NOLICAT=1).
+= 0 finite amplitude terms ARE NOT included in the model run (i.e., the depth is linearized by using the bathymetric depth, rather than the total depth, in all terms except the transient term in the continuity equation) and wetting and drying of elements is disabled. Initial water depths are assumed equal to the bathymetric water depth specified in the grid file (fort.14).
+= 1 finite amplitude terms ARE included in the model run and wetting and drying of elements is disabled. Initial water depths are assumed equal to the bathymetric water depth specified in the grid file (fort.14).
+= 2 finite amplitude terms ARE included in the model run and wetting and drying of elements is enabled. Initial water depths are assumed equal to the bathymetric water depth specified in the grid file (fort.14).
+""")
+
+    parser.add_argument("--advective-terms", "--NOLICA", default=1, dest="NOLICA",
+                        help=""" parameter controlling the advective terms in ADCIRC (with the exception of a time derivative portion that occurs in the GWCE form of the continuity equation and is controlled by NOLICAT).
+When these (spatial derivative) portions of the advective terms are included, the time derivative portion of the advective terms in the GWCE should also be included (i.e. when NOLICA=1, NOLICAT=1).
+= 0 advective terms ARE NOT included in the computations
+= 1 advective terms ARE included in the computations""")
+
+    parser.add_argument("--advective-time-derivative", "--NOLICAT", default=1, dest="NOLICAT",
+                        help=""" parameter controlling the advective terms in ADCIRC (with the exception of a time derivative portion that occurs in the GWCE form of the continuity equation and is controlled by NOLICAT).
+When these (spatial derivative) portions of the advective terms are included, the time derivative portion of the advective terms in the GWCE should also be included (i.e. when NOLICA=1, NOLICAT=1).
+= 0 advective terms ARE NOT included in the computations
+= 1 advective terms ARE included in the computations""")
+
+    parser.add_argument("--nodal-attribute-list", "--AttrName", default=1, dest="AttrName",
+                        help="""Comma separated list of nodal attributes to include in run.
+Supported attributes are:
+primitive_weighting_in_continuity_equation,
+surface_submergence_state,
+quadratic_friction_coefficient_at_sea_floor,
+surface_directional_effective_roughness_length,
+surface_canopy_coefficient,
+bridge_pilings_friction_paramenters,
+mannings_n_at_sea_floor,
+chezy_friction_coefficient_at_sea_floor,
+sea_surface_height_above_geoid,
+bottom_roughness_length,
+wave_refraction_in_swan,
+average_horizontal_eddy_viscosity_in_sea_water_wrt_depth,
+elemental_slope_limiter,
+advection_state,
+initial_river_elevation
+Note: Do not include spaces between nodal attribute names. e.g. use:
+sea_surface_height_above_geoid,bottom_roughness_length,wave_refraction_in_swan""")
+
+    parser.add_argument("--coriolis", "--NCOR", default=1, dest="NCOR",
+                        help="""parameter controlling whether the Coriolis parameter is constant in space and read in below or spatially varying as computed from the y-coordinates of the nodes in the grid (assumed to be in degrees Latitude).
+The grid coordinate system is specified by the ICS parameter.
+= 0, to read in a spatially constant Coriolis parameter
+= 1, to compute a spatially variable Coriolis parameter 
+""")
+
+    parser.add_argument("--tidal-potential", "--NTIP", default=1, dest="NTIP",
+                        help="""p parameter controlling whether tidal potential and self attraction/load tide forcings will be used to
+force ADCIRC.
+= 0, tidal potential & self attraction/load tide forcings are not used
+= 1, tidal potential forcing is used
+= 2, tidal potential & self attraction/load tide forcings are used. In this case the self attraction/load tide information is read in for each constituent at each node in the grid from the Self Attraction/Earth Load Tide Forcing File.
+""")
+
+    parser.add_argument("--NWS", default=0,
+                        help="""see https://adcirc.org/home/documentation/users-manual-v53/parameter-definitions/#NWS for details """)
+
+    parser.add_argument("--ramp-type", "--NRAMP", default=0, dest="NRAMP",
+                        help=""" ramp option parameter controlling whether a ramp is applied to ADCIRC forcing functions.
+= 0 No ramp function is used with forcing functions; full strength forcing is applied immediately upon cold start.
+= 1 A single hyperbolic tangent ramp function of specified duration (DRAMP, in days relative to the cold start time) will be applied to all forcing. See description of the DRAMP line for further information on the ramp function.
+= 2 Same as NRAMP=1, except that a second, separate hyperbolic tangent ramp of specified duration (DRAMPExtFlux, in days relative to the cold start time) specifically for external flux forcing (e.g., river boundary conditions) will also be read on the DRAMP line. In addition, the FluxSettlingTime parameter for IBTYPE=52 river boundaries will also be specified on the DRAMP line. If there are no IBTYPE=52 boundaries in the mesh (fort.14) file, the FluxSettlingTime will be read but ignored. See description of DRAMP for further information.
+= 3 Same as NRAMP=2, except that a third, separate hyperbolic tangent ramp of specified duration (DRAMPIntFlux, in days relative to the cold start time) specifically for internal flux forcing (e.g., flows over levees and under culverts) will also be read on the DRAMP line. See the description of the DRAMP line for further information.
+= 4 Same as NRAMP=3, except that a fourth, separate hyperbolic tangent ramp of specified duration (DRAMPElev, in days relative to the cold start time) specifically for elevation specified boundary forcing (e.g., tidal boundaries) will also be read on the DRAMP line. See the description of the DRAMP line for further information.
+= 5 Same as NRAMP=4, except that a fifth, separate hyperbolic tangent ramp of specified duration (DRAMPTip, in days relative to the cold start time) specifically for tidal potential forcing will also be read on the DRAMP line. See the description of the DRAMP line for further information.
+= 6 Same as NRAMP=5, except that a sixth, separate hyperbolic tangent ramp of specified duration (DRAMPMete, in days relative to the cold start time) specifically for meteorological forcing (i.e., wind and atmospheric pressure) will also be read on the DRAMP line. See the description of the DRAMP line for further information.
+= 7 Same as NRAMP=6, except that a seventh, separate hyperbolic tangent ramp of specified duration (DRAMPWRad, in days relative to the cold start time) specifically for wave radiation stress forcing will also be read on the DRAMP line. See the description of the DRAMP line for further information.
+= 8 Same as NRAMP=7, except that a delay parameter (DUnRampMete, in days relative to the cold start time) will also be read from the DRAMP line. The meteorological ramp delay parameter DUnRampMete is useful in cases where a meteorologically-forced run will be hotstarted from a long term meteorologically-free tidal spinup from cold start. The meteorological ramp delay parameter delays the start of the application of the meteorological ramp for the specified length of time, relative to the ADCIRC cold start time. See the description of the DRAMP line for further information.""")
+
+    parser.add_argument("--ramp-parameters", "--DRAMP", default=0, dest="DRAMP",
+                        help="""Comma separated list of required ramp parameters (no spaces). The quantity of parameters depends on NRAMP
+Required if NRAMP > 0.
+Allowed parameters are: DRAMP,DRAMPExtFlux,FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DUnRampMete
+See https://adcirc.org/home/documentation/users-manual-v53/parameter-definitions/#DRAMP for more details.""")
+
+    parser.add_argument("--gravitational-constant", "--G", default=9.8, dest="G",
+                        help=""" gravitational constant.
+The units of this constant determine the distance units that ADCIRC operates with.
+ADCIRC operates in seconds and therefore the time units for G must be seconds.
+When ICS = 2, it is required that G = 9.81 m/sec2.
+Regardless of ICS, when either NTIP = 1 or NCOR = 1, it is required that G = 9.81 m/sec2.""")
+
+    parser.add_argument("--gwce-weighting-factor", "--TAU0", default=0, dest="TAU0",
+                        help="""https://adcirc.org/home/documentation/users-manual-v53/parameter-definitions/#TAU0""")
+
+    parser.add_argument("--Tau0FullDomain", default="0.005,0.2", dest="Tau0FullDomain",
+                        help="""Comma separated (no spaces) Tau0fullDomainMin,Tau0FullDomainMax""")    
+
+    parser.add_argument("timestep",
+                        help="""ADCIRC time step (in seconds). Note: time in the model is computed as: TIME = STATIM*86400.+DTDP*IT. 
+> 0 = The predictor-corrector algorithm is not used. < 0 = The predictor-corrector algorithm is used.""")
+
+    parser.add_argument("start_date",
+                        help="""Date for coldstart run in UTC. Format is YYYY-MM-DDTHH:MM Example: {}
+                        This will be used to compute tidal factors.""".format(datetime.today().strftime('%Y-%m-%dT%H:%M')))
+
+    parser.add_argument("end_date", 
+                        help="Ending datetime for the entire run (including hotstart segment). If this is a coldstart, include the intended time for the end of the hostart run.")
+
+    parser.add_argument("meteo_start_date", 
+                        help="Start date for meteorological forcing.")
+
+
+    parser.add_argument("--tidal-constituents", "-const", "-tc", default="K1,O1,P1,Q1,N2,M2,Mf,Mm,M4,MS4,MN4", 
+                        help="Comma delimited list of constituents. Defaults to K1,O1,P1,Q1,N2,M2,Mf,Mm,M4,MS4,MN4")
+
+    
+    
+
+
+
+    # parser.add_argument("end_date", help="Model final timestep date after hotstart. Format is YYYY-MM-DD. Example: {}"\
+    #                                 .format(datetime.today().strftime('%Y-%m-%d')))
+    
+    args = parser.parse_args()
+
+
+def parse_config_file(path):
+    if path is not None:
+        config = dict()
+        with open(path, 'r') as f:
+            for line in f:
+                line = line.strip(' \t\n\r').split("=")
+                line = [x.strip(' ') for x in line]
+                # skip line if it's a comment or empty
+                if len(line[0])<2:
+                    continue
+                if '#' in line[0][0]:
+                    continue
+                if 'constituent_list' in line[0]:
+                    line[1]=line[1].split(',')
+                config[line[0]]=line[1]
+        return config
+
+def config():
+    if args.config_file :
+        pass
+
+def main():
+    parse_args()
+    fort15 = Fort15(**config())
+    fort15.generate_forcing_from_TPXO(args.mesh_path)
+    fort15.generate_equlibrium_factors(args.start_date, args.end_date)
+
+    # fort15.write_to_file(args.output_filepath)
+
+if __name__ == '__main__': main()

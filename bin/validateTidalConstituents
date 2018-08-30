@@ -1,0 +1,94 @@
+#! /usr/bin/env python
+import argparse
+import matplotlib.pyplot as plt 
+import numpy as np
+from scipy import spatial
+import sys
+sys.path.append('..')
+from AdcircPy.core.Tides import TidalDB as _TidalDB
+from AdcircPy.Outputs import HarmonicConstituentsStations
+from AdcircPy.core.Validation.COOPS import HarmonicConstituents
+
+def _parse_args():
+  global args
+  parser = argparse.ArgumentParser(description='Program for validating model data against USGS High Water Mark data.\n \
+                                                   Event names can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+  parser.add_argument('fort51', help='fort.51')
+  # parser.add_argument('fort53', help='fort.53')
+  parser.add_argument('fort14', help='Event name can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+  parser.add_argument('fort15', help='Event name can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+  args =  parser.parse_args()
+    
+def _plot_validation2(fort51, coops):
+  TidalDB = _TidalDB()
+  for station in fort51.keys():
+    plt.subplot(111)
+    x=list()
+    y1=list()
+    y2=list()
+    _ticklabels=list()
+    _ticklocs=list()
+    for i, constituent in enumerate(TidalDB.keys()):
+      if constituent in fort51[station].keys() and constituent in coops[station].keys():
+        _frequency = (fort51[station][constituent]['orbital_frequency']/(2*np.pi))*(60.*60.*24.)
+        _coops = coops[station][constituent]['amplitude']
+        _adcirc = fort51[station][constituent]['amplitude']
+        _bottombar=np.min([_coops, _adcirc])
+        _topbar=np.max([_coops, _adcirc])
+        if _bottombar==_adcirc:
+          _bottomColor='blue'
+          _topColor='red'
+        else:
+          _bottomColor='red'
+          _topColor='blue'
+
+        if _bottombar>0:
+
+          ax1 = plt.bar(_frequency, _bottombar, log=True, align='center',
+                                          width=0.01,
+                                          color=_bottomColor
+                                          )
+          ax2 = plt.bar(_frequency, _topbar, log=True, align='center',
+                                          bottom=_bottombar,
+                                          width=0.01,
+                                          color=_topColor,
+                                          )
+        elif _bottombar==0 and _topbar>0:
+          plt.bar(_frequency, _topbar, log=True, align='center',
+                                       color=_topColor,
+                                       width=0.01
+                                       )
+          
+          # plt.semilogy([_frequency, _frequency], [0., _amplitude], linestyle='-', linewidth=4., color='blue')
+
+        _ticklocs.append(_frequency)
+        _ticklabels.append(constituent)
+    plt.xscale('log')
+    plt.gca().set_xticks(_ticklocs)
+    plt.gca().set_xticklabels(_ticklabels)
+    plt.gca().set_title('station id: {}'.format(station))
+    plt.legend([ax1, ax2], ['Coops', 'Adcirc'])
+    plt.show()
+    #     x.append()
+    #     y1.append()
+    #     y2.append(coops[station][constituent]['amplitude'])
+    # for 
+    
+    # plt.bar(x,y1)
+    # plt.bar(x,y2) 
+    # # plt.gca().axis('tight')
+    # plt.show()
+    plt.close(plt.gcf())
+
+
+ 
+def main():
+  _parse_args()
+  fort51 = HarmonicConstituentsStations.from_fort51(args.fort51, args.fort14, args.fort15)
+  coops = HarmonicConstituents.from_station_list(fort51.keys())
+  _plot_validation2(fort51, coops)
+
+
+
+if __name__ == "__main__":
+  main()
