@@ -57,13 +57,13 @@ fi
 rsync -za --delete-before $GIT_DIR/AdcircPy/ $INSTALLDIR/AdcircPy/
 rsync -za --delete-before $GIT_DIR/bin/ $INSTALLDIR/bin/
 
-# if [ ! -f $INSTALLDIR/AdcircPy/core/h_tpxo9.v1.nc ]; then
-# 	if [ ! -f $INSTALLDIR/tpxo9_netcdf.tar.gz ]; then
-# 		wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
-# 	fi
-# 	echo "Extracting TPXO file..."
-# 	tar -xf $INSTALLDIR/tpxo9_netcdf.tar.gz -C $INSTALLDIR/AdcircPy/core h_tpxo9.v1.nc
-# fi
+if [ ! -f $INSTALLDIR/AdcircPy/core/h_tpxo9.v1.nc ]; then
+	if [ ! -f $INSTALLDIR/tpxo9_netcdf.tar.gz ]; then
+		wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
+	fi
+	echo "Extracting TPXO file..."
+	tar -xf $INSTALLDIR/tpxo9_netcdf.tar.gz -C $INSTALLDIR/AdcircPy/core h_tpxo9.v1.nc
+fi
 
 echo "
 source $INSTALLDIR/miniconda3/bin/activate $INSTALLDIR/miniconda3

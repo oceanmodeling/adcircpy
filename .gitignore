@@ -1,6 +1,3 @@
 # python precompiled
 __pycache__
 *.pyc
-
-# Large files
-AdcircPy/core/Tides/h_tpxo9.v1
