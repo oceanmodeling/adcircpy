@@ -8,8 +8,9 @@ matplotlib==2.2.3
 netCDF4==1.4.1
 numpy==1.15.1
 pyparsing==2.2.0
-git+https://github.com/jswhit/pyproj.git
+pyproj==1.9.5.1
 python-dateutil==2.7.3
 pytz==2018.5
 scipy==1.1.0
 six==1.11.0
+wget==3.2
