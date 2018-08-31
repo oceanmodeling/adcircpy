@@ -1,3 +1,4 @@
 # python precompiled
 __pycache__
 *.pyc
+env
