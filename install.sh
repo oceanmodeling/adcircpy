@@ -1,7 +1,7 @@
 #!/bin/bash -e
-############################
-# Setup script for AdcircPy#
-############################
+###############################
+# Setup script for Hurricaned # 
+###############################
 
 # while [[ "$#" > 0 ]]; do case $1 in
 #   -d|--deploy) deploy="$2"; shift;;
