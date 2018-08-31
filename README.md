@@ -1,14 +1,26 @@
-To install package, simply run the install.sh script.</br>
-This will install the package to ~/.local/Hurricaned and
-will create an alias "Hurricaned" to activate the environment.
+# AdcircPy </h1>
+## A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
 
-To activate the environment, simply write 
-```bash
-Hurricaned
-```
-And this will activate the Hurricaned environment.
+### Basic Installation Notes:
+This package should work on Windows, Linux and MacOS.
+It may be installed by prodiving the requirements.txt file to your active pip environment:
 
-To see a list of available programs use the alias hurricaned.list
-```bash
-hurricaned.list
-```
+> pip install -r requirements.txt
+
+
+If using the pip method on Linux, the OS is required to provide:
+
+HDF5 headers
+
+
+
+
+#### Windows:
+Download and install the latest [Anaconda 3 for Windows](https://www.anaconda.com/download/#windows). Use the Anaconda environment manager to import 
+
+#### Linux:
+
+### Usage
+
+
+This package is an API to handle input and output files for the [ADCIRC](http://adcirc.org) hydrodynamic model. 
