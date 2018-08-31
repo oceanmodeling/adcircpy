@@ -17,6 +17,7 @@ INSTALLDIR=~/.local/Hurricaned
 
 # environment file
 RCFILE=$INSTALLDIR/.rcfile
+BASH_ALIAS=$INSTALLDIR/.bash_alias
 
 # Check if wget exists.
 if [ ! -x /usr/bin/wget ] ; then
@@ -35,41 +36,43 @@ if [ ! -d $INSTALLDIR/miniconda3 ]; then
 	conda update -y -n base conda
 	conda activate Hurricaned
 	pip install --upgrade pip
-	pip install matplotlib
-	pip install scipy
-	conda install -y -c anaconda netcdf4
-
-
-	if grep -Fxq "source $RCFILE" ~/.bashrc
+	pip install matplotlib scipy haversine requests bs4 psycopg2-binary
+	conda install -y -c anaconda netcdf4 pyproj gdal
+	if grep -Fxq "source $BASH_ALIAS" ~/.bashrc
 		then
 		    true
 		else
 			echo "# Line added by Hurricaned installer" >> ~/.bashrc
-			echo "source $RCFILE" >> ~/.bashrc
+			echo "source $BASH_ALIAS" >> ~/.bashrc
 	fi
-	if grep -Fxq "source $RCFILE" ~/.zshrc
+	if grep -Fxq "source $BASH_ALIAS" ~/.zshrc
 	then
 	    true
 	else
 		echo "# Line added by Hurricaned installer" >> ~/.zshrc
-		echo "source $RCFILE" >> ~/.zshrc
+		echo "source $BASH_ALIAS" >> ~/.zshrc
 	fi
 fi
 
-rsync -za --delete-before $GIT_DIR/AdcircPy $INSTALLDIR/AdcircPy
-rsync -za --delete-before $GIT_DIR/bin $INSTALLDIR/bin
+rsync -za --delete-before $GIT_DIR/AdcircPy/ $INSTALLDIR/AdcircPy/
+rsync -za --delete-before $GIT_DIR/bin/ $INSTALLDIR/bin/
 
-if [ ! -f $INSTALLDIR/AdcircPy/core/h_tpxo9.v1.nc ]; then
-	if [ ! -f $INSTALLDIR/tpxo9_netcdf.tar.gz ]; then
-		wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
-	fi
-	echo "Extracting TPXO file..."
-	tar -xf $INSTALLDIR/tpxo9_netcdf.tar.gz -C $INSTALLDIR/AdcircPy/core h_tpxo9.v1.nc
-fi
+# if [ ! -f $INSTALLDIR/AdcircPy/core/h_tpxo9.v1.nc ]; then
+# 	if [ ! -f $INSTALLDIR/tpxo9_netcdf.tar.gz ]; then
+# 		wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
+# 	fi
+# 	echo "Extracting TPXO file..."
+# 	tar -xf $INSTALLDIR/tpxo9_netcdf.tar.gz -C $INSTALLDIR/AdcircPy/core h_tpxo9.v1.nc
+# fi
 
-echo "alias Hurricaned=\"source $INSTALLDIR/miniconda3/bin/activate $INSTALLDIR/miniconda3 && source activate Hurricaned\""  > $RCFILE
-echo "export PATH=$INSTALLDIR/bin:\$PATH" >> $RCFILE
-echo "alias hurricaned.list='ls $INSTALLDIR/bin'" >> $RCFILE
+echo "
+source $INSTALLDIR/miniconda3/bin/activate $INSTALLDIR/miniconda3
+source activate Hurricaned
+export PATH=$INSTALLDIR/bin:\$PATH
+export PYTHONPATH="${PYTHONPATH}:$INSTALLDIR"
+" > $RCFILE
+echo "alias Hurricaned=\"source $RCFILE\"" > $BASH_ALIAS
+echo "alias hurricaned.list='ls $INSTALLDIR/bin'" >> $BASH_ALIAS
 
 echo "
 ##################################################################
