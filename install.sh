@@ -24,6 +24,11 @@ if [ ! -x /usr/bin/wget ] ; then
     command -v wget >/dev/null 2>&1 || { echo >&2 "Please install wget or set it in your path. Aborting."; exit 1; }
 fi
 
+# Check if rsync exists.
+if [ ! -x rsync ] ; then
+    command -v rsync >/dev/null 2>&1 || { echo >&2 "Please install rsync or set it in your path. Aborting."; exit 1; }
+fi
+
 # Create installation directory
 mkdir -p $INSTALLDIR
 
@@ -54,13 +59,13 @@ if [ ! -d $INSTALLDIR/miniconda3 ]; then
 	fi
 fi
 
-rsync -za --delete-before $GIT_DIR/AdcircPy/ $INSTALLDIR/AdcircPy/
+# rsync git dir
+rsync -za --exclude='h_tpxo9.v1.nc' --delete-before $GIT_DIR/AdcircPy/ $INSTALLDIR/AdcircPy/
 rsync -za --delete-before $GIT_DIR/bin/ $INSTALLDIR/bin/
 
+# Install TPXO database.
 if [ ! -f $INSTALLDIR/AdcircPy/core/h_tpxo9.v1.nc ]; then
-	if [ ! -f $INSTALLDIR/tpxo9_netcdf.tar.gz ]; then
-		wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
-	fi
+	wget -c ftp://ftp.oce.orst.edu/dist/tides/Global/tpxo9_netcdf.tar.gz -P $INSTALLDIR
 	echo "Extracting TPXO file..."
 	tar -xf $INSTALLDIR/tpxo9_netcdf.tar.gz -C $INSTALLDIR/AdcircPy/core h_tpxo9.v1.nc
 fi
@@ -73,7 +78,6 @@ export PYTHONPATH="${PYTHONPATH}:$INSTALLDIR"
 " > $RCFILE
 echo "alias Hurricaned=\"source $RCFILE\"" > $BASH_ALIAS
 echo "alias hurricaned.list='ls $INSTALLDIR/bin'" >> $BASH_ALIAS
-
 echo "
 ##################################################################
 # PLEASE READ THE FOLLOWING NOTICE:                              #
@@ -84,8 +88,8 @@ Activate the environment by running the command \"Hurricaned\"
 
 $ Hurricaned
 
-If this is your first time installing, and Hurricaned says \"command not found\",
-try resourcing your ~/.bashrc file first by running the following command:
+If this is your first time installing the  Hurricaned command may returb \"command not found\"
+If that is the case, try resourcing your ~/.bashrc file first with the following command:
 
 $ source ~/.bashrc && Hurricaned
 
