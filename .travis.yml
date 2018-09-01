@@ -20,6 +20,7 @@ install:
   - python setup.py install
 
 script:
+  - mkdir ~/.cache/AdcircPy
   - touch ~/.cache/AdcircPy/h_tpxo9.v1.nc
   - python -c "import AdcircPy"
 
