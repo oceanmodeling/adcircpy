@@ -1,8 +1,0 @@
-AdcircPy==0.8.0
-Cython==0.28.5
-GDAL==2.3.1
-haversine==0.4.5
-matplotlib==3.0.0rc2
-netCDF4==1.4.1
-scipy==1.1.0
-wget==3.2

@@ -8,16 +8,23 @@ The dependecies of Python packages installed through pip must be satisfied by th
 Method 1 describes the steps to install thorugh conda, while method 2 describes the steps to perform a pip only install.
 
 #### Method 1: Conda (the easy way!)
-Install Anaconda on your platform.</br>
-Navigate to the directory where the AdcircPy has been downloaded and run the following commands:
+#### Windows:
+Install Anaconda for Windows</br>
+Using the Anaconda Command Prompt, navigate to the directory where the AdcircPy has been downloaded and run the following command:
 ```cmd
-conda env create -f environment.yml
-source activate AdcircPy
+conda env create -f conda-windows-x86_64.yml
+```
+After the installation of the dependecies is done, you should activate the AdcircPy environment by running:
+```cmd
+conda activate AdcircPy
+```
+Finally, you can install the package by issuing the command:
+```cmd
 python setup.py install
 ```
 This will install the AdcircPy on your conda environment. Remember to alwasy activate the AdcircPy enviroment by running the command
 ```cmd
-source activate AdcircPy
+conda activate AdcircPy
 ```
 
 

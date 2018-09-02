@@ -1,0 +1,87 @@
+name: AdcircPy
+channels:
+- anaconda
+- defaults
+dependencies:
+- blas=1.0=mkl
+- bzip2=1.0.6=h14c3975_5
+- ca-certificates=2018.03.07=0
+- cairo=1.14.12=h8948797_3
+- certifi=2016.2.28=py36_0
+- cftime=1.0.0b1=py36h3010b51_0
+- curl=7.61.0=h84994c4_0
+- expat=2.2.6=he6710b0_0
+- fontconfig=2.13.0=h9420a91_0
+- freetype=2.9.1=h8a8886c_1
+- freexl=1.0.5=h14c3975_0
+- gdal=2.3.0=py36h04863e7_1
+- geos=3.6.2=heeff764_2
+- giflib=5.1.4=ha764e47_1
+- glib=2.56.2=hd408876_0
+- hdf4=4.2.13=h3ca952b_2
+- hdf5=1.8.18=h6792536_1
+- icu=58.2=h9c2bf20_1
+- intel-openmp=2018.0.3=0
+- jpeg=9b=h024ee3a_2
+- json-c=0.13.1=h1bed415_0
+- kealib=1.4.7=h5472223_5
+- krb5=1.16.1=hc83ff2d_6
+- libboost=1.67.0=h46d08c1_4
+- libcurl=7.61.0=h1ad7b7a_0
+- libdap4=3.19.1=h6ec2957_0
+- libedit=3.1.20170329=h6b74fdf_2
+- libffi=3.2.1=hd88cf55_4
+- libgcc-ng=8.2.0=hdf63c60_1
+- libgdal=2.3.0=heea9cce_1
+- libgfortran-ng=7.3.0=hdf63c60_0
+- libkml=1.3.0=h590aaf7_4
+- libnetcdf=4.6.1=h015f1c5_0
+- libpng=1.6.34=hb9fc6fc_0
+- libpq=10.5=h1ad7b7a_0
+- libspatialite=4.3.0a=he475c7f_19
+- libssh2=1.8.0=h9cfc8f7_4
+- libstdcxx-ng=8.2.0=hdf63c60_1
+- libtiff=4.0.9=he85c1e1_2
+- libuuid=1.0.3=h1bed415_2
+- libxcb=1.13=h1bed415_1
+- libxml2=2.9.8=h26e45fe_1
+- mkl=2018.0.3=1
+- mkl_fft=1.0.4=py36h4414c95_1
+- mkl_random=1.0.1=py36h4414c95_1
+- ncurses=6.1=hf484d3e_0
+- netcdf4=1.4.1=py36h083d9da_0
+- numpy=1.15.1=py36h3b04361_0
+- numpy-base=1.15.1=py36h81de0dd_0
+- openjpeg=2.3.0=h05c96fa_1
+- openssl=1.0.2p=h14c3975_0
+- pcre=8.42=h439df22_0
+- pip=9.0.1=py36_1
+- pixman=0.34.0=hceecf20_3
+- poppler=0.65.0=h581218d_1
+- poppler-data=0.4.9=0
+- proj4=5.0.1=h14c3975_0
+- pyproj=1.9.5.1=py36h7b21b82_1
+- python=3.6.6=hc3d631a_0
+- readline=7.0=h7b6447c_5
+- setuptools=36.4.0=py36_1
+- sqlite=3.24.0=h84994c4_0
+- tk=8.6.8=hbc83047_0
+- wheel=0.29.0=py36_0
+- xerces-c=3.2.1=hac72e42_0
+- xz=5.2.4=h14c3975_4
+- zlib=1.2.11=0
+- pip:
+  - cycler==0.10.0
+  - cython==0.28.5
+  - haversine==0.4.5
+  - kiwisolver==1.0.1
+  - matplotlib==2.2.3
+  - mkl-fft==1.0.4
+  - mkl-random==1.0.1
+  - pyparsing==2.2.0
+  - python-dateutil==2.7.3
+  - pytz==2018.5
+  - scipy==1.1.0
+  - six==1.11.0
+  - wget==3.2
+
