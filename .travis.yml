@@ -6,7 +6,7 @@ sudo: false
 python:
   - "3.6"
 install:
-  - apt-get update
+  # - sudo apt-get update
   # - pip install virtualenv
   - python -m virtualenv env
   - source ./env/bin/activate
