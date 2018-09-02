@@ -17,4 +17,5 @@ setup(name=meta['name'],
                        'GDAL',
                        'haversine',
                        'pyproj',
-                       'wget'])
+                       'wget']
+)
