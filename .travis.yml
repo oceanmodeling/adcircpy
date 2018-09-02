@@ -7,7 +7,7 @@ python:
   - "3.6"
 install:
   # - sudo apt-get update
-  # - pip install virtualenv
+  - pip install virtualenv
   - python -m virtualenv env
   - source ./env/bin/activate
   # - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
