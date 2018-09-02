@@ -5,8 +5,13 @@ language: python
 sudo: false
 python:
   - "3.6"
+before_install:
+  - sudo apt-get update
+  - sudo add-apt-repository ppa:ubuntugis/ppa -y
+  - sudo apt-get update
+  - sudo apt-get install gdal-bin
+
 install:
-  # - sudo apt-get update
   - pip install virtualenv
   - python -m virtualenv env
   - source ./env/bin/activate
