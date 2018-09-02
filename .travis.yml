@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get update
   - sudo add-apt-repository ppa:ubuntugis/ppa -y
   - sudo apt-get update
-  - sudo apt-get install gdal-bin
+  - sudo apt-get install libgdal-dev
 
 install:
   - pip install virtualenv
