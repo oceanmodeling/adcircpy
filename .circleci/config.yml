@@ -27,6 +27,12 @@
 #
 ########################################################################
 version: 0
+
+general:
+  branches:
+    only:
+     - devel
+
 jobs:
   build:
       docker:
