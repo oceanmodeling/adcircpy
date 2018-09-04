@@ -1,7 +1,7 @@
 # from collections import OrderedDict
 from AdcircPy import Mesh
 from AdcircPy import Outputs
-from AdcircPy.core.Tides import TidalDB as _TidalDB
+from AdcircPy.Tides import TidalDB as _TidalDB
 
 def _from_fort51(path, fort14, fort15, **kwargs):
   TidalDB = _TidalDB()

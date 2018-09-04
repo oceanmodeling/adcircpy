@@ -1,5 +1,5 @@
 from AdcircPy.Mesh import AdcircMesh
-from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
+from AdcircPy.Mesh import UnstructuredGrid
 from AdcircPy.Outputs import _Outputs
 from AdcircPy.Outputs import _OutputStations
 from AdcircPy.Outputs import _ElevationStations

@@ -3,7 +3,7 @@ from AdcircPy.Mesh import _Mesh
 from AdcircPy.Mesh import _fort13
 from AdcircPy.Mesh import _fort14
 from AdcircPy.Mesh import _fort15
-from AdcircPy.core.UnstructuredGrid import UnstructuredGrid
+from AdcircPy.Mesh import _UnstructuredGrid
 
 class UnstructuredGrid(object):   
   def __init__(self, x, y, values, elements, **kwargs):
