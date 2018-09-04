@@ -1,5 +1,8 @@
+name = 'AdcircPy'
 from AdcircPy.Mesh   import AdcircMesh
 from AdcircPy.Outputs import Outputs
+
+
 
 class AdcircPy(object):
     @staticmethod
