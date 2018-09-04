@@ -1,69 +1,35 @@
-########################################################################
-# ADCIRC CircleCI Yaml
-#
-# Written By: Zach Cobell
-#
-# Generated for: CircleCI v2.0
-#
-# This yaml runs a series of build tests
-# and acceptance tests used to ensure the
-# ADCIRC code is throughly checked before 
-# accepting code into the master branch
-#
-# Build tests:
-#   (1) Legacy makefile without netcdf or xdmf
-#   (2) Legacy makefile with netcdf
-#   (3) Legacy makefile with netcdf and xdmf
-#   (4) CMake without netcdf or xdmf
-#   (5) CMake with netcdf
-#   (6) CMake with netcdf and xdmf
-#
-# Acceptance Tests:
-#   The suite of acceptance tests from: 
-#     https://github.com/adcirc/adcirc-cg-testsuite.git
-#   is used here to validate the code. The test suite
-#   is currently run as a single script, though at some
-#   point it will be broken into workflows for CirlceCI 2.0
-#
-########################################################################
-version: 0
-
-general:
-  branches:
-    only:
-     - devel
+version: 2
 
 jobs:
+
   build:
-      docker:
+    docker:
         - image: jreniel/ci-adcircpy:alpine-conda
-      steps:
-        # - run:
-        #     name: Update PATH and Define Environment Variable at Runtime
-        #     command: echo 'export CIRCLE_REPOSITORY_URL=https://git@github.com/jreniel/AdcircPy.git'       
-        - checkout
-        - run:
-            name: "Updating conda"
-            command: conda update -n base conda
-        - run:
-            name: "Activate the AdcircPy environment"
-            command: source activate AdcircPy
-        - run:
-            name: "Install AdcircPy to local"
-            command: python setup.py install
-        - run: tar xf /tmp/test_data.tar.gz -C /root/.cache h_tpxo9.v1
-        - run: tar xf /tmp/test_data.tar.gz -C /root/.cache CubaIkeModNOMAD1enoflux.grd
-        - run: tar xf /tmp/test_data.tar.gz -C /root/.cache fort13nomad1elowerwaterdrag
-        - run: tar xf /tmp/test_data.tar.gz -C /root/.cache fort.15
-        - run: ln -sf /root/.cache/CubaIkeModNOMAD1enoflux.grd .circle-ci/tests/fort.14
-        - run: ln -sf /root/.cache/fort13nomad1elowerwaterdrag .circle-ci/tests/fort.13
-        - run: ln -sf /root/.cache/fort13nomad1elowerwaterdrag .circle-ci/tests/fort.15  
-        - run:
-            name: "Basic import test"
-            command: python -c "import AdcircPy"
-        - run:
-            name: "Test Read Mesh"
-            command: python .circle-ci/tests/ci-test-read_mesh.py
+    
+    environment:
+      BASH_ENV: "~/.bashrc"
+    
+    steps:
+      - checkout
+      - run:
+          name: "Updating conda"
+          command: conda update -n base conda
+      - run:
+          name: "Install AdcircPy to local"
+          command: python setup.py install
+      - run: tar xf /tmp/test_data.tar.gz -C /root/.cache h_tpxo9.v1
+      - run: tar xf /tmp/test_data.tar.gz -C /root/.cache CubaIkeModNOMAD1enoflux.grd
+      - run: tar xf /tmp/test_data.tar.gz -C /root/.cache fort13nomad1elowerwaterdrag
+      - run: tar xf /tmp/test_data.tar.gz -C /root/.cache fort.15
+      - run: ln -sf /root/.cache/CubaIkeModNOMAD1enoflux.grd .circle-ci/tests/fort.14
+      - run: ln -sf /root/.cache/fort13nomad1elowerwaterdrag .circle-ci/tests/fort.13
+      - run: ln -sf /root/.cache/fort13nomad1elowerwaterdrag .circle-ci/tests/fort.15  
+      - run:
+          name: "Basic import test"
+          command: python -c "import AdcircPy"
+      - run:
+          name: "Test Read Mesh"
+          command: python .circle-ci/tests/ci-test-read_mesh.py
 
 workflows:
   version: 0
