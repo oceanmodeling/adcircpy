@@ -68,3 +68,5 @@ dependencies:
     - wget==3.2
     - utm
     - requests
+    - bs4
+    - psycopg2-binary
