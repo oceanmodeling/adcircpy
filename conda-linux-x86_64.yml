@@ -84,4 +84,6 @@ dependencies:
   - scipy==1.1.0
   - six==1.11.0
   - wget==3.2
+  - utm
+  - requests
 
