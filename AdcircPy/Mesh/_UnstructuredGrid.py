@@ -8,7 +8,7 @@ from matplotlib.cm import ScalarMappable
 from scipy.interpolate import griddata
 import pyproj
 from haversine import haversine
-from AdcircPy.core import UnstructuredGrid
+from AdcircPy.Mesh import UnstructuredGrid
 # from AdcircPy.core import demtools
 
 def get_xyz(self, extent=None, epsg=None):
