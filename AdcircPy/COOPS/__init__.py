@@ -1,5 +1,5 @@
-from AdcircPy.core.Validation.COOPS import _COOPS
-from AdcircPy.core.Validation.COOPS import _HarmonicConstituents
+from AdcircPy.COOPS import _COOPS
+from AdcircPy.COOPS import _HarmonicConstituents
 
 class COOPS(dict, _COOPS._REST):
   def __init__(self, **kwargs):

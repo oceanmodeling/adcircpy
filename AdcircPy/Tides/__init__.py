@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from AdcircPy.core.Tides import _TidalDB
+from AdcircPy.Tides import _TidalDB
 
 class TidalDB(OrderedDict):
   def __init__(self):

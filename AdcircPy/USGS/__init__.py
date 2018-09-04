@@ -1,5 +1,4 @@
-from AdcircPy.core.Validation import USGS
-from AdcircPy.core.Validation.USGS import _HighWaterMarks
+from AdcircPy.USGS import _HighWaterMarks
 
 class USGS(dict):
   def __init__(self, **kwargs):

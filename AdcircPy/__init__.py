@@ -1,4 +1,4 @@
-name = 'AdcircPy'
+__package__ = 'AdcircPy'
 from AdcircPy.Mesh   import AdcircMesh
 from AdcircPy.Outputs import Outputs
 

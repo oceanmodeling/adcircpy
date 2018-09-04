@@ -1,5 +1,5 @@
-from AdcircPy.core.Datum import _DatumGrid
-from AdcircPy.core.Datum import _vdatum
+from AdcircPy.Datum import _DatumGrid
+from AdcircPy.Datum import _vdatum
 
 
 class DatumGrid(object):
