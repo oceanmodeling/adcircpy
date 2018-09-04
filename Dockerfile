@@ -1,6 +1,7 @@
 FROM frolvlad/alpine-miniconda3
 RUN apk add tini
 RUN apk add bash
+RUN apk add libx11
 ADD conda-linux-x86_64.yml /tmp/conda-linux-x86_64.yml
 RUN conda update -n base -c defaults conda
 RUN conda env create -f /tmp/conda-linux-x86_64.yml
