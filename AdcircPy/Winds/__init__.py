@@ -1,6 +1,5 @@
 from collections import defaultdict
-
-from AdcircPy.core.Winds import _BestTrack
+from AdcircPy.Winds import _BestTrack
 
 class BestTrack(object):
   _hurdat2_url="https://www.nhc.noaa.gov/data/hurdat/hurdat2-1851-2017-050118.txt"

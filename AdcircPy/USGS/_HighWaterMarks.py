@@ -9,14 +9,14 @@ import numpy as np
 import psycopg2
 import requests
 from AdcircPy.Mesh import AdcircMesh
-from AdcircPy.core import Validation
+from AdcircPy import USGS
 rest_url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
 params = dict()
 params['EventType'] = 2 # 2 for hurricane
 params['EventStatus'] = 0 # for completed
      
 def from_event_name(eventName):
-    params['Event'] = Validation.USGS.HighWaterMarks._get_event_id(eventName.lower())
+    params['Event'] = HighWaterMarks._get_event_id(eventName.lower())
     response = requests.get(rest_url, params=params)
     response.raise_for_status()
     json_data = json.loads(response.text)
@@ -28,7 +28,7 @@ def from_event_name(eventName):
             for key in data.keys():
                 hwm_stations[station_id][key] = data[key]
             hwm_stations[station_id]['elev_m'] = hwm_stations[station_id]['elev_ft'] / 3.28084
-    return Validation.USGS.HighWaterMarks(**hwm_stations)
+    return USGS.HighWaterMarks(**hwm_stations)
 
 
 def from_csv(path):
@@ -52,7 +52,7 @@ def from_csv(path):
         hwm_stations[station_id]['hwm_environment'] = line[header.index('hwm_environment')].lower()
         hwm_stations[station_id]['elev_m'] = hwm_stations[station_id]['elev_ft'] / 3.28084
     csvfile.close()
-    return Validation.USGS.HighWaterMarks(**hwm_stations)
+    return USGS.HighWaterMarks(**hwm_stations)
 
 def get_environments(self):
     environment = list()

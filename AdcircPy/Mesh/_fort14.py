@@ -145,6 +145,7 @@ def parse_fort14(path):
     grid['description']        = description
     # grid['fort14_path']        = path
     # grid['levels'] = np.negative(np.flip([-40,-30,-20,-10,-5,0,2,4,6,8,10,15,20,30,40,50,100,200,300,400,500,550], axis=0))
+    f.close()
     return grid
 
 def write_fort14(self, path):

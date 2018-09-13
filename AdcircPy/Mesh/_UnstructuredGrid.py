@@ -34,40 +34,42 @@ def transform_to_epsg(self, epsg):
   self.y = np.asarray(y).flatten()
   self.epsg = epsg
 
-def make_plot(self, extent=None, epsg=None, axes=None, title=None, **kwargs):
-  step = kwargs.pop("step", 0)  # TODO: replace with self._get__step() 
-  total_colors=256
-  cbar_label=None
+def _init_Tri(self):
+  if np.ma.is_masked(self._values):
+    trimask = np.any(self._values.mask[self.elements], axis=1)
+    self._Tri = Triangulation(self.x, self.y, self.elements, trimask)
+  else:
+    self._Tri = Triangulation(self.x, self.y, self.elements)
 
-  axes, idx = self._init_fig(axes, extent, title, epsg)
-  if isinstance(self.values, list):
-    values = self.values[step]
-  else:
-    values = self.values
-  vmin = kwargs.pop("vmin", np.min(values))
-  vmax = kwargs.pop("vmax", np.max(values))
-  cmap = kwargs.pop("cmap", "jet")
-  levels = kwargs.pop("levels", np.linspace(vmin, vmax, total_colors))
-  if np.ma.is_masked(values):
-    trimask = np.any(values.mask[self.elements], axis=1)
-    Tri = Triangulation(self.x, self.y, self.elements, trimask)
-    axes.tricontourf(Tri, values, levels=levels, cmap=cmap, extend='both')
-  else:
-    axes.tricontourf(self.x, self.y, self.elements, values, levels=levels, cmap=cmap, extend='both')
-  cbar = self._init_cbar(axes, cmap, vmin, vmax)
+
+def _make_plot(self, extent=None, epsg=None, axes=None, title=None, show=False, **kwargs):
+  # print(self.va)
+  total_colors=256
+  self._init_fig(axes, extent, title, epsg)
+  self._vmin = kwargs.pop("vmin", np.min(self._values))
+  self._vmax = kwargs.pop("vmax", np.max(self._values))
+  self._cmap = kwargs.pop("cmap", "jet")
+  self._levels = kwargs.pop("levels", np.linspace(self._vmin, self._vmax, total_colors))
+  self._axes.tricontourf(self._Tri, self._values, levels=self._levels, cmap=self._cmap, extend='both')
+  self._init_cbar(self._cmap, self._vmin, self._vmax)
+  cbar_label=None
   if cbar_label is not None:
-    cbar.set_label(cbar_label)
-  cbar.set_ticks([vmin,
-                  vmin+(1./4.)*(vmax-vmin),
-                  vmin+(1./2.)*(vmax-vmin),
-                  vmin+(3./4.)*(vmax-vmin),
-                  vmax])
-  cbar.set_ticklabels([np.around(vmin, 2), 
-                          np.around(vmin+(1./4.)*(vmax-vmin), 2),
-                          np.around(vmin+(1./2.)*(vmax-vmin), 2),
-                          np.around(vmin+(3./4.)*(vmax-vmin), 2),
-                          np.around(vmax, 2)])
-  return axes
+    self._cbar.set_label(cbar_label)
+  self._cbar.set_ticks([self._vmin,
+                  self._vmin+(1./4.)*(self._vmax-self._vmin),
+                  self._vmin+(1./2.)*(self._vmax-self._vmin),
+                  self._vmin+(3./4.)*(self._vmax-self._vmin),
+                  self._vmax])
+  self._cbar.set_ticklabels([np.around(self._vmin, 2), 
+                          np.around(self._vmin+(1./4.)*(self._vmax-self._vmin), 2),
+                          np.around(self._vmin+(1./2.)*(self._vmax-self._vmin), 2),
+                          np.around(self._vmin+(3./4.)*(self._vmax-self._vmin), 2),
+                          np.around(self._vmax, 2)])
+  
+  if show == True:
+    plt.show()
+
+  return self._axes
 
 def plot_velocity(self, **kwargs):
     raise NotImplementedError("Coming soon!")
@@ -324,15 +326,16 @@ def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
     idx  = self._get_extent_idx(extent, epsg)
     axes.axis('scaled')
     axes.axis(extent) 
-    return axes, idx
+  self._axes=axes
+  self._idx=idx
 
-def _init_cbar(self, axes, cmap, vmin, vmax):
-  divider = make_axes_locatable(axes)
+def _init_cbar(self, cmap, vmin, vmax):
+  divider = make_axes_locatable(self._axes)
   cax     = divider.append_axes("bottom", size="2%", pad=0.5)
   mappable = ScalarMappable(cmap=cmap)
   mappable.set_array([])
   mappable.set_clim(vmin, vmax)
-  return plt.colorbar(mappable, cax=cax, extend='both', orientation='horizontal')
+  self._cbar = plt.colorbar(mappable, cax=cax, extend='both', orientation='horizontal')
 
 def get_extent(self, **kwargs):
     epsg = kwargs.pop("epsg", self.epsg)

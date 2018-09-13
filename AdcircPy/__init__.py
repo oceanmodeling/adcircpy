@@ -1,10 +1,8 @@
-__package__ = 'AdcircPy'
 from AdcircPy.Mesh   import AdcircMesh
-from AdcircPy.Outputs import Outputs
-
-
+from AdcircPy.Outputs import _OutputFactory
 
 class AdcircPy(object):
+
     @staticmethod
     def read_mesh(fort14, **kwargs):
         """
@@ -54,7 +52,7 @@ class AdcircPy(object):
         -------
             AdcirPy.<output>  where <output> is the output type.
         """
-        return Outputs.read_outputs(path, **kwargs)
+        return _OutputFactory(path, **kwargs)
     
 
 import os
@@ -75,4 +73,3 @@ if os.path.isfile(_cachedir+"/h_tpxo9.v1.nc")==False:
         tpxo=tarfile.open(tpxo)
     else:
         tpxo=tarfile.open(tpxo)
-    print(tpxo)

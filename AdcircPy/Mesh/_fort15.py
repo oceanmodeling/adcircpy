@@ -44,10 +44,10 @@ def _init_fort15(self, path):
     f['DTDP'] = float(__line())
     f['STATIM'] = float(__line())
     f['REFTIM'] = float(__line())
-    if f['NWS'] > 0:
+    if f['NWS'] != 0:
         if f['NWS']==11 or f['NWS']==9:
             raise Exception('Invalid NWS number.')
-        f['WTIMNC'] = _f.readline()
+        f['WTIMINC'] = _f.readline()
     f['RNDAY'] = float(__line())
     f['DRAMP'] = _f.readline()
     f['A00, B00, C00'] = _f.readline()
@@ -89,7 +89,7 @@ def _init_fort15(self, path):
 
     for _constituent in list(f['BOUNTAG'].keys()):
         __line()
-        for _boundary in self.Boundaries.ocean_boundaries:
+        for _boundary in self.ocean_boundaries:
             for j in range(len(_boundary)):
                 line = _f.readline().split()
                 f['BOUNTAG'][_constituent]['amplitude'].append(float(line[0]))
@@ -97,7 +97,7 @@ def _init_fort15(self, path):
         f['BOUNTAG'][_constituent]['amplitude'] = np.asarray(f['BOUNTAG'][_constituent]['amplitude'])
         f['BOUNTAG'][_constituent]['phase'] = np.asarray(f['BOUNTAG'][_constituent]['phase'])
     f['ANGINN'] = float(__line())
-    if self.Boundaries.inflow_boundaries is not None:
+    if self.inflow_boundaries is not None:
         raise NotImplementedError('This fort.15 appears to include inflow boundaries which are not yet supported')
     f['StationOutputs'] = dict()
     def __stations():
@@ -151,6 +151,7 @@ def _init_fort15(self, path):
     f['NCCONV'] = _f.readline()
     f['NCCONT'] = _f.readline()
     f['NCDATE'] = datetime.strptime(_f.readline().strip(), '%Y-%m-%d %H:%M:%S UTC')
+    _f.close()
     self.fort15 = Mesh.fort15(**f)
 
 def _generate_forcing_from_TPXO(self):
@@ -163,3 +164,4 @@ def _generate_forcing_from_TPXO(self):
 
 def _generate_equilibrium_arguments(self, start_date, end_date):
     pass
+

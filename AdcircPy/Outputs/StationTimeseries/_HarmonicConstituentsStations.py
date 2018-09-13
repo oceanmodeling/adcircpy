@@ -31,6 +31,8 @@ def _from_fort51(path, fort14, fort15, **kwargs):
     else:
       _id = str(_id)
     stations[_id] = dict()
+    stations[_id]['longitude'] = fort14.fort15['StationOutputs']['elevation']['coords'][_station][0]
+    stations[_id]['latitude'] = fort14.fort15['StationOutputs']['elevation']['coords'][_station][1]
     for _component in _components:
       line = __line().split()
       amplitude = float(line[0])
@@ -38,7 +40,7 @@ def _from_fort51(path, fort14, fort15, **kwargs):
       stations[_id][_component] = {
               "orbital_frequency" : TidalDB[_component]["orbital_frequency"],
               "amplitude"         : amplitude,
-              "phase"             : phase }
+              "phase"             : phase}
   _f.close()
   return Outputs.HarmonicConstituentsStations(**stations)
     

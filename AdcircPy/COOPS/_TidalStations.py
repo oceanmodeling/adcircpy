@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import json
 import numpy as np
 import requests
-from AdcircPy.core import Validation
+from AdcircPy import COOPS
 
 class _REST(object):
     _url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
@@ -77,4 +77,4 @@ def _from_station_list(station_list, start_date, end_date):
                                 "s"        : np.ma.masked_invalid(s),
                                 "metadata" : metadata,
                                 "datum"    : _REST._params["datum"]}
-    return Validation.COOPS(**_stations)
+    return COOPS.TidalStations(**_stations)

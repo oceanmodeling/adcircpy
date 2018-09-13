@@ -1,35 +1,41 @@
 from collections import OrderedDict
-from AdcircPy.Mesh import _Mesh
+from AdcircPy.Mesh import _AdcircMesh
 from AdcircPy.Mesh import _fort13
 from AdcircPy.Mesh import _fort14
 from AdcircPy.Mesh import _fort15
 from AdcircPy.Mesh import _UnstructuredGrid
 
 class UnstructuredGrid(object):   
-  def __init__(self, x, y, values, elements, **kwargs):
-    self.x           = x
-    self.y           = y
-    self._values     = values
-    self.elements    = elements
-    self.nodeID      = kwargs.pop("nodeID", None)
-    self.elementID   = kwargs.pop("elementID", None)
-    self.datum       = kwargs.pop("datum", None)
-    self.epsg        = kwargs.pop("epsg", None)
-    self.ocean_boundaries    = kwargs.pop("ocean_boundaries", None)
-    self.land_boundaries     = kwargs.pop("land_boundaries", None)
-    self.inner_boundaries    = kwargs.pop("inner_boundaries", None)
-    self.weir_boundaries     = kwargs.pop("weir_boundaries", None)
-    self.inflow_boundaries   = kwargs.pop("inflow_boundaries", None)
-    self.outflow_boundaries  = kwargs.pop("outflow_boundaries", None)
-    self.culvert_boundaries  = kwargs.pop("culvert_boundaries", None)
+  def __init__(self, x, y, elements, values,
+                                     nodeID=None,
+                                     elementID=None,
+                                     datum=None,
+                                     epsg=None):
+    self._set_xyz(x, y, values)
+    self.elements     = elements
+    self.nodeID      = nodeID
+    self.elementID   = elementID
+    self.datum       = datum
+    self.epsg        = epsg
+    self._init_Tri()
+
+  def _set_xyz(self, x, y, values):
+    # Sanity check goes here.
+    self._x = x
+    self._y = y
+    self._values = values
 
   @property
   def values(self):
     return self._values
 
-  @values.setter
-  def values(self, values):
-    self._values = values
+  @property
+  def x(self):
+    return self._x
+  
+  @property
+  def y(self):
+    return self._y
 
   def __sub__(self, other):
     """
@@ -60,7 +66,7 @@ class UnstructuredGrid(object):
 
   def make_plot(self, **kwargs):
     """  """
-    return _UnstructuredGrid.make_plot(self, **kwargs)
+    return _UnstructuredGrid._make_plot(self, **kwargs)
 
   def get_dict(self):
     """  """
@@ -79,11 +85,14 @@ class UnstructuredGrid(object):
   
   def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
     """    """
-    return _UnstructuredGrid._init_fig(self, axes, extent, title, epsg)
+    _UnstructuredGrid._init_fig(self, axes, extent, title, epsg)
 
-  def _init_cbar(self, axes, cmap, vmin, vmax):
+  def _init_cbar(self, cmap, vmin, vmax):
     """ """
-    return _UnstructuredGrid._init_cbar(self, axes, cmap, vmin, vmax)
+    _UnstructuredGrid._init_cbar(self, cmap, vmin, vmax)
+
+  def _init_Tri(self):
+    _UnstructuredGrid._init_Tri(self)
 
   def _get_finite_volume_interp(self, point_idx):
     """
@@ -148,19 +157,38 @@ class UnstructuredGrid(object):
   def plot_outerBoundary(self):
     return _Boundaries.plot_outerBoundary(self)
 
+
 class AdcircMesh(UnstructuredGrid):
-  def __init__(self, x, y, values, elements, **kwargs):
-    UnstructuredGrid.__init__(self, x, y, values, elements,
-                              epsg=kwargs.pop('epsg', 4326), **kwargs)
-    self.description = kwargs.pop('description', None)
+  def __init__(self, x, y, elements, values,
+                                     description=None,
+                                     fort15=None,
+                                     fort13=None,
+                                     ocean_boundaries=None,
+                                     land_boundaries=None,
+                                     inner_boundaries=None,
+                                     weir_boundaries=None,
+                                     inflow_boundaries=None,
+                                     outflow_boundaries=None,
+                                     culvert_boundaries=None,
+                                     **kwargs):
+    UnstructuredGrid.__init__(self, x, y, elements, values, **kwargs)
+    self.ocean_boundaries    = ocean_boundaries
+    self.land_boundaries     = land_boundaries
+    self.inner_boundaries    = inner_boundaries
+    self.weir_boundaries     = weir_boundaries
+    self.inflow_boundaries   = inflow_boundaries
+    self.outflow_boundaries  = outflow_boundaries
+    self.culvert_boundaries  = culvert_boundaries
+    self._description = description
+    self._init_fort15(fort15)
+    self._init_fort13(fort13)
     self._boundary_forcing=OrderedDict()
-    self._init_TPXO()
-    self._init_fort15(kwargs.pop('fort15', None))
-    self._init_fort13(kwargs.pop('fort13', None))
+    # self._init_TPXO()
+
 
   @staticmethod
   def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
-    return _Mesh._from_fort14(fort14, datum, epsg, fort13, fort15)
+    return _AdcircMesh._from_fort14(fort14, datum, epsg, fort13, fort15)
 
   @property
   def boundary_forcing(self):
@@ -168,14 +196,13 @@ class AdcircMesh(UnstructuredGrid):
 
   @boundary_forcing.setter 
   def boundary_forcing(self, constituent_list):
-    _Mesh._set_boundary_forcing(self, constituent_list) 
+    _AdcircMesh._set_boundary_forcing(self, constituent_list) 
 
-  def make_plot(self, surface='bathy', **kwargs):
-    return _Mesh.make_plot(self, surface, **kwargs)
-    # return _Mesh.plot_bathy(self, surface, **kwargs)
+  def make_plot(self, **kwargs):
+    return _AdcircMesh._make_plot(self, **kwargs)
 
   def interpolate_DEM(self, DEM, **kwargs):
-    _Mesh.interpolate_DEM(self, DEM, **kwargs)
+    _AdcircMesh.interpolate_DEM(self, DEM, **kwargs)
   
   def write_fort14(self, path):
     _fort14.write_fort14(self, path)
@@ -186,8 +213,8 @@ class AdcircMesh(UnstructuredGrid):
   def _init_fort13(self, fort13):
     _fort13._init_fort13(self, fort13)
 
-  def _init_TPXO(self):
-    _Mesh._init_TPXO(self)
+  # def _init_TPXO(self):
+  #   _AdcircMesh._init_TPXO(self)
 
 
 

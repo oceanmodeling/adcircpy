@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from AdcircPy.core.Tides import orbital_constants
+from AdcircPy.Tides import orbital_constants
 
 def _init_constituents(self):
   _constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))

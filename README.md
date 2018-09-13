@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/jreniel/AdcircPy.svg?style=svg)](https://circleci.com/gh/jreniel/AdcircPy)
+
 # AdcircPy </h1>
 ## A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
 

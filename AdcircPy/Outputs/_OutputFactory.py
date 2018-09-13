@@ -6,26 +6,22 @@ import numpy as np
 from AdcircPy.Mesh import AdcircMesh
 from AdcircPy import Outputs
 
-
-def read_outputs(path, **kwargs):
-    return Outputs.Outputs(path, **kwargs)._open_file()
-
-def _open_file(self):
-  if os.path.isfile(self._path)==False:
-    raise FileNotFoundError("No such file or directory: %s" % path)
+def _read_file(cls):
+  if os.path.isfile(cls._path)==False:
+    raise FileNotFoundError("No such file or directory: %s" % cls._path)
   try:
-    Dataset(self._path)
+    Dataset(cls._path)
     _nc = True
   except:
     _nc = False
   if _nc == True:
-    return self._read_netcdf()
+    return cls._read_netcdf()
   else:
-    if self.fort14 is None:
+    if cls._fort14 is None:
       raise Exception('For reading ASCII outputs, a fort.14 is required. A fort.15 is optional.')
-    if isinstance(self.fort14, AdcircMesh)==False:
-      self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, fort15=self.fort15, datum=self.datum, epsg=self.epsg)
-    return self._read_ascii()
+    if isinstance(cls._fort14, AdcircMesh)==False:
+      cls._fort14 = AdcircMesh.from_fort14(fort14=cls._fort14, fort15=cls._fort15, datum=cls._datum, epsg=cls._epsg)
+    return cls._read_ascii(cls)
 
 def _read_netcdf(self):
   self.Dataset = Dataset(self._path)
@@ -44,15 +40,48 @@ def _read_ascii(self):
   line = f.readline().split()
   number_of_datasets = int(line[0])
   number_of_points = int(line[1])
-  if number_of_points == self.fort14.x.size:
-    f.close()
-    return Outputs.__OutputSurface.from_ascii(self._path, self.fort14, epsg=self.epsg)
+  if number_of_points == self._fort14.x.size:
+    if number_of_datasets > 2:
+      return Outputs._AsciiOutputSurfaceTimeseries(self._fort14.x,
+                                                   self._fort14.y,
+                                                   values,
+                                                   self._fort14.elements,
+                                                   f,
+                                                   epsg=self._epsg
+                                                    )
+
+    elif number_of_datasets in [1,2]:
+      line = f.readline().split()
+      _time = float(line[0].strip(' /n'))
+      _timestep = int(line[1])
+      _nodeid = list()
+      _values = list()
+      for i in range(number_of_points):
+        line = f.readline().split()
+        _nodeid.append(int(line[0].strip(' \n')))
+        _values.append(float(line[1].strip(' \n')))
+      _extrema_time=list()
+      if number_of_datasets==2:
+        for i in range(number_of_points):
+          line = f.readline().split()
+          _extrema_time.append(float(line[1].strip(' \n')))
+      nodeID = np.asarray(_nodeid)
+      values = np.ma.masked_equal(_values, -99999.)
+      f.close()
+      return Outputs._OutputSurfaceExtrema(self._fort14.x,
+                                           self._fort14.y,
+                                           self._fort14.elements,
+                                           values,
+                                           _extrema_time,
+                                           epsg=self._epsg,
+                                           nodeID=nodeID)
+
   else:
     f.close()
-    return Outputs.__OutputStations.from_ascii(self._path, self.fort14)
+    return Outputs._OutputStations.from_ascii(self._path, self._fort14)
 
-def _harmonic_constituent_ascii():
-  pass
+# def _harmonic_constituent_ascii():
+#   pass
   
 
 
@@ -69,7 +98,7 @@ def _harmonic_constituent_ascii():
   # _shape = fort14.values.shape
   # fort14 = fort14.get_dict()
   
-  # f = open(path)
+  # f = open(self._path)
   # description          = f.readline().strip()
   # line                 = f.readline().split()
   # number_of_datasets   = int(line[0]) 

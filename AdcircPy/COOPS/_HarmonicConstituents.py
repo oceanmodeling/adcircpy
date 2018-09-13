@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import json, codecs
 import requests
-from AdcircPy.core.Validation import COOPS
 import os
 
 _cachedir = os.getenv('LOCALAPPDATA')
