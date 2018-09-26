@@ -4,17 +4,17 @@ from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
 from haversine import haversine
 from AdcircPy.core._FixPointNormalize import FixPointNormalize
-from AdcircPy import Mesh
 from AdcircPy.Mesh import _fort14
 from AdcircPy.Mesh import _fort13
 
-def _from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
+def _from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, fort15=None, datum_grid=None):
     kwargs = _fort14.parse_fort14(fort14)
     kwargs['datum'] = datum
     kwargs['epsg']  = epsg
     kwargs['fort13'] = fort13
     kwargs['fort15'] = fort15
-    return Mesh.AdcircMesh(**kwargs)
+    kwargs['datum_grid'] = datum_grid
+    return cls(**kwargs)
 
 def _make_plot(self, extent=None, epsg=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
     self._init_fig(axes, extent, title, epsg)

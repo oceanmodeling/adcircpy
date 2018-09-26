@@ -1,0 +1,8 @@
+export H_TPXO_PATH=h_tpxo9.v1.nc
+export FORT14_PATH=fort.14
+export FORT13_PATH=fort.13
+export FORT15_COLDSTART_PATH=fort.15.coldstart
+export FORT15_HOTSTART_PATH=fort.15.hotstart
+export MAXELE_NC_PATH=maxele.63.nc
+export MAXELE_ASCII_PATH=maxele.63
+export STORM_EVENT_NAME=Sandy

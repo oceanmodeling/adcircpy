@@ -313,6 +313,20 @@ def get_values_at_xy(self, x, y, step=0, method='linear'):
         idx = np.where(~np.isin(values, 0.0))
         return griddata((self.x[idx], self.y[idx]), values[idx], (x, y), method='nearest')
 
+def get_finite_volume_element_list(self, index):
+    return self.elements[np.where(np.any(np.isin(self.elements, index), axis=1))[0]]
+
+def get_finite_volume_Path_list(self, index):
+    return [self.get_Path_from_element(element) for element in self.get_finite_volume_element_list(index)]
+
+def get_element_containing_coord(self, coord):
+    x = coord[0]; y = coord[1]
+    distance, node_idx = self.KDTree.query([x,y])
+    elements = self.get_finite_volume_Path_list(node_idx)
+    for i, element in enumerate(elements):
+        if element.contains_point((x,y)):
+            return self.get_finite_volume_element_list(node_idx)[i]
+
 def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
   if axes is None:                
     fig = plt.figure()
@@ -374,11 +388,12 @@ def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewi
     axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
     return axes
 
-def get_elements_surrounding_index(self, index, return_Paths=False):
-    connected_element_idxs, = np.where(np.any(np.isin(self.elements, index), axis=1))
-    return self.elements[connected_element_idxs]
+def get_finite_volume(self, index):
+    self.get_elements_from_
+    return Path.make_compound_path(*paths)
 
-def _get_Path_from_element_indexes(self, element):
+
+def get_Path_from_element(self, element):
     return Path([[self.x[element[0]], self.y[element[0]]],
                  [self.x[element[1]], self.y[element[1]]],
                  [self.x[element[2]], self.y[element[2]]],
@@ -461,7 +476,20 @@ def _get_finite_volume_interp(self, idx, radius=None):
     ordered_vertices.append(ordered_vertices[0])
     return Path(ordered_vertices, closed=True)
 
-
+def _init_datum_grid(self):
+  if self._datum_grid is not None:
+    with open(self._datum_grid, 'r') as f: 
+      f.readline().rstrip()
+      original_datum, target_datum = f.readline().split(':')
+      if original_datum == self.datum:
+        NP = int(f.readline().split()[1])
+        values = list()
+        for k in range(NP):
+          values.append(float(f.readline().split()[3]))
+        self.original_mesh_values = self.values
+        self.original_mesh_datum = self.datum
+        self._values += np.asarray(values)
+        self.datum = target_datum
 
 
 # def get_dict(self):

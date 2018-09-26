@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import os
 import sys
-sys.path.append('..')
 from AdcircPy import AdcircPy
 
 class testReadOutputs(object):
@@ -10,9 +9,10 @@ class testReadOutputs(object):
     self.test_read_maxele_ascii()
 
   def test_read_maxele_ascii(self):
-    maxele = AdcircPy.read_output(self._os.getenv("MAXELE_ASCII_PATH"),
-                         fort14=self._os.getenv("FORT14_PATH"))
-    maxele.make_plot()
+    maxele = AdcircPy.read_output(self._os.getenv("MAXELE_NC_PATH"),
+                         # fort14=self._os.getenv("FORT14_PATH")
+                         )
+    # maxele.make_plot()
 
 
   def read_environment_variables(self):

@@ -1,3 +1,7 @@
+# Current version of localci doesn't support workflows
+# therefore all the steps have been concatenated into the build segment
+# See https://discuss.circleci.com/t/can-you-use-workflows-locally/16934/3
+
 version: 2
 jobs:
   build:
@@ -5,6 +9,7 @@ jobs:
         - image: jreniel/ci-adcircpy:Dockerfile
     environment:
       BASH_ENV: "~/.bashrc"
+    
     steps:
       - checkout
       - run:
@@ -13,10 +18,25 @@ jobs:
       - run:
           name: "Install AdcircPy to local"
           command: python setup.py install
-      - run: mkdir -p ~/.cache/AdcircPy
-      - run: tar xf /tmp/test_data.tar.gz
-      - run: mv h_tpxo9.v1.nc ~/.cache/AdcircPy/
-      - run: python tests/ci-tests.py
+      - run:
+          name: Setup environment for running tests
+          command: |
+            DATA="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"
+            echo "export FORT14_PATH=$DATA/fort.14 " >> ~/.adcpyrc
+            echo "export FORT13_PATH=$DATA/fort.13 " >> ~/.adcpyrc
+            echo "export FORT15_COLDSTART_PATH=$DATA/fort.15.coldstart " >> ~/.adcpyrc
+            echo "export FORT15_HOTSTART_PATH=$DATA/fort.15.hotstart " >> ~/.adcpyrc
+            echo "export MAXELE_NC_PATH=$DATA/maxele.63.nc " >> ~/.adcpyrc
+            echo "export MAXELE_ASCII_PATH=$DATA/maxele.63 " >> ~/.adcpyrc
+            echo "export STORM_EVENT_NAME=Isaac " >> ~/.adcpyrc
+            mkdir -p ~/.cache/AdcircPy
+            tar xf /tmp/test_data.tar.gz
+            mv h_tpxo9.v1.nc ~/.cache/AdcircPy/
+      - run: python tests/test_front_end.py
+      - run: python tests/test_read_ascii_maxele_factory.py
+      - run: python tests/test_read_fort15.py
+      - run: python tests/test_read_netcdf_maxele_factory.py
+      - run: python tests/test_usgs_high_water_marks.py
 
 workflows:
   version: 2

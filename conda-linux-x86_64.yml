@@ -88,4 +88,5 @@ dependencies:
   - requests
   - bs4
   - psycopg2-binary
-
+  - tqdm
+  - eventlet

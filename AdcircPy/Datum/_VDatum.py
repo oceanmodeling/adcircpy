@@ -1,10 +1,10 @@
-from __future__ import absolute_import, division, print_function
 import os
 import subprocess
 import shutil
 import numpy as np
 
-def convert(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
+
+def jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, verbose=True):
     if os.path.isfile(vdatumdir+"/vdatum.jar")==False:
         raise FileNotFoundError("vdatum.jar not found in provided path: '{}'".format(vdatumdir))
 

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from scipy.spatial import KDTree
 from AdcircPy.Mesh import _AdcircMesh
 from AdcircPy.Mesh import _fort13
 from AdcircPy.Mesh import _fort14
@@ -10,20 +11,20 @@ class UnstructuredGrid(object):
                                      nodeID=None,
                                      elementID=None,
                                      datum=None,
-                                     epsg=None):
-    self._set_xyz(x, y, values)
-    self.elements     = elements
+                                     epsg=None,
+                                     datum_grid=None):
+    self._x = x
+    self._y = y
+    self._values     = values
+    self.elements    = elements
     self.nodeID      = nodeID
     self.elementID   = elementID
     self.datum       = datum
     self.epsg        = epsg
+    self._datum_grid  = datum_grid
+    self._init_datum_grid()
     self._init_Tri()
-
-  def _set_xyz(self, x, y, values):
-    # Sanity check goes here.
-    self._x = x
-    self._y = y
-    self._values = values
+    self._init_KDTree()
 
   @property
   def values(self):
@@ -36,19 +37,7 @@ class UnstructuredGrid(object):
   @property
   def y(self):
     return self._y
-
-  def __sub__(self, other):
-    """
-    Used in the case where two different grids are subtracted directly.
-    Grids must have the same dimensions.
-    Example:
-        grid1 = adcpy.read_grid("fort.14.1")
-        grid2 = adcpy.read_grid("fort.14.2")
-        diff = grid2 - grid1
-        diff.make_plot(show=True)
-    """
-    return _UnstructuredGrid.get_difference(self, other)
-
+    
   def get_mean_value(self, **kwargs):
     """   """
     return _UnstructuredGrid.get_mean_value(self, **kwargs)
@@ -67,42 +56,17 @@ class UnstructuredGrid(object):
   def make_plot(self, **kwargs):
     """  """
     return _UnstructuredGrid._make_plot(self, **kwargs)
-
-  def get_dict(self):
-    """  """
-    return _UnstructuredGrid.get_dict(self)
   
   def get_values_at_xy(self, x, y, **kwargs):
     """
     Returns numpy array of values at coordinates or list of coordinates give by lon lat
     """
     return _UnstructuredGrid.get_values_at_xy(self, x, y, **kwargs)
-      
+
   def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
-    """
-    """
+    """  """
     return _UnstructuredGrid.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
-  
-  def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
-    """    """
-    _UnstructuredGrid._init_fig(self, axes, extent, title, epsg)
-
-  def _init_cbar(self, cmap, vmin, vmax):
-    """ """
-    _UnstructuredGrid._init_cbar(self, cmap, vmin, vmax)
-
-  def _init_Tri(self):
-    _UnstructuredGrid._init_Tri(self)
-
-  def _get_finite_volume_interp(self, point_idx):
-    """
-    Fetches the Path for the DEM interpolator.
-    """
-    return _UnstructuredGrid._get_finite_volume_interp(self, point_idx)
-
-  def plot_trimesh(self, **kwargs):
-    """ """
-    return _UnstructuredGrid.plot_trimesh(self, **kwargs)    
+   
 
   def get_xyz(self, extent=None, **kwargs):
     """
@@ -120,14 +84,60 @@ class UnstructuredGrid(object):
     """ """
     return _UnstructuredGrid.get_elements_from_extent(self, extent)
 
-  def get_elements_surrounding_index(self, index):
+  def get_finite_volume(self, index):
     """ """
-    return _UnstructuredGrid.get_elements_surrounding_index(self, index)
+    return _UnstructuredGrid.get_finite_volume(self, index)
     
-  def get_Path_from_element_indexes(self, elements):
+  def get_Path_from_element(self, element):
     """ """
-    return _UnstructuredGrid._get_Path_from_element_indexes(self, elements)
+    return _UnstructuredGrid.get_Path_from_element(self, element)
+  
+  def get_extent(self, **kwargs):
+    """ """
+    return _UnstructuredGrid.get_extent(self, **kwargs)
 
+  def get_element_containing_coord(self, coord):
+    return _UnstructuredGrid.get_element_containing_coord(self, coord)
+
+  def get_finite_volume_Path_list(self, index):
+    return _UnstructuredGrid.get_finite_volume_Path_list(self, index)
+
+  def get_finite_volume_element_list(self, index):
+    return _UnstructuredGrid.get_finite_volume_element_list(self, index)
+  
+  def transform_to_epsg(self, epsg):
+    """ """
+    _UnstructuredGrid.transform_to_epsg(self, epsg)
+
+  def plot_trimesh(self, **kwargs):
+    """ """
+    return _UnstructuredGrid.plot_trimesh(self, **kwargs) 
+  
+  def plot_outerBoundary(self):
+    return _Boundaries.plot_outerBoundary(self)
+  
+  def __init_fig(self, axes=None, extent=None, title=None, epsg=None):
+    """    """
+    _UnstructuredGrid._init_fig(self, axes, extent, title, epsg)
+
+  def __init_cbar(self, cmap, vmin, vmax):
+    """ """
+    _UnstructuredGrid._init_cbar(self, cmap, vmin, vmax)
+
+  def _init_Tri(self):
+    _UnstructuredGrid._init_Tri(self)
+
+  def _init_KDTree(self):
+    self.KDTree = KDTree(self.get_xy())
+
+  def _init_datum_grid(self):
+    _UnstructuredGrid._init_datum_grid(self)
+
+  def _get_finite_volume_interp(self, point_idx):
+    """
+    Fetches the Path for the DEM interpolator.
+    """
+    return _UnstructuredGrid._get_finite_volume_interp(self, point_idx)
 
   def _get_extent_idx(self, extent, epsg, **kwargs):
     """
@@ -137,25 +147,17 @@ class UnstructuredGrid(object):
     """
     return _UnstructuredGrid._get_extent_idx(self, extent, epsg, **kwargs)
 
-  def get_extent(self, **kwargs):
-    """ """
-    return _UnstructuredGrid.get_extent(self, **kwargs)
-
-  def transform_to_epsg(self, epsg):
-    """ """
-    _UnstructuredGrid.transform_to_epsg(self, epsg)
-
-  def get_land_boundaries(self, **kwargs):
-    return _Boundaries.get_land_boundaries(self, **kwargs)
-
-  def build_outer_polygon(self, **kwargs):
-    return _Boundaries.build_outer_polygon(self, **kwargs)
-
-  def build_inner_polygons(self, **kwargs):
-    return _Boundaries.build_inner_polygons(self, **kwargs)
-
-  def plot_outerBoundary(self):
-    return _Boundaries.plot_outerBoundary(self)
+  def __sub__(self, other):
+    """
+    Used in the case where two different grids are subtracted directly.
+    Grids must have the same dimensions.
+    Example:
+        grid1 = adcpy.read_grid("fort.14.1")
+        grid2 = adcpy.read_grid("fort.14.2")
+        diff = grid2 - grid1
+        diff.make_plot(show=True)
+    """
+    return _UnstructuredGrid.get_difference(self, other)
 
 
 class AdcircMesh(UnstructuredGrid):
@@ -163,6 +165,7 @@ class AdcircMesh(UnstructuredGrid):
                                      description=None,
                                      fort15=None,
                                      fort13=None,
+                                     datum_grid=None,
                                      ocean_boundaries=None,
                                      land_boundaries=None,
                                      inner_boundaries=None,
@@ -179,16 +182,19 @@ class AdcircMesh(UnstructuredGrid):
     self.inflow_boundaries   = inflow_boundaries
     self.outflow_boundaries  = outflow_boundaries
     self.culvert_boundaries  = culvert_boundaries
-    self._description = description
+    self._description        = description
     self._init_fort15(fort15)
     self._init_fort13(fort13)
-    self._boundary_forcing=OrderedDict()
+    self._boundary_forcing   = OrderedDict()
     # self._init_TPXO()
 
 
-  @staticmethod
-  def from_fort14(fort14, datum='MSL', epsg=4326, fort13=None, fort15=None):
-    return _AdcircMesh._from_fort14(fort14, datum, epsg, fort13, fort15)
+  @classmethod
+  def from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, fort15=None, datum_grid=None):
+    return _AdcircMesh._from_fort14(cls, fort14, datum, epsg, fort13, fort15, datum_grid)
+
+  def generate_tidal_run(self, start_time, run_days):
+    return self._coldstart_time
 
   @property
   def boundary_forcing(self):
