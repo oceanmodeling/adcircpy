@@ -53,3 +53,5 @@ class AdcircPy(object):
             AdcirPy.<output>  where <output> is the output type.
         """
         return OutputFactory(path, fort14, fort15, datum, epsg, datum_grid)
+
+from AdcircPy.Tides import TidalDB; TidalDB.init_TPXO_cache()

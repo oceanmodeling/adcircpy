@@ -39,6 +39,8 @@ orbital_frequency = { 'M4'      : 0.0002810378050173,
                       'Msf'     : 0.0000049252018242,
                       'Mf'      : 0.0000053234146919}
 
+orbital_frequency_units = 'rad/sec'
+
 doodson_coefficient ={'M4'      :  4,
                       'M6'      :  6,
                       'MK3'     :  3,

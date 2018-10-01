@@ -55,7 +55,7 @@ class UnstructuredGrid(object):
 
   def make_plot(self, **kwargs):
     """  """
-    return _UnstructuredGrid._make_plot(self, **kwargs)
+    return _UnstructuredGrid.make_plot(self, **kwargs)
   
   def get_values_at_xy(self, x, y, **kwargs):
     """
@@ -66,7 +66,6 @@ class UnstructuredGrid(object):
   def rasterize_to_geoTransform(self, geoTransform, shape, **kwargs):
     """  """
     return _UnstructuredGrid.rasterize_to_geoTransform(self, geoTransform, shape, **kwargs)
-   
 
   def get_xyz(self, extent=None, **kwargs):
     """
@@ -116,11 +115,11 @@ class UnstructuredGrid(object):
   def plot_outerBoundary(self):
     return _Boundaries.plot_outerBoundary(self)
   
-  def __init_fig(self, axes=None, extent=None, title=None, epsg=None):
+  def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
     """    """
     _UnstructuredGrid._init_fig(self, axes, extent, title, epsg)
 
-  def __init_cbar(self, cmap, vmin, vmax):
+  def _init_cbar(self, cmap, vmin, vmax):
     """ """
     _UnstructuredGrid._init_cbar(self, cmap, vmin, vmax)
 
@@ -186,7 +185,7 @@ class AdcircMesh(UnstructuredGrid):
     self._init_fort15(fort15)
     self._init_fort13(fort13)
     self._boundary_forcing   = OrderedDict()
-    # self._init_TPXO()
+    self._init_TPXO()
 
 
   @classmethod
@@ -219,8 +218,8 @@ class AdcircMesh(UnstructuredGrid):
   def _init_fort13(self, fort13):
     _fort13._init_fort13(self, fort13)
 
-  # def _init_TPXO(self):
-  #   _AdcircMesh._init_TPXO(self)
+  def _init_TPXO(self):
+    _AdcircMesh._init_TPXO(self)
 
 
 

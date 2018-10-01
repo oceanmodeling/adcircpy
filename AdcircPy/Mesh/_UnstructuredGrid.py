@@ -42,7 +42,7 @@ def _init_Tri(self):
     self._Tri = Triangulation(self.x, self.y, self.elements)
 
 
-def _make_plot(self, extent=None, epsg=None, axes=None, title=None, show=False, **kwargs):
+def make_plot(self, extent=None, epsg=None, axes=None, title=None, show=False, **kwargs):
   # print(self.va)
   total_colors=256
   self._init_fig(axes, extent, title, epsg)

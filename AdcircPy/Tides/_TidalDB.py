@@ -1,10 +1,10 @@
 from collections import OrderedDict
 from AdcircPy.Tides import orbital_constants
 
-def _init_constituents(self):
-  _constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))
+def init_constituents(self):
+  constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))
   TidalDB = OrderedDict()
-  for constituent in _constituents:
+  for constituent in constituents:
     TidalDB[constituent] = dict()
     TidalDB[constituent]['orbital_frequency'] = orbital_constants.orbital_frequency[constituent]
     if constituent in orbital_constants.doodson_coefficient.keys():

@@ -275,3 +275,7 @@ def plot_outerBoundary(self, extent=None, axes=None, **kwargs):
     axes, idx = _plotters._init_fig(self, axes, extent, title)
     patch = patches.PathPatch(self.outerBoundary, **kwargs)
     axes.add_patch(patch)
+
+
+def _init_TPXO(self):
+    pass
