@@ -140,7 +140,6 @@ def _set_vertical_datum(self, target_datum, _tqdm=False):
           if value != -999999.:
             self[str(data['hwm_id'])]['elev_m'] = value
             self[str(data['hwm_id'])]['verticalDatumName'] = target_datum
-            del self[str(data['hwm_id'])]['elev_ft']
           elif value==-999999. or value==-99999./3.28084:
             del self[str(data['hwm_id'])]
             self.filtered_count+=1

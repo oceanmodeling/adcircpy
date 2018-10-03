@@ -2,6 +2,7 @@ import unittest
 from AdcircPy import AdcircPy
 from AdcircPyTests import AdcircPyEnvironment
 
+
 class FrontEndTests(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):
     super(FrontEndTests, self).__init__()
@@ -39,8 +40,5 @@ class FrontEndTests(AdcircPyEnvironment, unittest.TestCase):
     AdcircPy.read_output(self._os.getenv("MAXELE_NC_PATH"),
                          fort14=self._os.getenv("FORT14_PATH"))
 
-
-
 if __name__ == '__main__':
     unittest.main()
-

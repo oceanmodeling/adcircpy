@@ -204,7 +204,7 @@ class AdcircMesh(UnstructuredGrid):
     _AdcircMesh._set_boundary_forcing(self, constituent_list) 
 
   def make_plot(self, **kwargs):
-    return _AdcircMesh._make_plot(self, **kwargs)
+    return _AdcircMesh.make_plot(self, **kwargs)
 
   def interpolate_DEM(self, DEM, **kwargs):
     _AdcircMesh.interpolate_DEM(self, DEM, **kwargs)

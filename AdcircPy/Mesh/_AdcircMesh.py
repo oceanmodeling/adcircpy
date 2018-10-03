@@ -16,7 +16,7 @@ def _from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, fort15=None, 
     kwargs['datum_grid'] = datum_grid
     return cls(**kwargs)
 
-def _make_plot(self, extent=None, epsg=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
+def make_plot(self, extent=None, epsg=None, axes=None, title=None, total_colors=256, cbar_label=r'elevation [m]', **kwargs):
     self._init_fig(axes, extent, title, epsg)
     vmin = kwargs.pop("vmin", np.min(self.values[self._idx]))
     vmax = kwargs.pop("vmax", np.max(self.values[self._idx]))
@@ -43,7 +43,7 @@ def _make_plot(self, extent=None, epsg=None, axes=None, title=None, total_colors
     norm = FixPointNormalize(sealevel=mlevel, vmax=vmax, vmin=vmin, col_val=col_val)
     self._axes.tricontourf(self.x, self.y, self.elements, self.values,
                     levels=levels, cmap=cmap, norm=norm, extend='both', **kwargs)
-    self._init_cbar(self._axes, cmap, vmin, vmax)
+    self._init_cbar(cmap, vmin, vmax)
     self._cbar.set_label(cbar_label)
     self._cbar.set_ticks([vmin, vmin + col_val *(vmax-vmin), vmax])
     self._cbar.set_ticklabels([np.around(vmin, 2), mlevel, np.around(vmax, 2)])

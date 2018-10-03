@@ -384,9 +384,8 @@ def _get_extent_idx(self, extent, epsg, **kwargs):
     return idx
 
 def plot_trimesh(self, extent=None, axes=None, title=None, color='black', linewidth=0.5, alpha=0.4):
-    axes, idx = fig._init_fig(self, axes, extent, title)
-    axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
-    return axes
+    self._init_fig(axes, extent, title)
+    self._axes.triplot(self.x, self.y, self.elements, color=color, linewidth=linewidth, alpha=alpha)
 
 def get_finite_volume(self, index):
     self.get_elements_from_

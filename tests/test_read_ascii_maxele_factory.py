@@ -1,26 +1,27 @@
 #! /usr/bin/env python
-import os
+import unittest
+import matplotlib
+matplotlib.use('Agg')
+from AdcircPyTests import AdcircPyEnvironment
 from AdcircPy import AdcircPy
 
-class testReadOutputs(object):
-  def __init__(self):
+class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
+  def setUp(self):
     self.read_environment_variables()
-    self.test_read_maxele_ascii()
 
   def test_read_maxele_ascii(self):
     maxele = AdcircPy.read_output(self._os.getenv("MAXELE_ASCII_PATH"),
-                         fort14=self._os.getenv("FORT14_PATH"))
-    # maxele.make_plot()
+                                  fort14=self._os.getenv("FORT14_PATH"))
+    maxele.make_plot()
 
+class testReadOutputs(AdcircPyEnvironment, unittest.TestCase):
+  def setUp(self):
+    self.read_environment_variables()
 
-  def read_environment_variables(self):
-    with open(os.path.expanduser("~")+'/.adcpyrc') as lines:
-      for line in lines:
-        if 'export' in line and '#' not in line:
-          line = line.strip('export \n').split('=')
-          os.environ[line[0]] = line[1]
-    self._os=os
+  def test_read_maxele_ascii(self):
+    maxele = AdcircPy.read_output(self._os.getenv("MAXELE_NC_PATH"))
+    maxele.make_plot()
 
 if __name__ == '__main__':
-  testReadOutputs()
+  unittest.main()
 
