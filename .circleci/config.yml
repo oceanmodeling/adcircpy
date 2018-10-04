@@ -33,9 +33,8 @@ jobs:
             tar xf /tmp/test_data.tar.gz
             mv h_tpxo9.v1.nc ~/.cache/AdcircPy/
       - run: python tests/test_front_end.py
-      - run: python tests/test_read_ascii_maxele_factory.py
       - run: python tests/test_read_fort15.py
-      - run: python tests/test_read_netcdf_maxele_factory.py
+      - run: python tests/test_read_maxele.py
       - run: python tests/test_usgs_high_water_marks.py
       - run: python tests/test_plots.py
 workflows:
