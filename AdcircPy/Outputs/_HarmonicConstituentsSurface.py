@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from AdcircPy import Mesh
+from AdcircPy import Model
 from AdcircPy import Outputs
 
 def _from_ascii(path, fort14=None, fort15=None, datum=None, epsg=None, station_data=None):

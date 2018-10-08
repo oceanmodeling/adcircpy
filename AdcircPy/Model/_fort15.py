@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from datetime import datetime
 import numpy as np
-from AdcircPy import Mesh
+from AdcircPy import Model
 # from AdcircPy.core import TidalDB
 
 def _init_fort15(self, path):
@@ -152,16 +152,4 @@ def _init_fort15(self, path):
     f['NCCONT'] = _f.readline()
     f['NCDATE'] = datetime.strptime(_f.readline().strip(), '%Y-%m-%d %H:%M:%S UTC')
     _f.close()
-    self.fort15 = Mesh.fort15(**f)
-
-def _generate_forcing_from_TPXO(self):
-    boundary_TPXO = list()
-    if self.ocean_boundaries is not None:
-        Tpxo = TidalDB.TPXO()
-        for boundary in self.ocean_boundaries:
-            boundary_TPXO.append(Tpxo.get_constituents_at_lonlat(self.x[boundary], self.y[boundary], self.constituent_list))
-        self.fort15.boundary_TPXO = boundary_TPXO
-
-def _generate_equilibrium_arguments(self, start_date, end_date):
-    pass
-
+    self.fort15 = Model.fort15(**f)

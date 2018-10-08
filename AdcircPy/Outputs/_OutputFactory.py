@@ -3,7 +3,7 @@ import numpy as np
 import fnmatch
 from netCDF4 import Dataset
 import numpy as np
-from AdcircPy.Mesh import AdcircMesh
+from AdcircPy.Model import AdcircMesh
 from AdcircPy import Outputs
 
 def __new__(cls, path, fort14=None, fort15=None, datum='MSL', epsg=None, datum_grid=None):

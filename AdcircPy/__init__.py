@@ -1,5 +1,6 @@
-from AdcircPy.Mesh   import AdcircMesh
+from AdcircPy.Model import AdcircMesh
 from AdcircPy.Outputs import _OutputFactory as OutputFactory
+from AdcircPy.Tides import TPXO
 
 class AdcircPy(object):
 
@@ -54,4 +55,3 @@ class AdcircPy(object):
         """
         return OutputFactory(path, fort14, fort15, datum, epsg, datum_grid)
 
-from AdcircPy.Tides import TidalDB; TidalDB.init_TPXO_cache()

@@ -2,7 +2,6 @@ import numpy as np
 import copy
 import warnings
 from scipy.interpolate import griddata
-from AdcircPy import Mesh as _Mesh
 from AdcircPy import Datum
             
 def msl_to_navd88(Datum_grid):
@@ -28,27 +27,27 @@ def msl_to_navd88(Datum_grid):
     return Datum.DatumGrid(**kwargs)
 
 
-
-def convert(self, Mesh, method='nearest', inverse=False):
-    if inverse==False:
-        if isinstance(Mesh, ("".__class__, u"".__class__)):
-            Mesh = _Mesh.Mesh(Mesh)
-        mesh = copy.deepcopy(Mesh)
-        values = griddata((self.x, self.y), self.values, (Mesh.x, Mesh.y), method=method, fill_value=np.nan)
-        Mesh.values = mesh.values + values
-        Mesh.datum = self._type
-        Mesh._inverseDatumType = mesh.datum
-        Mesh._inverseDatumValues = values
-        if np.any(np.isnan(Mesh.values)):
-            warnings.warn("NaN values found during datum interpolation. Make sure the provided Datum conversion grid covers the entire domain.")
-        return Mesh
-    elif inverse==True:
-        Mesh.values = Mesh.values - Mesh._inverseDatumValues
-        Mesh.datum = Mesh._inverseDatumType
-        del Mesh._inverseDatumType
-        del Mesh._inverseDatumValues
-        return Mesh
-    else:
-        raise IOError("Unknown kwargs inverse={}".format(inverse))
+# from AdcircPy import Mesh as _Mesh
+# def convert(self, Mesh, method='nearest', inverse=False):
+#     if inverse==False:
+#         if isinstance(Mesh, ("".__class__, u"".__class__)):
+#             Mesh = _Mesh.Mesh(Mesh)
+#         mesh = copy.deepcopy(Mesh)
+#         values = griddata((self.x, self.y), self.values, (Mesh.x, Mesh.y), method=method, fill_value=np.nan)
+#         Mesh.values = mesh.values + values
+#         Mesh.datum = self._type
+#         Mesh._inverseDatumType = mesh.datum
+#         Mesh._inverseDatumValues = values
+#         if np.any(np.isnan(Mesh.values)):
+#             warnings.warn("NaN values found during datum interpolation. Make sure the provided Datum conversion grid covers the entire domain.")
+#         return Mesh
+#     elif inverse==True:
+#         Mesh.values = Mesh.values - Mesh._inverseDatumValues
+#         Mesh.datum = Mesh._inverseDatumType
+#         del Mesh._inverseDatumType
+#         del Mesh._inverseDatumValues
+#         return Mesh
+#     else:
+#         raise IOError("Unknown kwargs inverse={}".format(inverse))
 
 

@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from AdcircPy.Mesh import _UnstructuredGrid
+from AdcircPy.Model import UnstructuredMesh
 from AdcircPy import Outputs
 
 
@@ -11,7 +11,7 @@ def from_file(cls, path, fort14=None):
 def make_plot(self, title='Surface Extrema', **kwargs):
   fig1 = plt.figure()
   ax1 = fig1.add_subplot(111)
-  _UnstructuredGrid.make_plot(self, axes=ax1, title=title)
+  UnstructuredMesh.make_plot(self, axes=ax1, title=title)
   if len(self._times)>0:
     fig2 = plt.figure()
     ax2 = fig2.add_subplot(111)

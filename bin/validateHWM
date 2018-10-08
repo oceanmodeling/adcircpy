@@ -1,0 +1,111 @@
+#! /usr/bin/env python
+import argparse
+import matplotlib.pyplot as plt 
+import numpy as np
+from scipy import spatial
+import sys
+sys.path.append('..')
+from AdcircPy.Outputs import Maxele
+from AdcircPy.core.Validation.USGS import HighWaterMarks
+
+def _parse_args():
+    global args
+    parser = argparse.ArgumentParser(description='Program for validating model data against USGS High Water Mark data.\n \
+                                                   Event names can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+    parser.add_argument('eventName', help='Event name can be found on: https://stn.wim.usgs.gov/STNDataPortal')
+    parser.add_argument('maxeleFile', help='Path to model output file.')
+    args =  parser.parse_args()
+
+def _radial_validation(self, maxele, multiplier=1.):
+    # TODO: Inverse distance weighting matrix
+    #       Detect and eliminate points outside the mesh boundaries?
+    tree = spatial.KDTree(maxele.get_xy())
+    _xyz = self.get_xyz()
+    distances, points = tree.query(_xyz[:,0:2])
+    number_of_points = list()
+    for i, xyz in enumerate(_xyz):
+        number_of_points.append(len(tree.query_ball_point(xyz[0:2], multiplier*distances[i])))
+    # print maximum number of points to be averaged for a single station
+    print(np.max(number_of_points))
+
+def _finite_volume_validation(self, maxele):
+    # find closest node to each HWM
+    tree = spatial.KDTree(maxele.get_xy())
+    _xyz = self.get_xyz()
+    distance, idx = tree.query(_xyz[:,0:2])
+    # For each HWM...
+    ModelValues = list()
+    for i, closest_node_idx in enumerate(idx):
+            
+        # Get indexes of elements connected to the node closest to HWM
+        elements = maxele.get_elements_surrounding_index(closest_node_idx)
+        
+        # Convert indexes of elements connected to closest node into Path objects
+        Paths=list()
+        for element in elements:
+            Paths.append(maxele.get_Path_from_element_indexes(element))
+       
+        # Using the Path objects, find which element contains the HWM point.
+        for j, element in enumerate(Paths):
+            if element.contains_point((_xyz[i,0], _xyz[i,1])):
+                _idxs_of_element_containing_node = elements[j, :]
+                break
+        
+        # Find all the elements connected to each vertex of the element that contains the HWM
+        elements_surrounding_hwm = list()
+        for _idx in _idxs_of_element_containing_node:
+            elements_surrounding_hwm.append(maxele.get_elements_surrounding_index(_idx))
+        
+        # # Plot for proof of concept.
+        # import matplotlib.patches as patches
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111)
+        # for element in elements_surrounding_hwm:
+        #     for indices in element:
+        #         path = maxele.get_Path_from_element_indexes(indices)
+        #         patch = patches.PathPatch(path, facecolor='none', lw=2)
+        #         ax.add_patch(patch)
+        # ax.scatter(_xyz[i,0], _xyz[i,1], color='red', marker='*')
+        # ax.axis('scaled')
+        # plt.show()
+
+        # Filter out repeated elements from list (make the volume a mathematical topology)
+        final_indexes = set()
+        for elements_touching_one_idx in elements_surrounding_hwm:
+            for element in elements_touching_one_idx:
+                for _idx in element:
+                    final_indexes.add(_idx)
+
+        _values = maxele.values[list(final_indexes)].filled(fill_value=np.nan)
+        ModelValues.append(np.nanmean(_values))
+    
+    ModelValues = np.ma.masked_invalid(ModelValues)
+    HWMValues   = np.ma.masked_where(ModelValues.mask, _xyz[:,2])
+    return ModelValues, HWMValues
+
+def _get_linear_regression(ModelValues, HWMValues):
+    pass
+
+def _make_validation_plots(ModelValues, HWMValues, **kwargs):
+    plt.scatter(ModelValues, HWMValues)
+    
+
+def main():
+    _parse_args()
+    HWM = HighWaterMarks.from_event_name(args.eventName)
+    _start = len(HWM.keys())
+    HWM, rejectCount  = HWM.filter(fair=True, poor=True,
+                                   riverine=True,
+                                   non_still_water=True,
+                                   return_count=True)
+    _end = _start - rejectCount
+    maxele = Maxele.from_netcdf(args.maxeleFile)
+    # ModelValues, HWMValues = _radial_validation(HWM, maxele, multiplier=2.)
+    ModelValues, HWMValues = _finite_volume_validation(HWM, maxele)
+    _get_linear_regression(ModelValues, HWMValues)
+    _make_validation_plots(ModelValues, HWMValues)
+    plt.show()
+    plt.close(plt.gcf())
+
+if __name__ == '__main__':
+    main()

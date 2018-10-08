@@ -11,7 +11,7 @@ import pyproj
 import utm
 import psycopg2
 import getpass
-from AdcircPy import demtools
+from AdcircPy import DEM
 gdal.UseExceptions()
 
 def read_tile (path, force_epsg=None):
@@ -59,7 +59,7 @@ def read_tile (path, force_epsg=None):
                         num = geo.RasterYSize)
     values = geo.ReadAsArray()
     values = np.ma.masked_equal(values, geo.GetRasterBand(1).GetNoDataValue())
-    return demtools.DEM(x, y, values, geoTransform, epsg, vertical_datum)
+    return DEM.DEM(x, y, values, geoTransform, epsg, vertical_datum)
 
 
 def circular_filter(self, radius):
@@ -242,7 +242,7 @@ def concatenate_tiles(rootdir, extent, epsg, file_format):
             tile_max_x, tile_max_y = pyproj.transform(tile_proj, target_proj, tile_max_x, tile_max_y)
         if (extent[0] <= tile_max_x and extent[1] >= tile_min_x) and \
             (extent[2] <= tile_max_y and extent[3] >= tile_min_y):
-            tile = demtools.read_tile(file)
+            tile = DEM.read_tile(file)
             xyz.append(tile.get_xyz(epsg=epsg))
 
     if len(xyz) > 0:
@@ -258,7 +258,7 @@ def get_xyz_from_Path_instance(rootdir, Path_instance, epsg, transform=False):
     xyz = list()
     for file in tile_list:
         try:
-            tile = demtools.read_tile(file)
+            tile = DEM.read_tile(file)
             tile_path = tile.get_bbox_as_Path(epsg=epsg)
             if Path_instance.intersects_path(tile_path):
                 xyz.append(tile.get_xyz(epsg=epsg, path=Path_instance, transform=transform))
@@ -311,8 +311,8 @@ def scatter_to_geoTransform(xyz, geoTransform, epsg, shape, **kwargs):
 
 
 def build_DEM_from_files(rootdir, file_extension, extent, dx, dy):
-    xyz = demtools.demutils.concatenate_tiles(rootdir, file_extension, extent)
-    return demtools.demutils.scatter_to_tile(xyz, extent, dx, dy)
+    xyz = DEM.demutils.concatenate_tiles(rootdir, file_extension, extent)
+    return DEM.demutils.scatter_to_tile(xyz, extent, dx, dy)
 
 
         

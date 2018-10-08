@@ -1,6 +1,6 @@
 from netCDF4 import Dataset
 from AdcircPy import Outputs
-from AdcircPy.Mesh import AdcircMesh
+from AdcircPy.Model import AdcircMesh
 
 def from_netcdf(cls, path, fort14=None, fort15=None, datum='MSL', epsg=None, datum_grid=None):
   nc = Dataset(path)

@@ -1,4 +1,4 @@
-from AdcircPy.Mesh import UnstructuredGrid
+from AdcircPy.Model import UnstructuredMesh
 from AdcircPy.Outputs import _OutputFactory as _OutputFactory_
 from AdcircPy.Outputs import _ScalarSurfaceExtrema as _ScalarSurfaceExtrema_
 from AdcircPy.Outputs import _ScalarSurfaceTimeseries as _ScalarSurfaceTimeseries_
@@ -30,14 +30,14 @@ class _OutputFactory(object):
     """ Will determine which type of ascii output and returns an instance of the appropritate class. """
     return _OutputFactory_.ascii_factory(path, fort14, fort15, datum, epsg, datum_grid)
 
-class _ScalarSurfaceExtrema(UnstructuredGrid):
+class _ScalarSurfaceExtrema(UnstructuredMesh):
   """
   Private subclass that represents a general Output Surface Extrema, which is instantiated
   by the _OutputFactory class.
   """
   def __init__(self, x, y, elements, values, times, **kwargs):
     self._times = times
-    UnstructuredGrid.__init__(self, x, y, elements, values, **kwargs)
+    UnstructuredMesh.__init__(self, x, y, elements, values, **kwargs)
       
   @classmethod
   def from_file(cls, path, fort14, **kwargs):
@@ -46,12 +46,12 @@ class _ScalarSurfaceExtrema(UnstructuredGrid):
   def make_plot(self, **kwargs):
     _ScalarSurfaceExtrema_.make_plot(self, **kwargs)
 
-class _ScalarSurfaceTimeseries(UnstructuredGrid):
+class _ScalarSurfaceTimeseries(UnstructuredMesh):
   """
   Private subclass that 
   """
   def __init__(self, x, y, values, elements, **kwargs):
-    UnstructuredGrid.__init__(self, x, y, values, elements, **kwargs)
+    UnstructuredMesh.__init__(self, x, y, values, elements, **kwargs)
     self._f = f
     self._slice = 0.
 
@@ -71,12 +71,12 @@ class _ScalarSurfaceTimeseries(UnstructuredGrid):
       values.append(float(f.readline().split()[1]))
     self.values = np.ma.masked_equal(values, -99999.)
 
-class _VectorSurfaceExtrema(UnstructuredGrid):
+class _VectorSurfaceExtrema(UnstructuredMesh):
   """
   Private subclass that 
   """
   def __init__(self, x, y, values, elements, **kwargs):
-    UnstructuredGrid.__init__(self, x, y, values, elements, **kwargs)
+    UnstructuredMesh.__init__(self, x, y, values, elements, **kwargs)
     self._f = f
     self._slice = 0.
 
@@ -99,13 +99,13 @@ class _VectorSurfaceExtrema(UnstructuredGrid):
       values.append(float(f.readline().split()[1]))
     self.values = np.ma.masked_equal(values, -99999.)
     
-class _VectorSurfaceTimeseries(UnstructuredGrid):
+class _VectorSurfaceTimeseries(UnstructuredMesh):
   pass
 
 class _NetCDFScalarSurfaceTimeseries(_ScalarSurfaceTimeseries):
   """ Contains reusable methods for the NetCDF scalar surface timeseries outputs """
   def __init__(self, x, y, values, elements, **kwargs):
-    UnstructuredGrid.__init__(self, x, y, values, elements, **kwargs)
+    UnstructuredMesh.__init__(self, x, y, values, elements, **kwargs)
     self.Dataset = Dataset
     self.__slice = 0
     self.__var   = var
@@ -141,10 +141,10 @@ class _NetCDFVectorSurfaceTimeseries(_VectorSurfaceTimeseries):
   """ Contains reusable methods for the NetCDF vector surface timeseries outputs """
   pass
 
-class Maxele(UnstructuredGrid):
+class Maxele(UnstructuredMesh):
   def __init__(self, x, y, elements, values, times, **kwargs):
     self._times = times
-    UnstructuredGrid.__init__(self, x, y, elements, values, **kwargs)
+    UnstructuredMesh.__init__(self, x, y, elements, values, **kwargs)
     
   @classmethod
   def from_ascii(cls, path, fort14):

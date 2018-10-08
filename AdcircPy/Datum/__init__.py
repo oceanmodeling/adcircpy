@@ -47,8 +47,8 @@ class VDatum(object):
         self._request(lon, lat, height, ihorz, ivert, ivert_units, overt, ivert_geoid, overt_units)
 
     @staticmethod
-    def jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs):
-        return _VDatum.jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatumdir, **kwargs)
+    def jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, **kwargs):
+        return _VDatum.jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, **kwargs)
 
     @classmethod
     def _request(cls, lon, lat, height, ihorz, ivert, ivert_units, overt, ivert_geoid='geoid12b', overt_units='m'):
