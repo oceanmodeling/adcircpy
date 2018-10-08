@@ -86,7 +86,8 @@ def init_orbital_params(self):
   self.DR   = np.rad2deg(self.R)
   self.NUP2 = np.arctan(np.sin(2.*self.NU)/(np.cos(2.*self.NU)+.0726184/np.sin(self.I)**2))/2.
   self.DNUP2 = np.rad2deg(self.NUP2)
-
+  self.Q    = np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC), (7.*np.cos(self.I)+1.)*np.cos(self.PC))
+  self.DQ   = np.rad2deg(self.Q)
 
 def init_node_factors(self):
   for constituent in self.keys():
@@ -114,7 +115,7 @@ def _get_nodal_factor(self, constituent):
   if constituent   == "M2":
     return self._EQ78()
   elif constituent == "S2":
-    return 1.0 # constant
+    return 1.0
   elif constituent == "N2":
     return self._EQ78()
   elif constituent == "K1":
@@ -146,9 +147,7 @@ def _get_nodal_factor(self, constituent):
   elif constituent == "S1":
     return 1.0
   elif constituent == "M1":
-    # return self._EQ207()
-    # M1 is disabled on tide_fac13.f
-    return 0.
+    return self._EQ207()
   elif constituent == "J1":
     return self._EQ76()
   elif constituent == "Mm":
@@ -178,9 +177,7 @@ def _get_nodal_factor(self, constituent):
   elif constituent == "M3":
     return self._EQ149()
   elif constituent == "L2":
-    # return self._EQ215()
-    # L2 is disabled on tide_fac13.f
-    return 0.
+    return self._EQ215()
   elif constituent == "2MK3":
     return  self._EQ227()*self._EQ78()**2
   elif constituent == "K2":
@@ -226,13 +223,7 @@ def _get_greenwich_term(self, constituent):
   elif constituent == "S1":
     return self.DT
   elif constituent == "M1":
-    # M1 is disabled on tide_fac13.f
-    # This calculation is buggy. 
-    top = (5.*np.cos(self.I)-1.)*np.sin(self.PC)
-    bot = (7.*np.cos(self.I)+1.)*np.cos(self.PC)
-    Q = np.rad2deg(np.arctan2(top, bot))
-    return self.DT-self.DS+self.DH-90.+self.DXI-self.DNU+Q
-
+    return self.DT-self.DS+self.DH-90.+self.DXI-self.DNU+self.DQ
   elif constituent == "J1":
     return self.DT+self.DS+self.DH-self.DP-90.-self.DNU
   elif constituent == "Mm":
@@ -262,7 +253,6 @@ def _get_greenwich_term(self, constituent):
   elif constituent == "M3":
     return 3.*(self.DT-self.DS+self.DH)+3.*(self.DXI-self.DNU)
   elif constituent == "L2":
-    # L2 is disabled on tide_fac13.f
     return 2.*(self.DT+self.DH)-self.DS-self.DP+180.+2.*(self.DXI-self.DNU)-self.DR
   elif constituent == "2MK3":
     return  3.*(self.DT+self.DH)-4.*self.DS+90.+4.*(self.DXI-self.DNU)+self.DNUP
