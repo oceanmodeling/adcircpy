@@ -4,6 +4,7 @@ import os
 import calendar
 import wget
 import tarfile
+import numpy as np
 from netCDF4 import Dataset
 from AdcircPy.Tides import orbital_constants
 
@@ -59,40 +60,83 @@ def init_orbital_params(self):
   self.DYR  = self.spinup_date.year - 1900. 
   self.DDAY = self.spinup_date.timetuple().tm_yday + int((self.spinup_date.year-1901.)/4.)-1
   self.hour_middle = self.spinup_date.hour + ((self.end_date - self.spinup_date).total_seconds()/3600)/2
+  self.N  = self.get_lunar_node(self.hour_middle)
+  self.I  = np.arccos(.9136949-.0356926*np.cos(self.N))
+  self.NU = np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
 
-def init_orbital_functions(self):
-  self.orbital_functions_start = self._get_orbital_functions_start_of_record()
-  self.orbital_functions_middle = self._get_orbital_functions_middle_of_record()
-  
-  print(self.orbital_functions_start["lunar_node_degrees"])
-  print(self.orbital_functions_middle["lunar_node_degrees"])
-  # self.mean_longitude_of_sun_start  = 280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*self.spinup_date.hour
-  # self.mean_longitude_of_sun_middle = 280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*self.hour_middle
-  # self.solar_perigee_start = 281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*self.spinup_date.hour
-  # self.solar_perigee_middle = 281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*self.hour_middle
-  # self.mean_longitude_of_moon_start=
-  # self.mean_longitude_of_moon_middle=277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*self.hour_middle
+def init_node_factors(self):
+  for constituent in self.keys():
+    # nodal factors are referenced to middle of record
+    self[constituent]["nodal_factor"] = self._get_nodal_factor(constituent)
+    # greenwich terms are referenced to the spinup_date
+    self[constituent]["greenwich_term"] = self._get_greenwich_term(constituent)
 
-def _get_orbital_functions_start_of_record(self):
-  return { "lunar_node_degrees"   : self._get_lunar_node_degrees(self.spinup_date.hour),
-           "lunar_perigee"        : self._get_lunar_perigee_degrees(self.spinup_date.hour)
-           "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.spinup_date.hour)
-  }
-
-def _get_orbital_functions_middle_of_record(self):
-  return { "lunar_node_degrees"   : self._get_lunar_node_degrees(self.hour_middle),
-           "lunar_perigee"        : self._get_lunar_perigee_degrees(self.hour_middle),
-           "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.hour_middle) 
-  }  
-
-def _get_lunar_node_degrees(self, hours):
+def get_lunar_node(self, hours):
   # DN
-  return (259.1560564-19.328185764*self.DYR-.0529539336*self.DDAY-.0022064139*hours) % 360.
+  return np.deg2rad((259.1560564-19.328185764*self.DYR-.0529539336*self.DDAY-.0022064139*hours) % 360.)
 
-def _get_lunar_perigee_degrees(self, hours):
+def get_lunar_perigee(self, hours):
   # DP
-  return (334.3837214+40.66246584*self.DYR+.111404016*self.DDAY+.004641834*hours) % 360.
+  return np.deg2rad((334.3837214+40.66246584*self.DYR+.111404016*self.DDAY+.004641834*hours) % 360.)
 
-def _get_lunar_mean_longitude(self, hours):
+def get_lunar_mean_longitude(self, hours):
   # DS
-  return (277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*hours) % 360.
+  return np.deg2rad((277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*hours) % 360.)
+
+def get_solar_perigee(self, hours):
+  # DP1
+  return np.deg2rad((281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*hours) % 360.)
+
+def get_solar_mean_longitude(self, hours):
+  # DH
+  return np.deg2rad((280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*hours) % 360.)
+
+def get_nodal_factor(self, constituent):
+  if constituent   == "M2":
+    return self._EQ78()
+  elif constituent == "S2":
+    return 1.0 # constant
+  elif constituent == "N2":
+    return self._EQ78()
+  elif constituent == "K1":
+    return self._EQ227()
+  elif constituent == "M4":
+    return (self._EQ78())**2.
+  elif constituent == "O1":
+    return self._EQ75()
+  elif constituent == "M6":
+    return (self._EQ78())**3.
+  elif constituent == "MK3":
+    return self._EQ78()*self._EQ227()
+  elif constituent == "S4":
+    return 1.0
+  elif constituent == "MN4":
+    return (self._EQ78())**2.
+
+def _EQ78(self):
+  return (np.cos(self.I/2)**4)/.91544
+  
+def _EQ227(self):
+  return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)*np.cos(self.NU)+.1006)
+
+def _EQ75(self):
+  return np.sin(self.I)*np.cos(self.I/2.)**2/.37988
+
+# def init_orbital_functions_start_of_record(self):
+#     self.orbital_functions_start = dict()
+#     DI =  
+#     self.orbital_functions_start["I"] = 
+#   # return { "lunar_node"           : self._get_lunar_node(self.spinup_date.hour),
+#   #          "lunar_perigee"        : self._get_lunar_perigee(self.spinup_date.hour),
+#   #          "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.spinup_date.hour),
+#   #          "solar_perigee"        : self._get_solar_perigee(self.spinup_date.hour),
+#   #          "solar_mean_longitude" : self._get_solar_mean_longitude(self.spinup_date.hour)
+
+
+# def init_orbital_functions_middle_of_record(self):
+#   return { "lunar_node"           : self._get_lunar_node(self.hour_middle),
+#            "lunar_perigee"        : self._get_lunar_perigee(self.hour_middle),
+#            "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.hour_middle),
+#            "solar_perigee"        : self._get_solar_perigee(self.hour_middle),
+#            "solar_mean_longitude" : self._get_solar_mean_longitude(self.hour_middle)
+#   }  
