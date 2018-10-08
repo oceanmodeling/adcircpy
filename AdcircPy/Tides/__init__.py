@@ -18,7 +18,7 @@ class TidalForcing(OrderedDict):
     self.init_spinup_date(spinup_date)
     self.init_orbital_params()
     self.init_node_factors()
-  
+
   @property
   def units(self):
     return 'rad/sec'
@@ -54,8 +54,51 @@ class TidalForcing(OrderedDict):
   def get_solar_mean_longitude(self, hours):
     return _TidalForcing.get_solar_mean_longitude(self, hours)
 
+  def _get_nodal_factor(self, constituent):
+    return _TidalForcing._get_nodal_factor(self, constituent)
+
+  def _get_greenwich_term(self, constituent):
+    return _TidalForcing._get_greenwich_term(self, constituent)
+
+  def _EQ73(self):
+    return _TidalForcing._EQ73(self)
+
+  def _EQ74(self):
+    return _TidalForcing._EQ74(self)
+
+  def _EQ75(self):
+    return _TidalForcing._EQ75(self)
+
+  def _EQ76(self):
+    return _TidalForcing._EQ76(self)
+
+  def _EQ77(self):
+    return _TidalForcing._EQ77(self)
+
   def _EQ78(self):
     return _TidalForcing._EQ78(self)
+
+  def _EQ149(self):
+    return _TidalForcing._EQ149(self)
+
+  def _EQ197(self):
+    return _TidalForcing._EQ197(self)
+
+  def _EQ207(self):
+    return _TidalForcing._EQ207(self)
+
+  def _EQ213(self):
+    return _TidalForcing._EQ213(self)
+    
+  def _EQ215(self):
+    return _TidalForcing._EQ215(self)
+
+  def _EQ227(self):
+    return _TidalForcing._EQ227(self)
+
+  def _EQ235(self):
+    return _TidalForcing._EQ235(self)
+
 
 class TPXO(object):
   """  Runs at top level module import so that the TPXO cache gets initialized on disk. """

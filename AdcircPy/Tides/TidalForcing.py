@@ -60,38 +60,57 @@ def init_orbital_params(self):
   self.DYR  = self.spinup_date.year - 1900. 
   self.DDAY = self.spinup_date.timetuple().tm_yday + int((self.spinup_date.year-1901.)/4.)-1
   self.hour_middle = self.spinup_date.hour + ((self.end_date - self.spinup_date).total_seconds()/3600)/2
-  self.N  = self.get_lunar_node(self.hour_middle)
-  self.I  = np.arccos(.9136949-.0356926*np.cos(self.N))
-  self.NU = np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
+  self.DN   = self.get_lunar_node(self.hour_middle)
+  self.N    = np.deg2rad(self.DN)
+  self.DP   = self.get_lunar_perigee(self.hour_middle)
+  self.P    = np.deg2rad(self.DP)
+  self.DH   = self.get_solar_mean_longitude(self.spinup_date.hour)
+  self.H    = np.deg2rad(self.DH)
+  self.DS   = self.get_lunar_mean_longitude(self.spinup_date.hour)
+  self.S    = np.deg2rad(self.DS)
+  self.DP1  = self.get_solar_perigee(self.spinup_date.hour)
+  self.P1   = np.deg2rad(self.DP1)
+  self.I    = np.arccos(.9136949-.0356926*np.cos(self.N))
+  self.DI   = np.rad2deg(self.I)
+  self.NU   = np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
+  self.DNU  = np.rad2deg(self.NU)
+  self.XI   = self.N-2.*np.arctan(.64412*np.tan(self.N/2)) - self.NU
+  self.DXI  = np.rad2deg(self.XI)
+  self.DT   = (180.+self.spinup_date.hour*(360./24)) % 360.
+  self.T    = np.deg2rad(self.DT)
+  self.NUP  = np.arctan(np.sin(self.NU)/(np.cos(self.NU)+.334766/np.sin(2.*self.I)))
+  self.DNUP = np.rad2deg(self.NUP)
+  self.DPC  = (self.DP - self.DXI) % 360.
+  self.PC   = np.deg2rad(self.DPC)
+  self.R    = np.arctan(np.sin(2.*self.PC)/((1./6.)*(1./np.tan(.5*self.I))**2-np.cos(2.*self.PC)))
+  self.DR   = np.rad2deg(self.R)
+  self.NUP2 = np.arctan(np.sin(2.*self.NU)/(np.cos(2.*self.NU)+.0726184/np.sin(self.I)**2))/2.
+  self.DNUP2 = np.rad2deg(self.NUP2)
+
 
 def init_node_factors(self):
   for constituent in self.keys():
     # nodal factors are referenced to middle of record
     self[constituent]["nodal_factor"] = self._get_nodal_factor(constituent)
     # greenwich terms are referenced to the spinup_date
-    self[constituent]["greenwich_term"] = self._get_greenwich_term(constituent)
+    self[constituent]["greenwich_term"] = (self._get_greenwich_term(constituent)) % 360.
 
 def get_lunar_node(self, hours):
-  # DN
-  return np.deg2rad((259.1560564-19.328185764*self.DYR-.0529539336*self.DDAY-.0022064139*hours) % 360.)
+  return (259.1560564-19.328185764*self.DYR-.0529539336*self.DDAY-.0022064139*hours) % 360.
 
 def get_lunar_perigee(self, hours):
-  # DP
-  return np.deg2rad((334.3837214+40.66246584*self.DYR+.111404016*self.DDAY+.004641834*hours) % 360.)
+  return (334.3837214+40.66246584*self.DYR+.111404016*self.DDAY+.004641834*hours) % 360.
 
 def get_lunar_mean_longitude(self, hours):
-  # DS
-  return np.deg2rad((277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*hours) % 360.)
+  return (277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*hours) % 360.
 
 def get_solar_perigee(self, hours):
-  # DP1
-  return np.deg2rad((281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*hours) % 360.)
+  return (281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*hours) % 360.
 
 def get_solar_mean_longitude(self, hours):
-  # DH
-  return np.deg2rad((280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*hours) % 360.)
+  return (280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*hours) % 360.
 
-def get_nodal_factor(self, constituent):
+def _get_nodal_factor(self, constituent):
   if constituent   == "M2":
     return self._EQ78()
   elif constituent == "S2":
@@ -112,31 +131,183 @@ def get_nodal_factor(self, constituent):
     return 1.0
   elif constituent == "MN4":
     return (self._EQ78())**2.
+  elif constituent == "Nu2":
+    return self._EQ78()
+  elif constituent == "S6":
+    return 1.0
+  elif constituent == "MU2":
+    return self._EQ78()
+  elif constituent == "2N2":
+    return self._EQ78()
+  elif constituent == "OO1":
+    return self._EQ77()
+  elif constituent == "lambda2":
+    return self._EQ78()
+  elif constituent == "S1":
+    return 1.0
+  elif constituent == "M1":
+    # return self._EQ207()
+    # M1 is disabled on tide_fac13.f
+    return 0.
+  elif constituent == "J1":
+    return self._EQ76()
+  elif constituent == "Mm":
+    return self._EQ73()
+  elif constituent == "Ssa":
+    return 1.0
+  elif constituent == "Sa":
+    return 1.0
+  elif constituent == "Msf":
+    return self._EQ78()
+  elif constituent == "Mf":
+    return self._EQ74()
+  elif constituent == "RHO":
+    return self._EQ75()
+  elif constituent == "Q1":
+    return self._EQ75()
+  elif constituent == "T2":
+    return 1.0
+  elif constituent == "R2":
+    return 1.0
+  elif constituent == "2Q1":
+    return self._EQ75()
+  elif constituent == "P1":
+    return 1.0
+  elif constituent == "2SM2":
+    return self._EQ78()
+  elif constituent == "M3":
+    return self._EQ149()
+  elif constituent == "L2":
+    # return self._EQ215()
+    # L2 is disabled on tide_fac13.f
+    return 0.
+  elif constituent == "2MK3":
+    return  self._EQ227()*self._EQ78()**2
+  elif constituent == "K2":
+    return self._EQ235()
+  elif constituent == "M8":
+    return self._EQ78()**4
+  elif constituent == "MS4":
+    return self._EQ78()
 
-def _EQ78(self):
-  return (np.cos(self.I/2)**4)/.91544
-  
-def _EQ227(self):
-  return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)*np.cos(self.NU)+.1006)
+def _get_greenwich_term(self, constituent):
+  if constituent   == "M2":
+    return 2.*(self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
+  elif constituent == "S2":
+    return 2.*self.DT
+  elif constituent == "N2":
+    return 2.*(self.DT+self.DH)-3.*self.DS+self.DP+2.*(self.DXI-self.DNU)
+  elif constituent == "K1":
+    return self.DT+self.DH-90.-self.DNUP
+  elif constituent == "M4":
+    return 4.*(self.DT-self.DS+self.DH)+4.*(self.DXI-self.DNU)
+  elif constituent == "O1":
+    return self.DT-2.*self.DS+self.DH+90.+2.*self.DXI-self.DNU
+  elif constituent == "M6":
+    return 6.*(self.DT-self.DS+self.DH)+6.*(self.DXI-self.DNU)
+  elif constituent == "MK3":
+    return 3.*(self.DT+self.DH)-2.*self.DS-90.+2.*(self.DXI-self.DNU)-self.DNUP
+  elif constituent == "S4":
+    return 4.*self.DT
+  elif constituent == "MN4":
+    return 4.*(self.DT+self.DH)-5.*self.DS+self.DP+4.*(self.DXI-self.DNU)
+  elif constituent == "Nu2":
+    return 2.*self.DT-3.*self.DS+4.*self.DH-self.DP+2.*(self.DXI-self.DNU)
+  elif constituent == "S6":
+    return 6.*self.DT
+  elif constituent == "MU2":
+    return 2.*(self.DT+2.*(self.DH-self.DS))+2.*(self.DXI-self.DNU)
+  elif constituent == "2N2":
+    return 2.*(self.DT-2.*self.DS+self.DH+self.DP)+2.*(self.DXI-self.DNU)
+  elif constituent == "OO1":
+    return self.DT+2.*self.DS+self.DH-90.-2.*self.DXI-self.DNU
+  elif constituent == "lambda2":
+    return 2.*self.DT-self.DS+self.DP+180.+2.*(self.DXI-self.DNU)
+  elif constituent == "S1":
+    return self.DT
+  elif constituent == "M1":
+    # M1 is disabled on tide_fac13.f
+    # This calculation is buggy. 
+    top = (5.*np.cos(self.I)-1.)*np.sin(self.PC)
+    bot = (7.*np.cos(self.I)+1.)*np.cos(self.PC)
+    Q = np.rad2deg(np.arctan2(top, bot))
+    return self.DT-self.DS+self.DH-90.+self.DXI-self.DNU+Q
+
+  elif constituent == "J1":
+    return self.DT+self.DS+self.DH-self.DP-90.-self.DNU
+  elif constituent == "Mm":
+    return self.DS-self.DP
+  elif constituent == "Ssa":
+    return 2.*self.DH
+  elif constituent == "Sa":
+    return self.DH
+  elif constituent == "Msf":
+    return 2.*(self.DS-self.DH)
+  elif constituent == "Mf":
+    return 2.*self.DS-2.*self.DXI
+  elif constituent == "RHO":
+    return self.DT+3.*(self.DH-self.DS)-self.DP+90.+2.*self.DXI-self.DNU
+  elif constituent == "Q1":
+    return self.DT-3.*self.DS+self.DH+self.DP+90.+2.*self.DXI-self.DNU
+  elif constituent == "T2":
+    return 2.*self.DT-self.DH+self.DP1
+  elif constituent == "R2":
+    return 2.*self.DT+self.DH-self.DP1+180.
+  elif constituent == "2Q1":
+    return self.DT-4.*self.DS+self.DH+2.*self.DP+90.+2.*self.DXI-self.DNU
+  elif constituent == "P1":
+    return self.DT-self.DH+90.
+  elif constituent == "2SM2":
+    return 2.*(self.DT+self.DS-self.DH)+2.*(self.DNU-self.DXI)
+  elif constituent == "M3":
+    return 3.*(self.DT-self.DS+self.DH)+3.*(self.DXI-self.DNU)
+  elif constituent == "L2":
+    # L2 is disabled on tide_fac13.f
+    return 2.*(self.DT+self.DH)-self.DS-self.DP+180.+2.*(self.DXI-self.DNU)-self.DR
+  elif constituent == "2MK3":
+    return  3.*(self.DT+self.DH)-4.*self.DS+90.+4.*(self.DXI-self.DNU)+self.DNUP
+  elif constituent == "K2":
+    return 2.*(self.DT+self.DH)-2.*self.DNUP2
+  elif constituent == "M8":
+    return 8.*(self.DT-self.DS+self.DH)+8.*(self.DXI-self.DNU)
+  elif constituent == "MS4":
+    return 2.*(2.*self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
+
+def _EQ73(self):
+  return (2./3.-np.sin(self.I)**2)/.5021
+
+def _EQ74(self):
+  return np.sin(self.I)**2/.1578
 
 def _EQ75(self):
   return np.sin(self.I)*np.cos(self.I/2.)**2/.37988
 
-# def init_orbital_functions_start_of_record(self):
-#     self.orbital_functions_start = dict()
-#     DI =  
-#     self.orbital_functions_start["I"] = 
-#   # return { "lunar_node"           : self._get_lunar_node(self.spinup_date.hour),
-#   #          "lunar_perigee"        : self._get_lunar_perigee(self.spinup_date.hour),
-#   #          "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.spinup_date.hour),
-#   #          "solar_perigee"        : self._get_solar_perigee(self.spinup_date.hour),
-#   #          "solar_mean_longitude" : self._get_solar_mean_longitude(self.spinup_date.hour)
+def _EQ76(self):
+  return np.sin(2.*self.I)/.7214
 
+def _EQ77(self):
+  return np.sin(self.I)*np.sin(self.I/2.)**2/.0164
 
-# def init_orbital_functions_middle_of_record(self):
-#   return { "lunar_node"           : self._get_lunar_node(self.hour_middle),
-#            "lunar_perigee"        : self._get_lunar_perigee(self.hour_middle),
-#            "lunar_mean_longitude" : self._get_lunar_mean_longitude(self.hour_middle),
-#            "solar_perigee"        : self._get_solar_perigee(self.hour_middle),
-#            "solar_mean_longitude" : self._get_solar_mean_longitude(self.hour_middle)
-#   }  
+def _EQ78(self):
+  return (np.cos(self.I/2)**4)/.91544
+
+def _EQ149(self):
+  return np.cos(self.I/2.)**6/.8758
+
+def _EQ197(self):
+  return np.sqrt(2.310+1.435*np.cos(2.*(self.P - self.XI)))
+
+def _EQ207(self):
+  return self._EQ75()*self._EQ197()
+
+def _EQ213(self):
+  return np.sqrt(1.-12.*np.tan(self.I/2.)**2*np.cos(2.*self.P)+36.*np.tan(self.I/2.)**4)
+  
+def _EQ215(self):
+  return self._EQ78()*self._EQ213()
+
+def _EQ227(self):
+  return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)*np.cos(self.NU)+.1006)
+
+def _EQ235(self):
+  return .001+np.sqrt(19.0444*np.sin(self.I)**4+2.7702*np.sin(self.I)**2*np.cos(2.*self.NU)+.0981)
