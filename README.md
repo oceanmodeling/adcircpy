@@ -61,7 +61,7 @@ Now you can load an Adcirc mesh or an output file by doing:
 
 ```Python
 mesh = AdcircPy.read_mesh('/path/to/fort.14')
-output = AdcircPy.read_output('/path/to/outputfile.nc'
+output = AdcircPy.read_output('/path/to/outputfile.nc')
 ```
 
 The most basic you can do with this software is create plots:
@@ -72,5 +72,29 @@ mesh.make_plot()
 output.make_plot()
 plt.show()
 ```
+
+### Example of fort.15 generation:
+This is still in development, so it will only output a partial fort.15
+```Python
+from AdcircPy import AdcircPy
+from AdcircPy import TidalForcing
+from AdcircPy import AdcircRun
+from datetime import datetime, timedelta
+
+Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
+	                      fort13='/path/to/fort.13')
+start_date = datetime.now()
+end_date = start_date+timedelta(days=5)
+tidalForcing = TidalForcing(start_date, end_date,
+	# optionally may pass a constituent list for forcing
+							constituents=None, 
+	# Optionally pass a spinup_date
+	# The package will take 15 days prior to start_date as spinup by default.
+							spinup_date=None)
+adcircRun = AdcircRun(Mesh, Tides=tidalForcing)
+# Writes the files to directory
+adcircRun.dump('/directory/to/dump')
+```
+
 
 Please report bugs to jreniel@gmail.com
