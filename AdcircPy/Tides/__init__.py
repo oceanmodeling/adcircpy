@@ -8,7 +8,7 @@ class TidalForcing(OrderedDict):
     TPXO initializations is not part of TidalForcing because
     it depends on the mesh boundaries.
   """
-  def __init__(self, start_date, end_date, constituents, spinup_date=None):
+  def __init__(self, start_date, end_date, constituents=None, spinup_date=None):
     self.constituents = constituents
     self.start_date   = start_date
     self.end_date     = end_date
@@ -39,20 +39,20 @@ class TidalForcing(OrderedDict):
   def init_node_factors(self):
     _TidalForcing.init_node_factors(self)
 
-  def get_lunar_node(self, hours):
-    return _TidalForcing.get_lunar_node(self, hours)
+  def _get_lunar_node(self, hours):
+    return _TidalForcing._get_lunar_node(self, hours)
 
-  def get_lunar_perigee(self, hours):
-    return _TidalForcing.get_lunar_perigee(self, hours)
+  def _get_lunar_perigee(self, hours):
+    return _TidalForcing._get_lunar_perigee(self, hours)
 
-  def get_lunar_mean_longitude(self, hours):
-    return _TidalForcing.get_lunar_mean_longitude(self, hours)
+  def _get_lunar_mean_longitude(self, hours):
+    return _TidalForcing._get_lunar_mean_longitude(self, hours)
 
-  def get_solar_perigee(self, hours):
-    return _TidalForcing.get_solar_perigee(self, hours)
+  def _get_solar_perigee(self, hours):
+    return _TidalForcing._get_solar_perigee(self, hours)
 
-  def get_solar_mean_longitude(self, hours):
-    return _TidalForcing.get_solar_mean_longitude(self, hours)
+  def _get_solar_mean_longitude(self, hours):
+    return _TidalForcing._get_solar_mean_longitude(self, hours)
 
   def _get_nodal_factor(self, constituent):
     return _TidalForcing._get_nodal_factor(self, constituent)

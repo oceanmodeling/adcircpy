@@ -1,11 +1,13 @@
 from AdcircPy.Model import AdcircMesh
-from AdcircPy.Outputs import _OutputFactory as OutputFactory
+from AdcircPy.Model import AdcircRun
 from AdcircPy.Tides import TPXO
+from AdcircPy.Tides import TidalForcing
+from AdcircPy.Outputs import _OutputFactory as OutputFactory
 
 class AdcircPy(object):
 
     @staticmethod
-    def read_mesh(fort14, **kwargs):
+    def read_mesh(fort14, fort13=None, **kwargs):
         """
         Reads ADCIRC input files.
         
@@ -26,7 +28,7 @@ class AdcircPy(object):
         -------
             AdcirPy.Mesh instance.
         """
-        return AdcircMesh.from_fort14(fort14, **kwargs)
+        return AdcircMesh.from_fort14(fort14, fort13=fort13, **kwargs)
         
     @staticmethod
     def read_output(path, fort14=None, fort15=None, datum='LMSL', epsg=None, datum_grid=None):

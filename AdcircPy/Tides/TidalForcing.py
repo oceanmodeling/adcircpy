@@ -60,15 +60,15 @@ def init_orbital_params(self):
   self.DYR  = self.spinup_date.year - 1900. 
   self.DDAY = self.spinup_date.timetuple().tm_yday + int((self.spinup_date.year-1901.)/4.)-1
   self.hour_middle = self.spinup_date.hour + ((self.end_date - self.spinup_date).total_seconds()/3600)/2
-  self.DN   = self.get_lunar_node(self.hour_middle)
+  self.DN   = self._get_lunar_node(self.hour_middle)
   self.N    = np.deg2rad(self.DN)
-  self.DP   = self.get_lunar_perigee(self.hour_middle)
+  self.DP   = self._get_lunar_perigee(self.hour_middle)
   self.P    = np.deg2rad(self.DP)
-  self.DH   = self.get_solar_mean_longitude(self.spinup_date.hour)
+  self.DH   = self._get_solar_mean_longitude(self.spinup_date.hour)
   self.H    = np.deg2rad(self.DH)
-  self.DS   = self.get_lunar_mean_longitude(self.spinup_date.hour)
+  self.DS   = self._get_lunar_mean_longitude(self.spinup_date.hour)
   self.S    = np.deg2rad(self.DS)
-  self.DP1  = self.get_solar_perigee(self.spinup_date.hour)
+  self.DP1  = self._get_solar_perigee(self.spinup_date.hour)
   self.P1   = np.deg2rad(self.DP1)
   self.I    = np.arccos(.9136949-.0356926*np.cos(self.N))
   self.DI   = np.rad2deg(self.I)
@@ -96,19 +96,19 @@ def init_node_factors(self):
     # greenwich terms are referenced to the spinup_date
     self[constituent]["greenwich_term"] = (self._get_greenwich_term(constituent)) % 360.
 
-def get_lunar_node(self, hours):
+def _get_lunar_node(self, hours):
   return (259.1560564-19.328185764*self.DYR-.0529539336*self.DDAY-.0022064139*hours) % 360.
 
-def get_lunar_perigee(self, hours):
+def _get_lunar_perigee(self, hours):
   return (334.3837214+40.66246584*self.DYR+.111404016*self.DDAY+.004641834*hours) % 360.
 
-def get_lunar_mean_longitude(self, hours):
+def _get_lunar_mean_longitude(self, hours):
   return (277.0256206+129.38482032*self.DYR+13.176396768*self.DDAY+.549016532*hours) % 360.
 
-def get_solar_perigee(self, hours):
+def _get_solar_perigee(self, hours):
   return (281.2208569+.01717836*self.DYR+.000047064*self.DDAY+.000001961*hours) % 360.
 
-def get_solar_mean_longitude(self, hours):
+def _get_solar_mean_longitude(self, hours):
   return (280.1895014-.238724988*self.DYR+.9856473288*self.DDAY+.0410686387*hours) % 360.
 
 def _get_nodal_factor(self, constituent):

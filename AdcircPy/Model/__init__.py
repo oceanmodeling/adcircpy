@@ -2,7 +2,7 @@ from collections import OrderedDict
 from scipy.spatial import KDTree
 from AdcircPy.Model import UnstructuredMesh as _UnstructuredMesh
 from AdcircPy.Model import AdcircMesh as _AdcircMesh
-from AdcircPy.Model import _AdcircRun as _AdcircRun__AdcircRun
+from AdcircPy.Model import AdcircRun as _AdcircRun
 from AdcircPy.Model import _fort14
 from AdcircPy.Model import _fort13
 
@@ -177,8 +177,8 @@ class AdcircMesh(UnstructuredMesh):
   def __init__(self, x, y, elements, values,
                                      fort13=None,
                                      fort15=None,
-                                     description=None,
                                      nodeID=None,
+                                     description=None,
                                      elementID=None,
                                      datum=None,
                                      epsg=None,
@@ -194,14 +194,12 @@ class AdcircMesh(UnstructuredMesh):
                               datum, epsg, datum_grid, ocean_boundaries,
                               land_boundaries, inner_boundaries, weir_boundaries,
                               inflow_boundaries, outflow_boundaries, culvert_boundaries)
+    self.description = description
     self._init_fort13(fort13)
 
   @classmethod
   def from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, fort15=None, datum_grid=None):
     return _AdcircMesh.from_fort14(cls, fort14, datum, epsg, fort13, fort15, datum_grid)
-
-  def generate_tidal_run(self, start_time, end_time, constituents=None, **kwargs):
-    return TidalRun(self, start_time, end_time, constituents, **kwargs)
 
   def make_plot(self, **kwargs):
     return _AdcircMesh.make_plot(self, **kwargs)
@@ -216,38 +214,58 @@ class AdcircMesh(UnstructuredMesh):
     _fort13._init_fort13(self, path)
 
 
-class _AdcircRun(object):
+class AdcircRun(object):
 
-  def __init__(self, start_time, end_time, constituents, spinup_date=None, **kwargs):
-    self.init_TidalForcing(start_time, end_time, constituents, spinup_date)
-    self.init_TPXO()
+  def __init__(self, AdcircMesh, Tides=None, Winds=None, Waves=None,
+                                  Outputs=None, **kwargs):
+    self.AdcircMesh = AdcircMesh
+    self.init_Tides(Tides)
+    self.init_Winds(Winds)
+    self.init_Waves(Waves)
+    self.init_Outputs(Outputs)
     self.init_fort15(**kwargs)
 
-  def init_TidalForcing(self, start_time, end_time, constituents, spinup_date=None):
-    _AdcircRun__AdcircRun.init_TidalForcing(self, start_time, end_time, constituents, spinup_date)
+  def init_Tides(self, Tides):
+    _AdcircRun.init_Tides(self, Tides)
 
-  def init_TPXO(self):
-    _AdcircRun__AdcircRun.init_TPXO(self)
+  def init_Winds(self, Winds):
+    self.Winds = Winds
+
+  def init_Waves(self, Waves):
+    self.Waves = Waves
+
+  def init_Outputs(self, Outputs):
+    self.Outputs = Outputs
 
   def init_fort15(self):
-    _AdcircRun__AdcircRun.init_fort15(self)
-
-class TidalRun(_AdcircRun):
-  def __init__(self, AdcircMesh, start_time, end_time, constituents, **kwargs):
-    self.AdcircMesh = AdcircMesh
-    super(TidalRun, self).__init__(start_time, end_time, constituents, **kwargs)
-    
-  @classmethod
-  def from_fort14(self, fort14_path, start_time, end_time):
-    pass
+    _AdcircRun.init_fort15(self)
 
   def dump(self, directory):
-    _TidalRun.dump(self, directory)
+    _AdcircRun.dump(self, directory)
 
+  def _init_TPXO(self):
+    _AdcircRun._init_TPXO(self)
 
-class StormRun(object):
-  def __init__(self, AdcircMesh, **kwargs):
-    self.AdcircMesh = AdcircMesh
+  def _write_fort15(self):
+    _AdcircRun._write_fort15(self)
 
+  def _write_IHOT(self):
+    _AdcircRun._write_IHOT(self)
 
+  def _write_NWP(self):
+    _AdcircRun._write_NWP(self)
 
+  def _write_NWS(self):
+    _AdcircRun._write_NWS(self)
+
+  def _write_NRAMP(self):
+    _AdcircRun._write_NRAMP(self)
+
+  def _write_TAU0(self):
+    _AdcircRun._write_TAU0(self)
+
+  def _write_DTDP(self):
+    _AdcircRun._write_DTDP(self)
+
+  def _write_RNDAY(self):
+    _AdcircRun._write_RNDAY(self)
