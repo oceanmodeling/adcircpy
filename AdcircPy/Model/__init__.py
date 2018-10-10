@@ -222,12 +222,15 @@ class AdcircRun(object):
     self.AdcircMesh = AdcircMesh
     self.init_Tides(Tides)
     self.init_Winds(Winds)
-    self.init_Waves(Waves)
-    self.init_ElevationStationsOutput(Outputs)
+    # self.init_Waves(Waves)
+    self.ElevationStationsOutput = ElevationStationsOutput
     self.init_fort15(**kwargs)
 
   def init_Tides(self, Tides):
     _AdcircRun.init_Tides(self, Tides)
+
+  def init_Winds(self, Winds):
+    self.Winds = Winds
 
   def init_fort15(self):
     _AdcircRun.init_fort15(self)
