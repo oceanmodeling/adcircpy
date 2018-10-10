@@ -203,8 +203,9 @@ def _write_NRAMP(self):
   self.f.write('! NRAMP - RAMP FUNCTION OPTION\n')
 
 def _write_TAU0(self):
-  if 'primitive_weighting_in_continuity_equation' in list(self.AdcircMesh.fort13.keys()):
-    self.f.write('{:<32d}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(-3))
+  if self.AdcircMesh.fort13 is not None:
+    if 'primitive_weighting_in_continuity_equation' in list(self.AdcircMesh.fort13.keys()):
+      self.f.write('{:<32d}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(-3))
   elif self.TAU0==-5:
     self.f.write('{:<10.3f}'.format(self.Tau0FullDomainMin))
     self.f.write('{:<10.3f}\n'.format(self.Tau0FullDomainMax))
