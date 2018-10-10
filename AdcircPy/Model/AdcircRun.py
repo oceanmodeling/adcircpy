@@ -23,7 +23,7 @@ def init_fort15(self, **kwargs):
   self.ICS = kwargs.pop("ICS", 2) # Coordinate system. 1 Cartesian, 2 spherical.
   self.IM = kwargs.pop("IM", 0) # Defaults to 2D Barotropic.
   self.IDEN = kwargs.pop("IDEN", None) # used only for 3D Baroclinic
-  self.NOLIBF = kwargs.pop("NOLIBF", 2)  # bottom friction; 0:linear, 1:quadratic, 2:hybrid non-linear
+  self.NOLIBF = kwargs.pop("NOLIBF", 1)  # bottom friction; 0:linear, 1:quadratic, 2:hybrid non-linear
   self.NOLIFA = kwargs.pop("NOLIFA", 2)  # wetting/drying; 0: wet/dry off no finite amplitude, 1: wet/dry off with finite amplitude, 2: wet/dry on. 
   self.NOLICA = kwargs.pop("NOLICA", 1)  # Advection; 0:OFF, 1:ON
   self.NOLICAT = kwargs.pop("NOLICAT", 1) # Advection time derivative; 0:OFF, 1:ON
@@ -43,28 +43,28 @@ def init_fort15(self, **kwargs):
   self.RSTIMINC = kwargs.pop("RSTIMINC", None) # Package provided during wave initialization
   self.RNDAY = kwargs.pop("RNDAY", None) # Provided by package on date initialization.
   self.DRAMP = kwargs.pop("DRAMP", None) # Provided by package 
-  self.DRAMPExtFlux = kwargs.pop("DRAMPExtFlux", None) # Ramp external boundary fluxes
-  self.FluxSettlingTime = kwargs.pop("FluxSettlingTime", None) # 
-  self.DRAMPIntFlux = kwargs.pop("DRAMPIntFlux", None) # Ramp internal fluxes
+  self.DRAMPExtFlux = kwargs.pop("DRAMPExtFlux", 0) # Ramp external boundary fluxes
+  self.FluxSettlingTime = kwargs.pop("FluxSettlingTime", 0) # 
+  self.DRAMPIntFlux = kwargs.pop("DRAMPIntFlux", 0) # Ramp internal fluxes
   self.DRAMPElev = kwargs.pop("DRAMPElev", None) # Ramps for boundary
   self.DRAMPTip = kwargs.pop("DRAMPTip", None) # Ramp for tidal potentials
-  self.DRAMPMete = kwargs.pop("DRAMPMete", None) # ramp wind an pressure
-  self.DRAMPWRad = kwargs.pop("DRAMPWRad", None) # Ramp for waves
+  self.DRAMPMete = kwargs.pop("DRAMPMete", 1.) # ramp wind an pressure
+  self.DRAMPWRad = kwargs.pop("DRAMPWRad", 0) # Ramp for waves
   self.DUnRampMete = kwargs.pop("DUnRampMete", None) # meteo ramp offset relative to coldstart
   self.A00 = kwargs.pop("A00", 0.35) # k+1 TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
   self.B00 = kwargs.pop("B00", 0.30) # k   TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
   self.C00 = kwargs.pop("C00", 0.35) # k-1 TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
   self.H0 = kwargs.pop("H0", 0.05) # water level threshold for wet/dry
   self.VELMIN = kwargs.pop("VELMIN", 0.05) # velocity threshold for wetting, used for increasing model stability from wetting/dry
-  self.SLAM0 = kwargs.pop("SLAM0", -71.0) # longitude on which the CPP coordinate projection is centered (in degrees) if ICS = 2.
-  self.SFEA0 = kwargs.pop("SFEA", 27.0) # longitude on which the CPP coordinate projection is centered (in degrees) if ICS = 2.
+  self.SLAM0 = kwargs.pop("SLAM0", None) # longitude on which the CPP coordinate projection is centered (in degrees) if ICS = 2.
+  self.SFEA0 = kwargs.pop("SFEA", None) # longitude on which the CPP coordinate projection is centered (in degrees) if ICS = 2.
   self.TAU = kwargs.pop("TAU", self.TAU0) # Not commonly used, setting recommended value.
-  self.CF = kwargs.pop("CF", 0.0025) # replaces self.TAU in fort.15
+  self.FFACTOR = kwargs.pop("FFACTOR", 0.0025) # replaces self.TAU in fort.15
   self.HBREAK = kwargs.pop("HBREAK", 1) # Not commonly used, setting recommended value.
   self.FTHETA = kwargs.pop("FTHETA", 10) # Not commonly used, setting recommended value.
   self.FGAMMA = kwargs.pop("FGAMMA", 1./3.) # Not commonly used, setting recommended value.
   self.ESLM = kwargs.pop("ESLM", 10.) # Horizontal eddy viscosity constant for momentum equation
-  self.ESLM = kwargs.pop("ESLS", None) # Horizontal eddy diffusivity constant for transport equation, used only if IM=10
+  self.ESLS = kwargs.pop("ESLS", '???') # Horizontal eddy diffusivity constant for transport equation, used only if IM=10
   self.CORI = kwargs.pop("CORI", 0.0001)  # Coriolis constant for NCOR=0
   self.NTIF = kwargs.pop("NTIF", None) # Provided by module
   self.NBFR = kwargs.pop("NBFR", None) # Provided by module
@@ -118,8 +118,10 @@ def _init_TPXO(self):
         idx = tpxo_constituents.index(constituent.lower())
         ha_interpolator = RectBivariateSpline(x, y, nc['ha'][idx,:,:])
         hp_interpolator = RectBivariateSpline(x, y, nc['hp'][idx,:,:])
-        constituents[constituent]['ha'] = ha_interpolator.ev(self.AdcircMesh.x[ocean_boundary], self.AdcircMesh.y[ocean_boundary])
-        constituents[constituent]['hp'] = hp_interpolator.ev(self.AdcircMesh.x[ocean_boundary], self.AdcircMesh.y[ocean_boundary])
+        _x = (self.AdcircMesh.x[ocean_boundary]) % 360.
+        _y = (self.AdcircMesh.y[ocean_boundary]) % 360.
+        constituents[constituent]['ha'] = ha_interpolator.ev(_x, _y)
+        constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
     self.TPXO.append(constituents)
 
 
@@ -147,8 +149,24 @@ def _write_fort15(self):
   self.f.write('{:<32.2f}! STATIM - STARTING TIME (IN DAYS)\n'.format(0))
   self.f.write('{:<32.2f}! REFTIM - REFERENCE TIME (IN DAYS)\n'.format(0))
   self._write_RNDAY()
+  self._write_DRAMP()
+  self.f.write('{:<4.2f} {:<4.2f} {:<4.2f} {:<17}! TIME WEIGHTING FACTORS FOR THE GWCE EQUATION\n'.format(self.A00, self.B00, self.C00, ''))
+  self._write_H0_VELMIN()
+  self._write_SLAM0_SFEA0()
+  self._write_FFACTOR()
+  self._write_ESLM()
+  self._write_CORI()
+  self._write_NTIF()
+  self._write_NBFR()
+  self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD'.format(self.ANGINN))
+  self._write_station_outputs()
+  self._write_global_outputs()
+  self._write_harmonic_outputs()
+  self._write_hotstart_parameters()
+  self._write_iteration_parameters()
+  self._write_netcdf_parameters()
+  self._write_fortran_namelists()
   self.f.write('\n')
-  
 
 def _write_IHOT(self):
   if self.run_type=='coldstart':
@@ -177,9 +195,11 @@ def _write_NWS(self):
 
 def _write_NRAMP(self):
   if self.run_type=='coldstart' or self.Winds is None:
-    self.f.write('{:<32d}'.format(1))
+    self.NRAMP=1
+    self.f.write('{:<32d}'.format(self.NRAMP))
   else:
-    self.f.write('{:<32d}'.format(8))
+    self.NRAMP=8
+    self.f.write('{:<32d}'.format(self.NRAMP))
   self.f.write('! NRAMP - RAMP FUNCTION OPTION\n')
 
 def _write_TAU0(self):
@@ -212,4 +232,137 @@ def _write_RNDAY(self):
     self.f.write('{:<32}'.format('Set manually for met-only run'))
   self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
 
-  
+def _write_DRAMP(self):
+  # requires tidal forcing. need to consider met only forcing.
+  if self.DRAMP is None:
+    self.DRAMP = ((2/3)*(self.Tides.start_date - self.Tides.spinup_date).total_seconds())/86400.
+  if self.NRAMP==1:
+    self.f.write('{:<32.1f}'.format(self.DRAMP))
+    self.f.write('! DRAMP - DURATION OF RAMP FUNCTION (IN DAYS)\n')
+  elif self.NRAMP==8:
+    if self.DUnRampMete is None:
+      self.DUnRampMete = (self.Tides.start_date - self.Tides.spinup_date).days
+    if self.DRAMPElev is None:
+      self.DRAMPElev = self.DRAMP
+    if self.DRAMPTip is None:
+      self.DRAMPTip = self.DRAMP
+    self.f.write('{:.1f} '.format(self.DRAMP))
+    self.f.write('{:.1f} '.format(self.DRAMPExtFlux))
+    self.f.write('{:.1f} '.format(self.FluxSettlingTime))
+    self.f.write('{:.1f} '.format(self.DRAMPIntFlux))
+    self.f.write('{:.1f} '.format(self.DRAMPElev))
+    self.f.write('{:.1f} '.format(self.DRAMPTip))
+    self.f.write('{:.1f} '.format(self.DRAMPMete))
+    self.f.write('{:.1f} '.format(self.DRAMPWRad))
+    self.f.write('{:.1f} '.format(self.DUnRampMete))
+    self.f.write('! DRAMP, DRAMPExtFlux,FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete - DURATION OF RAMP FUNCTION (IN DAYS)\n')
+  else:
+    self.f.write('Write ramp parameters manually.\n')
+
+def _write_H0_VELMIN(self):
+  if self.NOLIFA in [0,1]:
+    self.f.write('{:<32.4f}'.format(self.H0))
+  elif self.NOLIFA in [2,3]:
+    # middle terms are present for forwards breakability.
+    self.f.write('{:<4.3f} 0 0 {:4.3f}{:<17}'.format(self.H0, self.VELMIN,''))
+  self.f.write('! H0, NODEDRYMIN, NODEWETRMP, VELMIN\n')
+
+def _write_SLAM0_SFEA0(self):
+  # This is just the center of mass of the mesh.
+  # Why is this not not calculated internally by ADCIRC?
+  self.SLAM0 = np.mean(self.AdcircMesh.x)
+  self.SFEA0 = np.mean(self.AdcircMesh.y)
+  self.f.write('{:<4.1f} {:<4.1f}{:<22}'.format(self.SLAM0, self.SFEA0,''))
+  self.f.write('! SLAM0,SFEA0 - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)\n')
+
+def _write_FFACTOR(self):
+  if self.NOLIBF==0:
+    self.f.write('{:<32.4f}'.format(self.TAU))
+  elif self.NOLIBF==1:
+    self.f.write('{:<32.4f}'.format(self.FFACTOR))
+  elif self.NOLIBF==2:
+    self.f.write('{:<6.4f} {:<6.4f} {:<6.4f} {:<6.4f} {:<3}'.format(self.FFACTOR, self.HBREAK, self.FTHETA, self.FGAMMA, ''))
+  self.f.write('! FFACTOR\n')
+
+def _write_ESLM(self):
+  if self.IM in [0,1,2]:
+    self.f.write('{:<32.2f}'.format(self.ESLM))
+  elif self.IM in [10]:
+    self.f.write('{:<2d} {}{:26}'.format(self.ESLM, self.ESLS,''))
+  self.f.write('! ESL - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1\n')
+
+def _write_CORI(self):
+  if self.NCOR==1:
+    self.f.write('{:<32.1f}'.format(0))
+  else:
+    self.f.write('set parameter manually. ')
+  self.f.write('! CORI - CORIOLIS PARAMETER - IGNORED IF NCOR = 1\n')
+
+def _write_NTIF(self):
+  """ 
+  This segment is confusing and redundant.
+  Could have added the extra parameters to NBFR or have them
+  as part of the source code, since these are constants.
+  """
+  if self.NTIP==0:
+    self.f.write('{:<32d}! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n'.format(0))
+  elif self.NTIP==1:
+    NTIF=list()
+    for constituent in self.Tides.keys():
+      if 'earth_tidal_potential_reduction_factor' in self.Tides[constituent].keys():
+        NTIF.append(constituent)
+    self.f.write('{:<32d}! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n'.format(len(NTIF)))
+    for i, constituent in enumerate(NTIF):
+      self.f.write('{:<32}'.format(constituent))
+      if i == 0:
+        self.f.write('! ALPHANUMERIC DESCRIPTION OF TIDAL POTENTIAL CONSTIT.\n')
+      else:
+        self.f.write('\n')
+      self.f.write('{:>10.6f}'.format(self.Tides[constituent]['tidal_potential_amplitude']))
+      self.f.write('{:>19.15f}'.format(self.Tides[constituent]['orbital_frequency']))
+      self.f.write('{:>7.3f}'.format(self.Tides[constituent]['earth_tidal_potential_reduction_factor']))
+      self.f.write('{:>9.5f}'.format(self.Tides[constituent]['nodal_factor']))
+      self.f.write('{:>11.2f}'.format(self.Tides[constituent]['greenwich_term']))
+      self.f.write('\n')
+  else:
+    self.f.write('reading from fort.24, set parameter mannually.  ! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n')
+
+def _write_NBFR(self):
+  if self.Tides is None:
+    self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(0))
+  else:
+    self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(len(self.Tides.constituents)))
+    for constituent in self.Tides.constituents:
+      self.f.write('{}\n'.format(constituent))
+      self.f.write('{:>19.15f}'.format(self.Tides[constituent]['orbital_frequency']))
+      self.f.write('{:>9.5f}'.format(self.Tides[constituent]['nodal_factor']))
+      self.f.write('{:>11.2f}'.format(self.Tides[constituent]['greenwich_term']))
+      self.f.write('\n')
+    for constituent in self.Tides.constituents:
+      self.f.write('{}\n'.format(constituent.lower()))
+      for boundary in self.TPXO:
+        for i in range(boundary[constituent]['ha'].size):
+          self.f.write('{:>11.6f}'.format(boundary[constituent]['ha'][i]))
+          self.f.write('{:>14.6f}'.format(boundary[constituent]['hp'][i]))
+          self.f.write('\n')
+
+def _write_station_outputs(self):
+  pass
+
+def _write_global_outputs(self):
+  pass
+
+def _write_harmonic_outputs(self):
+  pass
+
+def _write_hotstart_parameters(self):
+  pass
+
+def _write_iteration_parameters(self):
+  pass
+
+def _write_netcdf_parameters(self):
+  pass
+
+def _write_fortran_namelists(self):
+  pass

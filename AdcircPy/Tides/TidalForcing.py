@@ -30,14 +30,17 @@ def init_TPXO_cache(cachedir):
     os.remove(cachedir+"/tpxo9_netcdf.tar.gz")
 
 def init_constituent_dictionary(self):
+  constituents = ['Mm', 'Mf', 'Q1', 'O1', 'P1', 'S1', 'K1', '2N2', 'N2', 'M2', 'S2', 'K2', 'MN4', 'M4', 'MS4']
   if self.constituents is not None:
     self.constituents = list(self.constituents)
     for constituent in self.constituents:
-      if constituent not in list(self.keys()):
+      if constituent not in constituents:
         raise Exception('\nUnknown Tidal Constituent \'{}\'.\n'.format(constituent)+\
-                        'Possible constituents are: {} '.format(list(self.keys())))
+                        'Possible constituents are: {} '.format(constituents))
   else:
-    self.constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))
+    # These are the only ones available in TPXO, so we're limited to these.
+    self.constituents = constituents
+    # self.constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))
   for constituent in self.constituents:
     self[constituent] = dict()
     self[constituent]['orbital_frequency'] = orbital_constants.orbital_frequency[constituent]

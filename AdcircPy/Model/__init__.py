@@ -3,9 +3,9 @@ from scipy.spatial import KDTree
 from AdcircPy.Model import UnstructuredMesh as _UnstructuredMesh
 from AdcircPy.Model import AdcircMesh as _AdcircMesh
 from AdcircPy.Model import AdcircRun as _AdcircRun
+from AdcircPy.Model import ElevationStationsOutput as _ElevationStationsOutput
 from AdcircPy.Model import _fort14
 from AdcircPy.Model import _fort13
-
 
 class UnstructuredMesh(object):   
   def __init__(self, x, y, elements, values,
@@ -213,29 +213,21 @@ class AdcircMesh(UnstructuredMesh):
   def _init_fort13(self, path):
     _fort13._init_fort13(self, path)
 
-
 class AdcircRun(object):
 
   def __init__(self, AdcircMesh, Tides=None, Winds=None, Waves=None,
-                                  Outputs=None, **kwargs):
+                ElevationStationsOutput=None, VelocityStationsOutput=None,
+                ElevationGlobalOutput=None, VelocityGlobalOutput=None, 
+                **kwargs):
     self.AdcircMesh = AdcircMesh
     self.init_Tides(Tides)
     self.init_Winds(Winds)
     self.init_Waves(Waves)
-    self.init_Outputs(Outputs)
+    self.init_ElevationStationsOutput(Outputs)
     self.init_fort15(**kwargs)
 
   def init_Tides(self, Tides):
     _AdcircRun.init_Tides(self, Tides)
-
-  def init_Winds(self, Winds):
-    self.Winds = Winds
-
-  def init_Waves(self, Waves):
-    self.Waves = Waves
-
-  def init_Outputs(self, Outputs):
-    self.Outputs = Outputs
 
   def init_fort15(self):
     _AdcircRun.init_fort15(self)
@@ -269,3 +261,113 @@ class AdcircRun(object):
 
   def _write_RNDAY(self):
     _AdcircRun._write_RNDAY(self)
+
+  def _write_DRAMP(self):
+    _AdcircRun._write_DRAMP(self)
+
+  def _write_H0_VELMIN(self):
+    _AdcircRun._write_H0_VELMIN(self)
+
+  def _write_SLAM0_SFEA0(self):
+    _AdcircRun._write_SLAM0_SFEA0(self)
+
+  def _write_FFACTOR(self):
+    _AdcircRun._write_FFACTOR(self)
+
+  def _write_ESLM(self):
+    _AdcircRun._write_ESLM(self)
+
+  def _write_CORI(self):
+    _AdcircRun._write_CORI(self)
+
+  def _write_NTIF(self):
+    _AdcircRun._write_NTIF(self)
+
+  def _write_NBFR(self):
+    _AdcircRun._write_NBFR(self)
+
+  def _write_station_outputs(self):
+    _AdcircRun._write_station_outputs(self)
+
+  def _write_global_outputs(self):
+    _AdcircRun._write_global_outputs(self)
+
+  def _write_harmonic_outputs(self):
+    _AdcircRun._write_harmonic_outputs(self)
+
+  def _write_hotstart_parameters(self):
+    _AdcircRun._write_hotstart_parameters(self)
+
+  def _write_iteration_parameters(self):
+    _AdcircRun._write_iteration_parameters(self)
+
+  def _write_netcdf_parameters(self):
+    _AdcircRun._write_netcdf_parameters(self)
+
+  def _write_fortran_namelists(self):
+    _AdcircRun._write_fortran_namelists(self)
+
+class _AdcircOutputs(object):
+ def __init__(self, stations, netcdf):
+    self.stations = stations
+    self.netcdf = netcdf
+
+class ElevationStationsOutput(_AdcircOutputs):
+  def __init__(self, stations, netcdf=True):
+    super(ElevationStationsOutput, self).__init__(stations, netcdf)
+    self.init_params()
+
+  @classmethod
+  def from_fort15(self, path):
+    _ElevationStationsOutput.from_fort15(self, path)
+
+  @classmethod
+  def from_csv(self, path):
+    _ElevationStationOutput.from_csv(self, path)  
+
+  def init_params(self):
+    _ElevationStationOutput.init_params(self)
+
+
+
+
+
+
+# class VelocityStationOutputs(dict):
+  
+#   def __init__(self, netcdf=True):
+#     self.netcdf=netcdf
+  
+#   @classmethod
+#   def from_fort15(self, path):
+#     _ElevationStationOutputs.from_fort15(self, path)
+
+#   @classmethod
+#   def from_csv(self, path):
+#     _ElevationStationOutputs.from_csv(self, path)
+
+# class ElevationGlobalOutputs(dict):
+
+#   def __init__(self, netcdf=True):
+#     self.netcdf=netcdf
+  
+#   @classmethod
+#   def from_fort15(self, path):
+#     _ElevationStationOutputs.from_fort15(self, path)
+
+#   @classmethod
+#   def from_csv(self, path):
+#     _ElevationStationOutputs.from_csv(self, path)
+
+# class VelocityGlobalOutputs(dict):
+  
+#   def __init__(self, netcdf=True):
+#     self.netcdf=netcdf
+  
+#   @classmethod
+#   def from_fort15(self, path):
+#     _ElevationStationOutputs.from_fort15(self, path)
+
+#   @classmethod
+#   def from_csv(self, path):
+#     _ElevationStationOutputs.from_csv(self, path)

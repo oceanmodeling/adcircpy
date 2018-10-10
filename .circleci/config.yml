@@ -32,9 +32,9 @@ jobs:
             mkdir -p ~/.cache/AdcircPy
             tar xf /tmp/test_data.tar.gz
             mv h_tpxo9.v1.nc ~/.cache/AdcircPy/
-      - run: python tests/test_read_maxele.py
-      - run: python tests/test_usgs_high_water_marks.py
-      - run: python tests/test_plots.py
+      # - run: python tests/test_read_maxele.py
+      # - run: python tests/test_usgs_high_water_marks.py
+      # - run: python tests/test_plots.py
       - run: python tests/test_AdcircRun.py
 workflows:
   version: 2
