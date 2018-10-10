@@ -1,5 +1,5 @@
-from AdcircPy.Datum import _DatumGrid
-from AdcircPy.Datum import _VDatum
+from AdcircPy.Datum import DatumGrid as _DatumGrid
+from AdcircPy.Datum import VDatum as _VDatum
 import requests
 import json
 
@@ -10,18 +10,24 @@ class DatumGrid(object):
     represent Datum 
     """
 
-    def __init__(self, **kwargs):
-        self.x = kwargs.pop("x", None)
-        self.y = kwargs.pop("y", None)
-        self.values = kwargs.pop("values", None)
-        self._type = kwargs.pop("_type", None)
+    def __init__(self, x, y, values, elements, source_hdatum, source_vdatum, target_hdatum, target_vdatum, description):
+        self.x = x
+        self.y = y
+        self.values = values
+        self.elements = elements
+        self.source_hdatum = source_hdatum
+        self.source_vdatum = source_vdatum
+        self.target_hdatum = target_hdatum
+        self.target_vdatum = target_vdatum
+        self.description   = description
 
-    @staticmethod
-    def msl_to_navd88(Datum_grid):
-        return _DatumGrid.msl_to_navd88(Datum_grid)
+    @classmethod
+    def build_datum_grid(cls, AdcircMesh, source_hdatum, target_hdatum, source_vdatum, target_vdatum, vdatum_jar_path):
+        return _DatumGrid.build_datum_grid(cls, AdcircMesh, source_hdatum, target_hdatum, source_vdatum, target_vdatum, vdatum_jar_path)
 
-    def convert(self, Mesh, **kwargs):
-        return _DatumGrid.convert(self, Mesh, **kwargs)
+    def dump(self, path):
+        _DatumGrid.dump(self, path)
+
 
 class VDatum(object):
     """
@@ -47,8 +53,8 @@ class VDatum(object):
         self._request(lon, lat, height, ihorz, ivert, ivert_units, overt, ivert_geoid, overt_units)
 
     @staticmethod
-    def jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, **kwargs):
-        return _VDatum.jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, **kwargs)
+    def jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, verbose=True, return_nodata=False):
+        return _VDatum.jar_wrapper(xyz, ihorz, ivert,  ohorz,  overt,  vdatum_jar_dir, verbose, return_nodata)
 
     @classmethod
     def _request(cls, lon, lat, height, ihorz, ivert, ivert_units, overt, ivert_geoid='geoid12b', overt_units='m'):
