@@ -1,6 +1,8 @@
 import unittest
 import matplotlib
-matplotlib.use('Agg')
+if os.getenv('CIRCLECI') == 'true':
+  matplotlib.use('Agg')
+import matplotlib.pyplot as plt 
 from AdcircPy import AdcircPy
 from AdcircPyTests import AdcircPyEnvironment
 
@@ -13,9 +15,14 @@ class FrontEndTests(AdcircPyEnvironment, unittest.TestCase):
 
   def test_make_plot(self):
     self.AdcircMesh.make_plot()
+    plt.show()
+    plt.close(plt.gcf())
+
 
   def test_plot_trimesh(self):
     self.AdcircMesh.plot_trimesh()
+    plt.show()
+    plt.close(plt.gcf())
 
 
 if __name__ == '__main__':

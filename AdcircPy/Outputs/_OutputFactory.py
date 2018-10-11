@@ -4,92 +4,125 @@ import fnmatch
 from netCDF4 import Dataset
 import numpy as np
 from AdcircPy.Model import AdcircMesh
-from AdcircPy import Outputs
+from AdcircPy.Outputs.Maxele import Maxele
+from AdcircPy.Outputs.ScalarSurfaceExtrema import ScalarSurfaceExtrema
 
-def __new__(cls, path, fort14=None, fort15=None, datum='MSL', epsg=None, datum_grid=None):
+class _OutputFactory(object):
+  """
+  Private class called by AdcircPy.read_output() that returns
+  the appropriate subclass belonging to the given output file.
+  Supports ASCII and NetCDF outputs.
+  Fortran binary outputs are not supported.
+  """
+  def __init__(self, path, fort14=None, datum='MSL', epsg=None, datum_grid=None):
+    self.path = path
+    self.datum=datum
+    self.epsg=epsg
+    self.datum_grid=datum_grid
+    self.fort14=fort14
+    self._init_fort14()
 
-  # Read and return NetCDF output
-  if cls.is_ncfile(path) == True:
-    return cls.netcdf_factory(path, fort14, fort15, datum, epsg, datum_grid)
-
-  # Read and return ASCII output
-  else:
-    if fort14 is None:
-      raise Exception('For reading ASCII outputs, a fort.14 is required. A fort.15 is optional.')
-    if isinstance(fort14, AdcircMesh)==False:
-      fort14 = AdcircMesh.from_fort14(fort14=fort14, fort15=fort15, datum=datum, epsg=epsg, datum_grid=datum_grid)
-    f = open(path)
-    line = f.readline().strip()
-    
-    # Test to see if it's a harmonic constituents file
-    try: int(line); _=True
-    except: pass; _=False
-    if _==True:
-      f.close()  
-      return Outputs.HarmonicConstituentsSurface()
-    
-    # Test which other types this file might be
-    line = f.readline().split()
-    number_of_datasets = int(line[0])
-    number_of_points = int(line[1])
-    # Correspods to a surface file
-    if number_of_points == fort14.x.size:
-      # Correspondos to a surface time series file
-      if number_of_datasets > 2:
-        return Outputs._ScalarSurfaceTimeseries(fort14.x,
-                                                     fort14.y,
-                                                     values,
-                                                     fort14.elements,
-                                                     f,
-                                                     epsg=epsg)
-
-      # Corresponds to a surface maxima file
-      elif number_of_datasets in [1,2]:
-        line = f.readline().split()
-        _time = float(line[0].strip(' /n'))
-        _timestep = int(line[1])
-        _nodeid = list()
-        _values = list()
-        for i in range(number_of_points):
-          line = f.readline().split()
-          _nodeid.append(int(line[0].strip(' \n')))
-          _values.append(float(line[1].strip(' \n')))
-        _extrema_time=list()
-        if number_of_datasets==2:
-          for i in range(number_of_points):
-            line = f.readline().split()
-            _extrema_time.append(float(line[1].strip(' \n')))
-        nodeID = np.asarray(_nodeid)
-        values = np.ma.masked_equal(_values, -99999.)
-        f.close()
-        return Outputs._ScalarSurfaceExtrema(fort14.x,
-                                             fort14.y,
-                                             fort14.elements,
-                                             values,
-                                             _extrema_time,
-                                             epsg=epsg,
-                                             nodeID=nodeID)
-    # Then it has to be a station timeseries file
+  def get_output_instance(self):
+    if self._is_ncfile() == True:
+      return self._netcdf_factory()
     else:
-      f.close()
-      return Outputs._OutputStations.from_ascii(self._path, self._fort14)
+      return self._ascii_factory()
 
-def is_ncfile(path):
-  try: Dataset(path); nc = True
-  except: nc = False
-  return nc
+  def _init_fort14(self):
+    if self.fort14 is None and self._is_ncfile()==False:
+        raise Exception('For reading ASCII outputs, a fort.14 is required. A fort.15 is optional.')
+    elif isinstance(self.fort14, str):
+      self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, datum=self.datum, epsg=self.epsg, datum_grid=self.datum_grid)
 
-def netcdf_factory(path, fort14=None, fort15=None, datum='MSL', epsg=None, datum_grid=None):
-  nc = Dataset(path)
-  if 'station' in nc.variables.keys():
-    if 'zeta' in nc.variables.keys():
-      return ElevationStations.from_netcdf(path)
+  def _is_ncfile(self):
+    try:
+      Dataset(self.path)
+      return True
+    except:
+      return False
+
+  def _netcdf_factory(self):
+    nc = Dataset(self.path)
+    if 'station' in nc.variables.keys():
+      if 'zeta' in nc.variables.keys():
+        return ElevationStations.from_netcdf(self.path)
+      else:
+        raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
+    elif 'zeta_max' in nc.variables.keys():
+      return Maxele.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
+    
     else:
-      raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
-  elif 'zeta_max' in nc.variables.keys():
-    return Outputs.Maxele.from_netcdf(path, fort14, fort15, datum, epsg, datum_grid)
-  else:
-    raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')
+      raise NotImplementedError('Guessed a NetCDF output but instantiation has not been implemented yet.')
 
-def ascii_factory(path, fort14=None, fort15=None, datum='MSL', epsg=None, datum_grid=None):
-  pass
+  def _ascii_factory(self):
+    self.f = open(self.path, 'r')
+    # Might be a harmonic constituents file...
+    if self.check_is_HarmonicConstituentsSurface()==True:
+      return self._init_HarmonicConstituentsSurface()
+    
+    # else, could be a general surface file...
+    elif self.check_is_SurfaceFile()==True:
+      if self.number_of_points == self.fort14.x.size:
+        if self.number_of_datasets > 2:
+          return self._init_ScalarSurfaceTimeseries()
+        elif self.number_of_datasets in [1,2]:
+          return self._init_ScalarSurfaceMaxima()
+    
+    # else has to be a stations output file.
+    else:
+      return self._init_OutputStations()
+
+  def check_is_HarmonicConstituentsSurface(self):
+    self.line = self.f.readline().strip()
+    try:
+      int(self.line)
+      return True
+    except:
+      return False
+
+  def check_is_SurfaceFile(self):
+    self.line = self.f.readline().split()
+    self.number_of_datasets = int(self.line[0])
+    self.number_of_points = int(self.line[1])
+    if self.number_of_points==self.fort14.x.size:
+      return True
+
+  def _init_ScalarSurfaceTimeseries(self):
+    """ """
+    raise NotImplementedError("Guessed Scalar Surface Timeseries output, but instantiantion is not yet implemented")
+
+  def _init_ScalarSurfaceMaxima(self):
+    """ """
+    self.line = self.f.readline().split()
+    time = float(self.line[0].strip(' /n'))
+    timestep = int(self.line[1])
+    nodeID = list()
+    values = list()
+    for i in range(self.number_of_points):
+      self.line = self.f.readline().split()
+      nodeID.append(int(self.line[0].strip(' \n')))
+      values.append(float(self.line[1].strip(' \n')))
+    extrema_time_vector=list()
+    if self.number_of_datasets==2:
+      for i in range(self.number_of_points):
+        self.line = self.f.readline().split()
+        extrema_time_vector.append(float(self.line[1].strip(' \n')))
+    nodeID = np.asarray(nodeID)
+    values = np.ma.masked_equal(values, -99999.)
+    return ScalarSurfaceExtrema(self.fort14.x,
+                                 self.fort14.y,
+                                 self.fort14.elements,
+                                 values,
+                                 extrema_time_vector,
+                                 epsg=self.epsg,
+                                 nodeID=nodeID)
+
+  def _init_HarmonicConstituentsSurface(self):
+    raise NotImplementedError('Guessed a Harmonic Constituents Output Surface but instantiantion has not yet been implemented.')
+
+  def _init_OutputStations(self):
+    raise NotImplementedError('Guessed an Output Stations file but instantiantion has not yet been implemented.')
+
+  def __del__(self):
+    if hasattr(self, 'f'):
+      self.f.close()
