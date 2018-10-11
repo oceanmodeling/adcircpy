@@ -3,6 +3,7 @@ from scipy.spatial import KDTree
 from AdcircPy.Model import UnstructuredMesh as _UnstructuredMesh
 from AdcircPy.Model import AdcircMesh as _AdcircMesh
 from AdcircPy.Model import AdcircRun as _AdcircRun
+from AdcircPy.Model import _AdcircOutputs as _AdcircOutputs__AdcircOutputs
 from AdcircPy.Model import ElevationStationsOutput as _ElevationStationsOutput
 from AdcircPy.Model import _fort14
 from AdcircPy.Model import _fort13
@@ -250,6 +251,9 @@ class AdcircRun(object):
   def _write_NWP(self):
     _AdcircRun._write_NWP(self)
 
+  def _write_NTIP(self):
+    _AdcircRun._write_NTIP(self)
+
   def _write_NWS(self):
     _AdcircRun._write_NWS(self)
 
@@ -310,28 +314,26 @@ class AdcircRun(object):
   def _write_fortran_namelists(self):
     _AdcircRun._write_fortran_namelists(self)
 
-class _AdcircOutputs(object):
- def __init__(self, stations, netcdf):
-    self.stations = stations
+class _AdcircOutputs(OrderedDict):
+  def __init__(self, sampling_frequency, netcdf, **kwargs):
+    super(_AdcircOutputs, self).__init__(**kwargs)
+    self.init_sampling_frequency(sampling_frequency)
     self.netcdf = netcdf
 
+  def init_sampling_frequency(self, sampling_frequency):
+    _AdcircOutputs__AdcircOutputs.init_sampling_frequency(self, sampling_frequency)
+
 class ElevationStationsOutput(_AdcircOutputs):
-  def __init__(self, stations, netcdf=True):
-    super(ElevationStationsOutput, self).__init__(stations, netcdf)
-    self.init_params()
+  def __init__(self, stations, sampling_frequency, netcdf):
+    super(ElevationStationsOutput, self).__init__(sampling_frequency, netcdf, **stations)
 
   @classmethod
-  def from_fort15(self, path):
-    _ElevationStationsOutput.from_fort15(self, path)
+  def from_fort15(self, path, sampling_frequency=None, netcdf=True):
+    return _ElevationStationsOutput.from_fort15(self, path, sampling_frequency, netcdf)
 
   @classmethod
   def from_csv(self, path):
-    _ElevationStationOutput.from_csv(self, path)  
-
-  def init_params(self):
-    _ElevationStationOutput.init_params(self)
-
-
+    _ElevationStationsOutput.from_csv(self, path)  
 
 
 

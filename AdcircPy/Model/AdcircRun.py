@@ -18,7 +18,7 @@ def init_fort15(self, **kwargs):
   self.WarnElevDumpLimit = kwargs.pop("WarnElevDumpLimit", None) # –DDEBUG_WARN_ELEV
   self.ErrorElev = kwargs.pop("ErrorElev", None) # –DDEBUG_WARN_ELEV
   self.NABOUT = kwargs.pop("NABOUT", 1) # NABOUT - ABREVIATED OUTPUT OPTION PARAMETER
-  self.NSCREEN = kwargs.pop("NSCREEN", 1) # NSCREEN - OUTPUT TO UNIT 6 PARAMETER
+  self.NSCREEN = kwargs.pop("NSCREEN", 100) # NSCREEN - OUTPUT TO UNIT 6 PARAMETER
   self.IHOT = kwargs.pop("IHOT", None) # provided by package
   self.ICS = kwargs.pop("ICS", 2) # Coordinate system. 1 Cartesian, 2 spherical.
   self.IM = kwargs.pop("IM", 0) # Defaults to 2D Barotropic.
@@ -29,7 +29,7 @@ def init_fort15(self, **kwargs):
   self.NOLICAT = kwargs.pop("NOLICAT", 1) # Advection time derivative; 0:OFF, 1:ON
   self.NWP = kwargs.pop("NWP", None)  # Not used, provided by package
   self.NCOR = kwargs.pop("NCOR", 1)  # Coriolis; 0:spatially constant, 1:spatially variable
-  self.NTIP = kwargs.pop("NTIP", 1)  # Tidal potentials and self attraction; 0:OFF, 1:TidalPotential, 2:use_fort.24
+  self.NTIP = kwargs.pop("NTIP", None)  # Tidal potentials and self attraction; 0:OFF, 1:TidalPotential, 2:use_fort.24
   self.NWS = kwargs.pop("NWS", None) # Meteo forcing selection. Provided by package.
   self.NRAMP = kwargs.pop("NRAMP", None) # Provided by package. 0 for coldstart, 8 for hotstart
   self.G = kwargs.pop("G", 9.81) # G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
@@ -91,16 +91,16 @@ def dump(self, directory):
   os.makedirs(directory, exist_ok=True)
   
   with open(self.directory+'/fort.15.coldstart', 'w') as self.f:
-    self.run_type='coldstart'
+    self.IHOT=0
     self._write_fort15()
 
   with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
-    self.run_type='hotstart'
+    self.IHOT=567
     self._write_fort15()
 
 
 def _init_TPXO(self):
-  if self.AdcircMesh.ocean_boundaries is None:
+  if self.AdcircMesh.ocean_boundaries is None or self.Tides is None:
     self.TPXO=None; return
   nc = Dataset(self.Tides.tpxo_path)
   tpxo_constituents = nc['con'][:].tostring().decode('UTF-8').split()
@@ -140,6 +140,7 @@ def _write_fort15(self):
   self.f.write('{:<32d}! NOLICAT - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER\n'.format(self.NOLICAT))
   self._write_NWP() # depends on fort.13 and a better implementation could be designed.
   self.f.write('{:<32d}! NCOR - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER\n'.format(self.NCOR))
+  self._write_NTIP()
   self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
   self._write_NWS()
   self._write_NRAMP()
@@ -158,7 +159,7 @@ def _write_fort15(self):
   self._write_CORI()
   self._write_NTIF()
   self._write_NBFR()
-  self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD'.format(self.ANGINN))
+  self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD\n'.format(self.ANGINN))
   self._write_station_outputs()
   self._write_global_outputs()
   self._write_harmonic_outputs()
@@ -169,9 +170,9 @@ def _write_fort15(self):
   self.f.write('\n')
 
 def _write_IHOT(self):
-  if self.run_type=='coldstart':
+  if self.IHOT==0:
     self.f.write('{:<32d}'.format(0))
-  elif self.run_type=='hotstart':
+  elif self.IHOT==567:
     self.f.write('{:<32d}'.format(567))
   self.f.write('! IHOT - HOT START PARAMETER\n')
 
@@ -186,21 +187,38 @@ def _write_NWP(self):
     for attribute in self.AdcircMesh.fort13.keys():
       self.f.write('{}\n'.format(attribute))
 
+def _write_NTIP(self):
+  if self.NTIP is None:
+    if self.Tides is None:
+      self.NTIP=0
+    else:
+      self.NTIP=1
+  elif self.NTIP=='fort.24':
+    self.NTIP=2
+  self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
+
+
 def _write_NWS(self):
-  if self.run_type=='coldstart' or self.Winds is None:
+  if self.IHOT==0 or self.Winds is None:
     self.f.write('{:<32d}'.format(0))
   else:
     self.f.write('{:<32}'.format('Please set manually.'))
   self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
 
 def _write_NRAMP(self):
-  if self.run_type=='coldstart' or self.Winds is None:
-    self.NRAMP=1
-    self.f.write('{:<32d}'.format(self.NRAMP))
-  else:
+  if self.IHOT==0:
+    if self.Tides is not None:
+      self.NRAMP=1
+     
+  elif self.Winds is not None:
     self.NRAMP=8
     self.f.write('{:<32d}'.format(self.NRAMP))
-  self.f.write('! NRAMP - RAMP FUNCTION OPTION\n')
+  
+  if self.NRAMP is not None:
+    self.f.write('{:<32d}'.format(self.NRAMP))
+  else:
+    self.f.write('{:<32}'.format(''))
+  self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
 
 def _write_TAU0(self):
   if self.AdcircMesh.fort13 is not None:
@@ -210,7 +228,7 @@ def _write_TAU0(self):
     self.f.write('{:<10.3f}'.format(self.Tau0FullDomainMin))
     self.f.write('{:<10.3f}\n'.format(self.Tau0FullDomainMax))
   else:
-    self.f.write('{:<32}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005'.format('Please set manually.'))
+    self.f.write('{:<32}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(0.005))
 
 def _write_DTDP(self):
   """
@@ -221,25 +239,27 @@ def _write_DTDP(self):
   self.f.write('{:<32.1f}! DT - TIME STEP (IN SECONDS)\n'.format(self.DTDP))
 
 def _write_RNDAY(self):
+
+  # Based on tides or based on winds? 
+  # What if this is a met-only run without tides?
   if self.Tides is not None:
-    if self.run_type=="coldstart":
-      RNDAY = (self.Tides.start_date - self.Tides.spinup_date).days
-    elif self.run_type=="hotstart":
-      RNDAY = (self.Tides.end_date - self.Tides.spinup_date).days
+    if self.IHOT==0:
+      RNDAY = (self.Tides.start_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+    elif self.IHOT==567:
+      RNDAY = (self.Tides.end_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
     self.f.write('{:<32.2f}'.format(RNDAY))
-  
-  elif self.Winds is not None:
-    # May be a Met-Only run
-    self.f.write('{:<32}'.format('Set manually for met-only run'))
+  else:
+    self.f.write('{:<32}'.format(''))
   self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
 
 def _write_DRAMP(self):
-  # requires tidal forcing. need to consider met only forcing.
-  if self.DRAMP is None:
-    self.DRAMP = ((2/3)*(self.Tides.start_date - self.Tides.spinup_date).total_seconds())/86400.
+
+  if self.Tides is not None:
+    self.DRAMP = ((2/3)*(self.Tides.start_date - self.Tides.spinup_date).total_seconds())/(60*60*24)
+
   if self.NRAMP==1:
     self.f.write('{:<32.1f}'.format(self.DRAMP))
-    self.f.write('! DRAMP - DURATION OF RAMP FUNCTION (IN DAYS)\n')
+ 
   elif self.NRAMP==8:
     if self.DUnRampMete is None:
       self.DUnRampMete = (self.Tides.start_date - self.Tides.spinup_date).days
@@ -256,21 +276,19 @@ def _write_DRAMP(self):
     self.f.write('{:.1f} '.format(self.DRAMPMete))
     self.f.write('{:.1f} '.format(self.DRAMPWRad))
     self.f.write('{:.1f} '.format(self.DUnRampMete))
-    self.f.write('! DRAMP, DRAMPExtFlux,FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete - DURATION OF RAMP FUNCTION (IN DAYS)\n')
   else:
-    self.f.write('Write ramp parameters manually.\n')
+    self.f.write('{:<32}'.format(''))
+  self.f.write('! DRAMP [DRAMPExtFlux, FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete] DURATION OF RAMP FUNCTION (IN DAYS)\n')
 
 def _write_H0_VELMIN(self):
   if self.NOLIFA in [0,1]:
     self.f.write('{:<32.4f}'.format(self.H0))
   elif self.NOLIFA in [2,3]:
-    # middle terms are present for forwards breakability.
     self.f.write('{:<4.3f} 0 0 {:4.3f}{:<17}'.format(self.H0, self.VELMIN,''))
   self.f.write('! H0, NODEDRYMIN, NODEWETRMP, VELMIN\n')
 
 def _write_SLAM0_SFEA0(self):
   # This is just the center of mass of the mesh.
-  # Why is this not not calculated internally by ADCIRC?
   self.SLAM0 = np.mean(self.AdcircMesh.x)
   self.SFEA0 = np.mean(self.AdcircMesh.y)
   self.f.write('{:<4.1f} {:<4.1f}{:<22}'.format(self.SLAM0, self.SFEA0,''))
@@ -325,7 +343,7 @@ def _write_NTIF(self):
       self.f.write('{:>9.5f}'.format(self.Tides[constituent]['nodal_factor']))
       self.f.write('{:>11.2f}'.format(self.Tides[constituent]['greenwich_term']))
       self.f.write('\n')
-  else:
+  elif NTIP==2 or NTIP=='fort.22':
     self.f.write('reading from fort.24, set parameter mannually.  ! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n')
 
 def _write_NBFR(self):
@@ -348,7 +366,38 @@ def _write_NBFR(self):
           self.f.write('\n')
 
 def _write_station_outputs(self):
-  pass
+  if self.ElevationStationsOutput is None:
+    NOUTE=0
+    TOUTSE=0
+    TOUTFE=0
+    NSPOOLE=0
+  elif self.ElevationStationsOutput is not None:
+    if self.IHOT==0 or self.Tides is None:
+      NOUTE=0
+      TOUTSE=0
+      TOUTFE=0
+      NSPOOLE=0
+      NSTAE=0
+    else:
+      if self.ElevationStationsOutput.netcdf==True:
+        NOUTE=-5
+      else:
+        NOUTE=-1
+      TOUTSE=(self.Tides.start_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+      TOUTFE=(self.Tides.end_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+      NSPOOLE=self.ElevationStationsOutput.sampling_frequency.seconds/self.DTDP
+      NSTAE=len(self.ElevationStationsOutput.keys())
+  self.f.write('{:<3d}'.format(NOUTE))
+  self.f.write('{:<6.1f}'.format(TOUTSE))
+  self.f.write('{:<8.2f}'.format(TOUTFE))
+  self.f.write('{:<6.1f}'.format(NSPOOLE))
+  self.f.write('{:<9}{}\n'.format('','! NOUTE,TOUTSE,TOUTFE,NSPOOLE:ELEV STATION OUTPUT INFO (UNIT 61)'))
+  self.f.write('{:<32d}{}\n'.format(NSTAE, '! TOTAL NUMBER OF ELEVATION RECORDING STATIONS'))
+  if self.ElevationStationsOutput is not None and self.IHOT==567:
+    for station in self.ElevationStationsOutput.keys():
+      self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['x']))
+      self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['y']))
+      self.f.write('! {}\n'.format(station))
 
 def _write_global_outputs(self):
   pass
