@@ -112,11 +112,11 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.write_fort15()
     
     if printf==True:
-      with open('./fort.15.coldstart', 'r') as fort15:
+      with open(self.directory+'/fort.15.coldstart', 'r') as fort15:
         for line in fort15.read().splitlines():
           print(line)
 
-      with open('./fort.15.hotstart', 'r') as fort15:
+      with open(self.directory+'/fort.15.hotstart', 'r') as fort15:
         for line in fort15.read().splitlines():
           print(line)
 
