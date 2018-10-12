@@ -21,7 +21,7 @@ class DatumMesh(object):
     self.description   = description
 
   @classmethod
-  def build_datum_grid(cls, AdcircMesh, source_hdatum, target_hdatum, source_vdatum, target_vdatum, vdatum_jar_path):
+  def build_datum_mesh(cls, AdcircMesh, source_hdatum, target_hdatum, source_vdatum, target_vdatum, vdatum_jar_path):
     if isinstance(AdcircMesh, _AdcircMesh)==False:
       AdcircMesh = _AdcircMesh.from_fort14(AdcircMesh)
     xyz = VDatum.jar_wrapper(AdcircMesh.get_xyz(), source_hdatum, source_vdatum, target_hdatum, target_vdatum, vdatum_jar_path, return_nodata=True)

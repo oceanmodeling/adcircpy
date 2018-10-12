@@ -1,21 +1,15 @@
 import os
+import abc
 from datetime import datetime
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
 from netCDF4 import Dataset
-from AdcircPy.Tides import TidalForcing
 
-class _AdcircRun(object):
-  def __init__(self, AdcircMesh, Tides=None, Winds=None, Waves=None, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, **kwargs):
+class _AdcircRun(metaclass=abc.ABCMeta):
+  def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, **kwargs):
     self.AdcircMesh = AdcircMesh
-    self.init_Tides(Tides)
-    self.init_Winds(Winds)
-    # self.init_Waves(Waves)
     self.ElevationStationsOutput = ElevationStationsOutput
-    self.init_fort15(**kwargs)
-
-  def init_Tides(self, Tides):
-    self.Tides = Tides
+    self.init_fort15()
     self.init_TPXO()
 
   def init_fort15(self, **kwargs):
@@ -95,9 +89,9 @@ class _AdcircRun(object):
     self.contac= kwargs.pop("contac", "contac")
     self.NCDATE = kwargs.pop("NCDATE", None) # set by package on datetime init
 
-  def dump(self, directory):
+  def dump(self, directory, printf=False):
     self.directory = directory
-    os.makedirs(directory, exist_ok=True)
+    os.makedirs(self.directory, exist_ok=True)
     
     with open(self.directory+'/fort.15.coldstart', 'w') as self.f:
       self.IHOT=0
@@ -106,31 +100,43 @@ class _AdcircRun(object):
     with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
       self.IHOT=567
       self.write_fort15()
+    
+    if printf==True:
+      with open('./fort.15.coldstart', 'r') as fort15:
+        for line in fort15.read().splitlines():
+          print(line)
+
+      with open('./fort.15.hotstart', 'r') as fort15:
+        for line in fort15.read().splitlines():
+          print(line)
 
   def init_TPXO(self):
-    if self.AdcircMesh.ocean_boundaries is None or self.Tides is None:
+    if self.AdcircMesh.ocean_boundaries is None:
       self.TPXO=None; return
-    nc = Dataset(self.Tides.tpxo_path)
-    tpxo_constituents = nc['con'][:].tostring().decode('UTF-8').split()
-    x = nc['lon_z'][:]
-    y = nc['lat_z'][:]
-    x = np.linspace(np.min(x),np.max(x),num=x.shape[0])
-    y = np.linspace(np.min(y),np.max(y),num=y.shape[1])
-    self.TPXO=list()
-    for ocean_boundary in self.AdcircMesh.ocean_boundaries:
-      constituents = dict()
-      for constituent in self.Tides.constituents:
-        # There might be false mismatches between both databases. (tidal components who's names mismatch)      
-        if constituent.lower() in tpxo_constituents:
-          constituents[constituent] = dict()
-          idx = tpxo_constituents.index(constituent.lower())
-          ha_interpolator = RectBivariateSpline(x, y, nc['ha'][idx,:,:])
-          hp_interpolator = RectBivariateSpline(x, y, nc['hp'][idx,:,:])
-          _x = (self.AdcircMesh.x[ocean_boundary]) % 360.
-          _y = (self.AdcircMesh.y[ocean_boundary]) % 360.
-          constituents[constituent]['ha'] = ha_interpolator.ev(_x, _y)
-          constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
-      self.TPXO.append(constituents)
+    elif self.TidalForcing is None:
+      self.TPXO=None; return
+    else:
+      nc = Dataset(self.TidalForcing.tpxo_path)
+      tpxo_constituents = nc['con'][:].tostring().decode('UTF-8').split()
+      x = nc['lon_z'][:]
+      y = nc['lat_z'][:]
+      x = np.linspace(np.min(x),np.max(x),num=x.shape[0])
+      y = np.linspace(np.min(y),np.max(y),num=y.shape[1])
+      self.TPXO=list()
+      for ocean_boundary in self.AdcircMesh.ocean_boundaries:
+        constituents = dict()
+        for constituent in self.TidalForcing.constituents:
+          # There might be false mismatches between both databases. (tidal components who's names mismatch)      
+          if constituent.lower() in tpxo_constituents:
+            constituents[constituent] = dict()
+            idx = tpxo_constituents.index(constituent.lower())
+            ha_interpolator = RectBivariateSpline(x, y, nc['ha'][idx,:,:])
+            hp_interpolator = RectBivariateSpline(x, y, nc['hp'][idx,:,:])
+            _x = (self.AdcircMesh.x[ocean_boundary]) % 360.
+            _y = (self.AdcircMesh.y[ocean_boundary]) % 360.
+            constituents[constituent]['ha'] = ha_interpolator.ev(_x, _y)
+            constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
+        self.TPXO.append(constituents)
 
   def write_fort15(self):
     self.f.write('{:<32}! 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION\n'.format(self.RUNDES))
@@ -150,7 +156,9 @@ class _AdcircRun(object):
     self.write_NTIP()
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
     self.write_NWS()
+    self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
     self.write_NRAMP()
+    self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
     self.f.write('{:<32.2f}! G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS\n'.format(self.G))
     self.write_TAU0()
     self.write_DTDP()
@@ -196,7 +204,7 @@ class _AdcircRun(object):
 
   def write_NTIP(self):
     if self.NTIP is None:
-      if self.Tides is None:
+      if self.TidalForcing is None:
         self.NTIP=0
       else:
         self.NTIP=1
@@ -204,27 +212,13 @@ class _AdcircRun(object):
       self.NTIP=2
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
 
+  @abc.abstractmethod
   def write_NWS(self):
-    if self.IHOT==0 or self.Winds is None:
-      self.f.write('{:<32d}'.format(0))
-    else:
-      self.f.write('{:<32}'.format('Please set manually.'))
-    self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
+    """ Depends on whether wind forcing is present or not. """
 
+  @abc.abstractmethod
   def write_NRAMP(self):
-    if self.IHOT==0:
-      if self.Tides is not None:
-        self.NRAMP=1
-       
-    elif self.Winds is not None:
-      self.NRAMP=8
-      self.f.write('{:<32d}'.format(self.NRAMP))
-    
-    if self.NRAMP is not None:
-      self.f.write('{:<32d}'.format(self.NRAMP))
-    else:
-      self.f.write('{:<32}'.format(''))
-    self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
+    """ Depends on whether wind forcing is present or not. """
 
   def write_TAU0(self):
     if self.AdcircMesh.fort13 is not None:
@@ -247,26 +241,26 @@ class _AdcircRun(object):
   def write_RNDAY(self):
     # Based on tides or based on winds? 
     # What if this is a met-only run without tides?
-    if self.Tides is not None:
+    if self.TidalForcing is not None:
       if self.IHOT==0:
-        RNDAY = (self.Tides.start_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+        RNDAY = (self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
       elif self.IHOT==567:
-        RNDAY = (self.Tides.end_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+        RNDAY = (self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
       self.f.write('{:<32.2f}'.format(RNDAY))
     else:
       self.f.write('{:<32}'.format(''))
     self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
 
   def write_DRAMP(self):
-    if self.Tides is not None:
-      self.DRAMP = ((2/3)*(self.Tides.start_date - self.Tides.spinup_date).total_seconds())/(60*60*24)
+    if self.TidalForcing is not None:
+      self.DRAMP = ((2/3)*(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds())/(60*60*24)
 
     if self.NRAMP==1:
       self.f.write('{:<32.1f}'.format(self.DRAMP))
    
     elif self.NRAMP==8:
       if self.DUnRampMete is None:
-        self.DUnRampMete = (self.Tides.start_date - self.Tides.spinup_date).days
+        self.DUnRampMete = (self.TidalForcing.start_date - self.TidalForcing.spinup_date).days
       if self.DRAMPElev is None:
         self.DRAMPElev = self.DRAMP
       if self.DRAMPTip is None:
@@ -331,8 +325,8 @@ class _AdcircRun(object):
       self.f.write('{:<32d}! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n'.format(0))
     elif self.NTIP==1:
       NTIF=list()
-      for constituent in self.Tides.keys():
-        if 'earth_tidal_potential_reduction_factor' in self.Tides[constituent].keys():
+      for constituent in self.TidalForcing.keys():
+        if 'earth_tidal_potential_reduction_factor' in self.TidalForcing[constituent].keys():
           NTIF.append(constituent)
       self.f.write('{:<32d}! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n'.format(len(NTIF)))
       for i, constituent in enumerate(NTIF):
@@ -341,27 +335,27 @@ class _AdcircRun(object):
           self.f.write('! ALPHANUMERIC DESCRIPTION OF TIDAL POTENTIAL CONSTIT.\n')
         else:
           self.f.write('\n')
-        self.f.write('{:>10.6f}'.format(self.Tides[constituent]['tidal_potential_amplitude']))
-        self.f.write('{:>19.15f}'.format(self.Tides[constituent]['orbital_frequency']))
-        self.f.write('{:>7.3f}'.format(self.Tides[constituent]['earth_tidal_potential_reduction_factor']))
-        self.f.write('{:>9.5f}'.format(self.Tides[constituent]['nodal_factor']))
-        self.f.write('{:>11.2f}'.format(self.Tides[constituent]['greenwich_term']))
+        self.f.write('{:>10.6f}'.format(self.TidalForcing[constituent]['tidal_potential_amplitude']))
+        self.f.write('{:>19.15f}'.format(self.TidalForcing[constituent]['orbital_frequency']))
+        self.f.write('{:>7.3f}'.format(self.TidalForcing[constituent]['earth_tidal_potential_reduction_factor']))
+        self.f.write('{:>9.5f}'.format(self.TidalForcing[constituent]['nodal_factor']))
+        self.f.write('{:>11.2f}'.format(self.TidalForcing[constituent]['greenwich_term']))
         self.f.write('\n')
     elif NTIP==2 or NTIP=='fort.22':
       self.f.write('reading from fort.24, set parameter mannually.  ! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n')
 
   def write_NBFR(self):
-    if self.Tides is None:
+    if self.TidalForcing is None:
       self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(0))
     else:
-      self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(len(self.Tides.constituents)))
-      for constituent in self.Tides.constituents:
+      self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(len(self.TidalForcing.constituents)))
+      for constituent in self.TidalForcing.constituents:
         self.f.write('{}\n'.format(constituent))
-        self.f.write('{:>19.15f}'.format(self.Tides[constituent]['orbital_frequency']))
-        self.f.write('{:>9.5f}'.format(self.Tides[constituent]['nodal_factor']))
-        self.f.write('{:>11.2f}'.format(self.Tides[constituent]['greenwich_term']))
+        self.f.write('{:>19.15f}'.format(self.TidalForcing[constituent]['orbital_frequency']))
+        self.f.write('{:>9.5f}'.format(self.TidalForcing[constituent]['nodal_factor']))
+        self.f.write('{:>11.2f}'.format(self.TidalForcing[constituent]['greenwich_term']))
         self.f.write('\n')
-      for constituent in self.Tides.constituents:
+      for constituent in self.TidalForcing.constituents:
         self.f.write('{}\n'.format(constituent.lower()))
         for boundary in self.TPXO:
           for i in range(boundary[constituent]['ha'].size):
@@ -377,7 +371,7 @@ class _AdcircRun(object):
       NSPOOLE=0
       NSTAE=0
     elif self.ElevationStationsOutput is not None:
-      if self.IHOT==0 or self.Tides is None:
+      if self.IHOT==0 or self.TidalForcing is None:
         NOUTE=0
         TOUTSE=0
         TOUTFE=0
@@ -388,8 +382,8 @@ class _AdcircRun(object):
           NOUTE=-5
         else:
           NOUTE=-1
-        TOUTSE=(self.Tides.start_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
-        TOUTFE=(self.Tides.end_date - self.Tides.spinup_date).total_seconds()/(60*60*24)
+        TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
         NSPOOLE=self.ElevationStationsOutput.sampling_frequency.seconds/self.DTDP
         NSTAE=len(self.ElevationStationsOutput.keys())
     self.f.write('{:<3d}'.format(NOUTE))

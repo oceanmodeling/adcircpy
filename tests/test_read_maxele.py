@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 import unittest
 import matplotlib
-import os
-if os.getenv('CIRCLECI') == 'true':
-  matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from AdcircPyTests import AdcircPyEnvironment
 from AdcircPy import AdcircPy

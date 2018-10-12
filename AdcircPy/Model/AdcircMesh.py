@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
-from haversine import haversine
-from AdcircPy.Model.UnstructuredMesh import UnstructuredMesh
 from AdcircPy.core._FixPointNormalize import FixPointNormalize
+from AdcircPy.Model.UnstructuredMesh import UnstructuredMesh
+from AdcircPy.Model.TidalRun import TidalRun
 
 class AdcircMesh(UnstructuredMesh):
   def __init__(self, x, y, elements, values, fort13=None, description=None, **kwargs):
-    UnstructuredMesh.__init__(self, x, y, elements, values, **kwargs)
+    super(AdcircMesh, self).__init__(x, y, elements, values, **kwargs)
     self.description = description
     self._init_fort13(fort13)
 
@@ -21,6 +21,9 @@ class AdcircMesh(UnstructuredMesh):
     kwargs['datum_grid'] = datum_grid
     return cls(**kwargs)
 
+  def generate_tidal_run(self, start_date, end_date, spinup_date=None, constituents=None, **kwargs):
+    return TidalRun(self, start_date, end_date, spinup_date, constituents, **kwargs)
+  
   @staticmethod
   def parse_fort14(path):
     f  = open(path) 
@@ -201,164 +204,162 @@ class AdcircMesh(UnstructuredMesh):
       plt.show()
 
   def interpolate_DEM(self, tile, **kwargs):
-      method = kwargs.pop("method", "FVM")
-      channel_polygons = kwargs.pop("channel_polygons", None)
-      bar_polygons = kwargs.pop("bar_polygons", None)
-      tile_extent = tile.get_extent()
-      idxs_of_points_in_tile = self.get_extent_idx(tile_extent, tile.epsg)
-      xyz = tile.get_xyz(epsg=self.epsg)
-      for idx in idxs_of_points_in_tile:
-          path = self.get_finite_volume_Path(idx)
-          _idx, = np.where(np.logical_and(
-                      np.logical_and(xyz[:,0]>=np.min(path.vertices[:,0]), xyz[:,0]<=np.max(path.vertices[:,0])),
-                      np.logical_and(xyz[:,1]>=np.min(path.vertices[:,1]), xyz[:,1]<=np.max(path.vertices[:,1]))))
-          values = xyz[_idx,:]
-          if method=="FVM":
+    method = kwargs.pop("method", "FVM")
+    channel_polygons = kwargs.pop("channel_polygons", None)
+    bar_polygons = kwargs.pop("bar_polygons", None)
+    tile_extent = tile.get_extent()
+    idxs_of_points_in_tile = self.get_extent_idx(tile_extent, tile.epsg)
+    xyz = tile.get_xyz(epsg=self.epsg)
+    for idx in idxs_of_points_in_tile:
+      path = self.get_finite_volume_Path(idx)
+      _idx, = np.where(np.logical_and(
+                  np.logical_and(xyz[:,0]>=np.min(path.vertices[:,0]), xyz[:,0]<=np.max(path.vertices[:,0])),
+                  np.logical_and(xyz[:,1]>=np.min(path.vertices[:,1]), xyz[:,1]<=np.max(path.vertices[:,1]))))
+      values = xyz[_idx,:]
+      if method=="FVM":
+        _values = values[np.where(path.contains_points(values[:,0:2])),2]
+        self.values[idx] = np.mean(_values)
+      else:
+        self.values[idx] = griddata((xyz[_idx,0], xyz[_idx,1]), xyz[_idx,2], (self.x[idx], self.y[idx]), method=method)
+      if channel_polygons is not None:
+        for channel_polygon in channel_polygons:
+          if channel_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(channel_polygon):
+            try: 
+              _values
+            except:
               _values = values[np.where(path.contains_points(values[:,0:2])),2]
-              self.values[idx] = np.mean(_values)
-          else:
-              self.values[idx] = griddata((xyz[_idx,0], xyz[_idx,1]), xyz[_idx,2], (self.x[idx], self.y[idx]), method=method)
-          # path.contains_points() takes time, so we try to recycle the _values variable with try/except
-          if channel_polygons is not None:
-              for channel_polygon in channel_polygons:
-                  if channel_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(channel_polygon):
-                      try: 
-                          _values
-                      except:
-                          _values = values[np.where(path.contains_points(values[:,0:2])),2]
-                      self.values[idx] = np.min(_values)
-      
-          if bar_polygons is not None:
-              for bar_polygon in bar_polygons:
-                  if bar_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(bar):
-                      try:
-                          _values
-                      except:
-                          _values = values[np.where(path.contains_points(values[:,0:2])),2]
-                      self.values[idx] = np.max(_values)
+            self.values[idx] = np.min(_values)
+  
+      if bar_polygons is not None:
+        for bar_polygon in bar_polygons:
+          if bar_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(bar):
+            try:
+              _values
+            except:
+              _values = values[np.where(path.contains_points(values[:,0:2])),2]
+            self.values[idx] = np.max(_values)
 
   def write_fort14(self, path):
-      if self.datum != 'MSL':
-          self.values = self.values + self.datum_offset
-      f = open(path, 'w')
-      f.write(self.description + '\n')
-      f.write("{}  {}\n".format(self.elements.shape[0], self.values.size))
-      for i in range(self.values.size):
-          f.write("{:>10} {:15.10f} {:15.10f} {:15.10f}\n".format(
-              self.nodeID[i]+1, self.x[i], self.y[i], -self.values[i]))
-      for i in range(self.elements.shape[0]):
-          f.write("{:5d}{:5d} {:5d} {:5d} {:5d}\n".format(self.elementID[i], 3,self.elements[i,0]+1, self.elements[i,1]+1, self.elements[i,2]+1))
-      if self.ocean_boundaries is None:
-          ocean_boundaries = []
-      else:
-          ocean_boundaries = self.ocean_boundaries
-      _sum=0
-      for i in range(len(ocean_boundaries)):
-          _sum +=  ocean_boundaries[i].size
-      f.write("{:d} = Number of open boundaries\n".format(len(ocean_boundaries)))
-      f.write("{:d} = Total number of open boundary nodes\n".format(_sum))
-      if self.ocean_boundaries is not None:
-          for i in range(len(self.ocean_boundaries)):
-              f.write("{:d} = Number of nodes for open boundary {:d}\n".format(ocean_boundaries[i].size, i+1))
-              for j in range(ocean_boundaries[i].size):
-                  f.write("{:d}\n".format(ocean_boundaries[i][j]+1))
-      remainingBoundaries = 0
-      _sum=0
-      if self.land_boundaries is not None:
-          remainingBoundaries+=len(self.land_boundaries)
-          for i in range(len(self.land_boundaries)):
-              _sum +=  self.land_boundaries[i][0].size
-     
-      if self.inner_boundaries is not None:
-          remainingBoundaries+=len(self.inner_boundaries)
-          for i in range(len(self.inner_boundaries)):
-              _sum +=  self.inner_boundaries[i][0].size
-      
-      if self.inflow_boundaries is not None:
-          remainingBoundaries+=len(self.inflow_boundaries)
-          for i in range(len(self.inflow_boundaries)):
-              _sum +=  self.inflow_boundaries[i][0].size
-      
-      if self.outflow_boundaries is not None:
-          remainingBoundaries+=len(self.outflow_boundaries)
-          for i in range(len(self.outflow_boundaries)):
-              _sum +=  self.outflow_boundaries[i][0].size
+    if self.datum != 'MSL':
+      self.values = self.values + self.datum_offset
+    f = open(path, 'w')
+    f.write(self.description + '\n')
+    f.write("{}  {}\n".format(self.elements.shape[0], self.values.size))
+    for i in range(self.values.size):
+      f.write("{:>10} {:15.10f} {:15.10f} {:15.10f}\n".format(
+            self.nodeID[i]+1, self.x[i], self.y[i], -self.values[i]))
+    for i in range(self.elements.shape[0]):
+      f.write("{:5d}{:5d} {:5d} {:5d} {:5d}\n".format(self.elementID[i], 3,self.elements[i,0]+1, self.elements[i,1]+1, self.elements[i,2]+1))
+    if self.ocean_boundaries is None:
+      ocean_boundaries = []
+    else:
+      ocean_boundaries = self.ocean_boundaries
+    _sum=0
+    for i in range(len(ocean_boundaries)):
+      _sum +=  ocean_boundaries[i].size
+    f.write("{:d} = Number of open boundaries\n".format(len(ocean_boundaries)))
+    f.write("{:d} = Total number of open boundary nodes\n".format(_sum))
+    if self.ocean_boundaries is not None:
+      for i in range(len(self.ocean_boundaries)):
+        f.write("{:d} = Number of nodes for open boundary {:d}\n".format(ocean_boundaries[i].size, i+1))
+        for j in range(ocean_boundaries[i].size):
+          f.write("{:d}\n".format(ocean_boundaries[i][j]+1))
+    remainingBoundaries = 0
+    _sum=0
+    if self.land_boundaries is not None:
+      remainingBoundaries+=len(self.land_boundaries)
+      for i in range(len(self.land_boundaries)):
+        _sum +=  self.land_boundaries[i][0].size
+   
+    if self.inner_boundaries is not None:
+      remainingBoundaries+=len(self.inner_boundaries)
+      for i in range(len(self.inner_boundaries)):
+        _sum +=  self.inner_boundaries[i][0].size
+    
+    if self.inflow_boundaries is not None:
+      remainingBoundaries+=len(self.inflow_boundaries)
+      for i in range(len(self.inflow_boundaries)):
+        _sum +=  self.inflow_boundaries[i][0].size
+    
+    if self.outflow_boundaries is not None:
+      remainingBoundaries+=len(self.outflow_boundaries)
+      for i in range(len(self.outflow_boundaries)):
+        _sum +=  self.outflow_boundaries[i][0].size
+            
+    if self.weir_boundaries is not None:
+      remainingBoundaries+=len(self.weir_boundaries)
+      for i in range(len(self.weir_boundaries)):
+        _sum +=  self.weir_boundaries[i]['front_face'].size
+        _sum +=  self.weir_boundaries[i]['back_face'].size
+    
+    if self.culvert_boundaries is not None:
+      remainingBoundaries+=len(self.culvert_boundaries)
+      for i in range(len(self.culvert_boundaries)):
+        _sum +=  self.culvert_boundaries[i]['front_face'].size
+        _sum +=  self.culvert_boundaries[i]['back_face'].size
+    
+    f.write("{:d} = Number of land boundaries\n".format(remainingBoundaries))
+    f.write("{:d} = Total number of land boundary nodes\n".format(_sum))
+    
+    _cnt = 1
+    if self.land_boundaries is not None:
+      for i in range(len(self.land_boundaries)):
+        f.write("{:d} {:d} = Number of nodes for land boundary {:d}\n".format(
+                self.land_boundaries[i][0].size, self.land_boundaries[i][-1], _cnt))
+        _cnt+=1
+        for j in range(self.land_boundaries[i][0].size):
+          f.write("{:d}\n".format(self.land_boundaries[i][0][j]+1))
+    
+    if self.inner_boundaries is not None:
+      for i in range(len(self.inner_boundaries)):
+        f.write("{:d} {:d} = Number of nodes for closed (\"island\")  boundary (land boundary {:d})\n".format(
+                    self.inner_boundaries[i][0].size, self.inner_boundaries[i][-1], _cnt))
+        _cnt+=1
+        for j in range(self.inner_boundaries[i][0].size):
+          f.write("{:d}\n".format(self.inner_boundaries[i][0][j]+1))
+        
+    if self.inflow_boundaries is not None:
+      for i in range(len(self.inflow_boundaries)):
+        f.write("{:d} {:d} = Number of nodes for inflow boundary (land boundary {:d})\n".format(
+                    self.inflow_boundaries[i][0].size, self.inflow_boundaries[i][-1], _cnt))
+        _cnt+=1
+        for j in range(self.inflow_boundaries[i][0].size):
+          f.write("{:d}\n".format(self.inflow_boundaries[i][0][j]+1))
               
-      if self.weir_boundaries is not None:
-          remainingBoundaries+=len(self.weir_boundaries)
-          for i in range(len(self.weir_boundaries)):
-              _sum +=  self.weir_boundaries[i]['front_face'].size
-              _sum +=  self.weir_boundaries[i]['back_face'].size
-      
-      if self.culvert_boundaries is not None:
-          remainingBoundaries+=len(self.culvert_boundaries)
-          for i in range(len(self.culvert_boundaries)):
-              _sum +=  self.culvert_boundaries[i]['front_face'].size
-              _sum +=  self.culvert_boundaries[i]['back_face'].size
-      
-      f.write("{:d} = Number of land boundaries\n".format(remainingBoundaries))
-      f.write("{:d} = Total number of land boundary nodes\n".format(_sum))
-      
-      _cnt = 1
-      if self.land_boundaries is not None:
-          for i in range(len(self.land_boundaries)):
-              f.write("{:d} {:d} = Number of nodes for land boundary {:d}\n".format(
-                          self.land_boundaries[i][0].size, self.land_boundaries[i][-1], _cnt))
-              _cnt+=1
-              for j in range(self.land_boundaries[i][0].size):
-                  f.write("{:d}\n".format(self.land_boundaries[i][0][j]+1))
-      
-      if self.inner_boundaries is not None:
-          for i in range(len(self.inner_boundaries)):
-              f.write("{:d} {:d} = Number of nodes for closed (\"island\")  boundary (land boundary {:d})\n".format(
-                          self.inner_boundaries[i][0].size, self.inner_boundaries[i][-1], _cnt))
-              _cnt+=1
-              for j in range(self.inner_boundaries[i][0].size):
-                  f.write("{:d}\n".format(self.inner_boundaries[i][0][j]+1))
-          
-      if self.inflow_boundaries is not None:
-          for i in range(len(self.inflow_boundaries)):
-              f.write("{:d} {:d} = Number of nodes for inflow boundary (land boundary {:d})\n".format(
-                          self.inflow_boundaries[i][0].size, self.inflow_boundaries[i][-1], _cnt))
-              _cnt+=1
-              for j in range(self.inflow_boundaries[i][0].size):
-                  f.write("{:d}\n".format(self.inflow_boundaries[i][0][j]+1))
-                  
-      if self.outflow_boundaries is not None:
-          for i in range(len(self.outflow_boundaries)):
-              f.write("{:d} {:d} = Number of nodes for outflow boundary (land boundary {:d})\n".format(
-                          self.outflow_boundaries[i][0].size, self.outflow_boundaries[i][-1], _cnt))
-              _cnt+=1
-              for j in range(self.outflow_boundaries[i][0].size):
-                  f.write("{:d} {:.3f} {:.3f}\n".format(self.outflow_boundaries[i][0][j]+1, self.outflow_boundaries[i][1][j],
-                  self.outflow_boundaries[i][2][j]))
-                  
-      if self.weir_boundaries is not None:
-          for i in range(len(self.weir_boundaries)):
-              f.write("{:d} {:d} = Number of node pairs for weir (land boundary {:d})\n".format(
-                          self.weir_boundaries[i]['front_face'].size, self.weir_boundaries[i]['btype'], _cnt))
-              _cnt+=1
-              for j in range(self.weir_boundaries[i]['front_face'].size):
-                  f.write("{:d} {:d} {:.3f} {:.3f} {:.3f}\n".format(
-                  self.weir_boundaries[i]['front_face'][j]+1, self.weir_boundaries[i]['back_face'][j]+1,
-                  self.weir_boundaries[i]['height'][j], self.weir_boundaries[i]['subcritical_flow_coefficient'][j],
-                  self.weir_boundaries[i]['supercritical_flow_coefficient'][j]))
-                  
-      if self.culvert_boundaries is not None:
-          for i in range(len(self.culvert_boundaries)):
-              f.write("{:d} {:d} = Number of nodes pairs for culvert boundary (land boundary {:d})\n".format(
-                          len(self.culvert_boundaries[i]['front_face']), self.culvert_boundaries[i]['btype'], _cnt))
-              _cnt+=1
-              for j in range(self.culvert_boundaries[i]['front_face'].size):
-                  f.write("{:d} {:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(
-                  self.culvert_boundaries[i]['front_face'][j]+1, self.culvert_boundaries[i]['back_face'][j]+1,
-                  self.culvert_boundaries[i]['height'][j],     self.culvert_boundaries[i]['subcritical_flow_coefficient'][j],
-                  self.culvert_boundaries[i]['supercritical_flow_coefficient'][j],     self.culvert_boundaries[i]['cross_barrier_pipe_height'][j],
-                  self.culvert_boundaries[i]['friction_factor'][j],     self.culvert_boundaries[i]['pipe_diameter'][j]))
-      f.close()
-
-      if self.datum != 'MSL':
-          self.values = self.values - self.datum_offset
+    if self.outflow_boundaries is not None:
+      for i in range(len(self.outflow_boundaries)):
+        f.write("{:d} {:d} = Number of nodes for outflow boundary (land boundary {:d})\n".format(
+                    self.outflow_boundaries[i][0].size, self.outflow_boundaries[i][-1], _cnt))
+        _cnt+=1
+        for j in range(self.outflow_boundaries[i][0].size):
+          f.write("{:d} {:.3f} {:.3f}\n".format(self.outflow_boundaries[i][0][j]+1, self.outflow_boundaries[i][1][j],
+          self.outflow_boundaries[i][2][j]))
+                
+    if self.weir_boundaries is not None:
+      for i in range(len(self.weir_boundaries)):
+        f.write("{:d} {:d} = Number of node pairs for weir (land boundary {:d})\n".format(
+                    self.weir_boundaries[i]['front_face'].size, self.weir_boundaries[i]['btype'], _cnt))
+        _cnt+=1
+        for j in range(self.weir_boundaries[i]['front_face'].size):
+          f.write("{:d} {:d} {:.3f} {:.3f} {:.3f}\n".format(
+          self.weir_boundaries[i]['front_face'][j]+1, self.weir_boundaries[i]['back_face'][j]+1,
+          self.weir_boundaries[i]['height'][j], self.weir_boundaries[i]['subcritical_flow_coefficient'][j],
+          self.weir_boundaries[i]['supercritical_flow_coefficient'][j]))
+                
+    if self.culvert_boundaries is not None:
+      for i in range(len(self.culvert_boundaries)):
+        f.write("{:d} {:d} = Number of nodes pairs for culvert boundary (land boundary {:d})\n".format(
+                    len(self.culvert_boundaries[i]['front_face']), self.culvert_boundaries[i]['btype'], _cnt))
+        _cnt+=1
+        for j in range(self.culvert_boundaries[i]['front_face'].size):
+          f.write("{:d} {:d} {:.3f} {:.3f} {:.3f} {:.3f} {:.3f}\n".format(
+          self.culvert_boundaries[i]['front_face'][j]+1, self.culvert_boundaries[i]['back_face'][j]+1,
+          self.culvert_boundaries[i]['height'][j],     self.culvert_boundaries[i]['subcritical_flow_coefficient'][j],
+          self.culvert_boundaries[i]['supercritical_flow_coefficient'][j],     self.culvert_boundaries[i]['cross_barrier_pipe_height'][j],
+          self.culvert_boundaries[i]['friction_factor'][j],     self.culvert_boundaries[i]['pipe_diameter'][j]))
+    f.close()
+    if self.datum != 'MSL':
+      self.values = self.values - self.datum_offset
 
   def _init_fort13(self, path):
     if path == None:

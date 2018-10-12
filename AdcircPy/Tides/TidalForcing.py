@@ -2,22 +2,27 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 import os
 import calendar
-import wget
-import tarfile
 import numpy as np
-from netCDF4 import Dataset
 from AdcircPy.Tides import orbital_constants
+from AdcircPy.Tides import _TPXO
+
 class TidalForcing(OrderedDict):
   """
-    Notes:
+  Private class for initializing Tidal Forcings for the model.
+  Called by the AdcircMesh methods for generation of model runs.
+  Computes the Tidal nodal factors and Greenwich terms for a
+  specified date range and initializes other tidal constansts.
+
+  Note:
     TPXO initializations is not part of TidalForcing because
-    it depends on the mesh boundaries.
+    it depends on the mesh boundaries, therefore TPXO initialization
+    is called on _AdcircRun class.
   """
-  def __init__(self, start_date, end_date, constituents=None, spinup_date=None):
+  def __init__(self, start_date, end_date, spinup_date=None, constituents=None):
     self.constituents = constituents
     self.start_date   = start_date
     self.end_date     = end_date
-    self.cachedir     = self.get_cache_dir()
+    self.cachedir     = _TPXO.get_cache_dir()
     self.tpxo_path    = self.cachedir + "/h_tpxo9.v1.nc"
     self.init_constituent_dictionary()
     self.init_spinup_date(spinup_date)

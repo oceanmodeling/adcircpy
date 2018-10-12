@@ -1,71 +1,40 @@
 import unittest
-import os
-import shutil
+from AdcircPyTests import AdcircPyEnvironment
 from datetime import datetime, timedelta
 from AdcircPy import AdcircPy
-from AdcircPy import TidalForcing
-from AdcircPy import AdcircRun
-from AdcircPy.Winds import BestTrack
-from AdcircPy import ElevationStationsOutput
-from AdcircPyTests import AdcircPyEnvironment
+from AdcircPy import ElevationStationsOutput as ESO
+
 
 
 class GenerateAdcircRunTests(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):
     super(GenerateAdcircRunTests, self).__init__()
     self.read_environment_variables()
-    self.AdcircMesh = AdcircPy.read_mesh(fort14=self._os.getenv('FORT14_PATH'),
-                                         fort13=self._os.getenv('FORT13_PATH')
-                                         )
-  
-  # def test_generate_90DayTidal(self):
-  #   # Datetime is the same as the HSOFS offical 90 day tidal run.
-  #   spinup_date  = datetime(2013, 8, 1, 0, 0, 0)
-  #   start_time   = spinup_date + timedelta(days=30)
-  #   end_time     = spinup_date + timedelta(days=90)
-  #   elevationStationOutputs = ElevationStationsOutput.from_fort15(self._os.getenv('FORT15_HOTSTART_PATH'))
-  #   tidalForcing = TidalForcing(start_time, end_time,
-  #                               constituents=None,
-  #                               spinup_date=spinup_date)
-  #   modelRun     = AdcircRun(self.AdcircMesh, Tides=tidalForcing)
-  #   modelRun.dump("./")
-    # with open('./fort.15.coldstart', 'r') as fort15:
-    #     for line in fort15.read().splitlines():
-    #         print(line)
+    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv('FORT14_PATH'),
+                                    # fort13=self.os.getenv('FORT13_PATH')
+                                    )
+    # self.ElevationStationsOutput = ESO.from_fort15(self.os.getenv('FORT15_HOTSTART_PATH'))
 
-    # with open('./fort.15.hotstart', 'r') as fort15:
-    #     for line in fort15.read().splitlines():
-    #         print(line)
-    # os.remove('./fort.15.coldstart')
-    # os.remove('./fort.15.hotstart')
+  def test_generate_90DayTidal(self):
+    # Datetime is the same as the HSOFS offical 90 day tidal run.
+    spinup_date = datetime(2013, 8, 1, 0, 0, 0)
+    start_time = spinup_date + timedelta(days=30)
+    end_time = spinup_date + timedelta(days=90)
+    TidalRun = self.AdcircMesh.generate_tidal_run(start_time, end_time, spinup_date=spinup_date)
+    TidalRun.dump("./", printf=True)
+    self.os.remove('./fort.15.coldstart')
+    self.os.remove('./fort.15.hotstart')
 
-  def test_generate_Sandy_Hindcast(self):
-    spinup_date  = datetime(2012, 10, 11, 0, 0, 0)
-    start_time   = spinup_date + timedelta(days=15)
-    end_time     = spinup_date + timedelta(days=19.25)
-    elevationStationsOutput = ElevationStationsOutput.from_fort15(self._os.getenv('FORT15_HOTSTART_PATH'))
-    tidalForcing = TidalForcing(start_time, end_time,
-                                constituents=None,
-                                spinup_date=spinup_date)
-    # bestTrack    = BestTrack('AL182012')
-    modelRun     = AdcircRun(self.AdcircMesh,
-                             Tides=tidalForcing,
-                             # Winds=bestTrack
-                             ElevationStationsOutput=elevationStationsOutput,
-                             # VelocityStationsOutput=velocityStationsOutput,
-                             # ElevationGlobalOutput=elevationGlobalOutput,
-                             # VelocityGlobalOutput=VelocityGlobalOutput
-                             )
-    modelRun.dump("./")
-    with open('./fort.15.coldstart', 'r') as fort15:
-      for line in fort15.read().splitlines():
-         print(line)
-
-    with open('./fort.15.hotstart', 'r') as fort15:
-      for line in fort15.read().splitlines():
-        print(line)
-    os.remove('./fort.15.coldstart')
-    os.remove('./fort.15.hotstart')
+  # def test_generate_Sandy_Hindcast(self):
+  #   HindcastRun = self.AdcircMesh.generate_hindcast('AL182012',
+  #                   ElevationStationsOutput=self.ElevationStationsOutput,
+  #                  # VelocityStationsOutput=velocityStationsOutput,
+  #                  # ElevationGlobalOutput=elevationGlobalOutput,
+  #                  # VelocityGlobalOutput=VelocityGlobalOutput
+  #                  )
+  #   HindcastRun.dump("./", printf=True)
+  #   os.remove('./fort.15.coldstart')
+  #   os.remove('./fort.15.hotstart')
 
 if __name__ == '__main__':
     unittest.main()
