@@ -377,7 +377,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         
         if self.ElevationStationsOutput.spinup==True and self.IHOT==0:
           TOUTSE=0
-          TOUTFE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          TOUTFE=self.TidalForcing.start_date.total_seconds()/(60*60*24)
         else:
           TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
           TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
