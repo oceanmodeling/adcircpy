@@ -78,6 +78,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.NTIF = kwargs.pop("NTIF", None) # Provided by module
     self.NBFR = kwargs.pop("NBFR", None) # Provided by module
     self.ANGINN = kwargs.pop("ANGINN", 110.) # Inner angle velocity threshold
+    self.NOUTE = kwargs.pop("NOUTE", 0)
+    self.NOUTSE = kwargs.pop("NOUTSE", 0)
+    self.NOUTFE = kwargs.pop("NOUTFE", 0)
+    self.NSPOOLE = kwargs.pop("NSPOOLE", 0)
     self.NFFR = kwargs.pop("NFFR", None) # inflow boundaries forcing terms
     self.ITITER = kwargs.pop("ITITER", 1) # Solver type: -1:lumped, 1:ITPACKV2D
     self.ISLDIA = kwargs.pop("ISLDIA", 0) # fort.33 verbosity output level for solver (ITPACKV2D)
@@ -185,7 +189,12 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD\n'.format(self.ANGINN))
     self.write_ElevationStationsOutput()
     self.write_VelocityStationsOutput()
-    self.write_global_outputs()
+    self.write_ConcentrationStationsOutput()
+    self.write_WeatherStationsOutput()
+    self.write_ElevationGlobalOutput()
+    self.write_VelocityGlobalOutput()
+    self.write_ConcentrationGlobalOutput()
+    self.write_WeatherGlobalOutput()
     self.write_harmonic_outputs()
     self.write_hotstart_parameters()
     self.write_iteration_parameters()
@@ -360,99 +369,76 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             self.f.write('{:>11.6f}'.format(boundary[constituent]['ha'][i]))
             self.f.write('{:>14.6f}'.format(boundary[constituent]['hp'][i]))
             self.f.write('\n')
-
-  def write_ElevationStationsOutput(self):
-    if self.TidalForcing is None or self.ElevationStationsOutput is None:
-      NOUTE=0
-      TOUTSE=0
-      TOUTFE=0
-      NSPOOLE=0
-      NSTAE=0
-
-    elif self.ElevationStationsOutput is not None and self.TidalForcing is not None:
-      if self.IHOT==0 and self.ElevationStationsOutput.spinup==False:
-        NOUTE=0
-        TOUTSE=0
-        TOUTFE=0
-        NSPOOLE=0
-        NSTAE=0
-      elif (self.IHOT==0 and self.ElevationStationsOutput.spinup==True) or self.IHOT!=0:
-        if self.ElevationStationsOutput.netcdf==True:
-          NOUTE=-5
+  
+  def __write_StationsOutput(self):
+    if self.__StationsOutput is None:
+      self.NSTA_=0
+    else:
+      self.NSTA_ = len(self.__StationsOutput.keys())
+   
+    if  self.NSTA_ > 0:
+      if self.TidalForcing is not None:
+        if self.__StationsOutput.netcdf==True:
+          self.NOUT_=-5
         else:
-          NOUTE=-1
-        
-        if self.ElevationStationsOutput.spinup==True and self.IHOT==0:
-          TOUTSE=0
-          TOUTFE=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          self.NOUT_=-1
+        if self.__StationsOutput.spinup==True and self.IHOT==0:
+          self.TOUTS_=0
+          self.TOUTF_=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
         else:
-          TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-          TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-        
-        NSPOOLE=self.ElevationStationsOutput.sampling_frequency.seconds/self.DTDP
-        NSTAE=len(self.ElevationStationsOutput.keys())
-    
-    self.f.write('{:<3d}'.format(NOUTE))
-    self.f.write('{:<6.1f}'.format(TOUTSE))
-    self.f.write('{:<8.2f}'.format(TOUTFE))
-    self.f.write('{:<6.1f}'.format(NSPOOLE))
-    self.f.write('{:<9}{}\n'.format('','! NOUTE,TOUTSE,TOUTFE,NSPOOLE:ELEV STATION OUTPUT INFO (UNIT 61)'))
-    self.f.write('{:<32d}{}\n'.format(NSTAE, '! TOTAL NUMBER OF ELEVATION RECORDING STATIONS'))
-    
-    if self.ElevationStationsOutput is not None:
-      if self.IHOT==567 or self.ElevationStationsOutput.spinup==True:
-        for station in self.ElevationStationsOutput.keys():
-          self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['x']))
-          self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['y']))
+          self.TOUTS_=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          self.TOUTF_=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
+    else:
+      self.NOUT_=0
+      self.TOUTE=0
+      self.TOUTS_=0
+      self.TOUTF_=0
+      self.NSPOOL_=0
+    self.f.write('{:<3d}'.format(self.NOUT_))
+    self.f.write('{:<6.1f}'.format(self.TOUTS_))
+    self.f.write('{:<8.2f}'.format(self.TOUTF_))
+    self.f.write('{:<6.1f}'.format(self.NSPOOL_))
+    self.f.write('{:<9}{}\n'.format('',self.__StationsOutput._comment1))
+    self.f.write('{:<32d}{}\n'.format(self.NSTA_, self.__StationsOutput._comment2))
+    if self.NSTA_>0:
+      if self.IHOT==567 or self.__StationsOutput.spinup==True:
+        for station in self.__StationsOutput.keys():
+          self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['x']))
+          self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['y']))
           self.f.write('! {}\n'.format(station))
+  
+  def write_ElevationStationsOutput(self):
+    self.__StationsOutput=self.ElevationStationsOutput
+    self.__write_StationsOutput()
 
   def write_VelocityStationsOutput(self):
-    if self.TidalForcing is None or self.VelocityStationsOutput is None:
-      NOUTV=0
-      TOUTSV=0
-      TOUTFV=0
-      NSPOOLV=0
-      NSTAV=0
+    self.__StationsOutput=self.VelocityStationsOutput
+    self.__write_StationsOutput()
 
-    elif self.VelocityStationsOutput is not None and self.TidalForcing is not None:
-      if self.IHOT==0 and self.VelocityStationsOutput.spinup==False:
-        NOUTV=0
-        TOUTSV=0
-        TOUTFV=0
-        NSPOOLV=0
-        NSTAV=0
-      elif (self.IHOT==0 and self.VelocityStationsOutput.spinup==True) or self.IHOT!=0:
-        if self.VelocityStationsOutput.netcdf==True:
-          NOUTV=-5
-        else:
-          NOUTV=-1
-        
-        if self.VelocityStationsOutput.spinup==True and self.IHOT==0:
-          TOUTSV=0
-          TOUTFV=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-        else:
-          TOUTSV=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-          TOUTFV=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-        
-        NSPOOLV=self.VelocityStationsOutput.sampling_frequency.seconds/self.DTDP
-        NSTAV=len(self.VelocityStationsOutput.keys())
-    
-    self.f.write('{:<3d}'.format(NOUTV))
-    self.f.write('{:<6.1f}'.format(TOUTSV))
-    self.f.write('{:<8.2f}'.format(TOUTFV))
-    self.f.write('{:<6.1f}'.format(NSPOOLV))
-    self.f.write('{:<9}{}\n'.format('','! NOUTV,TOUTSV,TOUTFV,NSPOOLV:ELEV STATION OUTPUT INFO (UNIT 61)'))
-    self.f.write('{:<32d}{}\n'.format(NSTAV, '! TOTAL NUMBER OF VELOCITY RECORDING STATIONS'))
-    
-    if self.VelocityStationsOutput is not None:
-      if self.IHOT==567 or self.VelocityStationsOutput.spinup==True:
-        for station in self.VelocityStationsOutput.keys():
-          self.f.write('{:<13.6f}'.format(self.VelocityStationsOutput[station]['x']))
-          self.f.write('{:<13.6f}'.format(self.VelocityStationsOutput[station]['y']))
-          self.f.write('! {}\n'.format(station))
+  def write_ConcentrationStationsOutput(self):
+    if self.IM==10:
+      raise Exception('When IM=10 this line needs to be developed.')
 
-  def write_global_outputs(self):
+  def write_WeatherStationsOutput(self):
+    if self.NWS>0:
+      raise Exception('When NWS>0 this line needs to be developed.')
+
+  def write_ElevationGlobalOutput(self):
+    if self.ElevationGlobalOutput is None:
+      NOUTGE=0
+
+
+    self.f.write('! NOUTGE,TOUTSGE,TOUTFGE,NSPOOLGE : GLOBAL ELEVATION OUTPUT INFO (UNIT  63)\n')
+
+  def write_VelocityGlobalOutput(self):
     pass
+
+  def write_ConcentrationGlobalOutput(self):
+    pass
+
+  def write_WeatherGlobalOutput(self):
+    pass  
 
   def write_harmonic_outputs(self):
     pass

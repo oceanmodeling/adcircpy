@@ -14,7 +14,7 @@ class GenerateAdcircRunTests(AdcircPyEnvironment, unittest.TestCase):
     self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv('FORT14_PATH'),
                                     fort13=self.os.getenv('FORT13_PATH'))
     self.ElevationStationsOutput = ESO.from_fort15(self.os.getenv('FORT15_HOTSTART_PATH'),
-                                                    spinup=True)
+                                                    spinup=False)
 
     self.VelocityStationsOutput = VSO.from_fort15(self.os.getenv('FORT15_HOTSTART_PATH'),
                                                     spinup=False)
@@ -30,8 +30,8 @@ class GenerateAdcircRunTests(AdcircPyEnvironment, unittest.TestCase):
                     VelocityStationsOutput=self.VelocityStationsOutput,
                 )
     TidalRun.dump("./", printf=True)
-    # self.os.remove('./fort.15.coldstart')
-    # self.os.remove('./fort.15.hotstart')
+    self.os.remove('./fort.15.coldstart')
+    self.os.remove('./fort.15.hotstart')
 
   # def test_generate_Sandy_Hindcast(self):
   #   HindcastRun = self.AdcircMesh.generate_hindcast('AL182012',

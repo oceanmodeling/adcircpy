@@ -25,3 +25,6 @@ class TidalRun(_AdcircRun):
     if self.DRAMP is None:
       self.DRAMP = ((2/3)*(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds())/(60*60*24)
     self.f.write('{:<32.1f}'.format(self.DRAMP))
+
+
+    

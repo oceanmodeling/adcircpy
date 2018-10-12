@@ -3,7 +3,9 @@ from AdcircPy.Model._StationOutputs import _StationOutputs
 class VelocityStationsOutput(_StationOutputs):
   def __init__(self, stations, sampling_frequency, netcdf, spinup):
     super(VelocityStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, **stations)
-
+    self._comment1 = '! NOUTV,TOUTSV,TOUTFV,NSPOOLV:VEL STATION OUTPUT INFO (UNIT  62)'
+    self._comment2 = '! TOTAL NUMBER OF VELOCITY RECORDING STATIONS'
+  
   @classmethod
   def from_csv(cls, path):
     raise NotImplementedError
