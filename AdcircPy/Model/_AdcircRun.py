@@ -373,9 +373,13 @@ class _AdcircRun(metaclass=abc.ABCMeta):
   def __write_StationsOutput(self):
     if self.__StationsOutput is None:
       self.NSTA_=0
+      self.NOUT_=0
+      self.TOUT_=0
+      self.TOUTS_=0
+      self.TOUTF_=0
+      self.NSPOOL_=0
     else:
       self.NSTA_ = len(self.__StationsOutput.keys())
-   
     if  self.NSTA_ > 0:
       if self.TidalForcing is not None:
         if self.__StationsOutput.netcdf==True:
@@ -385,16 +389,20 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         if self.__StationsOutput.spinup==True and self.IHOT==0:
           self.TOUTS_=0
           self.TOUTF_=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
+
+        elif self.__StationsOutput.spinup==False and self.IHOT==0:
+          self.NOUT_=0
+          self.TOUT_=0
+          self.TOUTS_=0
+          self.TOUTF_=0
+          self.NSPOOL_=0
+          self.NSTA_=0
         else:
           self.TOUTS_=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
           self.TOUTF_=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-        self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
-    else:
-      self.NOUT_=0
-      self.TOUTE=0
-      self.TOUTS_=0
-      self.TOUTF_=0
-      self.NSPOOL_=0
+          self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
+
     self.f.write('{:<3d}'.format(self.NOUT_))
     self.f.write('{:<6.1f}'.format(self.TOUTS_))
     self.f.write('{:<8.2f}'.format(self.TOUTF_))
