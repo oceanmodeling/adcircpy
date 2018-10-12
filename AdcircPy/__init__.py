@@ -1,5 +1,6 @@
 from AdcircPy.Model import AdcircMesh
 from AdcircPy.Model import ElevationStationsOutput
+from AdcircPy.Model import VelocityStationsOutput
 from AdcircPy.Tides import TPXO
 from AdcircPy.Outputs import _OutputFactory
 

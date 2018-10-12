@@ -1,5 +1,6 @@
 from AdcircPy.Model.UnstructuredMesh import UnstructuredMesh
 from AdcircPy.Model.AdcircMesh import AdcircMesh
 from AdcircPy.Model.ElevationStationsOutput import ElevationStationsOutput
-from AdcircPy.Model._AdcircOutputs import _AdcircOutputs
+from AdcircPy.Model.VelocityStationsOutput import VelocityStationsOutput
+from AdcircPy.Model._StationOutputs import _StationOutputs
 from AdcircPy.Model._AdcircRun import _AdcircRun

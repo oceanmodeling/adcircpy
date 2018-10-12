@@ -8,10 +8,13 @@ from AdcircPy.core import alias
 
 class _AdcircRun(metaclass=abc.ABCMeta):
   
-  @alias({'ElevationStationsOutput': 'ESO'})
+  @alias({'ElevationStationsOutput': 'ESO', 'VelocityStationsOutput':'VSO', 'ElevationGlobalOutput':'EGO', 'VelocityGlobalOutput':'VGO'})
   def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, **kwargs):
     self.AdcircMesh = AdcircMesh
     self.ElevationStationsOutput = ElevationStationsOutput
+    self.VelocityStationsOutput  = VelocityStationsOutput
+    self.ElevationGlobalOutput   = ElevationGlobalOutput
+    self.VelocityGlobalOutput    = VelocityGlobalOutput
     self.init_fort15()
     self.init_TPXO()
 
@@ -181,6 +184,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.write_NBFR()
     self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD\n'.format(self.ANGINN))
     self.write_ElevationStationsOutput()
+    self.write_VelocityStationsOutput()
     self.write_global_outputs()
     self.write_harmonic_outputs()
     self.write_hotstart_parameters()
@@ -400,6 +404,51 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         for station in self.ElevationStationsOutput.keys():
           self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['x']))
           self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['y']))
+          self.f.write('! {}\n'.format(station))
+
+  def write_VelocityStationsOutput(self):
+    if self.TidalForcing is None or self.VelocityStationsOutput is None:
+      NOUTV=0
+      TOUTSV=0
+      TOUTFV=0
+      NSPOOLV=0
+      NSTAV=0
+
+    elif self.VelocityStationsOutput is not None and self.TidalForcing is not None:
+      if self.IHOT==0 and self.VelocityStationsOutput.spinup==False:
+        NOUTV=0
+        TOUTSV=0
+        TOUTFV=0
+        NSPOOLV=0
+        NSTAV=0
+      elif (self.IHOT==0 and self.VelocityStationsOutput.spinup==True) or self.IHOT!=0:
+        if self.VelocityStationsOutput.netcdf==True:
+          NOUTV=-5
+        else:
+          NOUTV=-1
+        
+        if self.VelocityStationsOutput.spinup==True and self.IHOT==0:
+          TOUTSV=0
+          TOUTFV=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        else:
+          TOUTSV=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          TOUTFV=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        
+        NSPOOLV=self.VelocityStationsOutput.sampling_frequency.seconds/self.DTDP
+        NSTAV=len(self.VelocityStationsOutput.keys())
+    
+    self.f.write('{:<3d}'.format(NOUTV))
+    self.f.write('{:<6.1f}'.format(TOUTSV))
+    self.f.write('{:<8.2f}'.format(TOUTFV))
+    self.f.write('{:<6.1f}'.format(NSPOOLV))
+    self.f.write('{:<9}{}\n'.format('','! NOUTV,TOUTSV,TOUTFV,NSPOOLV:ELEV STATION OUTPUT INFO (UNIT 61)'))
+    self.f.write('{:<32d}{}\n'.format(NSTAV, '! TOTAL NUMBER OF VELOCITY RECORDING STATIONS'))
+    
+    if self.VelocityStationsOutput is not None:
+      if self.IHOT==567 or self.VelocityStationsOutput.spinup==True:
+        for station in self.VelocityStationsOutput.keys():
+          self.f.write('{:<13.6f}'.format(self.VelocityStationsOutput[station]['x']))
+          self.f.write('{:<13.6f}'.format(self.VelocityStationsOutput[station]['y']))
           self.f.write('! {}\n'.format(station))
 
   def write_global_outputs(self):

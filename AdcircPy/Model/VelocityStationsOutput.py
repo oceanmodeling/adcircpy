@@ -1,8 +1,8 @@
 from AdcircPy.Model._StationOutputs import _StationOutputs
 
-class ElevationStationsOutput(_StationOutputs):
+class VelocityStationsOutput(_StationOutputs):
   def __init__(self, stations, sampling_frequency, netcdf, spinup):
-    super(ElevationStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, **stations)
+    super(VelocityStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, **stations)
 
   @classmethod
   def from_csv(cls, path):
@@ -15,7 +15,7 @@ class ElevationStationsOutput(_StationOutputs):
     stations=dict()
     with open(path,'r') as f:
       for line in f:
-        if 'NOUTE' in line:
+        if 'NOUTV' in line:
           num = int(f.readline().split('!')[0].strip().split(' ')[0])
           for i in range(num):
             line = f.readline().split('!')
@@ -28,5 +28,6 @@ class ElevationStationsOutput(_StationOutputs):
             x = float(coords[0])
             y = float(coords[1])
             stations[station_name]={'x' : x, 'y' : y}
+    if len(stations.keys())==0:
+      return None
     return cls(stations, sampling_frequency, netcdf, spinup)
-
