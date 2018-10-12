@@ -4,8 +4,11 @@ from datetime import datetime
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
 from netCDF4 import Dataset
+from AdcircPy.core import alias
 
 class _AdcircRun(metaclass=abc.ABCMeta):
+  
+  @alias({'ElevationStationsOutput': 'ESO'})
   def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, **kwargs):
     self.AdcircMesh = AdcircMesh
     self.ElevationStationsOutput = ElevationStationsOutput
@@ -377,7 +380,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         
         if self.ElevationStationsOutput.spinup==True and self.IHOT==0:
           TOUTSE=0
-          TOUTFE=self.TidalForcing.start_date.total_seconds()/(60*60*24)
+          TOUTFE=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
         else:
           TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
           TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)

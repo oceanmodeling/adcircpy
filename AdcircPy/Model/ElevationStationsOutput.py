@@ -10,6 +10,8 @@ class ElevationStationsOutput(_AdcircOutputs):
 
   @classmethod
   def from_fort15(cls, path, sampling_frequency=None, netcdf=True, spinup=False):
+    if path is None:
+      return
     stations=dict()
     with open(path,'r') as f:
       for line in f:

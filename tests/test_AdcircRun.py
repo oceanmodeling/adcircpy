@@ -21,13 +21,14 @@ class GenerateAdcircRunTests(AdcircPyEnvironment, unittest.TestCase):
     spinup_date = datetime(2013, 8, 1, 0, 0, 0)
     start_time = spinup_date + timedelta(days=30)
     end_time = spinup_date + timedelta(days=90)
-    TidalRun = self.AdcircMesh.generate_tidal_run(start_time, end_time, spinup_date=spinup_date,
-                ElevationStationsOutput=self.ElevationStationsOutput,
+    TidalRun = self.AdcircMesh.generate_tidal_run(start_time, end_time,
+                                                  spinup_date=spinup_date,
+                    ElevationStationsOutput=self.ElevationStationsOutput,
                 # VelocityStationsOutput=self.VelocityStationsOutput,
                 )
     TidalRun.dump("./", printf=True)
-    self.os.remove('./fort.15.coldstart')
-    self.os.remove('./fort.15.hotstart')
+    # self.os.remove('./fort.15.coldstart')
+    # self.os.remove('./fort.15.hotstart')
 
   # def test_generate_Sandy_Hindcast(self):
   #   HindcastRun = self.AdcircMesh.generate_hindcast('AL182012',
