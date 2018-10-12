@@ -1,15 +1,15 @@
 from AdcircPy.Model._AdcircOutputs import _AdcircOutputs
 
 class ElevationStationsOutput(_AdcircOutputs):
-  def __init__(self, stations, sampling_frequency, netcdf):
-    super(ElevationStationsOutput, self).__init__(sampling_frequency, netcdf, **stations)
+  def __init__(self, stations, sampling_frequency, netcdf, spinup):
+    super(ElevationStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, **stations)
 
   @classmethod
   def from_csv(cls, path):
     raise NotImplementedError
 
   @classmethod
-  def from_fort15(cls, path, sampling_frequency=None, netcdf=True):
+  def from_fort15(cls, path, sampling_frequency=None, netcdf=True, spinup=False):
     stations=dict()
     with open(path,'r') as f:
       for line in f:
@@ -26,5 +26,5 @@ class ElevationStationsOutput(_AdcircOutputs):
             x = float(coords[0])
             y = float(coords[1])
             stations[station_name]={'x' : x, 'y' : y}
-    return cls(stations, sampling_frequency, netcdf)
+    return cls(stations, sampling_frequency, netcdf, spinup)
 

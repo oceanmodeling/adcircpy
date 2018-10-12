@@ -2,9 +2,10 @@ from collections import OrderedDict
 from datetime import timedelta
 
 class _AdcircOutputs(OrderedDict):
-  def __init__(self, sampling_frequency, netcdf, **kwargs):
+  def __init__(self, sampling_frequency, netcdf, spinup, **kwargs):
     super(_AdcircOutputs, self).__init__(**kwargs)
     self.init_sampling_frequency(sampling_frequency)
+    self.spinup = spinup
     self.netcdf = netcdf
 
   def init_sampling_frequency(self, sampling_frequency):

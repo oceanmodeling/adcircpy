@@ -165,7 +165,9 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<32.2f}! STATIM - STARTING TIME (IN DAYS)\n'.format(0))
     self.f.write('{:<32.2f}! REFTIM - REFERENCE TIME (IN DAYS)\n'.format(0))
     self.write_RNDAY()
+    self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
     self.write_DRAMP()
+    self.f.write('! DRAMP [DRAMPExtFlux, FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete] DURATION OF RAMP FUNCTION (IN DAYS)\n')
     self.f.write('{:<4.2f} {:<4.2f} {:<4.2f} {:<17}! TIME WEIGHTING FACTORS FOR THE GWCE EQUATION\n'.format(self.A00, self.B00, self.C00, ''))
     self.write_H0_VELMIN()
     self.write_SLAM0_SFEA0()
@@ -175,7 +177,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.write_NTIF()
     self.write_NBFR()
     self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD\n'.format(self.ANGINN))
-    self.write_station_outputs()
+    self.write_ElevationStationsOutput()
     self.write_global_outputs()
     self.write_harmonic_outputs()
     self.write_hotstart_parameters()
@@ -238,25 +240,15 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     """
     self.f.write('{:<32.1f}! DT - TIME STEP (IN SECONDS)\n'.format(self.DTDP))
 
+  @abc.abstractmethod
   def write_RNDAY(self):
-    # Based on tides or based on winds? 
-    # What if this is a met-only run without tides?
-    if self.TidalForcing is not None:
-      if self.IHOT==0:
-        RNDAY = (self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-      elif self.IHOT==567:
-        RNDAY = (self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-      self.f.write('{:<32.2f}'.format(RNDAY))
-    else:
-      self.f.write('{:<32}'.format(''))
-    self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
+    """ Depends on forcings. """
 
+  @abc.abstractmethod
   def write_DRAMP(self):
-    if self.TidalForcing is not None:
-      self.DRAMP = ((2/3)*(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds())/(60*60*24)
-
+    """
     if self.NRAMP==1:
-      self.f.write('{:<32.1f}'.format(self.DRAMP))
+      
    
     elif self.NRAMP==8:
       if self.DUnRampMete is None:
@@ -274,9 +266,8 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{:.1f} '.format(self.DRAMPMete))
       self.f.write('{:.1f} '.format(self.DRAMPWRad))
       self.f.write('{:.1f} '.format(self.DUnRampMete))
-    else:
-      self.f.write('{:<32}'.format(''))
-    self.f.write('! DRAMP [DRAMPExtFlux, FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete] DURATION OF RAMP FUNCTION (IN DAYS)\n')
+ 
+    """
 
   def write_H0_VELMIN(self):
     if self.NOLIFA in [0,1]:
@@ -363,40 +354,50 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             self.f.write('{:>14.6f}'.format(boundary[constituent]['hp'][i]))
             self.f.write('\n')
 
-  def write_station_outputs(self):
-    if self.ElevationStationsOutput is None:
+  def write_ElevationStationsOutput(self):
+    if self.TidalForcing is None or self.ElevationStationsOutput is None:
       NOUTE=0
       TOUTSE=0
       TOUTFE=0
       NSPOOLE=0
       NSTAE=0
-    elif self.ElevationStationsOutput is not None:
-      if self.IHOT==0 or self.TidalForcing is None:
+
+    elif self.ElevationStationsOutput is not None and self.TidalForcing is not None:
+      if self.IHOT==0 and self.ElevationStationsOutput.spinup==False:
         NOUTE=0
         TOUTSE=0
         TOUTFE=0
         NSPOOLE=0
         NSTAE=0
-      else:
+      elif (self.IHOT==0 and self.ElevationStationsOutput.spinup==True) or self.IHOT!=0:
         if self.ElevationStationsOutput.netcdf==True:
           NOUTE=-5
         else:
           NOUTE=-1
-        TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-        TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        
+        if self.ElevationStationsOutput.spinup==True and self.IHOT==0:
+          TOUTSE=0
+          TOUTFE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        else:
+          TOUTSE=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          TOUTFE=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        
         NSPOOLE=self.ElevationStationsOutput.sampling_frequency.seconds/self.DTDP
         NSTAE=len(self.ElevationStationsOutput.keys())
+    
     self.f.write('{:<3d}'.format(NOUTE))
     self.f.write('{:<6.1f}'.format(TOUTSE))
     self.f.write('{:<8.2f}'.format(TOUTFE))
     self.f.write('{:<6.1f}'.format(NSPOOLE))
     self.f.write('{:<9}{}\n'.format('','! NOUTE,TOUTSE,TOUTFE,NSPOOLE:ELEV STATION OUTPUT INFO (UNIT 61)'))
     self.f.write('{:<32d}{}\n'.format(NSTAE, '! TOTAL NUMBER OF ELEVATION RECORDING STATIONS'))
-    if self.ElevationStationsOutput is not None and self.IHOT==567:
-      for station in self.ElevationStationsOutput.keys():
-        self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['x']))
-        self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['y']))
-        self.f.write('! {}\n'.format(station))
+    
+    if self.ElevationStationsOutput is not None:
+      if self.IHOT==567 or self.ElevationStationsOutput.spinup==True:
+        for station in self.ElevationStationsOutput.keys():
+          self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['x']))
+          self.f.write('{:<13.6f}'.format(self.ElevationStationsOutput[station]['y']))
+          self.f.write('! {}\n'.format(station))
 
   def write_global_outputs(self):
     pass
