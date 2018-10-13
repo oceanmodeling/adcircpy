@@ -20,7 +20,7 @@ class Generate90DayTidal(AdcircPyEnvironment, unittest.TestCase):
     start_time  = spinup_date + timedelta(days=30)
     end_time    = spinup_date + timedelta(days=90)
     
-    TidalRun = self.AdcircMesh.generate_tidal_run(start_time, end_time, spinup_date=spinup_date,
+    TidalRun = self.AdcircMesh.TidalRun(start_time, end_time, spinup_date=spinup_date,
                                           ElevationStationsOutput=self.ElevationStationsOutput,
                                           ElevationGlobalOutput=self.ElevationGlobalOutput)
     TidalRun.dump("./", printf=True)

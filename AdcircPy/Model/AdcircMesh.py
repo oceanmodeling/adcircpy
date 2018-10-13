@@ -22,7 +22,7 @@ class AdcircMesh(UnstructuredMesh):
     kwargs['datum_grid'] = datum_grid
     return cls(**kwargs)
 
-  def generate_tidal_run(self, start_date, end_date, spinup_date=None, constituents=None, netcdf=True, **kwargs):
+  def TidalRun(self, start_date, end_date, spinup_date=None, constituents=None, netcdf=True, **kwargs):
     return TidalRun(self, start_date, end_date, spinup_date, constituents, netcdf, **kwargs)
   
   @staticmethod
