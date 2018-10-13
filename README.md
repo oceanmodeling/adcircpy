@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/jreniel/AdcircPy/tree/master.svg?style=svg)](https://circleci.com/gh/jreniel/AdcircPy/tree/master)
+Status of the master branch: [![CircleCI](https://circleci.com/gh/jreniel/AdcircPy/tree/master.svg?style=svg)](https://circleci.com/gh/jreniel/AdcircPy/tree/master)
 
 # AdcircPy </h1>
 ## A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
@@ -74,26 +74,16 @@ plt.show()
 ```
 
 ### Example of fort.15 generation:
-This is still in development, so it will only output a partial fort.15
+
 ```Python
 from AdcircPy import AdcircPy
-from AdcircPy import TidalForcing
-from AdcircPy import AdcircRun
 from datetime import datetime, timedelta
-
 Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
 	                      fort13='/path/to/fort.13')
 start_date = datetime.now()
 end_date = start_date+timedelta(days=5)
-tidalForcing = TidalForcing(start_date, end_date,
-	# optionally may pass a constituent list for forcing
-							constituents=None, 
-	# Optionally pass a spinup_date
-	# The package will take 15 days prior to start_date as spinup by default.
-							spinup_date=None)
-adcircRun = AdcircRun(Mesh, Tides=tidalForcing)
-# Writes the files to directory
-adcircRun.dump('/directory/to/dump')
+tidalRun = Mesh.generate_tidal_run(start_date, end_date)
+tidalRun.dump('/directory/to/dump')
 ```
 
 
