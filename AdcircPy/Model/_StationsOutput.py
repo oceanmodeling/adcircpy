@@ -1,23 +1,13 @@
 from collections import OrderedDict
-from datetime import timedelta
+from AdcircPy.Model._ModelOutputs import _ModelOutputs
 
-class _StationOutputs(OrderedDict):
-  def __init__(self, sampling_frequency, netcdf, spinup, **kwargs):
-    super(_StationOutputs, self).__init__(**kwargs)
-    self._init_sampling_frequency(sampling_frequency)
-    self.spinup = spinup
-    self.netcdf = netcdf
+class _StationsOutput(OrderedDict, _ModelOutputs):
+  def __init__(self, sampling_frequency, netcdf, spinup, harmonic_analysis, **kwargs):
+    OrderedDict.__init__(self, **kwargs)
+    _ModelOutputs.__init__(self, sampling_frequency, netcdf, spinup, harmonic_analysis)
 
   def add_station(self, station_id, x, y):
     self[station_id] = {'x' : x, 'y' : y}
-
-  def _init_sampling_frequency(self, sampling_frequency):
-    if sampling_frequency is None:
-      self.sampling_frequency=timedelta(minutes=6)
-    elif isinstance(sampling_frequency, timedelta):
-      self.sampling_frequency=sampling_frequency
-    else:
-      raise TypeError('sampling_frequency must be a datetime.timedelta object.')
 
   @staticmethod
   def _parse_fort15(path, _hint):

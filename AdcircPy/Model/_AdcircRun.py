@@ -1,21 +1,26 @@
 import os
 import abc
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
 from netCDF4 import Dataset
+from AdcircPy.Model.ElevationStationsOutput import ElevationStationsOutput
+from AdcircPy.Model.VelocityStationsOutput import VelocityStationsOutput
+from AdcircPy.Model.ElevationGlobalOutput import ElevationGlobalOutput
+from AdcircPy.Model.VelocityGlobalOutput import VelocityGlobalOutput
 from AdcircPy.core import alias
 
 class _AdcircRun(metaclass=abc.ABCMeta):
   
   @alias({'ElevationStationsOutput': 'ESO', 'VelocityStationsOutput':'VSO', 'ElevationGlobalOutput':'EGO', 'VelocityGlobalOutput':'VGO'})
-  def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, **kwargs):
+  def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, netcdf=True, **kwargs):
     self.AdcircMesh = AdcircMesh
     self.ElevationStationsOutput = ElevationStationsOutput
     self.VelocityStationsOutput  = VelocityStationsOutput
     self.ElevationGlobalOutput   = ElevationGlobalOutput
     self.VelocityGlobalOutput    = VelocityGlobalOutput
-    self.init_fort15()
+    self.netcdf=netcdf
+    self.init_fort15(**kwargs)
     self.init_TPXO()
 
   def init_fort15(self, **kwargs):
@@ -78,10 +83,8 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.NTIF = kwargs.pop("NTIF", None) # Provided by module
     self.NBFR = kwargs.pop("NBFR", None) # Provided by module
     self.ANGINN = kwargs.pop("ANGINN", 110.) # Inner angle velocity threshold
-    self.NOUTE = kwargs.pop("NOUTE", 0)
-    self.NOUTSE = kwargs.pop("NOUTSE", 0)
-    self.NOUTFE = kwargs.pop("NOUTFE", 0)
-    self.NSPOOLE = kwargs.pop("NSPOOLE", 0)
+    self.FMV = kwargs.pop("FMV", 0)
+    self.NHAINC = kwargs.pop("NHAINC", None)
     self.NFFR = kwargs.pop("NFFR", None) # inflow boundaries forcing terms
     self.ITITER = kwargs.pop("ITITER", 1) # Solver type: -1:lumped, 1:ITPACKV2D
     self.ISLDIA = kwargs.pop("ISLDIA", 0) # fort.33 verbosity output level for solver (ITPACKV2D)
@@ -195,12 +198,12 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.write_VelocityGlobalOutput()
     self.write_ConcentrationGlobalOutput()
     self.write_WeatherGlobalOutput()
-    self.write_harmonic_outputs()
-    self.write_hotstart_parameters()
-    self.write_iteration_parameters()
-    self.write_netcdf_parameters()
-    self.write_fortran_namelists()
-    self.f.write('\n')
+    self.write_HarmonicAnalysisOutputs()
+    self.write_HotstartParams()
+    # self.write_iteration_parameters()
+    # self.write_netcdf_parameters()
+    # self.write_fortran_namelists()
+    # self.f.write('\n')
 
   def write_IHOT(self):
     if self.IHOT==0:
@@ -371,56 +374,55 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             self.f.write('\n')
   
   def __write_StationsOutput(self):
-    if self.__StationsOutput is None:
-      self.NSTA_=0
-      self.NOUT_=0
-      self.TOUT_=0
-      self.TOUTS_=0
-      self.TOUTF_=0
-      self.NSPOOL_=0
-    else:
-      self.NSTA_ = len(self.__StationsOutput.keys())
-    if  self.NSTA_ > 0:
+    NSTA = len(self.__StationsOutput.keys())
+    if  NSTA > 0:
       if self.TidalForcing is not None:
         if self.__StationsOutput.netcdf==True:
-          self.NOUT_=-5
+          NOUT=-5
         else:
-          self.NOUT_=-1
+          NOUT=-1
         if self.__StationsOutput.spinup==True and self.IHOT==0:
-          self.TOUTS_=0
-          self.TOUTF_=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-          self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
-
+          TOUTS=0
+          TOUTF=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          NSPOOL=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
         elif self.__StationsOutput.spinup==False and self.IHOT==0:
-          self.NOUT_=0
-          self.TOUT_=0
-          self.TOUTS_=0
-          self.TOUTF_=0
-          self.NSPOOL_=0
-          self.NSTA_=0
+          NOUT=0
+          TOUTS=0
+          TOUTF=0
+          NSPOOL=0
+          NSTA=0
         else:
-          self.TOUTS_=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-          self.TOUTF_=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
-          self.NSPOOL_=self.__StationsOutput.sampling_frequency.seconds/self.DTDP
-
-    self.f.write('{:<3d}'.format(self.NOUT_))
-    self.f.write('{:<6.1f}'.format(self.TOUTS_))
-    self.f.write('{:<8.2f}'.format(self.TOUTF_))
-    self.f.write('{:<6.1f}'.format(self.NSPOOL_))
+          TOUTS=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          TOUTF=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+          NSPOOL=self.__StationsOutput.sampling_frequency.seconds/self.DTDP 
+    else:
+      NOUT=0
+      TOUTS=0
+      TOUTF=0
+      NSPOOL=0
+    self.f.write('{:<3d}'.format(NOUT))
+    self.f.write('{:<6.1f}'.format(TOUTS))
+    self.f.write('{:<8.2f}'.format(TOUTF))
+    self.f.write('{:<6.1f}'.format(NSPOOL))
     self.f.write('{:<9}{}\n'.format('',self.__StationsOutput._comment1))
-    self.f.write('{:<32d}{}\n'.format(self.NSTA_, self.__StationsOutput._comment2))
-    if self.NSTA_>0:
+    self.f.write('{:<32d}{}\n'.format(NSTA, self.__StationsOutput._comment2))
+    if NSTA>0:
       if self.IHOT==567 or self.__StationsOutput.spinup==True:
         for station in self.__StationsOutput.keys():
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['x']))
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['y']))
           self.f.write('! {}\n'.format(station))
+    del self.__StationsOutput
   
   def write_ElevationStationsOutput(self):
+    if self.ElevationStationsOutput is None:
+      self.ElevationStationsOutput = ElevationStationsOutput()
     self.__StationsOutput=self.ElevationStationsOutput
     self.__write_StationsOutput()
 
   def write_VelocityStationsOutput(self):
+    if self.VelocityStationsOutput is None:
+      self.VelocityStationsOutput = VelocityStationsOutput()
     self.__StationsOutput=self.VelocityStationsOutput
     self.__write_StationsOutput()
 
@@ -432,28 +434,142 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     if self.NWS>0:
       raise Exception('When NWS>0 this line needs to be developed.')
 
+  def __write_GlobalOutputs(self):
+    if self.TidalForcing is not None and self.__GlobalOutputs is not None:
+      if self.__GlobalOutputs.netcdf==True:
+        NOUTG=-5
+      else:
+        NOUTG=-1
+      if self.__GlobalOutputs.spinup==True and self.IHOT==0:
+        TOUTSG=0
+        TOUTFG=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        NSPOOLG=self.__GlobalOutputs.sampling_frequency.seconds/self.DTDP
+      elif self.__GlobalOutputs.spinup==False and self.IHOT==0:
+        NOUTG=0
+        TOUTSG=0
+        TOUTFG=0
+        NSPOOLG=0
+      else:
+        TOUTSG=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        TOUTFG=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds()/(60*60*24)
+        NSPOOLG=self.__GlobalOutputs.sampling_frequency.seconds/self.DTDP
+    else:
+      NOUTG=0
+      TOUTSG=0
+      TOUTFG=0
+      NSPOOLG=0
+    self.f.write('{:<3d}'.format(NOUTG))
+    self.f.write('{:<6.1f}'.format(TOUTSG))
+    self.f.write('{:<8.2f}'.format(TOUTFG))
+    self.f.write('{:<6.1f}'.format(NSPOOLG))
+    del self.__GlobalOutputs
+
   def write_ElevationGlobalOutput(self):
-    if self.ElevationGlobalOutput is None:
-      NOUTGE=0
-
-
-    self.f.write('! NOUTGE,TOUTSGE,TOUTFGE,NSPOOLGE : GLOBAL ELEVATION OUTPUT INFO (UNIT  63)\n')
+    self.__GlobalOutputs=self.ElevationGlobalOutput
+    self.__write_GlobalOutputs()
+    self.f.write('{:<9}{}'.format('','! NOUTGE,TOUTSGE,TOUTFGE,NSPOOLGE : GLOBAL ELEVATION OUTPUT INFO (UNIT  63)\n'))
 
   def write_VelocityGlobalOutput(self):
-    pass
+    self.__GlobalOutputs = self.VelocityGlobalOutput
+    self.__write_GlobalOutputs()
+    self.f.write('{:<9}{}'.format('','! NOUTGV,TOUTSGV,TOUTFGV,NSPOOLGV : GLOBAL VELOCITY  OUTPUT INFO (UNIT  64)\n'))
 
   def write_ConcentrationGlobalOutput(self):
-    pass
+    if self.IM==10:
+      raise NotImplementedError('Concentration global outputs not yet implemented.')
 
   def write_WeatherGlobalOutput(self):
-    pass  
+    if self.NWS>0:
+      raise NotImplementedError('Weather global outputs not yet implemented.')  
 
-  def write_harmonic_outputs(self):
-    pass
+  def write_HarmonicAnalysisOutputs(self):
+    if self.IHOT!=0 and self.TidalForcing is not None:
 
-  def write_hotstart_parameters(self):
-    pass
+      if self.ElevationStationsOutput is not None:
+        if self.ElevationStationsOutput.harmonic_analysis==True:
+          NHASE = 1
+        else:
+          NHASE = 0
+      else:
+        NHASE = 0
 
+      if self.VelocityStationsOutput is not None:
+        if self.VelocityStationsOutput.harmonic_analysis==True:
+          NHASV = 1
+        else:
+          NHASV = 0
+      else:
+        NHASV = 0
+
+      if self.ElevationGlobalOutput is not None:
+        if self.ElevationGlobalOutput.harmonic_analysis==True:
+          NHAGE = 1
+        else:
+          NHAGE = 0
+      else:
+        NHAGE = 0
+
+      if self.VelocityGlobalOutput is not None:
+        if self.VelocityGlobalOutput.harmonic_analysis==True:
+          NHAGV = 1
+        else:
+          NHAGV = 0
+      else:
+        NHAGV = 0
+    else:
+      NHASE=0
+      NHASV=0
+      NHAGE=0
+      NHAGV=0
+    if 1 in [NHASE, NHASV, NHAGE, NHAGV]:
+      NFREQ=len(self.TidalForcing.keys())
+      THAS=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)
+      THAF=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)
+      if self.NHAINC is None:
+        self.NHAINC=timedelta(minutes=6).seconds/self.DTDP
+    else:
+      NFREQ=0
+      THAS=0
+      THAF=0
+      if self.NHAINC is None:
+        self.NHAINC=0
+    self.f.write('{:<32d}'.format(NFREQ))
+    self.f.write('! NFREQ - NUMBER OF CONSTITUENTS TO BE INCLUDED IN THE HARMONIC ANALYSIS OUTPUTS\n')
+    if NFREQ>0:
+      for constituent in self.TidalForcing.constituents:
+        self.f.write('{}\n'.format(constituent))
+        self.f.write('{:>19.15f}'.format(self.TidalForcing[constituent]['orbital_frequency']))
+        self.f.write('{:>9.5f}'.format(self.TidalForcing[constituent]['nodal_factor']))
+        self.f.write('{:>11.2f}'.format(self.TidalForcing[constituent]['greenwich_term']))
+        self.f.write('\n')
+    self.f.write('{:<6.1f}'.format(THAS))
+    self.f.write('{:<6.1f}'.format(THAF))
+    self.f.write('{:<6.1f}'.format(self.NHAINC))
+    self.f.write('{:<3.1f}'.format(self.FMV))
+    self.f.write('{:<11}{}'.format('','! THAS,THAF,NHAINC,FMV - HARMONIC ANALYSIS PARAMETERS\n'))
+    self.f.write('{:<4d}'.format(NHASE))
+    self.f.write('{:<4d}'.format(NHASV))
+    self.f.write('{:<4d}'.format(NHAGE))
+    self.f.write('{:<4d}'.format(NHAGV))
+    self.f.write('{:16}{}'.format('','! NHASE,NHASV,NHAGE,NHAGV - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54\n'))
+
+  def write_HotstartParams(self):
+    if self.IHOT==0:
+      if self.netcdf==True:
+        NHSTAR=5
+      else:
+        NHSTAR=1
+      if self.TidalForcing is not None:
+        NHSINC=(self.TidalForcing.start_date-self.TidalForcing.spinup_date).total_seconds()/self.DTDP
+      else:
+        NHSINC=0
+    else:
+      NHSTAR=0
+      NHSINC=0
+    self.f.write('{:<4d}'.format(NHSTAR))
+    self.f.write('{:<10.1f}'.format(NHSINC))
+    self.f.write('{:<18}{}'.format('','! NHSTAR,NHSINC - HOT START FILE GENERATION PARAMETERS'))
+    
   def write_iteration_parameters(self):
     pass
 

@@ -1,8 +1,9 @@
-from AdcircPy.Model._StationOutputs import _StationOutputs
+from datetime import timedelta
+from AdcircPy.Model._StationsOutput import _StationsOutput
 
-class VelocityStationsOutput(_StationOutputs):
-  def __init__(self, stations, sampling_frequency, netcdf, spinup):
-    super(VelocityStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, **stations)
+class VelocityStationsOutput(_StationsOutput):
+  def __init__(self, stations=dict(), sampling_frequency=timedelta(minutes=6), netcdf=True, spinup=False, harmonic_analysis=False):
+    super(VelocityStationsOutput, self).__init__(sampling_frequency, netcdf, spinup, harmonic_analysis, **stations)
     self._comment1 = '! NOUTV,TOUTSV,TOUTFV,NSPOOLV:VEL STATION OUTPUT INFO (UNIT  62)'
     self._comment2 = '! TOTAL NUMBER OF VELOCITY RECORDING STATIONS'
   
@@ -11,9 +12,7 @@ class VelocityStationsOutput(_StationOutputs):
     raise NotImplementedError
 
   @classmethod
-  def from_fort15(cls, path, sampling_frequency=None, netcdf=True, spinup=False):
-    if path is None:
-      return
+  def from_fort15(cls, path, sampling_frequency=None, netcdf=True, spinup=False, harmonic_analysis=False):
     stations=dict()
     with open(path,'r') as f:
       for line in f:
@@ -30,6 +29,4 @@ class VelocityStationsOutput(_StationOutputs):
             x = float(coords[0])
             y = float(coords[1])
             stations[station_name]={'x' : x, 'y' : y}
-    if len(stations.keys())==0:
-      return None
-    return cls(stations, sampling_frequency, netcdf, spinup)
+    return cls(stations, sampling_frequency, netcdf, spinup, harmonic_analysis)

@@ -2,7 +2,7 @@ from AdcircPy.Model._AdcircRun import _AdcircRun
 from AdcircPy.Tides import TidalForcing
 
 class TidalRun(_AdcircRun):
-  def __init__(self, AdcircMesh, start_date, end_date, spinup_date=None, constituents=None, **kwargs):
+  def __init__(self, AdcircMesh, start_date, end_date, spinup_date=None, constituents=None, netcdf=True, **kwargs):
     self.TidalForcing = TidalForcing(start_date, end_date, spinup_date, constituents)
     super(TidalRun, self).__init__(AdcircMesh, **kwargs)
   
