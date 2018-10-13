@@ -100,7 +100,6 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.projhost = kwargs.pop("projhost", "projhost")
     self.conv = kwargs.pop("conv", "conv")
     self.contac= kwargs.pop("contac", "contac")
-    self.NCDATE = kwargs.pop("NCDATE", None) # set by package on datetime init
 
   def dump(self, directory, printf=False):
     self.directory = directory
@@ -200,10 +199,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.write_WeatherGlobalOutput()
     self.write_HarmonicAnalysisOutputs()
     self.write_HotstartParams()
-    # self.write_iteration_parameters()
-    # self.write_netcdf_parameters()
+    self.write_iteration_parameters()
+    self.write_netcdf_parameters()
     # self.write_fortran_namelists()
-    # self.f.write('\n')
+    self.f.write('\n')
 
   def write_IHOT(self):
     if self.IHOT==0:
@@ -217,11 +216,20 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{:<32d}'.format(0))
       self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
     else:
-      NWP = len(self.AdcircMesh.fort13.keys())
-      self.f.write('{:<32d}'.format(NWP))
-      self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
-      for attribute in self.AdcircMesh.fort13.keys():
-        self.f.write('{}\n'.format(attribute))
+      if self.IHOT==0:
+        NWP = len(self.AdcircMesh.fort13.spinup_attributes)
+        self.f.write('{:<32d}'.format(NWP))
+        self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
+        for attribute in self.AdcircMesh.fort13.spinup_attributes:
+          self.f.write('{}\n'.format(attribute))
+      else:
+        NWP = len(self.AdcircMesh.fort13.runtime_attributes)
+        self.f.write('{:<32d}'.format(NWP))
+        self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
+        for attribute in self.AdcircMesh.fort13.runtime_attributes:
+          self.f.write('{}\n'.format(attribute))
+
+
 
   def write_NTIP(self):
     if self.NTIP is None:
@@ -411,7 +419,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         for station in self.__StationsOutput.keys():
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['x']))
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['y']))
-          self.f.write('! {}\n'.format(station))
+          self.f.write('{:<6}! {}\n'.format('',station))
     del self.__StationsOutput
   
   def write_ElevationStationsOutput(self):
@@ -483,6 +491,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       raise NotImplementedError('Weather global outputs not yet implemented.')  
 
   def write_HarmonicAnalysisOutputs(self):
+
     if self.IHOT!=0 and self.TidalForcing is not None:
 
       if self.ElevationStationsOutput is not None:
@@ -521,18 +530,23 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       NHASV=0
       NHAGE=0
       NHAGV=0
+
     if 1 in [NHASE, NHASV, NHAGE, NHAGV]:
       NFREQ=len(self.TidalForcing.keys())
       THAS=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)
       THAF=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)
       if self.NHAINC is None:
-        self.NHAINC=timedelta(minutes=6).seconds/self.DTDP
+        NHAINC=timedelta(minutes=6).seconds/self.DTDP
+
     else:
       NFREQ=0
       THAS=0
       THAF=0
       if self.NHAINC is None:
-        self.NHAINC=0
+        NHAINC=0
+      else:
+        NHAINC=self.NHAINC
+
     self.f.write('{:<32d}'.format(NFREQ))
     self.f.write('! NFREQ - NUMBER OF CONSTITUENTS TO BE INCLUDED IN THE HARMONIC ANALYSIS OUTPUTS\n')
     if NFREQ>0:
@@ -544,7 +558,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         self.f.write('\n')
     self.f.write('{:<6.1f}'.format(THAS))
     self.f.write('{:<6.1f}'.format(THAF))
-    self.f.write('{:<6.1f}'.format(self.NHAINC))
+    self.f.write('{:<6.1f}'.format(NHAINC))
     self.f.write('{:<3.1f}'.format(self.FMV))
     self.f.write('{:<11}{}'.format('','! THAS,THAF,NHAINC,FMV - HARMONIC ANALYSIS PARAMETERS\n'))
     self.f.write('{:<4d}'.format(NHASE))
@@ -568,13 +582,29 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       NHSINC=0
     self.f.write('{:<4d}'.format(NHSTAR))
     self.f.write('{:<10.1f}'.format(NHSINC))
-    self.f.write('{:<18}{}'.format('','! NHSTAR,NHSINC - HOT START FILE GENERATION PARAMETERS'))
+    self.f.write('{:<18}{}'.format('','! NHSTAR,NHSINC - HOT START FILE GENERATION PARAMETERS\n'))
     
   def write_iteration_parameters(self):
-    pass
+    self.f.write('{:<4d}'.format(self.ITITER))
+    self.f.write('{:<4d}'.format(self.ISLDIA))
+    self.f.write('{:<7.0E}'.format(self.CONVCR))
+    self.f.write('{:<4d}'.format(self.ITMAX))
+    self.f.write('{:<4d}'.format(self.ILUMP))
+    self.f.write('{:<9}{}'.format('','! ITITER, ISLDIA, CONVCR, ITMAX, ILUMP - ALGEBRAIC SOLUTION PARAMETERS\n'))
 
   def write_netcdf_parameters(self):
-    pass
+    if self.netcdf==True:
+      self.f.write('{}\n'.format(self.projtitle))
+      self.f.write('{}\n'.format(self.projinst))
+      self.f.write('{}\n'.format(self.projsrc))
+      self.f.write('{}\n'.format(self.projref))
+      self.f.write('{}\n'.format(self.projcom))
+      self.f.write('{}\n'.format(self.projhost))
+      self.f.write('{}\n'.format(self.conv))
+      self.f.write('{}\n'.format(self.contac))
+    if self.TidalForcing is not None:
+      self.f.write('{:<23}'.format(self.TidalForcing.spinup_date.strftime('%Y-%m-%d %H:%M:%S UTC')))
+      self.f.write('{:<9}{}\n'.format('','! Time at which tidal forcing factors are referenced.'))
 
   def write_fortran_namelists(self):
     pass

@@ -1,17 +1,15 @@
+#! /usr/bin/env python
+from AdcircPyTests import AdcircPyEnvironment
 import unittest
 import matplotlib
-if os.getenv('CIRCLECI') == 'true':
-  matplotlib.use('Agg')
 import matplotlib.pyplot as plt 
 from AdcircPy import AdcircPy
-from AdcircPyTests import AdcircPyEnvironment
-
 
 class FrontEndTests(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):
     super(FrontEndTests, self).__init__()
     self.read_environment_variables()
-    self.AdcircMesh = AdcircPy.read_mesh(fort14=self._os.getenv("FORT14_PATH"))
+    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv("FORT14_PATH"))
 
   def test_make_plot(self):
     self.AdcircMesh.make_plot()

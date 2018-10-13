@@ -35,7 +35,7 @@ jobs:
       - run: python tests/test_read_maxele.py
       - run: python tests/test_usgs_high_water_marks.py
       - run: python tests/test_plots.py
-      # - run: python tests/test_AdcircRun.py
+      - run: python tests/test_AdcircRun.py
 workflows:
   version: 2
   build_and_test:
