@@ -9,9 +9,9 @@ from AdcircPy.Model.TidalRun import TidalRun
 
 class AdcircMesh(UnstructuredMesh):
   def __init__(self, x, y, elements, values, fort13=None, description=None, **kwargs):
-    super(AdcircMesh, self).__init__(x, y, elements, values, **kwargs)
     self.description = description
-    self._init_fort13(fort13)
+    self._init_fort13(fort13, kwargs.pop("spinup_attributes", None), kwargs.pop("runtime_attributes", None))
+    super(AdcircMesh, self).__init__(x, y, elements, values, **kwargs)
 
   @classmethod
   def from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, datum_grid=None):
@@ -362,5 +362,8 @@ class AdcircMesh(UnstructuredMesh):
     if self.datum != 'MSL':
       self.values = self.values - self.datum_offset
 
-  def _init_fort13(self, path, spinup_attributes=None, runtime_attributes=None):
-    self.fort13=NodalAttributes.parse_fort13(path, spinup_attributes, runtime_attributes)
+  def _init_fort13(self, path, spinup_attributes, runtime_attributes):
+    if path is None:
+      self.fort13 = None
+    else:
+      self.fort13=NodalAttributes.parse_fort13(path, spinup_attributes, runtime_attributes)

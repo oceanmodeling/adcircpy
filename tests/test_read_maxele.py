@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-import unittest
 from AdcircPyTests import AdcircPyEnvironment
+import unittest
 from AdcircPy import AdcircPy
 import matplotlib
 import matplotlib.pyplot as plt
@@ -29,7 +29,8 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
     """
     NOTE: This function is returning True
     but in reality the fort.14 file is being ignored.
-    Need to collect boundary data from fort.14 before returning object.
+    TODO:
+      Need to collect boundary data from fort.14 before return.
     """
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"),
                                   fort14=self.os.getenv("FORT14_PATH"))
