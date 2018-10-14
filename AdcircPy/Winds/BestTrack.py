@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from datetime import datetime
 from collections import defaultdict
 
@@ -10,7 +11,6 @@ class BestTrack(object):
     self.hurdat2_id = hurdat2_id
     self._init_vars()
     self._init_hurdat2()
-    self._cleanup_record()
     self._init_dates()
     self._init_datetime_indexes()
     self._generate_best_track()
@@ -19,12 +19,13 @@ class BestTrack(object):
     with open(path,'w') as f:
       for line in self.best_track:
         f.write(line)
-        if line != self.best_track[-1]:
-          f.write('\n')
+        f.write('\n')
 
   def printf(self):
+    print('\n')
     for line in self.best_track:
       print(line)
+
 
   def _init_vars(self):
     self.datetime = list()
@@ -74,36 +75,14 @@ class BestTrack(object):
             if len(self.data)==4:
               break
             self.__process_line()
-
-  def _cleanup_record(self):
-    """
-    ADCIRC requires 6-hourly forcing only, but HURDAT2 contains some other
-    values in between. This function removes those values so that the delta
-    time between record entries remains 6 hourly.
-    """
-    idxs_to_delete = list()
-    for i, dates in enumerate(self.datetime):
-      if self.datetime[i].hour not in [0, 6, 8, 12] or self.datetime[i].minute!=0:
-        idxs_to_delete.append(i)
-    for index in sorted(idxs_to_delete, reverse=True):
-      del self.datetime[index]
-      del self.record_identifier[index]
-      del self.development_level[index]
-      del self.lat[index]
-      del self.lon[index]
-      del self.max_sustained_winds[index]
-      del self.min_pressure[index]
-      for isotach in self.wind_data.keys():
-        for quadrant in self.wind_data[isotach]:
-          del self.wind_data[isotach][quadrant][index]
-  
+             
   def _init_dates(self):
     if self.start_date is not None or self.end_date is not None:
       if isinstance(self.start_date, datetime)==False:
         raise Exception("start_date must be a datetime.datetime instance.")
       if isinstance(self.end_date, datetime)==False:
         raise Exception("end_date must be a datetime.datetime instance.")
-      if self.end_date>=self.start_date:
+      if self.end_date<=self.start_date:
         raise Exception("start_date must be previous to end_date.")
       if self.datetime[0]>self.end_date or self.end_date>self.datetime[-1]:
         raise Exception("end_date provided is out of range with the record")
@@ -114,11 +93,10 @@ class BestTrack(object):
       self.end_date = self.datetime[-1]
 
   def _init_datetime_indexes(self):
-    _diff = [(x - self.start_date).total_seconds() for x in self.datetime]
+    _diff = [np.abs((x - self.start_date).total_seconds()) for x in self.datetime]
     self.start_index = _diff.index(min(_diff))
-    _diff = [(self.end_date - x).total_seconds() for x in self.datetime]
+    _diff = [np.abs((self.end_date - x).total_seconds()) for x in self.datetime]
     self.end_index = _diff.index(min(_diff))
-
 
   def _generate_best_track(self):
     self.best_track=list()
@@ -138,14 +116,17 @@ class BestTrack(object):
           self._cnt+=1
         if any(_64_iso) > 0:
           self._cnt+=1
-        if self._cnt==0:
-          continue
         if any(_34_iso)>0 and self._isotach=='34':
           self.__append_isotach_data()
         if any(_50_iso)>0 and self._isotach=='50':
           self.__append_isotach_data()
         if any(_64_iso)>0 and self._isotach=='64':
           self.__append_isotach_data()
+        if self._cnt==0 and self.end_date==self.datetime[self.i]:
+          if self._isotach=='34':
+            self.__append_isotach_data()
+        elif self._cnt==0:
+          continue
 
   def __append_isotach_data(self):
     #1 : basin
@@ -159,7 +140,7 @@ class BestTrack(object):
     #5 : BestTrack tag
     string+= " BEST,"
     #6 : deltatime tag
-    string+= "{:>4},".format(int((self.datetime[self.i]-self.datetime[0]).total_seconds()/3600))
+    string+= "{:>4},".format(int((self.datetime[self.i]-self.start_date).total_seconds()/3600))
     #7 : lat
     _lat = self.lat[self.i].split('.')
     _lat = _lat[0].strip()+_lat[1]
@@ -175,7 +156,13 @@ class BestTrack(object):
     #11 : development level
     string+= "{:>3},".format(self.development_level[self.i])
     #12 : isotach
-    string+= "{:>4},".format(self._isotach)
+    # Hack to write isotach as zero at the end of the record.
+    # Not sure why this is necessary for ADCIRC,
+    # but it is written like this on the Sandy fort.22 used as example (NOAA:sar08).
+    if self._cnt==0 and self.end_date==self.datetime[self.i]:
+      string+="{:>4},".format(0)
+    else:
+      string+= "{:>4},".format(self._isotach)
     #13 : quadrant
     string+= "{:>4},".format('')
     #14 : radius of isotach NEQ
