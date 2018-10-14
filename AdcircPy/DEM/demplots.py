@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from AdcircPy.core._FixPointNormalize import FixPointNormalize
+from AdcircPy.core import FixPointNormalize
 
 def plot_bathy(self, axes=None, vmin=None, vmax=None, title=None, colors=256):
 

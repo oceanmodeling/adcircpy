@@ -3,47 +3,72 @@ from datetime import datetime, timedelta
 import os
 import calendar
 import numpy as np
+from AdcircPy import core
 from AdcircPy.Tides import orbital_constants
-from AdcircPy.Tides import _TPXO
+
 
 class TidalForcing(OrderedDict):
   """
-  Private class for initializing Tidal Forcings for the model.
-  Called by the AdcircMesh methods for generation of model runs.
-  Computes the Tidal nodal factors and Greenwich terms for a
-  specified date range and initializes other tidal constansts.
-
+  This class initializes tidal forcings information required to
+  run some tidal models.
   Note:
     TPXO initializations is not part of TidalForcing because
     it depends on the mesh boundaries, therefore TPXO initialization
-    is called on _AdcircRun class.
+    is called on the _AdcircRun class.
   """
   def __init__(self, start_date, end_date, spinup_date=None, constituents=None):
     self.constituents = constituents
     self.start_date   = start_date
     self.end_date     = end_date
-    self.cachedir     = _TPXO.get_cache_dir()
+    self.spinup_date  = spinup_date
+    self.cachedir     = core.get_cache_dir()
     self.tpxo_path    = self.cachedir + "/h_tpxo9.v1.nc"
-    self.init_constituent_dictionary()
-    self.init_spinup_date(spinup_date)
-    self.init_orbital_params()
-    self.init_node_factors()
+    self.default_constituents = ['Mm', 'Mf', 'Q1',  'O1', 'P1',
+                                 'S1', 'K1', '2N2', 'N2', 'M2',
+                                 'S2', 'K2', 'MN4', 'M4', 'MS4']
+    self._init_dates()
+    self._init_constituent_dictionary()
+    self._init_orbital_params()
+    self._init_node_factors()
 
   @property
   def units(self):
     return 'rad/sec'
+    
+  def __check_start_date(self):
+    if isinstance(self.start_date, datetime)==False:
+      raise IOError("start_date must be a datetime.datetime instance.")
+  
+  def __check_end_date(self):
+    if isinstance(self.end_date, datetime)==False:
+      raise IOError("end_date must be a datetime.datetime instance.")
+    elif self.end_date<=self.start_date:
+        raise Exception('end_date must be larger than start_date.')
 
-  def init_constituent_dictionary(self):
-    constituents = ['Mm', 'Mf', 'Q1', 'O1', 'P1', 'S1', 'K1', '2N2', 'N2', 'M2', 'S2', 'K2', 'MN4', 'M4', 'MS4']
+  def __check_spinup_date(self):
+    if self.spinup_date is None:
+      self.spinup_date = self.start_date - timedelta(days=15)
+    else:
+      if isinstance(self.spinup_date, datetime)==False:
+        raise IOError("spinup_date must be a datetime.datetime instance.")
+      elif self.spinup_date>=self.start_date:
+        raise Exception('spinup_date must be smaller than start_date.')
+
+  def _init_dates(self):
+    self.__check_start_date()
+    self.__check_end_date()
+    self.__check_spinup_date()
+
+  def _init_constituent_dictionary(self):
     if self.constituents is not None:
       self.constituents = list(self.constituents)
       for constituent in self.constituents:
-        if constituent not in constituents:
+        if constituent not in self.default_constituents:
           raise Exception('\nUnknown Tidal Constituent \'{}\'.\n'.format(constituent)+\
-                          'Possible constituents are: {} '.format(constituents))
+                          'Possible constituents are: {} '.format(self.default_constituents))
     else:
       # These are the only ones available in TPXO, so we're limited to these.
-      self.constituents = constituents
+      self.constituents = self.default_constituents
       # self.constituents = OrderedDict(sorted(orbital_constants.orbital_frequency.items(), key=lambda x: x[1]))
     for constituent in self.constituents:
       self[constituent] = dict()
@@ -55,15 +80,8 @@ class TidalForcing(OrderedDict):
       if constituent in orbital_constants.earth_tidal_potential_reduction_factor.keys():
         self[constituent]['earth_tidal_potential_reduction_factor'] = orbital_constants.earth_tidal_potential_reduction_factor[constituent]
 
-  def init_spinup_date(self, spinup_date):
-    if spinup_date is None:
-      self.spinup_date = self.start_date - timedelta(days=15)
-    elif isinstance(spinup_date, datetime):
-      self.spinup_date = spinup_date
-    else:
-      raise IOError("spinup_date must be a datetime instance.")
 
-  def init_orbital_params(self):
+  def _init_orbital_params(self):
     self.DYR  = self.spinup_date.year - 1900. 
     self.DDAY = self.spinup_date.timetuple().tm_yday + int((self.spinup_date.year-1901.)/4.)-1
     self.hour_middle = self.spinup_date.hour + ((self.end_date - self.spinup_date).total_seconds()/3600)/2
@@ -96,7 +114,7 @@ class TidalForcing(OrderedDict):
     self.Q    = np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC), (7.*np.cos(self.I)+1.)*np.cos(self.PC))
     self.DQ   = np.rad2deg(self.Q)
 
-  def init_node_factors(self):
+  def _init_node_factors(self):
     for constituent in self.keys():
       # nodal factors are referenced to middle of record
       self[constituent]["nodal_factor"] = self._get_nodal_factor(constituent)

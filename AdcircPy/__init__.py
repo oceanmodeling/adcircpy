@@ -4,7 +4,7 @@ from AdcircPy.Model import ElevationGlobalOutput
 from AdcircPy.Model import VelocityStationsOutput
 from AdcircPy.Model import VelocityGlobalOutput
 from AdcircPy.Tides import TPXO
-from AdcircPy.Outputs import _OutputFactory
+from AdcircPy.Outputs import Outputs
 
 class AdcircPy(object):
   """
@@ -50,5 +50,5 @@ class AdcircPy(object):
     -------
         AdcirPy.<output>  where <output> is the output type.
     """
-    return _OutputFactory(path, fort14, datum, epsg, datum_grid).get_output_instance()
+    return Outputs(path, fort14, datum, epsg, datum_grid).get_output_instance()
 

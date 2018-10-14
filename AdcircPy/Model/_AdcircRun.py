@@ -20,10 +20,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.ElevationGlobalOutput   = ElevationGlobalOutput
     self.VelocityGlobalOutput    = VelocityGlobalOutput
     self.netcdf=netcdf
-    self.init_fort15(**kwargs)
-    self.init_TPXO()
+    self._init_fort15(**kwargs)
+    self._init_TPXO()
 
-  def init_fort15(self, **kwargs):
+  def _init_fort15(self, **kwargs):
     self.RUNDES = kwargs.pop("RUNDES", self.AdcircMesh.description)  # UPTO 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
     self.RUNID = kwargs.pop("RUNID", "generated on {}".format(datetime.now().strftime('%Y-%m-%d')))    # UPTO 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
     self.NFOVER = kwargs.pop("NFOVER", 1) # NFOVER - NONFATAL ERROR OVERRIDE OPTION
@@ -107,11 +107,11 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     
     with open(self.directory+'/fort.15.coldstart', 'w') as self.f:
       self.IHOT=0
-      self.write_fort15()
+      self._write_fort15()
 
     with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
       self.IHOT=567
-      self.write_fort15()
+      self._write_fort15()
     
     if printf==True:
       with open(self.directory+'/fort.15.coldstart', 'r') as fort15:
@@ -122,7 +122,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         for line in fort15.read().splitlines():
           print(line)
 
-  def init_TPXO(self):
+  def _init_TPXO(self):
     if self.AdcircMesh.ocean_boundaries is None:
       self.TPXO=None; return
     elif self.TidalForcing is None:
@@ -150,68 +150,68 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
         self.TPXO.append(constituents)
 
-  def write_fort15(self):
+  def _write_fort15(self):
     self.f.write('{:<32}! 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION\n'.format(self.RUNDES))
     self.f.write('{:<24}{:8}! 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION\n'.format(self.RUNID,''))
     self.f.write('{:<32d}! NFOVER - NONFATAL ERROR OVERRIDE OPTION\n'.format(self.NFOVER))
     self.f.write('{:<32d}! NABOUT - ABREVIATED OUTPUT OPTION PARAMETER\n'.format(self.NABOUT))
     self.f.write('{:<32d}! NSCREEN - UNIT 6 OUTPUT OPTION PARAMETER\n'.format(self.NSCREEN))
-    self.write_IHOT()
+    self._write_IHOT()
     self.f.write('{:<32d}! ICS - COORDINATE SYSTEM SELECTION PARAMETER\n'.format(self.ICS))
     self.f.write('{:<32d}! IM - MODEL SELECTION PARAMETER\n'.format(self.IM))
     self.f.write('{:<32d}! NOLIBF - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, \'2\' was used\n'.format(self.NOLIBF))
     self.f.write('{:<32d}! NOLIFA - FINITE AMPLITUDE TERM SELECTION PARAMETER\n'.format(self.NOLIFA))
     self.f.write('{:<32d}! NOLICA - SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER\n'.format(self.NOLICA))
     self.f.write('{:<32d}! NOLICAT - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER\n'.format(self.NOLICAT))
-    self.write_NWP() # depends on fort.13 and a better implementation could be designed.
+    self._write_NWP() # depends on fort.13 and a better implementation could be designed.
     self.f.write('{:<32d}! NCOR - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER\n'.format(self.NCOR))
-    self.write_NTIP()
+    self._write_NTIP()
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
-    self.write_NWS()
+    self._write_NWS()
     self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
-    self.write_NRAMP()
+    self._write_NRAMP()
     self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
     self.f.write('{:<32.2f}! G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS\n'.format(self.G))
-    self.write_TAU0()
-    self.write_DTDP()
+    self._write_TAU0()
+    self._write_DTDP()
     self.f.write('{:<32.2f}! STATIM - STARTING TIME (IN DAYS)\n'.format(0))
     self.f.write('{:<32.2f}! REFTIM - REFERENCE TIME (IN DAYS)\n'.format(0))
-    self.write_RNDAY()
+    self._write_RNDAY()
     self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
-    self.write_DRAMP()
+    self._write_DRAMP()
     self.f.write('! DRAMP [DRAMPExtFlux, FluxSettlingTime,DRAMPIntFlux,DRAMPElev,DRAMPTip,DRAMPMete,DRAMPWRad,DRAMPUnMete] DURATION OF RAMP FUNCTION (IN DAYS)\n')
     self.f.write('{:<4.2f} {:<4.2f} {:<4.2f} {:<17}! TIME WEIGHTING FACTORS FOR THE GWCE EQUATION\n'.format(self.A00, self.B00, self.C00, ''))
-    self.write_H0_VELMIN()
-    self.write_SLAM0_SFEA0()
-    self.write_FFACTOR()
-    self.write_ESLM()
-    self.write_CORI()
-    self.write_NTIF()
-    self.write_NBFR()
+    self._write_H0_VELMIN()
+    self._write_SLAM0_SFEA0()
+    self._write_FFACTOR()
+    self._write_ESLM()
+    self._write_CORI()
+    self._write_NTIF()
+    self._write_NBFR()
     self.f.write('{:<32.1f}! ANGINN : INNER ANGLE THRESHOLD\n'.format(self.ANGINN))
-    self.write_ElevationStationsOutput()
-    self.write_VelocityStationsOutput()
-    self.write_ConcentrationStationsOutput()
-    self.write_WeatherStationsOutput()
-    self.write_ElevationGlobalOutput()
-    self.write_VelocityGlobalOutput()
-    self.write_ConcentrationGlobalOutput()
-    self.write_WeatherGlobalOutput()
-    self.write_HarmonicAnalysisOutputs()
-    self.write_HotstartParams()
-    self.write_iteration_parameters()
-    self.write_netcdf_parameters()
-    # self.write_fortran_namelists()
+    self._write_ElevationStationsOutput()
+    self._write_VelocityStationsOutput()
+    self._write_ConcentrationStationsOutput()
+    self._write_WeatherStationsOutput()
+    self._write_ElevationGlobalOutput()
+    self._write_VelocityGlobalOutput()
+    self._write_ConcentrationGlobalOutput()
+    self._write_WeatherGlobalOutput()
+    self._write_HarmonicAnalysisOutputs()
+    self._write_HotstartParams()
+    self._write_iteration_parameters()
+    self._write_netcdf_parameters()
+    # self._write_fortran_namelists()
     self.f.write('\n')
 
-  def write_IHOT(self):
+  def _write_IHOT(self):
     if self.IHOT==0:
       self.f.write('{:<32d}'.format(0))
     elif self.IHOT==567:
       self.f.write('{:<32d}'.format(567))
     self.f.write('! IHOT - HOT START PARAMETER\n')
 
-  def write_NWP(self):
+  def _write_NWP(self):
     if self.AdcircMesh.fort13 is None:
       self.f.write('{:<32d}'.format(0))
       self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
@@ -231,7 +231,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
 
 
 
-  def write_NTIP(self):
+  def _write_NTIP(self):
     if self.NTIP is None:
       if self.TidalForcing is None:
         self.NTIP=0
@@ -242,14 +242,14 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
 
   @abc.abstractmethod
-  def write_NWS(self):
+  def _write_NWS(self):
     """ Depends on whether wind forcing is present or not. """
 
   @abc.abstractmethod
-  def write_NRAMP(self):
+  def _write_NRAMP(self):
     """ Depends on whether wind forcing is present or not. """
 
-  def write_TAU0(self):
+  def _write_TAU0(self):
     if self.AdcircMesh.fort13 is not None:
       if 'primitive_weighting_in_continuity_equation' in list(self.AdcircMesh.fort13.keys()):
         self.f.write('{:<32d}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(-3))
@@ -259,7 +259,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     else:
       self.f.write('{:<32}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(0.005))
 
-  def write_DTDP(self):
+  def _write_DTDP(self):
     """
     The reason this is implemented separately is so that we can
     implement an optimal DTDP calculation in the future, based on
@@ -268,11 +268,11 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<32.1f}! DT - TIME STEP (IN SECONDS)\n'.format(self.DTDP))
 
   @abc.abstractmethod
-  def write_RNDAY(self):
+  def _write_RNDAY(self):
     """ Depends on forcings. """
 
   @abc.abstractmethod
-  def write_DRAMP(self):
+  def _write_DRAMP(self):
     """
     if self.NRAMP==1:
       
@@ -296,21 +296,21 @@ class _AdcircRun(metaclass=abc.ABCMeta):
  
     """
 
-  def write_H0_VELMIN(self):
+  def _write_H0_VELMIN(self):
     if self.NOLIFA in [0,1]:
       self.f.write('{:<32.4f}'.format(self.H0))
     elif self.NOLIFA in [2,3]:
       self.f.write('{:<4.3f} 0 0 {:4.3f}{:<17}'.format(self.H0, self.VELMIN,''))
     self.f.write('! H0, NODEDRYMIN, NODEWETRMP, VELMIN\n')
 
-  def write_SLAM0_SFEA0(self):
+  def _write_SLAM0_SFEA0(self):
     # This is just the center of mass of the mesh.
     self.SLAM0 = np.mean(self.AdcircMesh.x)
     self.SFEA0 = np.mean(self.AdcircMesh.y)
     self.f.write('{:<4.1f} {:<4.1f}{:<22}'.format(self.SLAM0, self.SFEA0,''))
     self.f.write('! SLAM0,SFEA0 - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)\n')
 
-  def write_FFACTOR(self):
+  def _write_FFACTOR(self):
     if self.NOLIBF==0:
       self.f.write('{:<32.4f}'.format(self.TAU))
     elif self.NOLIBF==1:
@@ -319,21 +319,21 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{:<6.4f} {:<6.4f} {:<6.4f} {:<6.4f} {:<3}'.format(self.FFACTOR, self.HBREAK, self.FTHETA, self.FGAMMA, ''))
     self.f.write('! FFACTOR\n')
 
-  def write_ESLM(self):
+  def _write_ESLM(self):
     if self.IM in [0,1,2]:
       self.f.write('{:<32.2f}'.format(self.ESLM))
     elif self.IM in [10]:
       self.f.write('{:<2d} {}{:26}'.format(self.ESLM, self.ESLS,''))
     self.f.write('! ESL - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1\n')
 
-  def write_CORI(self):
+  def _write_CORI(self):
     if self.NCOR==1:
       self.f.write('{:<32.1f}'.format(0))
     else:
       self.f.write('set parameter manually. ')
     self.f.write('! CORI - CORIOLIS PARAMETER - IGNORED IF NCOR = 1\n')
 
-  def write_NTIF(self):
+  def _write_NTIF(self):
     """ 
     This segment is confusing and redundant.
     Could have added the extra parameters to NBFR or have them
@@ -362,7 +362,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     elif NTIP==2 or NTIP=='fort.22':
       self.f.write('reading from fort.24, set parameter mannually.  ! NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED\n')
 
-  def write_NBFR(self):
+  def _write_NBFR(self):
     if self.TidalForcing is None:
       self.f.write('{:<32d}! NBFR: bnd forcing\n'.format(0))
     else:
@@ -422,23 +422,23 @@ class _AdcircRun(metaclass=abc.ABCMeta):
           self.f.write('{:<6}! {}\n'.format('',station))
     del self.__StationsOutput
   
-  def write_ElevationStationsOutput(self):
+  def _write_ElevationStationsOutput(self):
     if self.ElevationStationsOutput is None:
       self.ElevationStationsOutput = ElevationStationsOutput()
     self.__StationsOutput=self.ElevationStationsOutput
     self.__write_StationsOutput()
 
-  def write_VelocityStationsOutput(self):
+  def _write_VelocityStationsOutput(self):
     if self.VelocityStationsOutput is None:
       self.VelocityStationsOutput = VelocityStationsOutput()
     self.__StationsOutput=self.VelocityStationsOutput
     self.__write_StationsOutput()
 
-  def write_ConcentrationStationsOutput(self):
+  def _write_ConcentrationStationsOutput(self):
     if self.IM==10:
       raise Exception('When IM=10 this line needs to be developed.')
 
-  def write_WeatherStationsOutput(self):
+  def _write_WeatherStationsOutput(self):
     if self.NWS>0:
       raise Exception('When NWS>0 this line needs to be developed.')
 
@@ -472,25 +472,25 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<6.1f}'.format(NSPOOLG))
     del self.__GlobalOutputs
 
-  def write_ElevationGlobalOutput(self):
+  def _write_ElevationGlobalOutput(self):
     self.__GlobalOutputs=self.ElevationGlobalOutput
     self.__write_GlobalOutputs()
     self.f.write('{:<9}{}'.format('','! NOUTGE,TOUTSGE,TOUTFGE,NSPOOLGE : GLOBAL ELEVATION OUTPUT INFO (UNIT  63)\n'))
 
-  def write_VelocityGlobalOutput(self):
+  def _write_VelocityGlobalOutput(self):
     self.__GlobalOutputs = self.VelocityGlobalOutput
     self.__write_GlobalOutputs()
     self.f.write('{:<9}{}'.format('','! NOUTGV,TOUTSGV,TOUTFGV,NSPOOLGV : GLOBAL VELOCITY  OUTPUT INFO (UNIT  64)\n'))
 
-  def write_ConcentrationGlobalOutput(self):
+  def _write_ConcentrationGlobalOutput(self):
     if self.IM==10:
       raise NotImplementedError('Concentration global outputs not yet implemented.')
 
-  def write_WeatherGlobalOutput(self):
+  def _write_WeatherGlobalOutput(self):
     if self.NWS>0:
       raise NotImplementedError('Weather global outputs not yet implemented.')  
 
-  def write_HarmonicAnalysisOutputs(self):
+  def _write_HarmonicAnalysisOutputs(self):
 
     if self.IHOT!=0 and self.TidalForcing is not None:
 
@@ -567,7 +567,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<4d}'.format(NHAGV))
     self.f.write('{:16}{}'.format('','! NHASE,NHASV,NHAGE,NHAGV - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54\n'))
 
-  def write_HotstartParams(self):
+  def _write_HotstartParams(self):
     if self.IHOT==0:
       if self.netcdf==True:
         NHSTAR=5
@@ -584,7 +584,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<10.1f}'.format(NHSINC))
     self.f.write('{:<18}{}'.format('','! NHSTAR,NHSINC - HOT START FILE GENERATION PARAMETERS\n'))
     
-  def write_iteration_parameters(self):
+  def _write_iteration_parameters(self):
     self.f.write('{:<4d}'.format(self.ITITER))
     self.f.write('{:<4d}'.format(self.ISLDIA))
     self.f.write('{:<7.0E}'.format(self.CONVCR))
@@ -592,7 +592,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<4d}'.format(self.ILUMP))
     self.f.write('{:<9}{}'.format('','! ITITER, ISLDIA, CONVCR, ITMAX, ILUMP - ALGEBRAIC SOLUTION PARAMETERS\n'))
 
-  def write_netcdf_parameters(self):
+  def _write_netcdf_parameters(self):
     if self.netcdf==True:
       self.f.write('{}\n'.format(self.projtitle))
       self.f.write('{}\n'.format(self.projinst))
@@ -606,5 +606,5 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{:<23}'.format(self.TidalForcing.spinup_date.strftime('%Y-%m-%d %H:%M:%S UTC')))
       self.f.write('{:<9}{}\n'.format('','! Time at which tidal forcing factors are referenced.'))
 
-  def write_fortran_namelists(self):
+  def _write_fortran_namelists(self):
     pass

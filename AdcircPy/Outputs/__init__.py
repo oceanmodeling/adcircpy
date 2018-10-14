@@ -1,4 +1,4 @@
-from AdcircPy.Outputs._OutputFactory import _OutputFactory
+from AdcircPy.Outputs.Outputs import Outputs
 from AdcircPy.Outputs.Maxele import Maxele
 
 

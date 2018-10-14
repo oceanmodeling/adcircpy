@@ -1,10 +1,10 @@
 from AdcircPy.Tides.TidalForcing import TidalForcing
-from AdcircPy.Tides import _TPXO
+from AdcircPy import core
 
 class TPXO(object):
   """  Runs at top level module import so that the TPXO cache gets initialized on disk. """
-  _TPXO.init_TPXO_cache(_TPXO.get_cache_dir())
+  core.init_TPXO_cache(core.get_cache_dir())
   @staticmethod
   def rebuild_cache():
-    os.remove(_TPXO.get_cache_dir()+"/h_tpxo9.v1.nc")
-    _TPXO.init_TPXO_cache(_TPXO.get_cache_dir())
+    os.remove(core.get_cache_dir()+"/h_tpxo9.v1.nc")
+    core.init_TPXO_cache(core.get_cache_dir())

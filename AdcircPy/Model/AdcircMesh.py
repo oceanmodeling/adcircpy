@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from scipy.interpolate import griddata
-from AdcircPy.core._FixPointNormalize import FixPointNormalize
+from AdcircPy.core import FixPointNormalize
 from AdcircPy.Model.UnstructuredMesh import UnstructuredMesh
 from AdcircPy.Model.NodalAttributes import NodalAttributes
 from AdcircPy.Model.TidalRun import TidalRun
+from AdcircPy.Model.HindcastRun import HindcastRun
 
 class AdcircMesh(UnstructuredMesh):
   def __init__(self, x, y, elements, values, fort13=None, description=None, **kwargs):
@@ -23,8 +24,13 @@ class AdcircMesh(UnstructuredMesh):
     return cls(**kwargs)
 
   def TidalRun(self, start_date, end_date, spinup_date=None, constituents=None, netcdf=True, **kwargs):
+    """ Instantiates an ADCIRC tidal only run. """
     return TidalRun(self, start_date, end_date, spinup_date, constituents, netcdf, **kwargs)
   
+  def HindcastRun(self, hurdat_id, start_date=None, end_date=None, spinup_date=None, tides=True, netcdf=True, **kwargs):
+    """ Generates an ADCIRC hindcast run using wind data from the HURDAT2 database. """
+    return HindcastRun(self, hurdat_id, start_date, end_date, spinup_date, tides, netcdf, **kwargs)
+
   @staticmethod
   def parse_fort14(path):
     f  = open(path) 
