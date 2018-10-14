@@ -166,7 +166,6 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self._write_NWP() # depends on fort.13 and a better implementation could be designed.
     self.f.write('{:<32d}! NCOR - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER\n'.format(self.NCOR))
     self._write_NTIP()
-    self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
     self._write_NWS()
     self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
     self._write_NRAMP()
@@ -228,8 +227,6 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
         for attribute in self.AdcircMesh.fort13.runtime_attributes:
           self.f.write('{}\n'.format(attribute))
-
-
 
   def _write_NTIP(self):
     if self.NTIP is None:
