@@ -578,7 +578,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       NHSTAR=0
       NHSINC=0
     self.f.write('{:<4d}'.format(NHSTAR))
-    self.f.write('{:<10.1f}'.format(NHSINC))
+    self.f.write('{:<10d}'.format(int(np.around(NHSINC,0))))
     self.f.write('{:<18}{}'.format('','! NHSTAR,NHSINC - HOT START FILE GENERATION PARAMETERS\n'))
     
   def _write_iteration_parameters(self):
