@@ -52,11 +52,14 @@ class ScalarSurfaceExtrema(UnstructuredMesh):
                                    outflow_boundaries = fort14.outflow_boundaries,
                                    culvert_boundaries = fort14.culvert_boundaries)
 
-  def make_plot(self, title='Surface Extrema', **kwargs):
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
-    UnstructuredMesh.make_plot(self, axes=ax1, title=title)
-    if len(self._times)>0:
+  def make_plot(self, title='Surface Extrema', axes=None, plot_times=False, **kwargs):
+    if axes is None:
+      fig1 = plt.figure()
+      ax1 = fig1.add_subplot(111)
+    else:
+      ax1 = axes
+    UnstructuredMesh.make_plot(self, axes=ax1, title=title, **kwargs)
+    if len(self._times)>0 and plot_times==True:
       fig2 = plt.figure()
       ax2 = fig2.add_subplot(111)
       _ax = ax2.tripcolor(self._Tri, self._times)

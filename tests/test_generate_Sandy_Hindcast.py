@@ -1,3 +1,4 @@
+#! /usr/bin/env python
 import unittest
 from AdcircPyTests import AdcircPyEnvironment
 from datetime import datetime, timedelta

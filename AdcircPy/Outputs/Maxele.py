@@ -1,11 +1,10 @@
 from netCDF4 import Dataset
 from AdcircPy.Model import AdcircMesh
-from AdcircPy.Model import UnstructuredMesh
+from AdcircPy.Outputs.ScalarSurfaceExtrema import ScalarSurfaceExtrema
 
-class Maxele(UnstructuredMesh):
+class Maxele(ScalarSurfaceExtrema):
   def __init__(self, x, y, elements, values, times, **kwargs):
-    self._times = times
-    super(Maxele, self).__init__(x, y, elements, values, **kwargs)
+    super(Maxele, self).__init__(x, y, elements, values, times, **kwargs)
 
   @classmethod
   def from_netcdf(cls, path, fort14=None, datum='MSL', epsg=None, datum_grid=None):

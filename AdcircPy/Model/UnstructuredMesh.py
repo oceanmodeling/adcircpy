@@ -516,11 +516,24 @@ class UnstructuredMesh(object):
       return Path(ordered_vertices, closed=True)
 
   def _init_datum_grid(self):
+    """
+    The way this is implemented is not self consistent.
+    Vertical datum grids have to be handled with care until
+    some standards can be set. Meshes should actually be referenced
+    to an equipotential surface, and not to space variable datums.
+    This is because at time t0 in the model run, the water surface 
+    elevation must sit on an equipotential surface. Datums derived from
+    tidal measurements are not generally equipotentials.
+    """
     if self._datum_grid is not None:
+      # if self.datum is not None:
       with open(self._datum_grid, 'r') as f: 
         f.readline().rstrip()
-        original_datum, target_datum = f.readline().split(':')
-        if original_datum == self.datum:
+        line = f.readline().strip('\n').split(': ')
+        line = line.pop().split('to')
+        original_vdatum = line[0].split(':')[1].strip(' ')
+        target_vdatum = line[1].split(':')[1].strip(' ')
+        if original_vdatum == self.datum:
           NP = int(f.readline().split()[1])
           values = list()
           for k in range(NP):
@@ -528,7 +541,7 @@ class UnstructuredMesh(object):
           self.original_mesh_values = self.values
           self.original_mesh_datum = self.datum
           self._values += np.asarray(values)
-          self.datum = target_datum
+          self.datum = target_vdatum
 
   def build_outer_polygon(self):
     boundary_list = list()
