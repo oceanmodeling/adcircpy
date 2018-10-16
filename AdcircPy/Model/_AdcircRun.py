@@ -600,8 +600,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{}\n'.format(self.conv))
       self.f.write('{}\n'.format(self.contac))
     if self.TidalForcing is not None:
-      self.f.write('{:<23}'.format(self.TidalForcing.spinup_date.strftime('%Y-%m-%d %H:%M:%S UTC')))
-      self.f.write('{:<9}{}\n'.format('','! Time at which tidal forcing factors are referenced.'))
+      self.f.write('{:<23}\n'.format(self.TidalForcing.spinup_date.strftime('%Y-%m-%d %H:%M:%S UTC')))
 
   def _write_fortran_namelists(self):
     pass
