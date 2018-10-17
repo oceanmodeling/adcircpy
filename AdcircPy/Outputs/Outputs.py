@@ -5,6 +5,7 @@ from netCDF4 import Dataset
 import numpy as np
 from AdcircPy.Model import AdcircMesh
 from AdcircPy.Outputs.Maxele import Maxele
+from AdcircPy.Outputs.ElevationStations import ElevationStations
 from AdcircPy.Outputs.ScalarSurfaceExtrema import ScalarSurfaceExtrema
 
 class Outputs(object):
@@ -50,7 +51,8 @@ class Outputs(object):
         raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
     elif 'zeta_max' in nc.variables.keys():
       return Maxele.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
-    
+    elif 'zeta' in nc.variables.keys():
+      return ElevationStations.from_netcdf(self.path)
     else:
       raise NotImplementedError('Guessed a NetCDF output but instantiation has not been implemented yet.')
 

@@ -3,7 +3,14 @@ from AdcircPy import Mesh
 from AdcircPy import Outputs
 from AdcircPy.Tides import TidalDB as _TidalDB
 
-def _from_fort51(path, fort14, fort15, **kwargs):
+
+
+class HarmonicConstituentsStations(dict):
+  def __init__(self, **kwargs):
+    dict.__init__(self, **kwargs)
+
+  @classmethod
+  def from_fort51(cls, path, fort14, fort15):
   TidalDB = _TidalDB()
   if fort14 is not None:
     if isinstance(fort14, Mesh.AdcircMesh):
@@ -42,7 +49,7 @@ def _from_fort51(path, fort14, fort15, **kwargs):
               "amplitude"         : amplitude,
               "phase"             : phase}
   _f.close()
-  return Outputs.HarmonicConstituentsStations(**stations)
+  return cls(**stations)
     
 
 
