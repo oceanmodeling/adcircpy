@@ -14,7 +14,5 @@ class TestNodalAttributes(unittest.TestCase):
       NodalAttributes(spinup_attributes='None')
     self.assertTrue('not found in fort.13' in str(context.exception))
     
-    
-
 if __name__ == '__main__':
   unittest.main()
