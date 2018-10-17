@@ -369,7 +369,10 @@ class AdcircMesh(UnstructuredMesh):
       self.values = self.values - self.datum_offset
 
   def _init_fort13(self, path, spinup_attributes, runtime_attributes):
-    if path is None:
-      self.fort13 = None
+    if isinstance(path, str):
+      self.fort13 = NodalAttributes.from_fort13(path, spinup_attributes, runtime_attributes)
+    elif isinstance(path, NodalAttributes):
+      self.fort13 = path
     else:
-      self.fort13=NodalAttributes.parse_fort13(path, spinup_attributes, runtime_attributes)
+      self.fort13=NodalAttributes()
+

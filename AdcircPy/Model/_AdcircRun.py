@@ -211,7 +211,8 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('! IHOT - HOT START PARAMETER\n')
 
   def _write_NWP(self):
-    if self.AdcircMesh.fort13 is None:
+    if len(self.AdcircMesh.fort13.spinup_attributes) == 0 and \
+        len(self.AdcircMesh.fort13.runtime_attributes) == 0:
       self.f.write('{:<32d}'.format(0))
       self.f.write('! NWP - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0\n')
     else:
@@ -247,9 +248,15 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     """ Depends on whether wind forcing is present or not. """
 
   def _write_TAU0(self):
-    if self.AdcircMesh.fort13 is not None:
-      if 'primitive_weighting_in_continuity_equation' in list(self.AdcircMesh.fort13.keys()):
+    def __check_primitive(attr):
+      if 'primitive_weighting_in_continuity_equation' in attr:
         self.f.write('{:<32d}! TAU0 - WEIGHTING FACTOR IN GWCE; original, 0.005\n'.format(-3))
+    if self.TAU0!=-5 and self.IHOT==0:
+      if len(self.AdcircMesh.fort13.spinup_attributes)>0:
+        __check_primitive(self.AdcircMesh.fort13.spinup_attributes)
+    elif self.TAU0!=-5 and self.IHOT!=0:
+      if len(self.AdcircMesh.fort13.runtime_attributes)>0:
+        __check_primitive(self.AdcircMesh.fort13.runtime_attributes)
     elif self.TAU0==-5:
       self.f.write('{:<10.3f}'.format(self.Tau0FullDomainMin))
       self.f.write('{:<10.3f}\n'.format(self.Tau0FullDomainMax))
@@ -317,8 +324,11 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('! FFACTOR\n')
 
   def _write_ESLM(self):
+    # Unclear whether ESLM should be float or integer.
+    # All the examples show int but logically it looks like
+    # it should be float... ??
     if self.IM in [0,1,2]:
-      self.f.write('{:<32.2f}'.format(self.ESLM))
+      self.f.write('{:<32d}'.format(int(self.ESLM)))
     elif self.IM in [10]:
       self.f.write('{:<2d} {}{:26}'.format(self.ESLM, self.ESLS,''))
     self.f.write('! ESL - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1\n')
@@ -379,6 +389,8 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             self.f.write('\n')
   
   def __write_StationsOutput(self):
+    # Should NSPOOL be float or int?
+    # forcing int, but is there a case where it should be float?
     NSTA = len(self.__StationsOutput.keys())
     if  NSTA > 0:
       if self.TidalForcing is not None:
@@ -408,7 +420,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<3d}'.format(NOUT))
     self.f.write('{:<6.1f}'.format(TOUTS))
     self.f.write('{:<8.2f}'.format(TOUTF))
-    self.f.write('{:<6.1f}'.format(NSPOOL))
+    self.f.write('{:<6d}'.format(int(NSPOOL)))
     self.f.write('{:<9}{}\n'.format('',self.__StationsOutput._comment1))
     self.f.write('{:<32d}{}\n'.format(NSTA, self.__StationsOutput._comment2))
     if NSTA>0:
@@ -466,7 +478,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<3d}'.format(NOUTG))
     self.f.write('{:<6.1f}'.format(TOUTSG))
     self.f.write('{:<8.2f}'.format(TOUTFG))
-    self.f.write('{:<6.1f}'.format(NSPOOLG))
+    self.f.write('{:<6d}'.format(int(NSPOOLG)))
     del self.__GlobalOutputs
 
   def _write_ElevationGlobalOutput(self):
@@ -488,7 +500,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       raise NotImplementedError('Weather global outputs not yet implemented.')  
 
   def _write_HarmonicAnalysisOutputs(self):
-
+    # Is NHAINC always an integer?
     if self.IHOT!=0 and self.TidalForcing is not None:
 
       if self.ElevationStationsOutput is not None:
@@ -555,7 +567,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         self.f.write('\n')
     self.f.write('{:<6.1f}'.format(THAS))
     self.f.write('{:<6.1f}'.format(THAF))
-    self.f.write('{:<6.1f}'.format(NHAINC))
+    self.f.write('{:<6d}'.format(int(NHAINC)))
     self.f.write('{:<3.1f}'.format(self.FMV))
     self.f.write('{:<11}{}'.format('','! THAS,THAF,NHAINC,FMV - HARMONIC ANALYSIS PARAMETERS\n'))
     self.f.write('{:<4d}'.format(NHASE))
@@ -594,6 +606,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.f.write('{}\n'.format(self.projtitle))
       self.f.write('{}\n'.format(self.projinst))
       self.f.write('{}\n'.format(self.projsrc))
+      self.f.write('{}\n'.format(self.projhist))
       self.f.write('{}\n'.format(self.projref))
       self.f.write('{}\n'.format(self.projcom))
       self.f.write('{}\n'.format(self.projhost))

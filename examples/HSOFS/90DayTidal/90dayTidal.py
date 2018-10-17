@@ -46,6 +46,17 @@ class _90DayTidal(object):
     self.ElevationGlobalOutput = EGO(harmonic_analysis=True,
                                      spinup=True)
 
+  def _init_fort13_attributes(self):
+    self.Mesh.fort13.spinup_attributes = ['elemental_slope_limiter',
+                                          'mannings_n_at_sea_floor',
+                                          'primitive_weighting_in_continuity_equation',
+                                          'surface_submergence_state']
+    
+    self.Mesh.fort13.runtime_attributes = ['elemental_slope_limiter',
+                                          'mannings_n_at_sea_floor',
+                                          'primitive_weighting_in_continuity_equation',
+                                          'surface_submergence_state']
+
   def _init_TidalRun(self):
     self.TidalRun = self.Mesh.TidalRun(self.start_time, self.end_time,
                                         spinup_date=self.spinup_date,
@@ -56,7 +67,6 @@ class _90DayTidal(object):
                                                       'Mf', 'Mm', 'M4', 'MS4','MN4'])
   def _dump_TidalRun(self):
     self.TidalRun.dump('./')
-
 
 if __name__ == "__main__":
   _90DayTidal()

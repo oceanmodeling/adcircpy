@@ -37,6 +37,7 @@ jobs:
       - run: python tests/test_plots.py
       - run: python tests/test_TidalRun.py
       - run: python tests/test_TidalForcing.py
+      - run: python tests/test_NodalAttributes.py
 workflows:
   version: 2
   build_and_test:

@@ -5,11 +5,10 @@ class NodalAttributes(dict):
     super(NodalAttributes, self).__init__(**attributes)
     self.spinup_attributes = spinup_attributes
     self.runtime_attributes = runtime_attributes
-    self._init_spinup_attributes()
-    self._init_runtime_attributes()
 
+  
   @classmethod
-  def parse_fort13(cls, path, spinup_attributes=None, runtime_attributes=None):
+  def from_fort13(cls, path, spinup_attributes=None, runtime_attributes=None):
     fort13={}
     with open(path, 'r') as f:
       f.readline().strip()
@@ -42,26 +41,66 @@ class NodalAttributes(dict):
         fort13[attribute_name]['values'] = values
     return cls(spinup_attributes, runtime_attributes, **fort13)
 
-  def __check_attributes(self, attributes):
-    if isinstance(attributes, list):
-      for attribute in attributes:
-        if attribute not in self.keys():
-          raise IOError('Attribute \'{}\' not found in fort.13.'.format(attribute))
+  @property
+  def spinup_attributes(self):
+    """ """
+    return self._spinup_attributes
 
-  def _init_spinup_attributes(self):
-    self.__check_attributes(self.spinup_attributes)
-    if self.spinup_attributes is None:
-      self.spinup_attributes = list()
-      if 'mannings_n_at_sea_floor' in self.keys():
-        self.spinup_attributes.append('mannings_n_at_sea_floor')
-      if 'primitive_weighting_in_continuity_equation' in self.keys():
-        self.spinup_attributes.append('primitive_weighting_in_continuity_equation')
-      if 'surface_submergence_state' in self.keys():
-        self.spinup_attributes.append('surface_submergence_state')
+  @spinup_attributes.setter
+  def spinup_attributes(self, attributes):
+    self._check_attributes(attributes)
+    if attributes is None:
+      if len(self.keys())>0:
+        self._init_default_spinup_attributes(attributes)
+      else:
+        self._spinup_attributes = list()
+    else:
+      if isinstance(attributes, str):
+        self._spinup_attributes = list(attributes)
+      else:
+        self._spinup_attributes = list()
 
-  def _init_runtime_attributes(self):
-    self.__check_attributes(self.runtime_attributes)
-    if self.runtime_attributes is None:
-      self.runtime_attributes = list()
-      for attribute in self.keys():
-        self.runtime_attributes.append(attribute)
+  @property
+  def runtime_attributes(self):
+    """ """
+    return self._runtime_attributes
+
+  @runtime_attributes.setter
+  def runtime_attributes(self, attributes):
+    self._check_attributes(attributes)
+    if attributes is None:
+      if len(self.keys())>0:
+        self._init_default_runtime_attributes(attributes)
+      else:
+        self._runtime_attributes = list()
+    else:
+      if isinstance(attributes, str):
+        self._runtime_attributes = list(attributes)
+      else:
+        self._runtime_attributes = list()
+  
+  def _check_attributes(self, attributes):
+    if attributes is not None:
+      if isinstance(attributes, str):
+        attributes=list(attributes)
+      if isinstance(attributes, list):
+        for attribute in attributes:
+          # Not all attributes have to be part of fort.13,
+          # elemental_slope_limiter is one such example.
+          if attribute not in ['elemental_slope_limiter'] and \
+              attribute not in self.keys():
+            raise IOError('Attribute \'{}\' not found in fort.13.'.format(attribute))
+
+  def _init_default_spinup_attributes(self, attributes):
+    self._spinup_attributes = list()
+    if 'mannings_n_at_sea_floor' in self.keys():
+      self._spinup_attributes.append('mannings_n_at_sea_floor')
+    if 'primitive_weighting_in_continuity_equation' in self.keys():
+      self._spinup_attributes.append('primitive_weighting_in_continuity_equation')
+    if 'surface_submergence_state' in self.keys():
+      self._spinup_attributes.append('surface_submergence_state')
+
+  def _init_default_runtime_attributes(self, attributes):
+    self._runtime_attributes = list()
+    for attribute in self.keys():
+      self._runtime_attributes.append(attribute)
