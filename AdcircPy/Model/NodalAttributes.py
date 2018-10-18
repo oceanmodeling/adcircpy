@@ -57,8 +57,8 @@ class NodalAttributes(dict):
     else:
       if isinstance(attributes, str):
         self._spinup_attributes = list(attributes)
-      else:
-        self._spinup_attributes = list()
+      elif isinstance(attributes, list):
+        self._spinup_attributes = attributes
 
   @property
   def runtime_attributes(self):
@@ -76,8 +76,8 @@ class NodalAttributes(dict):
     else:
       if isinstance(attributes, str):
         self._runtime_attributes = list(attributes)
-      else:
-        self._runtime_attributes = list()
+      elif isinstance(attributes, list):
+        self._runtime_attributes = attributes
   
   def _check_attributes(self, attributes):
     if attributes is not None:
@@ -85,10 +85,7 @@ class NodalAttributes(dict):
         attributes=list(attributes)
       if isinstance(attributes, list):
         for attribute in attributes:
-          # Not all attributes have to be part of fort.13,
-          # elemental_slope_limiter is one such example.
-          if attribute not in ['elemental_slope_limiter'] and \
-              attribute not in self.keys():
+          if attribute not in self.keys():
             raise IOError('Attribute \'{}\' not found in fort.13.'.format(attribute))
 
   def _init_default_spinup_attributes(self, attributes):
