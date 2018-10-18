@@ -1,4 +1,6 @@
 import os
+import wget
+import tarfile
 from datetime import datetime, timedelta
 from AdcircPy.core.FixPointNormalize import FixPointNormalize
 """
