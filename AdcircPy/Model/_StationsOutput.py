@@ -10,8 +10,8 @@ class _StationsOutput(OrderedDict, _ModelOutputs):
     self[station_id] = {'x' : x, 'y' : y}
 
   @staticmethod
-  def _parse_fort15(path, _hint):
-    stations=dict()
+  def parse_fort15(path, _hint):
+    fort15=dict()
     with open(path,'r') as f:
       for line in f:
         if _hint in line:
@@ -26,8 +26,8 @@ class _StationsOutput(OrderedDict, _ModelOutputs):
             coords = [float(x) for x in coords if x != '']
             x = float(coords[0])
             y = float(coords[1])
-            stations[station_name]={'x' : x, 'y' : y}
-    return stations
+            fort15[station_name]={'x' : x, 'y' : y}
+    return fort15
 
 
 

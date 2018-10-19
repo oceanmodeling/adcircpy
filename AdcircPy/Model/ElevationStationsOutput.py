@@ -13,6 +13,6 @@ class ElevationStationsOutput(_StationsOutput):
 
   @classmethod
   def from_fort15(cls, path, sampling_frequency=None, netcdf=True, spinup=False, _hint='NOUTE', harmonic_analysis=False):
-    return cls(cls._parse_fort15(path, _hint), sampling_frequency, netcdf, spinup, harmonic_analysis)
+    return cls(cls.parse_fort15(path, _hint), sampling_frequency, netcdf, spinup, harmonic_analysis)
 
 
