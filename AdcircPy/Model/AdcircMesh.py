@@ -210,41 +210,6 @@ class AdcircMesh(UnstructuredMesh):
     if show == True:
       plt.show()
 
-  def interpolate_DEM(self, tile, **kwargs):
-    method = kwargs.pop("method", "FVM")
-    channel_polygons = kwargs.pop("channel_polygons", None)
-    bar_polygons = kwargs.pop("bar_polygons", None)
-    tile_extent = tile.get_extent()
-    idxs_of_points_in_tile = self.get_extent_idx(tile_extent, tile.epsg)
-    xyz = tile.get_xyz(epsg=self.epsg)
-    for idx in idxs_of_points_in_tile:
-      path = self.get_finite_volume_Path(idx)
-      _idx, = np.where(np.logical_and(
-                  np.logical_and(xyz[:,0]>=np.min(path.vertices[:,0]), xyz[:,0]<=np.max(path.vertices[:,0])),
-                  np.logical_and(xyz[:,1]>=np.min(path.vertices[:,1]), xyz[:,1]<=np.max(path.vertices[:,1]))))
-      values = xyz[_idx,:]
-      if method=="FVM":
-        _values = values[np.where(path.contains_points(values[:,0:2])),2]
-        self.values[idx] = np.mean(_values)
-      else:
-        self.values[idx] = griddata((xyz[_idx,0], xyz[_idx,1]), xyz[_idx,2], (self.x[idx], self.y[idx]), method=method)
-      if channel_polygons is not None:
-        for channel_polygon in channel_polygons:
-          if channel_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(channel_polygon):
-            try: 
-              _values
-            except:
-              _values = values[np.where(path.contains_points(values[:,0:2])),2]
-            self.values[idx] = np.min(_values)
-  
-      if bar_polygons is not None:
-        for bar_polygon in bar_polygons:
-          if bar_polygon.contains_point((self.x[idx], self.y[idx])):#path.intersects_path(bar):
-            try:
-              _values
-            except:
-              _values = values[np.where(path.contains_points(values[:,0:2])),2]
-            self.values[idx] = np.max(_values)
 
   def write_fort14(self, path):
     if self.datum != 'MSL':
