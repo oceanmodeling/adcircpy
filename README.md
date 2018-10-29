@@ -1,4 +1,4 @@
-Status of the master branch: [![CircleCI](https://circleci.com/gh/jreniel/AdcircPy/tree/master.svg?style=svg)](https://circleci.com/gh/jreniel/AdcircPy/tree/master)
+Status of the master branch: [![CircleCI](https://circleci.com/gh/jreniel/AdcircPy/tree/master.svg?style=svg)](https://circleci.com/gh/jrenielc/AdcircPy/tree/master)
 
 # AdcircPy </h1>
 ### A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 

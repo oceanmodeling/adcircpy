@@ -79,8 +79,7 @@ class _ATCF(metaclass=abc.ABCMeta):
       _SEQ = int(line[14].strip(' '))
       _SWQ = int(line[15].strip(' '))
       _NWQ = int(line[16].strip(' '))
-      _check = np.asarray([_NEQ, _SEQ, _SWQ, _NWQ])
-      if not np.all(_check==0):
+      if not np.all(np.asarray([_NEQ, _SEQ, _SWQ, _NWQ])==0):
         self._basin.append(line[0])
         self._storm_number.append(line[1].strip(' '))
         _datetime = line[2].strip(' ')

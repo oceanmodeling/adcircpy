@@ -1,0 +1,189 @@
+import os
+import numpy as np
+from datetime import datetime
+from AdcircPy.Winds.ATCF import ATCF
+
+class BestTrack(ATCF):
+  def __init__(self, storm_id, start_date=None, end_date=None):
+    self._url = 'http://ftp.nhc.noaa.gov/atcf/archive/'
+    super(BestTrackHindcast, self).__init__(storm_id, start_date, end_date)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # self.start_date = start_date
+    # self.end_date   = end_date
+    # self.hurdat2_id = hurdat2_id
+    # self._init_vars()
+    # self._init_hurdat2()
+    # self._init_dates()
+    # self._init_datetime_indexes()
+    # self._init_central_pressure()
+    # self._init_speeds()
+    # self._generate_best_track()
+
+  # def dump(self, path):
+  #   with open(path,'w') as f:
+  #     for line in self.best_track:
+  #       f.write(line)
+  #       f.write('\n')
+
+  # def printf(self):
+  #   print('\n')
+  #   for line in self.best_track:
+  #     print(line)
+
+  # def _init_central_pressure(self):
+  #   self.central_pressure = list()
+  #   self.__raise_bad_central_pressure_init()
+  #   for i in range(len(self.datetime)):
+  #     central_pressure=1013
+  #     if self.min_pressure[i] > central_pressure:
+  #       central_pressure=int(self.min_pressure[i]+1)
+  #     self.central_pressure.append(central_pressure)
+
+  # def _init_speeds(self):
+  #   self.U_translational_speed=list()
+  #   self.V_translational_speed=list()
+  #   self.h_speed=list()
+       
+
+
+  def _generate_best_track(self):
+    self.best_track=list()
+    self.__first_entry=True # implementation detail
+    for self.i in range(self.start_index, self.end_index+1):
+      for self._isotach in  self.wind_data.keys():
+        _isotach=list()
+        for _isot in list(self.wind_data.keys()):
+          for quadrant in list(self.wind_data[_isot].keys()):
+            _isotach.append(self.wind_data[_isot][quadrant][self.i])
+        _34_iso = _isotach[0:4]
+        _50_iso = _isotach[4:8]
+        _64_iso = _isotach[8:12]
+        self._cnt=0
+        if any(_34_iso) > 0:
+          self._cnt+=1
+        if any(_50_iso) > 0:
+          self._cnt+=1
+        if any(_64_iso) > 0:
+          self._cnt+=1
+        if any(_34_iso)>0 and self._isotach=='34':
+          self.__append_isotach_data()
+        if any(_50_iso)>0 and self._isotach=='50':
+          self.__append_isotach_data()
+        if any(_64_iso)>0 and self._isotach=='64':
+          self.__append_isotach_data()
+        if self._cnt==0 and self.end_date==self.datetime[self.i]:
+          if self._isotach=='34':
+            self.__append_isotach_data()
+        elif self._cnt==0:
+          continue
+
+  # def __append_isotach_data(self):
+  #   #1 : basin
+  #   string = "AL,"
+  #   #2 : hurricane_no/hurricane_id
+  #   string+= " {},".format(self.hurdat2_id[2:4])
+  #   #3 : record datetime
+  #   string+= " {},".format(self.datetime[self.i].strftime('%Y%m%d%H'))
+  #   #4 : landfall tag
+  #   string+= "{:>3},".format(self.record_identifier[self.i])
+  #   #5 : BestTrack tag
+  #   string+= " BEST,"
+  #   #6 : deltatime tag
+  #   if self.__first_entry==True:
+  #     self.__first_entry = int((self.datetime[self.i]-self.start_date).total_seconds()/3600)
+  #   string+= "{:>4},".format(int((self.datetime[self.i]-self.start_date).total_seconds()/3600)-self.__first_entry)
+  #   #7 : lat
+  #   _lat = self.lat[self.i].split('.')
+  #   _lat = _lat[0].strip()+_lat[1]
+  #   string+= "{:>5},".format(_lat)
+  #   #8 : lon
+  #   _lon = self.lon[self.i].split('.')
+  #   _lon = _lon[0].strip()+_lon[1]
+  #   string+= "{:>6},".format(_lon)
+  #   #9 : max sustained_winds 
+  #   string+= "{:>4},".format(int(self.max_sustained_winds[self.i]))
+  #   #10 : min pressure
+  #   string+= "{:>5},".format(int(self.min_pressure[self.i]))
+  #   #11 : development level
+  #   string+= "{:>3},".format(self.development_level[self.i])
+  #   #12 : isotach
+  #   # Hack to write isotach as zero at the end of the record.
+  #   # Not sure why this is necessary for ADCIRC,
+  #   # but it is written like this on the Sandy fort.22 used as example (NOAA:sar08).
+  #   if self._cnt==0 and self.end_date==self.datetime[self.i]:
+  #     string+="{:>4},".format(0)
+  #   else:
+  #     string+= "{:>4},".format(self._isotach)
+  #   #13 : quadrant
+  #   string+= "{:>4},".format('')
+  #   #14 : radius of isotach NEQ
+  #   string+= "{:>5},".format(int(self.wind_data[self._isotach]['NEQ'][self.i]))
+  #   #15 : radius of isotach SEQ
+  #   string+= "{:>5},".format(int(self.wind_data[self._isotach]['SEQ'][self.i]))
+  #   #16 : radius of isotach SWQ
+  #   string+= "{:>5},".format(int(self.wind_data[self._isotach]['SWQ'][self.i]))
+  #   #17 : radius of isotach NWQ
+  #   string+= "{:>5},".format(int(self.wind_data[self._isotach]['NWQ'][self.i]))
+  #   #18 : background pressure
+  #   string+= "{:>5},".format(self.central_pressure[self.i])
+  #   #19 : radius of last closed isobar RRP, unsued
+  #   string+= "{:>5},".format('')
+  #   #20 : Rmax, unused
+  #   string+= "{:>5},".format('')
+  #   #21 : gusts, unused
+  #   string+= "{:>4},".format('')
+  #   #22 : eye diamer, unused
+  #   string+= "{:>4},".format('')
+  #   #23 : subregion, unsused
+  #   string+= "{:>4},".format('')
+  #   #24 : maxseas, unsused
+  #   string+= "{:>4},".format('')
+  #   #25 : initials, unused
+  #   string+= "{:>4},".format('')
+  #   #26 : direction, **aswip**
+  #   string+= "{:>3},".format('')
+  #   #27 : speed, **aswip**
+  #   string+= "{:>4},".format('')
+  #   #28 : stormname
+  #   string+= "{:^12},".format(self.event_name)
+  #   #29 : record number, **aswip**
+  #   string+= "{:>4},".format('')
+  #   #30 : number of isotachs reported
+  #   string+= "{:>5},".format(self._cnt)
+  #   #31 : use NEQ isotach flag, **aswip**
+  #   string+= "{:>2},".format('')
+  #   #32 : use SEQ isotach flag, **aswip**
+  #   string+= "{:>2},".format('')
+  #   #33 : use SWQ isotach flag, **aswip**
+  #   string+= "{:>2},".format('')
+  #   #34 : use NWQ isotach flag, **aswip**
+  #   string+= "{:>2},".format('')
+  #   self.best_track.append(string)
