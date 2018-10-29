@@ -74,6 +74,7 @@ plt.show()
 ```
 
 ### Example of fort.15 generation:
+#### Tidal only run:
 
 ```Python
 from AdcircPy import AdcircPy
@@ -82,7 +83,7 @@ Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
 	                      fort13='/path/to/fort.13')
 start_date = datetime.now()
 end_date = start_date+timedelta(days=5)
-tidalRun = Mesh.generate_tidal_run(start_date, end_date)
+tidalRun = Mesh.TidalRun(start_date, end_date)
 tidalRun.dump('/directory/to/dump')
 ```
 
