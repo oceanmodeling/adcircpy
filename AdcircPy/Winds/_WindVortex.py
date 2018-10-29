@@ -96,6 +96,9 @@ class _WindVortex(_ATCF):
       self._v.append(speed*np.sin(direction))
 
   def __init_speed_and_direction(self):
+    zone = utm.from_latlon(self._latitude[0], self._longitude[0])[2]
+    utm_proj = pyproj.Proj(proj='utm', zone=zone)
+    x, y = utm_proj(self._longitude, self._latitude)
     for i, datetime in enumerate(self.__unique_datetimes):
       indexes, = np.where(np.asarray(self.datetime)==datetime)
       for idx in indexes:
@@ -161,6 +164,8 @@ class _WindVortex(_ATCF):
       string+= "{:>3},".format(self._direction[i])
       string+= "{:>4},".format(self._speed[i])
       string+= "{:^12},".format(self._name[i])
+      # from this point forwards it's all aswip
       string+= "{:>4},".format(self._record_number[i])
+      # string+= "{:>5},".format(self._record_number[i])
       string+="\n"
       self._fort22.append(string)
