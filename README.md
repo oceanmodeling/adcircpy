@@ -1,15 +1,18 @@
 Status of the master branch: [![CircleCI](https://circleci.com/gh/jreniel/AdcircPy/tree/master.svg?style=svg)](https://circleci.com/gh/jreniel/AdcircPy/tree/master)
 
 # AdcircPy </h1>
-## A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
+### A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
 
-### Basic Installation:
+## Basic Installation:
 You can install this software through conda or through pip.</br>
 The dependecies of Python packages installed through pip must be satisfied by the operating system (for example, the headers for HDF5 for use with netCDF4). Therefore, the recommended method of installation is through conda. </br>
 
+It is recommended that this package is used on Linux, but Windows should work as well. Not tested in MacOS, but should also work as well.</br>
+
+
 Method 1 describes the steps to install thorugh conda, while method 2 describes the steps to perform a pip only install.
 
-#### Method 1: Conda (the easy way!)
+### Method 1: Conda (the easy way!)
 #### Windows:
 Install Anaconda for Windows</br>
 Using the Anaconda Command Prompt, navigate to the directory where the AdcircPy has been downloaded and run the following command:
@@ -28,9 +31,10 @@ This will install the AdcircPy on your conda environment. Remember to alwasy act
 ```cmd
 conda activate AdcircPy
 ```
+#### Linux:
+Same as Windows but use conda-linux-x86_64.yml instead.
 
-
-#### Method 2: Pip-only (for the hardcore purist)
+### Method 2: Pip-only (for the hardcore purist)
 
 pyproj needs to be installed prior the installation on pip by running:</br>
 
@@ -42,14 +46,14 @@ Now you can install the package through pip by executing:
 ```cmd
 pip install AdcircPy
 ```
-If the package fails to install through pip, check if you have the headers installed in your os.
+If the package fails to install through pip, check if you have the correct headers installed in your operating system. Using conda is highly recommended.
 
 ### Usage
 
 
 This package is an API to handle input and output files for the [ADCIRC](http://adcirc.org) hydrodynamic model. 
 
-Create a new direectory where you plan to start your project and create a new file with the following content:
+Create a new directory where you plan to start your project and create a new file with the following content:
 
 ```Python
 from AdcircPy import AdcircPy
