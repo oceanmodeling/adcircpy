@@ -25,7 +25,7 @@ class AdcircMesh(UnstructuredMesh):
 
   def TidalRun(self, start_date, end_date, spinup_date=None, constituents=None, netcdf=True, **kwargs):
     """ Instantiates an ADCIRC tidal only run. """
-    return TidalRun(self, start_date, end_date, spinup_date, constituents, netcdf, **kwargs)
+    return TidalRun(self, start_date, end_date, spinup_date, constituents, netcdf=netcdf, **kwargs)
   
   def HindcastRun(self, hurdat_id, start_date=None, end_date=None, spinup_date=None, tides=True, netcdf=True, **kwargs):
     """ Generates an ADCIRC hindcast run using wind data from the HURDAT2 database. """
@@ -209,7 +209,6 @@ class AdcircMesh(UnstructuredMesh):
     self._cbar.set_ticklabels([np.around(vmin, 2), mlevel, np.around(vmax, 2)])
     if show == True:
       plt.show()
-
 
   def write_fort14(self, path):
     if self.datum != 'MSL':

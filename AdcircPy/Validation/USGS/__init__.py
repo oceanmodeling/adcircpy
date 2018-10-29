@@ -1,6 +1,7 @@
+from collections import OrderedDict
 from AdcircPy.Validation.USGS import _HighWaterMarks
 
-class HighWaterMarks(dict):
+class HighWaterMarks(OrderedDict):
   url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
   params = dict()
   params['EventType']   = 2 # 2 for hurricane

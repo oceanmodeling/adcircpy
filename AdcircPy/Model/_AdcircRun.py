@@ -100,6 +100,8 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.projhost = kwargs.pop("projhost", "projhost")
     self.conv = kwargs.pop("conv", "conv")
     self.contac= kwargs.pop("contac", "contac")
+    if len(kwargs.keys())>0:
+      raise Exception('Provided unknown keywords: {}'.format(list(kwargs.keys())))
 
   def dump(self, directory, printf=False):
     self.directory = directory
@@ -110,7 +112,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self._write_fort15()
 
     with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
-      self.IHOT=567
+      self._set_IHOT()
       self._write_fort15()
     
     if printf==True:
@@ -203,10 +205,16 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     # self._write_fortran_namelists()
     self.f.write('\n')
 
+  def _set_IHOT(self):
+    if self.netcdf==True:
+      self.IHOT=567
+    else:
+      self.IHOT=67
+      
   def _write_IHOT(self):
     if self.IHOT==0:
       self.f.write('{:<32d}'.format(0))
-    elif self.IHOT==567:
+    elif self.IHOT!=0:
       self.f.write('{:<32d}'.format(567))
     self.f.write('! IHOT - HOT START PARAMETER\n')
 
@@ -388,9 +396,18 @@ class _AdcircRun(metaclass=abc.ABCMeta):
             self.f.write('{:>14.6f}'.format(boundary[constituent]['hp'][i]))
             self.f.write('\n')
   
+  def __remove_stations_not_in_domain(self):
+    minlon, maxlon, minlat, maxlat = self.AdcircMesh.get_extent()
+    for station in self.__StationsOutput.keys():
+      x = self.__StationsOutput[station]['x']
+      y = self.__StationsOutput[station]['y']
+      if minlon<x<maxlon == False or minlat<y<maxlat==False:
+        del self.__StationsOutput[station]   
+
   def __write_StationsOutput(self):
     # Should NSPOOL be float or int?
     # forcing int, but is there a case where it should be float?
+    self.__remove_stations_not_in_domain()
     NSTA = len(self.__StationsOutput.keys())
     if  NSTA > 0:
       if self.TidalForcing is not None:
@@ -424,7 +441,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.f.write('{:<9}{}\n'.format('',self.__StationsOutput._comment1))
     self.f.write('{:<32d}{}\n'.format(NSTA, self.__StationsOutput._comment2))
     if NSTA>0:
-      if self.IHOT==567 or self.__StationsOutput.spinup==True:
+      if self.IHOT!=0 or self.__StationsOutput.spinup==True:
         for station in self.__StationsOutput.keys():
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['x']))
           self.f.write('{:<13.6f}'.format(self.__StationsOutput[station]['y']))
