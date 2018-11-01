@@ -5,10 +5,11 @@ from netCDF4 import Dataset
 import numpy as np
 from AdcircPy.Model import AdcircMesh
 from AdcircPy.Outputs.Maxele import Maxele
+from AdcircPy.Outputs.ElevationSurfaceTimeseries import ElevationSurfaceTimeseries
 from AdcircPy.Outputs.ElevationStations import ElevationStations
 from AdcircPy.Outputs.ScalarSurfaceExtrema import ScalarSurfaceExtrema
 
-class Outputs(object):
+class _OutputFactory(object):
   """
   Private class called by AdcircPy.read_output() that returns
   the appropriate subclass belonging to the given output file.
@@ -44,17 +45,19 @@ class Outputs(object):
 
   def _netcdf_factory(self):
     nc = Dataset(self.path)
-    if 'station' in nc.variables.keys():
+    if 'adcirc_mesh' in nc.variables.keys():
+      if 'zeta_max' in nc.variables.keys():
+        return Maxele.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
+      elif 'zeta' in nc.variables.keys():
+        return ElevationSurfaceTimeseries.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
+      else:
+        raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
+
+    else:
       if 'zeta' in nc.variables.keys():
         return ElevationStations.from_netcdf(self.path)
       else:
         raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
-    elif 'zeta_max' in nc.variables.keys():
-      return Maxele.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
-    elif 'zeta' in nc.variables.keys():
-      return ElevationStations.from_netcdf(self.path)
-    else:
-      raise NotImplementedError('Guessed a NetCDF output but instantiation has not been implemented yet.')
 
   def _ascii_factory(self):
     self.f = open(self.path, 'r')

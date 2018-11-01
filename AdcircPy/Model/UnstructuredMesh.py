@@ -100,6 +100,9 @@ class UnstructuredMesh(object):
     else:
       self._Tri = Triangulation(self.x, self.y, self.elements)
 
+  def _update_Tri(self):
+    self._init_Tri()
+
   def _init_KDTree(self):
     self.KDTree = KDTree(self.get_xy())
 
@@ -257,8 +260,9 @@ class UnstructuredMesh(object):
               return self.get_finite_volume_element_list(node_idx)[i]
 
   def _init_fig(self, axes=None, extent=None, title=None, epsg=None):
+    self.plt = plt
     if axes is None:                
-      fig = plt.figure()
+      fig = self.plt.figure()
       axes  = fig.add_subplot(111)
     if title is not None:
       axes.set_title(title)

@@ -15,7 +15,7 @@ class AdcircMesh(UnstructuredMesh):
     super(AdcircMesh, self).__init__(x, y, elements, values, **kwargs)
 
   @classmethod
-  def from_fort14(cls, fort14, datum='MSL', epsg=4326, fort13=None, datum_grid=None):
+  def from_fort14(cls, fort14, datum=None, epsg=4326, fort13=None, datum_grid=None):
     kwargs = cls.parse_fort14(fort14)
     kwargs['datum'] = datum
     kwargs['epsg']  = epsg

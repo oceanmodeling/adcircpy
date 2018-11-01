@@ -4,12 +4,12 @@ class ScalarSurfaceTimeseries(UnstructuredMesh):
   """
   def __init__(self, x, y, values, elements, **kwargs):
     UnstructuredMesh.__init__(self, x, y, values, elements, **kwargs)
-    self._f = f
-    self._slice = 0.
+    # self._f = f
+    # self._slice = 0.
 
-  @staticmethod
-  def from_file(path, fort14, **kwargs):
-    return _ScalarSurfaceTimeseries_._from_ascii(path, fort14, **kwargs)
+  # @classmethod
+  # def from_ascii(cls, path, fort14, **kwargs):
+  #   return _ScalarSurfaceTimeseries_._from_ascii(path, fort14, **kwargs)
 
   @property
   def slice(self):
