@@ -34,8 +34,8 @@ class _90DayTidal(object):
 
   def _init_dates(self):
     self.spinup_date = datetime(2013, 8, 1, 0, 0, 0)
-    self.start_time  = self.spinup_date + timedelta(days=9)
-    self.end_time    = self.spinup_date + timedelta(days=18)
+    self.start_time  = self.spinup_date + timedelta(days=30)
+    self.end_time    = self.spinup_date + timedelta(days=90)
   
   def _init_elevation_station_output_request(self):
     self.ElevationStationsOutput = ESO.from_fort15(FORT15_PATH,
