@@ -2,17 +2,15 @@ import os
 import abc
 from datetime import datetime, timedelta
 import numpy as np
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline, griddata, interp1d
 from netCDF4 import Dataset
 from AdcircPy.Model.ElevationStationsOutput import ElevationStationsOutput
 from AdcircPy.Model.VelocityStationsOutput import VelocityStationsOutput
 from AdcircPy.Model.ElevationGlobalOutput import ElevationGlobalOutput
 from AdcircPy.Model.VelocityGlobalOutput import VelocityGlobalOutput
-from AdcircPy.core import alias
+from AdcircPy.core import ServerConfiguration
 
 class _AdcircRun(metaclass=abc.ABCMeta):
-  
-  @alias({'ElevationStationsOutput': 'ESO', 'VelocityStationsOutput':'VSO', 'ElevationGlobalOutput':'EGO', 'VelocityGlobalOutput':'VGO'})
   def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, netcdf=True, **kwargs):
     self.AdcircMesh = AdcircMesh
     self.ElevationStationsOutput = ElevationStationsOutput
@@ -22,6 +20,20 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.netcdf=netcdf
     self._init_fort15(**kwargs)
     self._init_TPXO()
+
+
+  @property
+  @abc.abstractmethod
+  def NWS(self):
+    """
+    This property determines the run type in Adcirc.
+    """
+
+  @abc.abstractmethod
+  def _init_NWS(self):
+    """
+    This should be called on __init__ of daughter class to initialize self._NWS
+    """
 
   def _init_fort15(self, **kwargs):
     self.RUNDES = kwargs.pop("RUNDES", self.AdcircMesh.description)  # UPTO 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
@@ -44,7 +56,6 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self.NWP = kwargs.pop("NWP", None)  # Not used, provided by package
     self.NCOR = kwargs.pop("NCOR", 1)  # Coriolis; 0:spatially constant, 1:spatially variable
     self.NTIP = kwargs.pop("NTIP", None)  # Tidal potentials and self attraction; 0:OFF, 1:TidalPotential, 2:use_fort.24
-    self.NWS = kwargs.pop("NWS", None) # Meteo forcing selection. Provided by package.
     self.NRAMP = kwargs.pop("NRAMP", None) # Provided by package. 0 for coldstart, 8 for hotstart
     self.G = kwargs.pop("G", 9.81) # G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
     self.TAU0 = kwargs.pop("TAU0", None)  # Many options, need to set on package. It actually depends on a tau0_gen.f subroutine
@@ -114,6 +125,9 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
       self._set_IHOT()
       self._write_fort15()
+
+    if hasattr(self, '_ServerConfiguration'):
+      self._ServerConfiguration.dump(self.directory)
     
     if printf==True:
       with open(self.directory+'/fort.15.coldstart', 'r') as fort15:
@@ -124,6 +138,9 @@ class _AdcircRun(metaclass=abc.ABCMeta):
         for line in fort15.read().splitlines():
           print(line)
 
+  def ServerConfiguration(self, *argv, **kwargs):
+    self._ServerConfiguration = ServerConfiguration(self, *argv, **kwargs)
+
   def _init_TPXO(self):
     if self.AdcircMesh.ocean_boundaries is None:
       self.TPXO=None; return
@@ -132,24 +149,30 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     else:
       nc = Dataset(self.TidalForcing.tpxo_path)
       tpxo_constituents = nc['con'][:].tostring().decode('UTF-8').split()
-      x = nc['lon_z'][:]
-      y = nc['lat_z'][:]
-      x = np.linspace(np.min(x),np.max(x),num=x.shape[0])
-      y = np.linspace(np.min(y),np.max(y),num=y.shape[1])
+      x = nc['lon_z'][:].reshape(nc['lon_z'].size)
+      y = nc['lat_z'][:].reshape(nc['lat_z'].size)
       self.TPXO=list()
       for ocean_boundary in self.AdcircMesh.ocean_boundaries:
+        _x = (self.AdcircMesh.x[ocean_boundary]) % 360.
+        _y = (self.AdcircMesh.y[ocean_boundary]) % 360.
+        _idx = np.where(np.logical_and(
+                         np.logical_and(np.min(_x)<=x, x<=np.max(_x)),
+                         np.logical_and(np.min(_y)<=y, y<=np.max(_y))))
         constituents = dict()
         for constituent in self.TidalForcing.constituents:
           # There might be false mismatches between both databases. (tidal components who's names mismatch)      
           if constituent.lower() in tpxo_constituents:
             constituents[constituent] = dict()
             idx = tpxo_constituents.index(constituent.lower())
-            ha_interpolator = RectBivariateSpline(x, y, nc['ha'][idx,:,:])
-            hp_interpolator = RectBivariateSpline(x, y, nc['hp'][idx,:,:])
-            _x = (self.AdcircMesh.x[ocean_boundary]) % 360.
-            _y = (self.AdcircMesh.y[ocean_boundary]) % 360.
-            constituents[constituent]['ha'] = ha_interpolator.ev(_x, _y)
-            constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
+            ha = nc['ha'][idx,:,:].reshape(nc['ha'][idx,:,:].size)
+            hp = nc['hp'][idx,:,:].reshape(nc['hp'][idx,:,:].size)
+            constituents[constituent]['ha'] = griddata((x[_idx], y[_idx]), ha[_idx], (_x,_y), method='nearest')
+            constituents[constituent]['hp'] = griddata((x[_idx], y[_idx]), hp[_idx], (_x,_y), method='nearest')
+            # Rectilinear gives nicer results but tapers too strongly near shorelines and causes blowups.
+            # ha_interpolator = RectBivariateSpline(x, y, nc['ha'][idx,:,:])
+            # hp_interpolator = RectBivariateSpline(x, y, nc['hp'][idx,:,:])
+            # constituents[constituent]['ha'] = ha_interpolator.ev(_x, _y)
+            # constituents[constituent]['hp'] = hp_interpolator.ev(_x, _y)
         self.TPXO.append(constituents)
 
   def _write_fort15(self):
@@ -168,8 +191,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self._write_NWP() # depends on fort.13 and a better implementation could be designed.
     self.f.write('{:<32d}! NCOR - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER\n'.format(self.NCOR))
     self._write_NTIP()
-    self._write_NWS()
-    self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
+    self.f.write('{:<32d}! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n'.format(self.NWS))
     self._write_NRAMP()
     self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
     self.f.write('{:<32.2f}! G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS\n'.format(self.G))
@@ -246,10 +268,6 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     elif self.NTIP=='fort.24':
       self.NTIP=2
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
-
-  @abc.abstractmethod
-  def _write_NWS(self):
-    """ Depends on whether wind forcing is present or not. """
 
   @abc.abstractmethod
   def _write_NRAMP(self):

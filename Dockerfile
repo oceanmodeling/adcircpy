@@ -1,4 +1,5 @@
 FROM frolvlad/alpine-miniconda3
+RUN apk add build-base
 RUN apk add tini
 RUN apk add bash
 RUN apk add libx11

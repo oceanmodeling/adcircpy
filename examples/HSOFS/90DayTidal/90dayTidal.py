@@ -7,7 +7,7 @@ from AdcircPy import ElevationStationsOutput as ESO
 
 MESH_PATH='./fort.14'
 FORT13_PATH='./fort.13'
-FORT15_PATH='./fort.15'
+FORT15_PATH='./fort.15.original'
 
 class _90DayTidal(object):
   """
