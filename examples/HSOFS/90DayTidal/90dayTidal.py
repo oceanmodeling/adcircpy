@@ -29,13 +29,13 @@ class _90DayTidal(object):
     self._dump_TidalRun()
 
   def _init_mesh(self):
-    self.Mesh = AdcircPy.read_mesh(fort14=MESH_PATH,
-                                    fort13=FORT13_PATH)
+    self.AdcircMesh = AdcircPy.read_mesh(fort14=MESH_PATH,
+                                         fort13=FORT13_PATH)
 
   def _init_dates(self):
     self.spinup_date = datetime(2013, 8, 1, 0, 0, 0)
-    self.start_time  = self.spinup_date + timedelta(days=30)
-    self.end_time    = self.spinup_date + timedelta(days=90)
+    self.start_time  = self.spinup_date + timedelta(days=9)
+    self.end_time    = self.spinup_date + timedelta(days=18)
   
   def _init_elevation_station_output_request(self):
     self.ElevationStationsOutput = ESO.from_fort15(FORT15_PATH,
@@ -46,22 +46,11 @@ class _90DayTidal(object):
     self.ElevationGlobalOutput = EGO(harmonic_analysis=True,
                                      spinup=True)
 
-  def _init_fort13_attributes(self):
-    self.Mesh.fort13.spinup_attributes = ['elemental_slope_limiter',
-                                          'mannings_n_at_sea_floor',
-                                          'primitive_weighting_in_continuity_equation',
-                                          'surface_submergence_state']
-    
-    self.Mesh.fort13.runtime_attributes = ['elemental_slope_limiter',
-                                          'mannings_n_at_sea_floor',
-                                          'primitive_weighting_in_continuity_equation',
-                                          'surface_submergence_state']
-
   def _init_TidalRun(self):
-    self.TidalRun = self.Mesh.TidalRun(self.start_time, self.end_time,
+    self.TidalRun = self.AdcircMesh.TidalRun(self.start_time, self.end_time,
                                         spinup_date=self.spinup_date,
-                                        ESO=self.ElevationStationsOutput,
-                                        EGO=self.ElevationGlobalOutput,
+                                        ElevationStationsOutput=self.ElevationStationsOutput,
+                                        ElevationGlobalOutput=self.ElevationGlobalOutput,
                                         constituents=['K1', 'O1', 'P1', 'Q1',
                                                       'N2', 'M2', 'S2', 'K2',
                                                       'Mf', 'Mm', 'M4', 'MS4','MN4'])
