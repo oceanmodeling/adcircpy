@@ -48,11 +48,10 @@ pip install AdcircPy
 ```
 If the package fails to install through pip, check if you have the correct headers installed in your operating system. Using conda is highly recommended.
 
-### NOTE: If you are developer and would like to debug the package, please install this package on developer mode by doing:
+#### NOTE: If you are developer and would like to debug the package, you may install this package on developer mode by doing:
 ```cmd
 pip install -e .
 ```
-### on the AdcircPy folder. This will ensure that any changes you make to the source code will be reflected on your current environment. This will not be necessary in the future when an official stable release is provided through pip.
 
 ### Usage
 
@@ -97,5 +96,36 @@ tidalRun = Mesh.TidalRun(start_date, end_date)
 tidalRun.dump('/directory/to/dump')
 ```
 
+#### Generation of a Best Track Meteorological run:
+
+```Python
+from datetime import datetime, timedelta
+from AdcircPy import AdcircPy
+storm_id = 'AL182012'
+spinup_date = datetime(2012, 10, 11, 0)
+start_time  = spinup_date + timedelta(days=15)
+end_time    = spinup_date + timedelta(days=19.25)
+Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
+	                      fort13='/path/to/fort.13')
+BestTrackRun = Mesh.BestTrackRun('AL182012', start_time, end_time, spinup_date=spinup_date)
+BestTrackRun.dump('/directory/to/dump')
+```
+
+#### Example where global outputs are requested:
+
+```Python
+from AdcircPy import AdcircPy
+from AdcircPy import ElevationGlobalOutput as EGO
+from datetime import datetime, timedelta
+Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
+	                      fort13='/path/to/fort.13')
+start_date = datetime.now()
+end_date = start_date+timedelta(days=5)
+tidalRun = Mesh.TidalRun(start_date, end_date,
+			ElevationGlobalOutput=EGO(sampling_frequency=timedelta(minutes=15)))
+tidalRun.dump('/directory/to/dump')
+```
+
+See the "examples" directory for more examples where the Elevation stations outputs are requested.
 
 Please report bugs to jreniel@gmail.com

@@ -1,40 +1,95 @@
 import os
 import abc
 from datetime import datetime, timedelta
+from collections import Counter
 import numpy as np
 from scipy.interpolate import RectBivariateSpline, griddata, interp1d
 from netCDF4 import Dataset
 from AdcircPy.Model.ElevationStationsOutput import ElevationStationsOutput
 from AdcircPy.Model.VelocityStationsOutput import VelocityStationsOutput
+from AdcircPy.Model.MeteorologicalStationsOutput import MeteorologicalStationsOutput
 from AdcircPy.Model.ElevationGlobalOutput import ElevationGlobalOutput
 from AdcircPy.Model.VelocityGlobalOutput import VelocityGlobalOutput
+from AdcircPy.Model.MeteorologicalGlobalOutput import MeteorologicalGlobalOutput
 from AdcircPy.core import ServerConfiguration
 
 class _AdcircRun(metaclass=abc.ABCMeta):
-  def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, ElevationGlobalOutput=None, VelocityGlobalOutput=None, netcdf=True, **kwargs):
+  def __init__(self, AdcircMesh, ElevationStationsOutput=None, VelocityStationsOutput=None, MeteorologicalStationsOutput=None,
+                                 ElevationGlobalOutput=None, VelocityGlobalOutput=None, MeteorologicalGlobalOutput=None,
+                                  netcdf=True, **kwargs):
     self.AdcircMesh = AdcircMesh
     self.ElevationStationsOutput = ElevationStationsOutput
     self.VelocityStationsOutput  = VelocityStationsOutput
+    self.MeteorologicalStationsOutput  = MeteorologicalStationsOutput
     self.ElevationGlobalOutput   = ElevationGlobalOutput
     self.VelocityGlobalOutput    = VelocityGlobalOutput
+    self.MeteorologicalGlobalOutput    = MeteorologicalGlobalOutput
     self.netcdf=netcdf
     self._init_fort15(**kwargs)
+    self._init_NWS()
+    self._init_DRAMP()
     self._init_TPXO()
+  
+  def dump(self, directory, printf=False):
+    self.directory = directory
+    os.makedirs(self.directory, exist_ok=True)
+    
+    with open(self.directory+'/fort.15.coldstart', 'w') as self.f:
+      self.IHOT=0
+      self._write_fort15()
 
+    with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
+      self._set_IHOT()
+      self._write_fort15()
 
-  @property
-  @abc.abstractmethod
-  def NWS(self):
+    if hasattr(self, '_ServerConfiguration'):
+      self._ServerConfiguration.dump(self.directory)
+    
+    if printf==True:
+      with open(self.directory+'/fort.15.coldstart', 'r') as fort15:
+        for line in fort15.read().splitlines():
+          print(line)
+
+      with open(self.directory+'/fort.15.hotstart', 'r') as fort15:
+        for line in fort15.read().splitlines():
+          print(line)
+
+  def ServerConfiguration(self, *argv, **kwargs):
     """
-    This property determines the run type in Adcirc.
+    This method is used to provide server configuration parameters.
+    More docstring will be provided in the future.
     """
+    self._ServerConfiguration = ServerConfiguration(self, *argv, **kwargs)
 
   @abc.abstractmethod
   def _init_NWS(self):
     """
-    This should be called on __init__ of daughter class to initialize self._NWS
+    self.NWS = ??
     """
 
+  @abc.abstractmethod
+  def _init_DRAMP(self):
+    """
+    self.NWS = ??
+    """
+
+  @abc.abstractmethod
+  def _write_NRAMP(self):
+    """
+    Depends on whether wind forcing is present or not.
+    """
+
+  @abc.abstractmethod
+  def _write_RNDAY(self):
+    """
+    Depends on forcings.
+    """
+
+  @abc.abstractmethod
+  def _write_DRAMP(self):
+    """
+    Gets untangled on daughter classes.
+    """
   def _init_fort15(self, **kwargs):
     self.RUNDES = kwargs.pop("RUNDES", self.AdcircMesh.description)  # UPTO 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
     self.RUNID = kwargs.pop("RUNID", "generated on {}".format(datetime.now().strftime('%Y-%m-%d')))    # UPTO 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
@@ -114,34 +169,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     if len(kwargs.keys())>0:
       raise Exception('Provided unknown keywords: {}'.format(list(kwargs.keys())))
 
-  def dump(self, directory, printf=False):
-    self.directory = directory
-    os.makedirs(self.directory, exist_ok=True)
-    
-    with open(self.directory+'/fort.15.coldstart', 'w') as self.f:
-      self.IHOT=0
-      self._write_fort15()
-
-    with open(self.directory+'/fort.15.hotstart', 'w') as self.f:
-      self._set_IHOT()
-      self._write_fort15()
-
-    if hasattr(self, '_ServerConfiguration'):
-      self._ServerConfiguration.dump(self.directory)
-    
-    if printf==True:
-      with open(self.directory+'/fort.15.coldstart', 'r') as fort15:
-        for line in fort15.read().splitlines():
-          print(line)
-
-      with open(self.directory+'/fort.15.hotstart', 'r') as fort15:
-        for line in fort15.read().splitlines():
-          print(line)
-
-  def ServerConfiguration(self, *argv, **kwargs):
-    self._ServerConfiguration = ServerConfiguration(self, *argv, **kwargs)
-
   def _init_TPXO(self):
+    """
+    Method to generate the TPXO interpolation on the open boundaries.
+    """
     if self.AdcircMesh.ocean_boundaries is None:
       self.TPXO=None; return
     elif self.TidalForcing is None:
@@ -191,7 +222,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self._write_NWP() # depends on fort.13 and a better implementation could be designed.
     self.f.write('{:<32d}! NCOR - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER\n'.format(self.NCOR))
     self._write_NTIP()
-    self.f.write('{:<32d}! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n'.format(self.NWS))
+    self._write_NWS()
     self._write_NRAMP()
     self.f.write('! NRAMP - RAMP FUNCTION OPTION\n'.format(self.NRAMP))
     self.f.write('{:<32.2f}! G - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS\n'.format(self.G))
@@ -199,6 +230,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self._write_DTDP()
     self.f.write('{:<32.2f}! STATIM - STARTING TIME (IN DAYS)\n'.format(0))
     self.f.write('{:<32.2f}! REFTIM - REFERENCE TIME (IN DAYS)\n'.format(0))
+    self._write_WTIMINC()
     self._write_RNDAY()
     self.f.write('! RNDAY - TOTAL LENGTH OF SIMULATION (IN DAYS)\n')
     self._write_DRAMP()
@@ -215,11 +247,11 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     self._write_ElevationStationsOutput()
     self._write_VelocityStationsOutput()
     self._write_ConcentrationStationsOutput()
-    self._write_WeatherStationsOutput()
+    self._write_MeteorologicalStationsOutput()
     self._write_ElevationGlobalOutput()
     self._write_VelocityGlobalOutput()
     self._write_ConcentrationGlobalOutput()
-    self._write_WeatherGlobalOutput()
+    self._write_MeteorologicalGlobalOutput()
     self._write_HarmonicAnalysisOutputs()
     self._write_HotstartParams()
     self._write_iteration_parameters()
@@ -269,10 +301,13 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       self.NTIP=2
     self.f.write('{:<32d}! NTIP - TIDAL POTENTIAL OPTION PARAMETER\n'.format(self.NTIP))
 
-  @abc.abstractmethod
-  def _write_NRAMP(self):
-    """ Depends on whether wind forcing is present or not. """
-
+  def _write_NWS(self):
+    if self.IHOT==0:
+      self.f.write('{:<32d}'.format(0))
+    else:
+      self.f.write('{:<32d}'.format(self.NWS))
+    self.f.write('! NWS - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER\n')
+  
   def _write_TAU0(self):
     def __check_primitive(attr):
       if 'primitive_weighting_in_continuity_equation' in attr:
@@ -296,35 +331,20 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     the provided mesh.
     """
     self.f.write('{:<32.1f}! DT - TIME STEP (IN SECONDS)\n'.format(self.DTDP))
-
-  @abc.abstractmethod
-  def _write_RNDAY(self):
-    """ Depends on forcings. """
-
-  @abc.abstractmethod
-  def _write_DRAMP(self):
-    """
-    if self.NRAMP==1:
-      
-   
-    elif self.NRAMP==8:
-      if self.DUnRampMete is None:
-        self.DUnRampMete = (self.TidalForcing.start_date - self.TidalForcing.spinup_date).days
-      if self.DRAMPElev is None:
-        self.DRAMPElev = self.DRAMP
-      if self.DRAMPTip is None:
-        self.DRAMPTip = self.DRAMP
-      self.f.write('{:.1f} '.format(self.DRAMP))
-      self.f.write('{:.1f} '.format(self.DRAMPExtFlux))
-      self.f.write('{:.1f} '.format(self.FluxSettlingTime))
-      self.f.write('{:.1f} '.format(self.DRAMPIntFlux))
-      self.f.write('{:.1f} '.format(self.DRAMPElev))
-      self.f.write('{:.1f} '.format(self.DRAMPTip))
-      self.f.write('{:.1f} '.format(self.DRAMPMete))
-      self.f.write('{:.1f} '.format(self.DRAMPWRad))
-      self.f.write('{:.1f} '.format(self.DUnRampMete))
- 
-    """
+  
+  def _write_WTIMINC(self):
+    if self.IHOT>0:
+      if self.NWS==20:
+        self.f.write('{:<5}'.format(self.fort22.start_date.year))
+        self.f.write('{:<3}'.format(self.fort22.start_date.strftime('%m')))
+        self.f.write('{:<3}'.format(self.fort22.start_date.strftime('%d')))
+        self.f.write('{:<3}'.format(self.fort22.start_date.strftime('%H')))
+        self.f.write('{:<2}'.format(1))
+        self.f.write('{:<4}'.format(0.9))
+        self.f.write('{:<1}'.format(1))
+        self.f.write('{:<11}'.format(''))
+      if self.NWS>0:
+        self.f.write('! WTIMINC - meteorological data time increment, Geofactor=1 for NWS=20\n')
 
   def _write_H0_VELMIN(self):
     if self.NOLIFA in [0,1]:
@@ -482,9 +502,13 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     if self.IM==10:
       raise Exception('When IM=10 this line needs to be developed.')
 
-  def _write_WeatherStationsOutput(self):
-    if self.NWS>0:
-      raise Exception('When NWS>0 this line needs to be developed.')
+  def _write_MeteorologicalStationsOutput(self):
+    if self.IHOT>0:
+      if self.NWS>0:
+        if self.MeteorologicalStationsOutput is None:
+          self.MeteorologicalStationsOutput = MeteorologicalStationsOutput()
+        self.__StationsOutput=self.MeteorologicalStationsOutput
+        self.__write_StationsOutput()
 
   def __write_GlobalOutputs(self):
     if self.TidalForcing is not None and self.__GlobalOutputs is not None:
@@ -530,10 +554,13 @@ class _AdcircRun(metaclass=abc.ABCMeta):
     if self.IM==10:
       raise NotImplementedError('Concentration global outputs not yet implemented.')
 
-  def _write_WeatherGlobalOutput(self):
-    if self.NWS>0:
-      raise NotImplementedError('Weather global outputs not yet implemented.')  
-
+  def _write_MeteorologicalGlobalOutput(self):
+    if self.IHOT>0:
+      if self.NWS>0:
+        self.__GlobalOutputs = self.MeteorologicalGlobalOutput
+        self.__write_GlobalOutputs()
+        self.f.write('{:<9}{}'.format('','! NOUTGM,TOUTSGM,TOUTFGM,NSPOOLGM : GLOBAL METEOROLOGICAL  OUTPUT INFO (UNIT  64)\n'))
+ 
   def _write_HarmonicAnalysisOutputs(self):
     # Is NHAINC always an integer?
     if self.IHOT!=0 and self.TidalForcing is not None:

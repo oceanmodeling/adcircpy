@@ -30,6 +30,12 @@ class _WindVortex(_ATCF):
     print('\n', end="")
     for line in self._fort22:
       print(line, end="")
+  
+  def dump(self, path, filename='fort.22.best_track'):
+    with open(path+'/'+filename, 'w') as f:
+      for line in self._fort22:
+        f.write(line)
+
 
   def plot_track(self):
     self.plt = plt

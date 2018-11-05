@@ -6,14 +6,13 @@ class TidalRun(_AdcircRun):
                spinup_date=None, constituents=None, **kwargs):
     self.TidalForcing = TidalForcing(start_date, end_date, spinup_date, constituents)
     super(TidalRun, self).__init__(AdcircMesh, **kwargs)
-    self._init_NWS()
-
-  @property
-  def NWS(self):
-    return self._NWS
-  
+ 
   def _init_NWS(self):
-    self._NWS=0
+    self.NWS=0
+
+  def _init_DRAMP(self):
+    if self.DRAMP is None:
+      self.DRAMP = ((2/3)*(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds())/(60*60*24)
 
   def _write_NRAMP(self):
     self.NRAMP=1
