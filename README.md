@@ -48,6 +48,12 @@ pip install AdcircPy
 ```
 If the package fails to install through pip, check if you have the correct headers installed in your operating system. Using conda is highly recommended.
 
+### NOTE: If you are developer and would like to debug the package, please install this package on developer mode by doing:
+```cmd
+pip install -e .
+```
+### on the AdcircPy folder. This will ensure that any changes you make to the source code will be reflected on your current environment. This will not be necessary in the future when an official stable release is provided through pip.
+
 ### Usage
 
 
