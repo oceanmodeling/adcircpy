@@ -1,4 +1,12 @@
 #! /usr/bin/env python
+"""
+Standalone program for quickly looking at fort.61.nc files against COOPS data.
+For a complete list of options use ./TidalTimeseriesPlots.py -h
+
+Example usage:
+    ./TidalTimeseriesPlots.py /path/to/fort.61.nc --save-path /path/to/directory/for/saving/plots
+"""
+
 import os
 import argparse
 import matplotlib.pyplot as plt
