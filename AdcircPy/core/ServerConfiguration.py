@@ -142,7 +142,7 @@ class ServerConfiguration(object):
     self._ServerConfiguration.append('ln -sf $RUNDIR/fort.15.hotstart $HOTSTARTDIR/fort.15\n')
     self._ServerConfiguration.append('ln -sf $FORT14_PATH $HOTSTARTDIR/fort.14\n')
     self._ServerConfiguration.append('ln -sf $FORT13_PATH $HOTSTARTDIR/fort.13\n')
-    if hasattr(self._AdcircRun, '_fort22'):
+    if hasattr(self._AdcircRun, 'fort22'):
       self._ServerConfiguration.append('ln -sf $RUNDIR/fort.22.best_track $RUNDIR/fort.22.best_track\n')
       self._ServerConfiguration.append('$ADCIRC_BINARIES_DIR/aswip -n 20 -m 4 -z 2 -w fort.22.best_track\n')
       self._ServerConfiguration.append('ln -sf $HOTSTARTDIR/NWS_20_fort.22 $HOTSTARTDIR/fort.22\n')
