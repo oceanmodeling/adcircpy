@@ -11,7 +11,7 @@ class HighWaterMarks(OrderedDict):
     super(HighWaterMarks, self).__init__(**station_data)
 
   @classmethod
-  def from_event_name(cls, event_name, target_datum, filter_dict=None):
+  def from_event_name(cls, event_name, filter_dict=None):
     cls.params['Event'] = cls.get_event_id_from_name(event_name)
     if filter_dict is None:
       filter_dict  = { "riverine" : True,
