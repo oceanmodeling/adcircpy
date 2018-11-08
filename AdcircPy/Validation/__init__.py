@@ -1,2 +1,2 @@
-from AdcircPy.Validation.USGS import HighWaterMarks
+from AdcircPy.Validation import USGS
 from AdcircPy.Validation import COOPS
