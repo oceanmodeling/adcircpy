@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import unittest
 from AdcircPyTests import AdcircPyEnvironment
-from AdcircPy.Validation import HighWaterMarks
+from AdcircPy.Validation.USGS import HighWaterMarks
 
 class testUSGSHighWaterMarks(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):

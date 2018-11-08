@@ -90,10 +90,10 @@ class HighWaterMarks(OrderedDict):
           if self[station]['hwm_environment'].lower() == 'riverine':
             stations_to_delete.add(station)
       if non_still_water == True:
-          if 'still_water' in self[station].keys():
-              print('_USGSHighWaterMaks.py reports finding a still_water key on filter() (report this to the devs! jreniel@gmail.com)')
-              print(self[station]['still_water'])
-              stations_to_delete.add(station)        
+        if 'still_water' in self[station].keys():
+          print('_USGSHighWaterMaks.py reports finding a still_water key on filter() (report this to the devs! jreniel@gmail.com)')
+          print(self[station]['still_water'])
+          stations_to_delete.add(station)        
     for station in stations_to_delete:
       del self[station]
     self.filtered_count=len(stations_to_delete)
