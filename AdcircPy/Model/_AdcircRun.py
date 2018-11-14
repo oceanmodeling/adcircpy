@@ -567,7 +567,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
 
       if self.ElevationStationsOutput is not None:
         if self.ElevationStationsOutput.harmonic_analysis==True:
-          NHASE = 1
+          if self.netcdf==True:
+            NHASE = 5
+          else:
+            NHASE = 1
         else:
           NHASE = 0
       else:
@@ -575,7 +578,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
 
       if self.VelocityStationsOutput is not None:
         if self.VelocityStationsOutput.harmonic_analysis==True:
-          NHASV = 1
+          if self.netcdf==True:
+            NHASV = 5
+          else:
+            NHASV = 1
         else:
           NHASV = 0
       else:
@@ -583,7 +589,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
 
       if self.ElevationGlobalOutput is not None:
         if self.ElevationGlobalOutput.harmonic_analysis==True:
-          NHAGE = 1
+          if self.netcdf==True:
+            NHAGE = 5
+          else:
+            NHAGE = 1
         else:
           NHAGE = 0
       else:
@@ -591,7 +600,10 @@ class _AdcircRun(metaclass=abc.ABCMeta):
 
       if self.VelocityGlobalOutput is not None:
         if self.VelocityGlobalOutput.harmonic_analysis==True:
-          NHAGV = 1
+          if self.netcdf==True:
+            NHAGV = 5
+          else:
+            NHAGV = 1
         else:
           NHAGV = 0
       else:
@@ -602,7 +614,7 @@ class _AdcircRun(metaclass=abc.ABCMeta):
       NHAGE=0
       NHAGV=0
 
-    if 1 in [NHASE, NHASV, NHAGE, NHAGV]:
+    if 1 in [NHASE, NHASV, NHAGE, NHAGV] or 5 in [NHASE, NHASV, NHAGE, NHAGV]:
       NFREQ=len(self.TidalForcing.keys())
       THAS=(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)
       THAF=(self.TidalForcing.end_date - self.TidalForcing.spinup_date).total_seconds() / (60*60*24)

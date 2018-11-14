@@ -22,7 +22,7 @@ class TestTidalRun(AdcircPyEnvironment, unittest.TestCase):
     TidalRun = self.AdcircMesh.TidalRun(start_time, end_time, spinup_date=spinup_date,
                                           ElevationStationsOutput=self.ElevationStationsOutput,
                                           ElevationGlobalOutput=self.ElevationGlobalOutput)
-    TidalRun.dump("./")
+    TidalRun.dump("./", printf=True)
     self.os.remove('./fort.15.coldstart')
     self.os.remove('./fort.15.hotstart')
 

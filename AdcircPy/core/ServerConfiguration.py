@@ -91,7 +91,6 @@ class ServerConfiguration(object):
     else:
       self._ServerConfiguration.append("#!/bin/bash\n")
     self._ServerConfiguration.append('\n')
-    self._ServerConfiguration.append('set -x\n')
     self._ServerConfiguration.append('set -e\n')
     self._ServerConfiguration.append('\n')
     self._ServerConfiguration.append('# Set path to ADCIRC binaries:\n')
@@ -143,7 +142,7 @@ class ServerConfiguration(object):
     self._ServerConfiguration.append('ln -sf $FORT14_PATH $HOTSTARTDIR/fort.14\n')
     self._ServerConfiguration.append('ln -sf $FORT13_PATH $HOTSTARTDIR/fort.13\n')
     if hasattr(self._AdcircRun, 'fort22'):
-      self._ServerConfiguration.append('ln -sf $RUNDIR/fort.22.best_track $RUNDIR/fort.22.best_track\n')
+      self._ServerConfiguration.append('ln -sf $RUNDIR/fort.22.best_track $HOTSTART/fort.22.best_track\n')
       self._ServerConfiguration.append('$ADCIRC_BINARIES_DIR/aswip -n 20 -m 4 -z 2 -w fort.22.best_track\n')
       self._ServerConfiguration.append('ln -sf $HOTSTARTDIR/NWS_20_fort.22 $HOTSTARTDIR/fort.22\n')
     self.__write_adcirc_run()
