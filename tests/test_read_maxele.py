@@ -18,7 +18,7 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
   def test_read_maxele_ascii_no_fort14(self):
     with self.assertRaises(Exception) as context:
       AdcircPy.read_output(self.os.getenv("MAXELE_ASCII_PATH"))
-    self.assertTrue('a fort.14 is required' in str(context.exception))
+    self.assertTrue('A fort.14 is required' in str(context.exception))
 
   def test_read_maxele_netcdf_no_fort14(self):
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"))

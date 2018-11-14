@@ -105,6 +105,9 @@ class _OutputFactory(object):
     return int(self.f.readline())
 
   def _check_is_SurfaceFile(self):
+    # we keep pushing this check further and further below...
+    if self.fort14 is None:
+      raise Exception('A fort.14 is required for reading some output file types.')
     self.line = self.f.readline().split()
     self.number_of_datasets = int(self.line[0])
     self.number_of_points = int(self.line[1])
