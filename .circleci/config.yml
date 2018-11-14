@@ -39,7 +39,7 @@ jobs:
       - run: python tests/test_TidalRun.py
       - run: python tests/test_TidalForcing.py
       - run: python tests/test_NodalAttributes.py
-      - run: # python tests/test_read_harmonic_constituents.py
+      # - run: python tests/test_read_harmonic_constituents.py
 workflows:
   version: 2
   build_and_test:
