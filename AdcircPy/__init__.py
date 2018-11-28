@@ -3,6 +3,7 @@ from AdcircPy.Model import ElevationStationsOutput
 from AdcircPy.Model import ElevationGlobalOutput
 from AdcircPy.Model import VelocityStationsOutput
 from AdcircPy.Model import VelocityGlobalOutput
+from AdcircPy.DEM import DEM
 from AdcircPy.Tides import TPXO
 from AdcircPy.Outputs import _OutputFactory
 
