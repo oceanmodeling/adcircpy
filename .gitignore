@@ -1,0 +1,10 @@
+# python precompiled
+__pycache__
+*.pyc
+*.egg*
+env
+test_data.tar
+.adcpyrc
+bin
+fort.*
+scripts
