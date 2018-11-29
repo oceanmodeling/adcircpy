@@ -89,8 +89,8 @@ class UnstructuredMesh(object):
     self_proj = pyproj.Proj(init="epsg:{}".format(self.epsg))
     target_proj = pyproj.Proj(init="epsg:{}".format(epsg))
     x, y = pyproj.transform(self_proj, target_proj, self.x, self.y)
-    self.x = np.asarray(x).flatten()
-    self.y = np.asarray(y).flatten()
+    self._x = np.asarray(x).flatten()
+    self._y = np.asarray(y).flatten()
     self.epsg = epsg
 
   def _init_Tri(self):
