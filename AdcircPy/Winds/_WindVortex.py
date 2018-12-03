@@ -110,14 +110,14 @@ class _WindVortex(_ATCF):
       for idx in indexes:
         if indexes[-1]+1<len(self.datetime):
           dt = (self.datetime[indexes[-1]+1] - self.datetime[idx]).total_seconds()/(60.*60.)
-          dx = haversine((self._latitude[idx], self._longitude[indexes[-1]+1]), (self._latitude[idx], self._longitude[idx]),nautical_miles=True)
-          dy = haversine((self._latitude[indexes[-1]+1], self._longitude[idx]), (self._latitude[idx], self._longitude[idx]),nautical_miles=True)
+          dx = haversine((self._latitude[idx], self._longitude[indexes[-1]+1]), (self._latitude[idx], self._longitude[idx]),unit='nmi')
+          dy = haversine((self._latitude[indexes[-1]+1], self._longitude[idx]), (self._latitude[idx], self._longitude[idx]),unit='nmi')
           vx = np.copysign(dx/dt, self._longitude[indexes[-1]+1]-self._longitude[idx])
           vy = np.copysign(dy/dt, self._latitude[indexes[-1]+1]-self._latitude[idx])
         else:
           dt = (self.datetime[idx]-self.datetime[indexes[0]-1]).total_seconds()/(60.*60.)
-          dx = haversine((self._latitude[idx], self._longitude[indexes[0]-1]), (self._latitude[idx], self._longitude[idx]),nautical_miles=True)
-          dy = haversine((self._latitude[indexes[0]-1], self._longitude[idx]), (self._latitude[idx], self._longitude[idx]),nautical_miles=True)
+          dx = haversine((self._latitude[idx], self._longitude[indexes[0]-1]), (self._latitude[idx], self._longitude[idx]),unit='nmi')
+          dy = haversine((self._latitude[indexes[0]-1], self._longitude[idx]), (self._latitude[idx], self._longitude[idx]),unit='nmi')
           vx = np.copysign(dx/dt, self._longitude[idx] - self._longitude[indexes[0]-1])
           vy = np.copysign(dy/dt, self._latitude[idx] - self._latitude[indexes[0]-1])
         speed = np.sqrt(dx**2+dy**2)/dt
