@@ -9,16 +9,10 @@ class FrontEndTests(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):
     super(FrontEndTests, self).__init__()
     self.read_environment_variables()
-    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv("FORT14_PATH"))
+    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv("FORT14"))
 
   def test_make_plot(self):
-    self.AdcircMesh.make_plot()
-    plt.show()
-    plt.close(plt.gcf())
-
-
-  def test_plot_trimesh(self):
-    self.AdcircMesh.plot_trimesh()
+    self.AdcircMesh.make_plot(Trimesh=True)
     plt.show()
     plt.close(plt.gcf())
 

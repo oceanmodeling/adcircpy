@@ -10,7 +10,7 @@ class TestTidalRun(AdcircPyEnvironment, unittest.TestCase):
   def setUp(self):
     super(TestTidalRun, self).__init__()
     self.read_environment_variables()
-    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv('FORT14_PATH'), fort13=self.os.getenv('FORT13_PATH'))
+    self.AdcircMesh = AdcircPy.read_mesh(fort14=self.os.getenv('FORT14'), fort13=self.os.getenv('FORT13'))
     self.ElevationStationsOutput = ESO.from_fort15(self.os.getenv('FORT15_HOTSTART_PATH'), harmonic_analysis=True)
     self.ElevationGlobalOutput = EGO(harmonic_analysis=True)
 

@@ -20,9 +20,21 @@ setuptools.setup( name=meta['name'],
                                      'wget',
                                      'utm',
                                      'requests',
+                                     'gdal',
                                      'tqdm',
                                      'eventlet',
-                                     'paramiko_expect',
-                                     'bs4'],
+                                     'bs4',
+                                     'seaborn',
+                                     'pandas'
+                                     ],
+                  entry_points={
+                                'console_scripts': [
+                                    'PlotMesh = AdcircPy.entrypoints.PlotMesh:main',
+                                    'GenerateHindcast = AdcircPy.entrypoints.GenerateHindcast:main',
+                                    # 'GenerateForecast = AdcircPy.entrypoints.GenerateForecast:GenerateForecast',
+                                    'HighWaterMarkValidation = AdcircPy.entrypoints.HighWaterMarkValidation:main',
+                                    'TidalTimeseriesStationsValidation = AdcircPy.entrypoints.TidalTimeseriesStationsValidation:main',
+                                    ]
+                                },
                   test_suite='nose.collector',
                   tests_require=['nose'])

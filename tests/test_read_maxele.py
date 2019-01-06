@@ -10,10 +10,11 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
     self.read_environment_variables()
 
   def test_read_maxele_ascii(self):
+    
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_ASCII_PATH"),
-                                  fort14=self.os.getenv("FORT14_PATH"))
-    maxele.make_plot()
-    plt.close(plt.gcf())
+                                  fort14=self.os.getenv("FORT14"))
+    maxele.make_plot(show=True)
+
 
   def test_read_maxele_ascii_no_fort14(self):
     with self.assertRaises(Exception) as context:
@@ -22,8 +23,7 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
 
   def test_read_maxele_netcdf_no_fort14(self):
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"))
-    maxele.make_plot()
-    plt.close(plt.gcf())
+    maxele.make_plot(show=True)
 
   def test_read_netcdf_maxele_netcdf(self):
     """
@@ -33,9 +33,8 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
       Need to collect boundary data from fort.14 before return.
     """
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"),
-                                  fort14=self.os.getenv("FORT14_PATH"))
-    maxele.make_plot()
-    plt.close(plt.gcf())
+                                  fort14=self.os.getenv("FORT14"))
+    maxele.make_plot(show=True)
 
 if __name__ == '__main__':
   unittest.main()

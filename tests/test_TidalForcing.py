@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from AdcircPyTests import AdcircPyEnvironment
 import unittest
 from datetime import datetime, timedelta
 from AdcircPy.Tides import TidalForcing

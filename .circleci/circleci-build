@@ -4,13 +4,14 @@
 CIRCLE_CI_TAG=jreniel/ci-adcircpy:Dockerfile
 source ~/.adcpyrc
 tar cf test_data.tar --files-from /dev/null
-tar --transform="flags=r;s|$(basename $FORT14_PATH)|fort.14|" -rvf test_data.tar -C $(dirname $FORT14_PATH) $(basename $FORT14_PATH)
-tar --transform="flags=r;s|$(basename $FORT13_PATH)|fort.13|" -rvf test_data.tar -C $(dirname $FORT13_PATH) $(basename $FORT13_PATH)
+tar --transform="flags=r;s|$(basename $FORT14)|fort.14|" -rvf test_data.tar -C $(dirname $FORT14) $(basename $FORT14)
+tar --transform="flags=r;s|$(basename $FORT13)|fort.13|" -rvf test_data.tar -C $(dirname $FORT13) $(basename $FORT13)
 tar --transform="flags=r;s|$(basename $FORT15_COLDSTART_PATH)|fort.15.coldstart|" -rvf test_data.tar -C $(dirname $FORT15_COLDSTART_PATH) $(basename $FORT15_COLDSTART_PATH)
 tar --transform="flags=r;s|$(basename $FORT15_HOTSTART_PATH)|fort.15.hotstart|" -rvf test_data.tar -C $(dirname $FORT15_HOTSTART_PATH) $(basename $FORT15_HOTSTART_PATH)
 tar -rvf test_data.tar -C $(dirname $MAXELE_NC_PATH) $(basename $MAXELE_NC_PATH)
 tar -rvf test_data.tar -C $(dirname $MAXELE_ASCII_PATH) $(basename $MAXELE_ASCII_PATH)
-tar -rvf test_data.tar -C $(dirname $H_TPXO_PATH) $(basename $H_TPXO_PATH)
+tar -rvf test_data.tar -C $(dirname $H_TPXO) $(basename $H_TPXO)
+# tar --transform="flags=r;s|$(basename $HARM_CONST_ASCII)|fort.15.hotstart|" -rvf test_data.tar -C $(dirname $FORT15_HOTSTART_PATH) $(basename $FORT15_HOTSTART_PATH)
 gzip -vf test_data.tar
 cd ..
 docker build . --rm -t $CIRCLE_CI_TAG

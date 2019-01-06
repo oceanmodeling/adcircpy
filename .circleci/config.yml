@@ -22,13 +22,13 @@ jobs:
           name: Setup environment for running tests
           command: |
             DATA="${CIRCLE_WORKING_DIRECTORY/#\~/$HOME}"
-            echo "export FORT14_PATH=$DATA/fort.14 " >> ~/.adcpyrc
-            echo "export FORT13_PATH=$DATA/fort.13 " >> ~/.adcpyrc
+            echo "export FORT14=$DATA/fort.14 " >> ~/.adcpyrc
+            echo "export FORT13=$DATA/fort.13 " >> ~/.adcpyrc
             echo "export FORT15_COLDSTART_PATH=$DATA/fort.15.coldstart " >> ~/.adcpyrc
             echo "export FORT15_HOTSTART_PATH=$DATA/fort.15.hotstart " >> ~/.adcpyrc
             echo "export MAXELE_NC_PATH=$DATA/maxele.63.nc " >> ~/.adcpyrc
             echo "export MAXELE_ASCII_PATH=$DATA/maxele.63 " >> ~/.adcpyrc
-            echo "export STORM_EVENT_NAME=Isaac " >> ~/.adcpyrc
+            echo "export STORM_EVENT_NAME=Isaac2012 " >> ~/.adcpyrc
             # Need to add the harmonic constituents files to the dockerfile
             mkdir -p ~/.cache/AdcircPy
             tar xf /tmp/test_data.tar.gz
