@@ -13,8 +13,8 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
     
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_ASCII_PATH"),
                                   fort14=self.os.getenv("FORT14"))
-    maxele.make_plot(show=True)
-
+    maxele.make_plot(show=False)
+    del maxele
 
   def test_read_maxele_ascii_no_fort14(self):
     with self.assertRaises(Exception) as context:
@@ -23,7 +23,8 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
 
   def test_read_maxele_netcdf_no_fort14(self):
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"))
-    maxele.make_plot(show=True)
+    maxele.make_plot(show=False)
+    del maxele
 
   def test_read_netcdf_maxele_netcdf(self):
     """
@@ -34,7 +35,8 @@ class testReadMaxeleAscii(AdcircPyEnvironment, unittest.TestCase):
     """
     maxele = AdcircPy.read_output(self.os.getenv("MAXELE_NC_PATH"),
                                   fort14=self.os.getenv("FORT14"))
-    maxele.make_plot(show=True)
+    maxele.make_plot(show=False)
+    del maxele
 
 if __name__ == '__main__':
   unittest.main()
