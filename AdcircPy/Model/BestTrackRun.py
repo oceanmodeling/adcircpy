@@ -63,7 +63,7 @@ class BestTrackRun(_AdcircRun):
         self.DRAMPElev = self.DRAMP
       if self.DRAMPTip is None:
         self.DRAMPTip = self.DRAMP
-      self.f.write('{:<4.1f}'.format(self.DRAMP))
+      self.f.write('{:<4.1f} '.format(self.DRAMP))
       self.f.write('{:<2}'.format(int(self.DRAMPExtFlux)))
       self.f.write('{:<2}'.format(int(self.FluxSettlingTime)))
       self.f.write('{:<2}'.format(int(self.DRAMPIntFlux)))
@@ -72,7 +72,7 @@ class BestTrackRun(_AdcircRun):
       self.f.write('{:<4.1f}'.format(self.DRAMPMete))
       self.f.write('{:<2}'.format(int(self.DRAMPWRad)))
       self.f.write('{:<2}'.format(int(self.DUnRampMete)))
-      self.f.write('{:<8}'.format(''))
+      self.f.write('{:<7}'.format(''))
     elif self.NRAMP==0 and self.TidalForcing is not None:
       self.DRAMP = ((2/3)*(self.TidalForcing.start_date - self.TidalForcing.spinup_date).total_seconds())/(60*60*24)
       self.f.write('{:<32.1f}'.format(self.DRAMP))

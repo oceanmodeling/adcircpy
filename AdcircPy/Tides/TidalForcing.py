@@ -35,25 +35,6 @@ class TidalForcing(OrderedDict):
   def units(self):
     return 'rad/sec'
     
-  def __check_start_date(self):
-    if isinstance(self.start_date, datetime)==False:
-      raise IOError("start_date must be a datetime.datetime instance.")
-  
-  def __check_end_date(self):
-    if isinstance(self.end_date, datetime)==False:
-      raise IOError("end_date must be a datetime.datetime instance.")
-    elif self.end_date<=self.start_date:
-        raise Exception('end_date must be larger than start_date.')
-
-  def __check_spinup_date(self):
-    if self.spinup_date is None:
-      self.spinup_date = self.start_date - timedelta(days=15)
-    else:
-      if isinstance(self.spinup_date, datetime)==False:
-        raise IOError("spinup_date must be a datetime.datetime instance.")
-      elif self.spinup_date>=self.start_date:
-        raise Exception('spinup_date must be smaller than start_date.')
-
   def _init_dates(self):
     self.__check_start_date()
     self.__check_end_date()
@@ -346,3 +327,22 @@ class TidalForcing(OrderedDict):
   def _EQ235(self):
     """ """
     return .001+np.sqrt(19.0444*np.sin(self.I)**4+2.7702*np.sin(self.I)**2*np.cos(2.*self.NU)+.0981)
+
+  def __check_start_date(self):
+    if isinstance(self.start_date, datetime)==False:
+      raise IOError("start_date must be a datetime.datetime instance.")
+  
+  def __check_end_date(self):
+    if isinstance(self.end_date, datetime)==False:
+      raise IOError("end_date must be a datetime.datetime instance.")
+    elif self.end_date<=self.start_date:
+        raise Exception('end_date must be larger than start_date.')
+
+  def __check_spinup_date(self):
+    if self.spinup_date is None:
+      self.spinup_date = self.start_date - timedelta(days=15)
+    else:
+      if isinstance(self.spinup_date, datetime)==False:
+        raise IOError("spinup_date must be a datetime.datetime instance.")
+      elif self.spinup_date>=self.start_date:
+        raise Exception('spinup_date must be smaller than start_date.')

@@ -1,9 +1,9 @@
 from netCDF4 import Dataset
 import numpy as np
 from matplotlib.animation import FuncAnimation
-from AdcircPy.Model import UnstructuredMesh
+from AdcircPy.Mesh import TrimeshSurface
 
-class ElevationSurfaceTimeseries(UnstructuredMesh):
+class ElevationSurfaceTimeseries(TrimeshSurface):
   def __init__(self, Dataset, **kwargs):
     super(ElevationSurfaceTimeseries, self).__init__(Dataset['x'][:].flatten(), Dataset['y'][:].flatten(), Dataset['element'][:]-1, Dataset['zeta'][0,:].flatten(), **kwargs)
     self._Dataset = Dataset

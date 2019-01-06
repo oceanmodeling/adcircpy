@@ -129,3 +129,5 @@ tidalRun.dump('/directory/to/dump')
 See the "examples" directory for more examples where the Elevation stations outputs are requested.
 
 Please report bugs to jreniel@gmail.com
+
+pyproj, netCDF, scipy and gdal should be sourced from conda-forge. 

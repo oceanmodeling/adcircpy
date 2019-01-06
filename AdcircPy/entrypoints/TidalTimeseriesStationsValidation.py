@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 """
-Standalone program for quickly looking at fort.61.nc files against COOPS data.
-For a complete list of options use ./TidalTimeseriesPlots.py -h
+Entry point for quickly looking at fort.61.nc files against COOPS data.
+For a complete list of options use ./TidalTimeseriesStationsValidation.py -h
 
 Example usage:
-    ./TidalTimeseriesPlots.py /path/to/fort.61.nc --save-path /path/to/directory/for/saving/plots
+  TidalTimeseriesStationsValidation /path/to/fort.61.nc --save-path /path/to/directory/for/saving/plots
 """
 
 import os
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from AdcircPy import AdcircPy
 from AdcircPy.Validation import COOPS
 
-class TidalTimeseriesPlots(object):
+class TidalTimeseriesStationsValidation(object):
   def __init__(self):
     self._parse_args()
     self._read_fort61()
@@ -37,7 +37,7 @@ class TidalTimeseriesPlots(object):
   def _get_coops_timeseries(self):
     print('-> Fetching station data from COOPS...')
     self.coops = COOPS.TidalStations(self.fort61.keys(), self.fort61.time[0], self.fort61.time[-1])
-    
+
   def _generate_plots(self):
     self.__init_save_dir()
     print('-> Generating plots...')
@@ -59,4 +59,5 @@ class TidalTimeseriesPlots(object):
       os.makedirs(self.args.save_path, exist_ok=True)
 
 if __name__ == "__main__":
-  TidalTimeseriesPlots()
+  TidalTimeseriesStationsValidation()
+  

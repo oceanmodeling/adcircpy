@@ -34,7 +34,7 @@ class AdcircPy(object):
     return AdcircMesh.from_fort14(fort14, datum, epsg, fort13, datum_grid)
         
   @staticmethod
-  def read_output(path, fort14=None, datum=None, epsg=4326, datum_grid=None, fort15=None):
+  def read_output(path, fort14=None, vertical_datum='LSML', epsg=4326, datum_grid=None, fort15=None):
     """
     Reads ADCIRC output files and returns the appropriate output type class.
     Supports ASCII and NetCDF outputs.
@@ -55,5 +55,4 @@ class AdcircPy(object):
     -------
         AdcirPy.<output>  where <output> is the output type.
     """
-    return _OutputFactory(path, fort14, datum, epsg, datum_grid, fort15).get_output_instance()
-
+    return _OutputFactory(path, fort14, vertical_datum, epsg, datum_grid, fort15).get_output_instance()

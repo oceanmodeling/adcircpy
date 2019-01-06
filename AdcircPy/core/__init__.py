@@ -2,7 +2,9 @@ import os
 import wget
 import tarfile
 from datetime import datetime, timedelta
-from AdcircPy.core.FixPointNormalize import FixPointNormalize
+from AdcircPy.core._Figure import _Figure
+from AdcircPy.core._FixPointNormalize import _FixPointNormalize
+from AdcircPy.core._PostGIS import _PostGIS
 from AdcircPy.core.PBS import PBS
 from AdcircPy.core.ServerConfiguration import ServerConfiguration
 

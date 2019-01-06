@@ -17,12 +17,12 @@ class _OutputFactory(object):
   Supports ASCII and NetCDF outputs.
   Fortran binary outputs are not supported.
   """
-  def __init__(self, path, fort14=None, datum='MSL', epsg=None, datum_grid=None, fort15=None):
+  def __init__(self, path, fort14=None, vertical_datum='LMSL', epsg=None, datum_grid=None, fort15=None):
     """
     Should probably be replaced with __call__ in order to avoid having to call get_output_instance()
     """
     self.path = path
-    self.datum=datum
+    self.vertical_datum=vertical_datum
     self.epsg=epsg
     self.datum_grid=datum_grid
     self.fort14=fort14
@@ -37,7 +37,7 @@ class _OutputFactory(object):
 
   def _init_fort14(self):
     if isinstance(self.fort14, str):
-      self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, datum=self.datum, epsg=self.epsg, datum_grid=self.datum_grid)
+      self.fort14 = AdcircMesh.from_fort14(fort14=self.fort14, vertical_datum=self.vertical_datum, epsg=self.epsg, datum_grid=self.datum_grid)
 
   def _is_ncfile(self):
     try:
@@ -50,9 +50,9 @@ class _OutputFactory(object):
     nc = Dataset(self.path)
     if 'adcirc_mesh' in nc.variables.keys():
       if 'zeta_max' in nc.variables.keys():
-        return Maxele.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
+        return Maxele.from_netcdf(self.path, self.fort14, self.vertical_datum, self.epsg, self.datum_grid)
       elif 'zeta' in nc.variables.keys():
-        return ElevationSurfaceTimeseries.from_netcdf(self.path, self.fort14, self.datum, self.epsg, self.datum_grid)
+        return ElevationSurfaceTimeseries.from_netcdf(self.path, self.fort14, self.vertical_datum, self.epsg, self.datum_grid)
       else:
         raise NotImplementedError('The OutputFactory class has not implemented this output type yet, or this is not an Adcirc output file.')  
 
@@ -132,13 +132,14 @@ class _OutputFactory(object):
         extrema_time_vector.append(float(self.line[1].strip(' \n')))
     nodeID = np.asarray(nodeID)
     values = np.ma.masked_equal(values, -99999.)
-    return ScalarSurfaceExtrema(self.fort14.x,
-                                 self.fort14.y,
-                                 self.fort14.elements,
-                                 values,
-                                 extrema_time_vector,
-                                 epsg=self.epsg,
-                                 nodeID=nodeID)
+    return ScalarSurfaceExtrema(x=self.fort14.x,
+                                y=self.fort14.y,
+                                elements=self.fort14.elements,
+                                values=values,
+                                epsg=self.epsg,
+                                vertical_datum=self.vertical_datum,
+                                times=extrema_time_vector,
+                                nodeID=nodeID)
 
   def __del__(self):
     if hasattr(self, 'f'):
