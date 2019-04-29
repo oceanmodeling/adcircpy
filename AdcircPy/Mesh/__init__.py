@@ -1,2 +1,5 @@
-from AdcircPy.Mesh.Trimesh import Trimesh
-from AdcircPy.Mesh.TrimeshSurface import TrimeshSurface
+from AdcircPy.Mesh import Boundaries
+from AdcircPy.Mesh.UnstructuredMesh import UnstructuredMesh
+
+__all__ = ['UnstructuredMesh',
+           'Boundaries']
