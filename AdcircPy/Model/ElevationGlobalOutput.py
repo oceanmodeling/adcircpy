@@ -1,6 +1,9 @@
 from datetime import timedelta
-from AdcircPy.Model._ModelOutputs import _ModelOutputs
+from AdcircPy.Model._GlobalOutputs import _GlobalOutputs
 
-class ElevationGlobalOutput(_ModelOutputs):
-  def __init__(self, sampling_frequency=timedelta(minutes=15), netcdf=True, spinup=False, harmonic_analysis=False):
-    super(ElevationGlobalOutput, self).__init__(sampling_frequency, netcdf, spinup, harmonic_analysis)
+
+class ElevationGlobalOutput(_GlobalOutputs):
+    def __init__(self, sampling_frequency=timedelta(0), spinup=False,
+                 harmonic_analysis=False, netcdf=True):
+        super(ElevationGlobalOutput, self).__init__(sampling_frequency, spinup,
+                                                    harmonic_analysis, netcdf)
