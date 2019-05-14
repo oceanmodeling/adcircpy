@@ -20,14 +20,6 @@ import os
 
 class UnstructuredMesh(object):
 
-    __OceanBoundaries = None
-    __LandBoundaries = None
-    __InnerBoundaries = None
-    __InflowBoundaries = None
-    __OutflowBoundaries = None
-    __WeirBoundaries = None
-    __CulvertBoundaries = None
-
     def __init__(self, xy=None, z=None, elements=None, SpatialReference=None,
                  node_id=None, element_id=None, vertical_datum=None,
                  OceanBoundaries=None, LandBoundaries=None,
