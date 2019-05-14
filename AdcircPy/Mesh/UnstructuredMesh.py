@@ -26,6 +26,13 @@ class UnstructuredMesh(object):
                  InnerBoundaries=None, InflowBoundaries=None,
                  OutflowBoundaries=None, WeirBoundaries=None,
                  CulvertBoundaries=None, description=''):
+        self.__OceanBoundaries = None
+        self.__LandBoundaries = None
+        self.__InnerBoundaries = None
+        self.__InflowBoundaries = None
+        self.__OutflowBoundaries = None
+        self.__WeirBoundaries = None
+        self.__CulvertBoundaries = None
         self._xy = xy
         self._z = z
         self._elements = elements
