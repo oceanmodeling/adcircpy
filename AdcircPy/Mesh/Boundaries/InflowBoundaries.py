@@ -1,37 +1,49 @@
 # global imports
 import numpy as np
-from osgeo import osr, ogr
 
 # local imports
 from AdcircPy.Mesh.Boundaries._BaseBoundary import _BaseBoundary
-
-# unittest imports
-import unittest
+from AdcircPy.Mesh.UnstructuredMesh \
+    import UnstructuredMesh as _UnstructuredMesh
 
 
 class InflowBoundaries(_BaseBoundary):
 
-    def __init__(self, *boundaries):
-        super(InflowBoundaries, self).__init__(*boundaries)
+    __storage = list()
+    __ibtypes = [2, 12, 22, 102, 122]
 
-    def add_boundary(self, SpatialReference, vertices,
-                     LayerName='inflow_boundaries', **fields):
-        if isinstance(SpatialReference, int):
-            EPSG = SpatialReference
-            SpatialReference = osr.SpatialReference()
-            SpatialReference.ImportFromEPSG(EPSG)
-        else:
-            assert isinstance(SpatialReference, osr.SpatialReference)
-        Geometry = ogr.Geometry(ogr.wkbLineString)
-        Geometry.AssignSpatialReference(SpatialReference)
-        vertices = np.asarray(vertices)
-        for x, y in vertices:
-            Geometry.AddPoint_2D(x, y)
-        super(InflowBoundaries, self).add_boundary(LayerName, Geometry,
-                                                   **fields)
+    def __getitem__(self, i):
+        return self.storage[i]
 
+    def __iter__(self):
+        return iter(self.storage)
 
-class InflowBoundariesTestCase(unittest.TestCase):
+    def __len__(self):
+        return len(self.storage)
 
-    def test_empty(self):
-        InflowBoundaries()
+    def get_Geometry(self, i, SpatialReference=None):
+        return super(InflowBoundaries, self).__get_LineStringTypeGeometry(
+                                                        i, SpatialReference)
+
+    def _add_boundary(self, UnstructuredMesh, indexes, ibtype):
+        assert isinstance(UnstructuredMesh, _UnstructuredMesh)
+        indexes = np.asarray(indexes)
+        vertices = UnstructuredMesh.xy[indexes]
+        ibtype = int(ibtype)
+        assert indexes.shape[0] == vertices.shape[0]
+        if ibtype not in self.ibtypes:
+            raise TypeError('ibtype not valid. Allowed ibtypes are '
+                            + '{}'.format(self.ibtypes))
+        self.storage.append({
+                        'SpatialReference': UnstructuredMesh.SpatialReference,
+                        'vertices': vertices,
+                        'node_indexes': indexes,
+                        'ibtype': ibtype})
+
+    @property
+    def storage(self):
+        return self.__storage
+
+    @property
+    def ibtypes(self):
+        return self.__ibtypes

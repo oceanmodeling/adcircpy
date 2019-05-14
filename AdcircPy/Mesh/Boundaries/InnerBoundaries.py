@@ -1,46 +1,49 @@
 # global imports
 import numpy as np
-from osgeo import osr, ogr
 
 # local imports
 from AdcircPy.Mesh.Boundaries._BaseBoundary import _BaseBoundary
-
-# unittest imports
-import unittest
-import os
+from AdcircPy.Mesh.UnstructuredMesh \
+    import UnstructuredMesh as _UnstructuredMesh
 
 
 class InnerBoundaries(_BaseBoundary):
 
-    def __init__(self, *boundaries):
-        super(InnerBoundaries, self).__init__(*boundaries)
+    __storage = list()
+    __ibtypes = [1, 11, 21]
 
-    def add_boundary(self, SpatialReference, vertices,
-                     LayerName='inner_boundaries', **fields):
-        if isinstance(SpatialReference, int):
-            EPSG = SpatialReference
-            SpatialReference = osr.SpatialReference()
-            SpatialReference.ImportFromEPSG(EPSG)
-        else:
-            assert isinstance(SpatialReference, osr.SpatialReference)
-        Geometry = ogr.Geometry(ogr.wkbLinearRing)
-        Geometry.AssignSpatialReference(SpatialReference)
-        vertices = np.asarray(vertices)
-        for x, y in vertices:
-            Geometry.AddPoint_2D(x, y)
-        super(InnerBoundaries, self).add_boundary(LayerName, Geometry,
-                                                  **fields)
+    def __getitem__(self, i):
+        return self.storage[i]
 
+    def __iter__(self):
+        return iter(self.storage)
 
-class InnerBoundariesTestCase(unittest.TestCase):
+    def __len__(self):
+        return len(self.storage)
 
-    def setUp(self):
-        self.InnerBoundaries = InnerBoundaries
-        self.HSOFS_OCEAN_BOUNDARY_SHAPEFILE = os.getenv(
-                                            'HSOFS_INNER_BOUNDARIES_SHAPEFILE')
+    def get_Geometry(self, i, SpatialReference=None):
+        return super(InnerBoundaries, self).__get_LineStringTypeGeometry(
+                                                        i, SpatialReference)
 
-    def test_empty(self):
-        self.InnerBoundaries()
+    def _add_boundary(self, UnstructuredMesh, indexes, ibtype):
+        assert isinstance(UnstructuredMesh, _UnstructuredMesh)
+        indexes = np.asarray(indexes)
+        vertices = UnstructuredMesh.xy[indexes]
+        ibtype = int(ibtype)
+        assert indexes.shape[0] == vertices.shape[0]
+        if ibtype not in self.ibtypes:
+            raise TypeError('ibtype not valid. Allowed ibtypes are '
+                            + '{}'.format(self.ibtypes))
+        self.storage.append({
+                        'SpatialReference': UnstructuredMesh.SpatialReference,
+                        'vertices': vertices,
+                        'node_indexes': indexes,
+                        'ibtype': ibtype})
 
-    def test_read_Shapefile(self):
-        self.InnerBoundaries(self.HSOFS_INNER_BOUNDARIES_SHAPEFILE)
+    @property
+    def storage(self):
+        return self.__storage
+
+    @property
+    def ibtypes(self):
+        return self.__ibtypes

@@ -1,52 +1,69 @@
 # global imports
 import numpy as np
-from osgeo import osr, ogr
 
 # local imports
 from AdcircPy.Mesh.Boundaries._BaseBoundary import _BaseBoundary
-
-# unittest imports
-import unittest
-import os
+from AdcircPy.Mesh.UnstructuredMesh \
+    import UnstructuredMesh as _UnstructuredMesh
 
 
 class WeirBoundaries(_BaseBoundary):
 
-    def __init__(self, *boundaries):
-        super(WeirBoundaries, self).__init__(*boundaries)
+    __storage = list()
+    __ibtypes = [4, 24]
 
-    def add_boundary(self, SpatialReference, front_face, back_face,
-                     LayerName='weir_boundaries', **fields):
-        if isinstance(SpatialReference, int):
-            EPSG = SpatialReference
-            SpatialReference = osr.SpatialReference()
-            SpatialReference.ImportFromEPSG(EPSG)
-        else:
-            assert isinstance(SpatialReference, osr.SpatialReference)
-        FrontFaceGeometry = ogr.Geometry(ogr.wkbLineString)
-        BackFaceGeometry = ogr.Geometry(ogr.wkbLineString)
-        Geometry = ogr.Geometry(ogr.wkbMultiLineString)
-        Geometry.AssignSpatialReference(SpatialReference)
-        front_face = np.asarray(front_face)
-        back_face = np.asarray(back_face)
-        assert front_face.shape == back_face.shape
-        for x, y in front_face:
-            FrontFaceGeometry.AddPoint_2D(x, y)
-        for x, y in back_face:
-            BackFaceGeometry.AddPoint_2D(x, y)
-        Geometry.AddGeometry(FrontFaceGeometry)
-        Geometry.AddGeometry(BackFaceGeometry)
-        super(WeirBoundaries, self).add_boundary(LayerName, Geometry, **fields)
+    def __getitem__(self, i):
+        return self.storage[i]
 
+    def __iter__(self):
+        return iter(self.storage)
 
-class WeirBoundariesTestCase(unittest.TestCase):
+    def __len__(self):
+        return len(self.storage)
 
-    def setUp(self):
-        self.HSOFS_WEIR_BOUNDARIES_SHAPEFILE = os.getenv(
-                                            'HSOFS_WEIR_BOUNDARIES_SHAPEFILE')
+    def get_Geometry(self, i, SpatialReference=None):
+        super(WeirBoundaries, self).__get_MultiLineStringTypeGeometry(
+                                                        i, SpatialReference)
 
-    def test_empty(self):
-        WeirBoundaries()
+    def _add_boundary(self, UnstructuredMesh, front_face_indexes,
+                      back_face_indexes, barrier_heights,
+                      subcritical_flow_coefficients,
+                      supercritical_flow_coefficients, ibtype):
+        assert isinstance(UnstructuredMesh, _UnstructuredMesh)
+        front_face_indexes = np.asarray(front_face_indexes)
+        back_face_indexes = np.asarray(back_face_indexes)
+        front_face_vertices = UnstructuredMesh.xy[front_face_indexes]
+        back_face_vertices = UnstructuredMesh.xy[back_face_indexes]
+        barrier_heights = np.asarray(barrier_heights)
+        subcritical_flow_coefficients = np.asarray(
+                                                subcritical_flow_coefficients)
+        supercritical_flow_coefficients = np.asarray(
+                                            supercritical_flow_coefficients)
+        ibtype = int(ibtype)
+        assert front_face_indexes.shape == back_face_indexes.shape
+        assert front_face_indexes.shape[0] == barrier_heights.shape[0]
+        assert front_face_indexes.shape[0] \
+            == subcritical_flow_coefficients.shape[0]
+        assert front_face_indexes.shape[0] \
+            == supercritical_flow_coefficients.shape[0]
+        if ibtype not in self.ibtypes:
+            raise TypeError('ibtype not valid. Allowed ibtypes are '
+                            + '{}'.format(self.ibtypes))
+        self.storage.append({
+            'SpatialReference': UnstructuredMesh.SpatialReference,
+            'front_face_vertices': front_face_vertices,
+            'back_face_vertices': back_face_vertices,
+            'front_face_indexes': front_face_indexes,
+            'back_face_indexes': back_face_indexes,
+            'barrier_heights': barrier_heights,
+            'subcritical_flow_coefficients': subcritical_flow_coefficients,
+            'supercritical_flow_coefficients': supercritical_flow_coefficients,
+            'ibtype': ibtype})
 
-    def test_read_Shapefile(self):
-        WeirBoundaries(self.HSOFS_WEIR_BOUNDARIES_SHAPEFILE)
+    @property
+    def storage(self):
+        return self.__storage
+
+    @property
+    def ibtypes(self):
+        return self.__ibtypes

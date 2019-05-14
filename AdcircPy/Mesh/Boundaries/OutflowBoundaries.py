@@ -1,37 +1,56 @@
 # global imports
 import numpy as np
-from osgeo import osr, ogr
 
 # local imports
 from AdcircPy.Mesh.Boundaries._BaseBoundary import _BaseBoundary
-
-# unittest imports
-import unittest
+from AdcircPy.Mesh import UnstructuredMesh as _UnstructuredMesh
 
 
 class OutflowBoundaries(_BaseBoundary):
 
-    def __init__(self, *boundaries):
-        super(OutflowBoundaries, self).__init__(*boundaries)
+    __storage = list()
+    __ibtypes = [3, 13, 23]
 
-    def add_boundary(self, SpatialReference, vertices,
-                     LayerName='outflow_boundaries', **fields):
-        if isinstance(SpatialReference, int):
-            EPSG = SpatialReference
-            SpatialReference = osr.SpatialReference()
-            SpatialReference.ImportFromEPSG(EPSG)
-        else:
-            assert isinstance(SpatialReference, osr.SpatialReference)
-        Geometry = ogr.Geometry(ogr.wkbLineString)
-        Geometry.AssignSpatialReference(SpatialReference)
-        vertices = np.asarray(vertices)
-        for x, y in vertices:
-            Geometry.AddPoint_2D(x, y)
-        super(OutflowBoundaries, self).add_boundary(LayerName, Geometry,
-                                                    **fields)
+    def __getitem__(self, i):
+        return self.storage[i]
 
+    def __iter__(self):
+        return iter(self.storage)
 
-class OutflowBoundariesTestCase(unittest.TestCase):
+    def __len__(self):
+        return len(self.storage)
 
-    def test_empty(self):
-        OutflowBoundaries()
+    def get_Geometry(self, i, SpatialReference=None):
+        return super(OutflowBoundaries, self).__get_LineStringTypeGeometry(
+                                                        i, SpatialReference)
+
+    def _add_boundary(self, UnstructuredMesh, indexes, barrier_height,
+                      supercritical_flow_coefficient, ibtype):
+        assert isinstance(UnstructuredMesh, _UnstructuredMesh)
+        indexes = np.asarray(indexes)
+        vertices = UnstructuredMesh.xy[indexes]
+        barrier_height = np.asarray(barrier_height)
+        supercritical_flow_coefficient = np.asarray(
+                                                supercritical_flow_coefficient)
+        ibtype = int(ibtype)
+        assert indexes.shape[0] == vertices.shape[0]
+        assert indexes.shape[0] == barrier_height.shape[0]
+        assert indexes.shape[0] == supercritical_flow_coefficient.shape[0]
+        if ibtype not in self.ibtypes:
+            raise TypeError('ibtype not valid. Allowed ibtypes are '
+                            + '{}'.format(self.ibtypes))
+        self.storage.append({
+            'SpatialReference': UnstructuredMesh.SpatialReference,
+            'vertices': vertices,
+            'node_indexes': indexes,
+            'barrier_height': barrier_height,
+            'supercritical_flow_coefficient': supercritical_flow_coefficient,
+            'ibtype': ibtype})
+
+    @property
+    def storage(self):
+        return self.__storage
+
+    @property
+    def ibtypes(self):
+        return self.__ibtypes
