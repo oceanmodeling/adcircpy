@@ -1,37 +1,66 @@
-import argparse
+import warnings
 import numpy as np
 from netCDF4 import Dataset
-import matplotlib.pyplot as plt
 from AdcircPy.Model import AdcircMesh
 from AdcircPy.Outputs.ScalarSurfaceExtrema import ScalarSurfaceExtrema
 
 
 class Maxele(ScalarSurfaceExtrema):
-    def __init__(self, x, y, elements, values, times, epsg=4326,
-                 vertical_datum='LMSL', **kwargs):
-        super(Maxele, self).__init__(x, y, elements, values, times,
-                                     epsg, vertical_datum, **kwargs)
+    def __init__(self, xy, values, elements, SpatialReference, vertical_datum,
+                 model_times=None, node_id=None, element_id=None,
+                 **Boundaries):
+        super(Maxele, self).__init__(
+            xy, values, elements, SpatialReference, vertical_datum,
+            model_times, node_id, element_id, **Boundaries)
+
+    def convert_datum(self, datum_mesh, target_datum, operator='plus'):
+        """
+        The way vertical datums are implemented is not self consistent.
+        Vertical datum grids have to be handled with care until
+        some standards can be set. Meshes should actually be referenced
+        to an equipotential surface, and not to space variable datums.
+        This is because at time t0 in the model run, the water surface
+        elevation must sit on an equipotential surface. Datums derived from
+        tidal measurements are known to not be at the same geopotentials.
+        """
+        assert operator in ['plus', 'minus']
+        fort14 = AdcircMesh.parse_fort14(datum_mesh)
+        x = np.asarray(fort14['x'])
+        y = np.asarray(fort14['y'])
+        xy = np.vstack([x, y]).T
+        try:
+            np.testing.assert_array_equal(xy, self.xy)
+        except AssertionError:
+            assert xy.shape == self.xy.shape
+            warnings.warn(
+                "Coordinates of datum mesh are not identical to mesh, but "
+                + "sizes do match. Continuing...")
+
+        values = np.asarray(fort14['z'])
+        if operator == 'plus':
+            self._z = self.z + values
+        else:
+            self._z = self.z - values
+        self._vertical_datum = target_datum
 
     @classmethod
     def from_netcdf(cls, path, fort14=None, vertical_datum='LMSL',
-                    epsg=4326, datum_grid=None):
+                    SpatialReference=4326):
         nc = Dataset(path)
         if 'zeta_max' not in nc.variables.keys():
             raise Exception('Not a maxele file!')
-        fort14 = cls.__init_fort14(fort14)
-        return cls(nc['x'][:],
-                   nc['y'][:],
-                   nc['element'][:]-1,
+        fort14 = cls.__init_fort14(fort14, SpatialReference, vertical_datum)
+        xy = np.vstack([nc['x'][:], nc['y'][:]]).T
+        return cls(xy,
                    nc['zeta_max'][:],
-                   nc['time_of_zeta_max'],
-                   epsg,
+                   nc['element'][:]-1,
+                   SpatialReference,
                    vertical_datum,
-                   # **fort14.get_boundary_dictionary() # Need to add the additional infor provided by fort.14
-                   datum_grid=datum_grid)
+                   nc['time_of_zeta_max'])
 
     @classmethod
     def from_ascii(cls, path, fort14, vertical_datum='LMSL',
-                   epsg=4326, datum_grid=None):
+                   SpatialReference=4326, datum_grid=None):
         fort14 = cls.__init_fort14(fort14)
         with open(path, 'r') as f:
             line = f.readline()
@@ -55,7 +84,7 @@ class Maxele(ScalarSurfaceExtrema):
                    fort14.elements,
                    values,
                    time_of_zeta_max,
-                   epsg=epsg,
+                   SpatialReference=SpatialReference,
                    vertical_datum=vertical_datum,
                    ocean_boundaries=fort14.ocean_boundaries,
                    land_boundaries=fort14.land_boundaries,
@@ -67,47 +96,7 @@ class Maxele(ScalarSurfaceExtrema):
                    datum_grid=datum_grid)
 
     @staticmethod
-    def __init_fort14(fort14):
+    def __init_fort14(fort14, SpatialReference, vertical_datum):
         if fort14 is not None:
             if isinstance(fort14, AdcircMesh) is False:
-                return AdcircMesh.from_fort14(fort14)
-
-
-def PlotMaxeleEntrypoint():
-    class PlotMaxele(object):
-
-        def __init__(self):
-            self.parse_args()
-            if self.check_is_netcdf():
-                maxele = Maxele.from_netcdf(self.args.maxele)
-            else:
-                if self.args.fort14 is None:
-                    raise Exception('A fort.14 file is required if maxele file'
-                                    + ' is ascii.')
-                maxele = Maxele.from_ascii(self.args.maxele, self.args.fort14)
-            maxele.make_plot(title=self.args.title,
-                             vmin=self.args.vmin,
-                             vmax=self.args.vmax)
-            plt.show()
-
-        def parse_args(self):
-            parser = argparse.ArgumentParser(
-                        description="Program to see a quick plot of an ADCIRC "
-                        + "maxele file.")
-            parser.add_argument('maxele', help="Path to maxele file.")
-            parser.add_argument('--fort14', help="Path to fort.14 file"
-                                + "(required if maxele files is not netcdf).")
-            parser.add_argument('--title', help="Plot title override.")
-            parser.add_argument('--vmin', type=float)
-            parser.add_argument('--vmax', type=float)
-            self.args = parser.parse_args()
-
-        def check_is_netcdf(self):
-            try:
-                Dataset(self.args.maxele)
-                return True
-            except FileNotFoundError:
-                raise
-            except OSError:
-                return False
-    PlotMaxele()
+                return AdcircMesh(fort14, SpatialReference, vertical_datum)
