@@ -105,12 +105,16 @@ class NodalAttributes(Mapping):
         self._storage['primitive_weighting_in_continuity_equation'] \
             = _PrimitiveWeighting(self, 3, **kwargs)
 
-    def dump(self, output_dir, filename='fort.13'):
-        output_path = Path(str(output_dir) + '/' + filename)
-        if len(self._storage.keys()) > 0:
-            fort13 = self.get_fort13()
-            with open(str(output_path), 'w') as f:
-                f.write(fort13)
+    def dump(self, output_dir=None, filename='fort.13'):
+        if output_dir is not None:
+            output_path = Path(str(output_dir) + '/' + filename)
+            if len(self._storage.keys()) > 0:
+                fort13 = self.get_fort13()
+                with open(str(output_path), 'w') as f:
+                    f.write(fort13)
+        else:
+            if len(self._storage.keys()) > 0:
+                print(self.get_fort13())
 
     def add_attribute(self, UnstructuredMesh, attribute_name,
                       **attribute_values):

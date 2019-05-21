@@ -31,7 +31,7 @@ class _Fort15(object):
                  WarnElevDumpLimit=None,
                  ErrorElev=None,
                  NABOUT=1,
-                 NSCREEN=100,
+                 NSCREEN=500,
                  ICS=None,
                  IM=0,
                  IDEN=None,
@@ -608,9 +608,10 @@ class _Fort15(object):
 
     @DTDP.setter
     def DTDP(self, DTDP):
-        assert float(DTDP) != 0.
+        DTDP = float(DTDP)
         DTDP = np.abs(DTDP)
-        self.__DTDP = float(DTDP)
+        assert DTDP != 0.
+        self.__DTDP = DTDP
 
     @STATIM.setter
     def STATIM(self, STATIM):

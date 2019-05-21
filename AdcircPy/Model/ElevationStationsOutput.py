@@ -1,5 +1,5 @@
-from collections import OrderedDict
 from datetime import timedelta
+from collections import OrderedDict
 from AdcircPy.Model._StationsOutput import _StationsOutput
 
 
@@ -26,11 +26,10 @@ class ElevationStationsOutput(_StationsOutput):
                                                                       _hint)
 
     @classmethod
-    def from_fort15(cls, path, sampling_frequency=None, netcdf=True,
+    def from_fort15(cls, path, sampling_frequency, netcdf=True,
                     spinup=False, harmonic_analysis=False, _hint='NOUTE'):
-        return super(ElevationStationsOutput, cls).__from_fort15(
-            path, _hint, sampling_frequency, netcdf, spinup,
-            harmonic_analysis)
+        return cls._from_fort15(path, _hint, sampling_frequency, netcdf,
+                                spinup, harmonic_analysis)
 
     @property
     def _storage(self):

@@ -6,7 +6,7 @@ import matplotlib as mpl  # noqa: E402
 mpl.rcParams['agg.path.chunksize'] = 10000
 
 from AdcircPy import Model  # noqa: E402
-from AdcircPy.AdcircPy import read_mesh  # noqa: E402
+from AdcircPy.AdcircPy import read_mesh, read_output  # noqa: E402
 
 
 __author__ = "Jaime R. Calzada-Marrero"
@@ -23,4 +23,5 @@ __email__ = "jaime.calzada@noaa.gov"
 __status__ = "Development"
 
 __all__ = ['read_mesh',
+           'read_output',
            'Model']

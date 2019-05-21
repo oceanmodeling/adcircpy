@@ -25,7 +25,9 @@ class UnstructuredMesh(object):
                  OceanBoundaries=None, LandBoundaries=None,
                  InnerBoundaries=None, InflowBoundaries=None,
                  OutflowBoundaries=None, WeirBoundaries=None,
-                 CulvertBoundaries=None, description=''):
+                 CulvertBoundaries=None, description='', mask_value=-99999.):
+        # this needs to be improved.
+        # these attributes must exist befor anything else can happen
         self.__OceanBoundaries = None
         self.__LandBoundaries = None
         self.__InnerBoundaries = None
@@ -34,6 +36,7 @@ class UnstructuredMesh(object):
         self.__WeirBoundaries = None
         self.__CulvertBoundaries = None
         self._xy = xy
+        self._mask_value = mask_value
         self._z = z
         self._elements = elements
         self._SpatialReference = SpatialReference
@@ -49,6 +52,7 @@ class UnstructuredMesh(object):
         self.__set_InnerRings()
         self.__set_ConvexHull()
         self.__set_NodalAttributes()
+        self.__set_KDTree()
 
     def get_x(self, SpatialReference=None):
         if self.xy is not None:
@@ -178,7 +182,7 @@ class UnstructuredMesh(object):
                             + "adcirc-grid-and-boundary-information-"
                             + "file-fort-14/ for valid ibtypes")
 
-    def make_plot(self, elements=True, axes=None, vmin=None, vmax=None,
+    def make_plot(self, elements=False, axes=None, vmin=None, vmax=None,
                   cmap=None, levels=None, show=False, title=None, figsize=None,
                   colors=256, extent=None, cbar_label=None, norm=None,
                   tricontourf_kwargs=dict(), triplot_kwargs=dict()):
@@ -205,7 +209,8 @@ class UnstructuredMesh(object):
         axes.axis('scaled')
         if extent is not None:
             axes.axis(extent)
-
+        if title is not None:
+            axes.set_title(title)
         mappable = ScalarMappable(cmap=cmap)
         mappable.set_array([])
         mappable.set_clim(vmin, vmax)
@@ -260,6 +265,29 @@ class UnstructuredMesh(object):
     def set_description(self, description):
         self._description = description
 
+    def get_element_containing_coord(self, coord):
+        x = coord[0]
+        y = coord[1]
+        distance, node_idx = self.KDTree.query([x, y])
+        elements = self.get_finitive_volume_as_Path_list(node_idx)
+        for i, element in enumerate(elements):
+            if element.contains_point((x, y)):
+                return self.get_finitive_volume_indexes(node_idx)[i]
+
+    def get_finitive_volume_as_Path_list(self, index):
+        return [self.get_Path_from_element(element) for element
+                in self.get_finitive_volume_indexes(index)]
+
+    def get_finitive_volume_indexes(self, index):
+        return self.elements[np.where(np.any(np.isin(self.elements, index),
+                                             axis=1))[0]]
+
+    def get_Path_from_element(self, element):
+        return Path([[self.x[element[0]], self.y[element[0]]],
+                     [self.x[element[1]], self.y[element[1]]],
+                     [self.x[element[2]], self.y[element[2]]],
+                     [self.x[element[0]], self.y[element[0]]]], closed=True)
+
     def __set_xyz(self):
         if self.z is not None and self.xy is not None:
             self.__xyz = np.vstack([self.x, self.y, self.z]).T
@@ -304,6 +332,8 @@ class UnstructuredMesh(object):
                                         ordered_vertices,
                                         np.flipud(open_boundaries.pop(tidx))])
                 self.__OuterRing = Path(ordered_vertices, closed=True)
+            else:
+                self.__OuterRing = None
         else:
             self.__OuterRing = None
 
@@ -355,6 +385,9 @@ class UnstructuredMesh(object):
     def __set_NodalAttributes(self):
         self.__NodalAttributes = NodalAttributes(self)
 
+    def __set_KDTree(self):
+        self.__KDTree = cKDTree(self.xy)
+
     def __get_transformed_array(self, SpatialReference, xy):
         if isinstance(SpatialReference, int):
             EPSG = SpatialReference
@@ -387,7 +420,7 @@ class UnstructuredMesh(object):
                    norm=None):
         colors = int(colors)
         if cmap is None:
-            cmap = plt.cm.get_cmap('viridis')
+            cmap = plt.cm.get_cmap('jet')
             if levels is None:
                 levels = np.linspace(vmin, vmax, colors)
             col_val = 0.
@@ -499,6 +532,14 @@ class UnstructuredMesh(object):
         return self._description
 
     @property
+    def KDTree(self):
+        return self.__KDTree
+
+    @property
+    def mask_value(self):
+        return self._mask_value
+
+    @property
     def _xy(self):
         return self.__xy
 
@@ -570,6 +611,10 @@ class UnstructuredMesh(object):
     def _description(self):
         return self.__description
 
+    @property
+    def _mask_value(self):
+        return self.__mask_value
+
     @_xy.setter
     def _xy(self, xy):
         if xy is not None:
@@ -596,6 +641,7 @@ class UnstructuredMesh(object):
         if z is not None:
             z = np.asarray(z)
             assert z.shape != self.xy.shape[0]
+        z = np.ma.masked_equal(z, self.mask_value)
         self.__z = z
         self.__set_xyz()
 
@@ -693,6 +739,9 @@ class UnstructuredMesh(object):
     def _description(self, description):
         self.__description = str(description).strip('\n')
 
+    @_mask_value.setter
+    def _mask_value(self, mask_value):
+        self.__mask_value = float(mask_value)
 
 class UnstructuredMeshTestCase(unittest.TestCase):
 

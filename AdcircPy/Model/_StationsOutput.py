@@ -19,6 +19,15 @@ class _StationsOutput(Mapping, metaclass=abc.ABCMeta):
                         UnstructuredMesh, runtype, forcing_start_date,
                         start_date, end_date, DTDP)
 
+    def __getitem__(self, key):
+        return self._storage[key]
+
+    def __iter__(self):
+        return iter(self._storage)
+
+    def __len__(self):
+        return len(self._storage.keys())
+
     def add_station(self, x, y, station_id):
         self._storage[station_id] = (x, y)
 
@@ -112,12 +121,12 @@ class _StationsOutput(Mapping, metaclass=abc.ABCMeta):
         return NOUT, TOUTST, TOUTF, NSPOOL, stations
 
     @classmethod
-    def __from_fort15(cls, path, _hint, sampling_frequency=timedelta(0),
-                      netcdf=True, spinup=False, harmonic_analysis=False):
+    def _from_fort15(cls, path, _hint, sampling_frequency=timedelta(0),
+                     netcdf=True, spinup=False, harmonic_analysis=False):
         cls = cls(sampling_frequency, netcdf, spinup, harmonic_analysis)
         stations = cls.__parse_stations_from_fort15(path, _hint)
-        for station_id, (x, y) in stations:
-            cls.add_station(station_id, x, y)
+        for station_id, (x, y) in stations.items():
+            cls.add_station(x, y, station_id)
         return cls
 
     @staticmethod
@@ -126,7 +135,8 @@ class _StationsOutput(Mapping, metaclass=abc.ABCMeta):
         with open(path, 'r') as f:
             for line in f:
                 if _hint in line:
-                    num = int(f.readline().split('!')[0].strip().split(' ')[0])
+                    line = f.readline().split('!')[0]
+                    num = int(line)
                     for i in range(num):
                         line = f.readline().split('!')
                         if len(line) > 0:

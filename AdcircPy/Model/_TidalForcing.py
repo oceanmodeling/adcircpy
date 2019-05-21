@@ -18,6 +18,7 @@ tpxo_path = __init_TPXO_cache()
 
 class _TidalForcing(object):
     """
+    tide_fac13.f reimplementation with TPXO included.
     """
     __orbital_frequency = {'M4':      0.0002810378050173,
                            'M6':      0.0004215567080107,
@@ -113,8 +114,6 @@ class _TidalForcing(object):
     __nc = Dataset(tpxo_path)
     __constituents = set()
     __major8 = ['K1', 'O1', 'P1', 'Q1', 'M2', 'S2', 'N2', 'K2']
-    __tpxo_constituents = sorted(['2N2', 'M4', 'Mf', 'Mm', 'MN4', 'MS4', 'S1',
-                                 *__major8])
 
     def __init__(self, start_date, end_date, spinup_days=0.,
                  constituents='all'):
@@ -123,10 +122,12 @@ class _TidalForcing(object):
         self.__set_forcing_start_date()
         self.__set_end_date(end_date)
         self.__set_forcing_end_date()
+        self.__set_tpxo_constituents()
         self.__set_constituents(constituents)
         self.__init_orbital_parameters()
         self.__set_nodal_factor()
         self.__set_greenwich_term()
+        self.__set_tpxo_constituents()
 
     def __call__(self, constituent):
         return self.get_forcing_factors(constituent)
@@ -166,18 +167,17 @@ class _TidalForcing(object):
                 raise NotImplementedError(
                     'Tidal Run only supported for meshes in '
                     + ' geographic coordinates.')
-            _x = ocean_boundary['vertices'][:, 0] + 360.
+            _x = ocean_boundary['vertices'][:, 0]
+            _x = np.asarray([_ + 360. for _ in _x if _ < 0])
             _y = ocean_boundary['vertices'][:, 1]
             _idx = np.where(np.logical_and(
-                            np.logical_and(np.min(_x) <= x,
-                                           np.max(_x) >= x),
-                            np.logical_and(np.min(_y) <= y,
-                                           np.max(_y) >= y)))
+                            np.logical_and(np.min(_x) <= x, np.max(_x) >= x),
+                            np.logical_and(np.min(_y) <= y, np.max(_y) >= y)))
             constituents = CaseInsensitiveDict()
             for constituent in self.constituents:
-                if constituent in self.tpxo_constituents:
+                if constituent in self.tpxo_constituents.keys():
                     constituents[constituent] = dict()
-                    idx = self.tpxo_constituents.index(constituent)
+                    idx = self.tpxo_constituents[constituent]
                     ha = self.nc['ha'][idx, :, :].reshape(
                                             self.nc['ha'][idx, :, :].size)
                     hp = self.nc['hp'][idx, :, :].reshape(
@@ -213,6 +213,13 @@ class _TidalForcing(object):
     def __set_forcing_end_date(self):
         self.__forcing_end_date = self.end_date
 
+    def __set_tpxo_constituents(self):
+        tpxo_constituents = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1',
+                             'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1']
+        self.__tpxo_constituents = dict()
+        for index, constituent in enumerate(tpxo_constituents):
+            self.tpxo_constituents[constituent] = index
+
     def __set_constituents(self, constituents):
         if constituents is None:
             self.__constituents = set()
@@ -234,20 +241,21 @@ class _TidalForcing(object):
 
     def __init_orbital_parameters(self):
         self.DYR = self.forcing_start_date.year - 1900.
-        self.DDAY = self.forcing_start_date.timetuple().tm_yday
-        + int((self.forcing_start_date.year-1901.)/4.)-1
-        self.hour_middle = self.forcing_start_date.hour
-        + ((self.forcing_end_date - self.forcing_start_date)
-           .total_seconds()/3600)/2
-        self.DN = self.__get_lunar_node(self.hour_middle)
+        self.DDAY = (self.forcing_start_date.timetuple().tm_yday
+                     + int((self.forcing_start_date.year-1901.)/4.) - 1)
+        self.hour_middle = (self.forcing_start_date.hour
+                            + (self.forcing_end_date
+                               - self.forcing_start_date).total_seconds()
+                            / 3600 / 2)
+        self.DN = self.__get_lunar_node(self.hour_middle)  # HR
         self.N = np.deg2rad(self.DN)
-        self.DP = self.__get_lunar_perigee(self.hour_middle)
+        self.DP = self.__get_lunar_perigee(self.hour_middle)  # HR
         self.P = np.deg2rad(self.DP)
-        self.DH = self.__get_solar_mean_longitude(self.forcing_start_date.hour)
+        self.DH = self.__get_solar_mean_longitude(self.forcing_start_date.hour)  # HR
         self.H = np.deg2rad(self.DH)
-        self.DS = self.__get_lunar_mean_longitude(self.forcing_start_date.hour)
+        self.DS = self.__get_lunar_mean_longitude(self.forcing_start_date.hour)  % 360.# HR
         self.S = np.deg2rad(self.DS)
-        self.DP1 = self.__get_solar_perigee(self.forcing_start_date.hour)
+        self.DP1 = self.__get_solar_perigee(self.forcing_start_date.hour)  # HR
         self.P1 = np.deg2rad(self.DP1)
         self.I = np.arccos(.9136949-.0356926*np.cos(self.N))
         self.DI = np.rad2deg(self.I)
@@ -255,12 +263,13 @@ class _TidalForcing(object):
         self.DNU = np.rad2deg(self.NU)
         self.XI = self.N-2.*np.arctan(.64412*np.tan(self.N/2)) - self.NU
         self.DXI = np.rad2deg(self.XI)
-        self.DT = (180.+self.forcing_start_date.hour*(360./24)) % 360.
+
+        self.DT = (180.+self.forcing_start_date.hour*(360./24))
         self.T = np.deg2rad(self.DT)
         self.NUP = np.arctan(np.sin(self.NU)
                              / (np.cos(self.NU)+.334766/np.sin(2.*self.I)))
         self.DNUP = np.rad2deg(self.NUP)
-        self.DPC = (self.DP - self.DXI) % 360.
+        self.DPC = (self.DP - self.DXI)
         self.PC = np.deg2rad(self.DPC)
         self.R = np.arctan(np.sin(2.*self.PC)
                            / ((1./6.)*(1./np.tan(.5*self.I))**2
@@ -287,33 +296,7 @@ class _TidalForcing(object):
             self.greenwich_term[constituent] \
                 = self.__get_greenwich_term(constituent) % 360.
 
-    def __get_lunar_node(self, hours):
-        """ """
-        return (259.1560564 - 19.328185764 * self.DYR - .0529539336 * self.DDAY
-                - .0022064139 * hours) % 360.
-
-    def __get_lunar_perigee(self, hours):
-        """ """
-        return (334.3837214 + 40.66246584 * self.DYR + .111404016 * self.DDAY
-                + .004641834 * hours) % 360.
-
-    def __get_lunar_mean_longitude(self, hours):
-        """ """
-        return (277.0256206 + 129.38482032 * self.DYR + 13.176396768
-                * self.DDAY + .549016532 * hours) % 360.
-
-    def __get_solar_perigee(self, hours):
-        """ """
-        return (281.2208569 + .01717836 * self.DYR + .000047064 * self.DDAY
-                + .000001961 * hours) % 360.
-
-    def __get_solar_mean_longitude(self, hours):
-        """ """
-        return (280.1895014 - .238724988 * self.DYR + .9856473288 * self.DDAY
-                + .0410686387 * hours) % 360.
-
     def __get_nodal_factor(self, constituent):
-        """ """
         if constituent == "M2":
             return self.__EQ78()
         elif constituent == "S2":
@@ -393,7 +376,6 @@ class _TidalForcing(object):
                                + '{}.'.format(constituent))
 
     def __get_greenwich_term(self, constituent):
-        """ """
         if constituent == "M2":
             return 2.*(self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
         elif constituent == "S2":
@@ -481,58 +463,65 @@ class _TidalForcing(object):
             raise RuntimeError('Unrecognized constituent '
                                + '{}.'.format(constituent))
 
+    def __get_lunar_node(self, hours):
+        return (259.1560564 - 19.328185764 * self.DYR - .0529539336 * self.DDAY
+                - .0022064139 * hours)
+
+    def __get_lunar_perigee(self, hours):
+        return (334.3837214 + 40.66246584 * self.DYR + .111404016 * self.DDAY
+                + .004641834 * hours)
+
+    def __get_lunar_mean_longitude(self, hours):
+        return (277.0256206 + 129.38482032 * self.DYR + 13.176396768
+                * self.DDAY + .549016532 * hours)
+
+    def __get_solar_perigee(self, hours):
+        return (281.2208569 + .01717836 * self.DYR + .000047064 * self.DDAY
+                + .000001961 * hours)
+
+    def __get_solar_mean_longitude(self, hours):
+        return (280.1895014 - .238724988 * self.DYR + .9856473288 * self.DDAY
+                + .0410686387 * hours)
+
     def __EQ73(self):
-        """ """
         return (2./3.-np.sin(self.I)**2)/.5021
 
     def __EQ74(self):
-        """ """
         return np.sin(self.I)**2/.1578
 
     def __EQ75(self):
-        """ """
         return np.sin(self.I)*np.cos(self.I/2.)**2/.37988
 
     def __EQ76(self):
-        """ """
         return np.sin(2.*self.I)/.7214
 
     def __EQ77(self):
-        """ """
         return np.sin(self.I)*np.sin(self.I/2.)**2/.0164
 
     def __EQ78(self):
-        """ """
         return (np.cos(self.I/2)**4)/.91544
 
     def __EQ149(self):
-        """ """
         return np.cos(self.I/2.)**6/.8758
 
     def __EQ197(self):
-        """ """
         return np.sqrt(2.310+1.435*np.cos(2.*(self.P - self.XI)))
 
     def __EQ207(self):
-        """ """
         return self.__EQ75()*self.__EQ197()
 
     def __EQ213(self):
-        """ """
         return np.sqrt(1.-12.*np.tan(self.I/2.)**2*np.cos(2.*self.P)
                        + 36.*np.tan(self.I/2.)**4)
 
     def __EQ215(self):
-        """ """
         return self.__EQ78()*self.__EQ213()
 
     def __EQ227(self):
-        """ """
         return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)
                        * np.cos(self.NU)+.1006)
 
     def __EQ235(self):
-        """ """
         return .001+np.sqrt(19.0444*np.sin(self.I)**4+2.7702*np.sin(self.I)**2
                             * np.cos(2.*self.NU)+.0981)
 
@@ -585,10 +574,6 @@ class _TidalForcing(object):
         return self.__nodal_factor
 
     @property
-    def greenwich_term(self):
-        return self.__greenwich_term
-
-    @property
     def TPXO_interp(self):
         return self.__TPXO_interp
 
@@ -600,15 +585,40 @@ class _TidalForcing(object):
     def major8(self):
         return self.__major8
 
+    @property
+    def greenwich_term(self):
+        return self.__greenwich_term
+
 
 class TidalForcing(unittest.TestCase):
 
-    def test_nowcast(self):
-        now = datetime.now()
-        three_days = now + timedelta(minutes=3.*24.*60.)
-        _TidalForcing(now, three_days, 7)
+    def test_control_Sandy(self):
+        """
+        K1    0.94843     298.0830551604721
+        O1    0.91613     167.70941789973676
+        P1    1.0         70.01137799920002
+        Q1    0.91613     266.0233347217413
+        N2    1.0203      208.1293472169341
+        M2    1.0203      109.81543039492954
+        S2    1.0         0.0
+        K2    0.86465     55.559822189650276
+        M4    1.041       219.63086078985907
+        MS4   1.0203      109.81543039492954
+        """
+        start_date = datetime(2012, 10, 26, 00)
+        end_date = start_date + timedelta(days=4.25)
+        t = _TidalForcing(start_date, end_date, 15)
+        ordered = ["K1", "O1", "P1", "Q1", "N2", "M2", "S2", "K2", "MF", "MM",
+                   "M4", "MS4"]
+        for constituent in ordered:
+            if constituent in t.constituents:
+                s = '{:<6}'.format(constituent)
+                s += '{:<7.5}'.format(t.nodal_factor[constituent])
+                s += 5*' '
+                s += '{} '.format(t.greenwich_term[constituent])
+                print(s)
 
-    def test_TPXO_interp(self):
+    def _test_TPXO_interp(self):
         mesh = Model.AdcircMesh(os.getenv('ShinnecockInlet'), 4326, 'LMSL')
         now = datetime.now()
         three_days = now + timedelta(minutes=3.*24.*60.)

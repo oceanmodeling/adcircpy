@@ -6,11 +6,8 @@ from scipy.interpolate import RectBivariateSpline
 from haversine import haversine
 from osgeo import gdal, osr
 
-# local imports
-from AdcircPy.utils._Figure import _Figure
 
-
-class _BaseRaster(_Figure):
+class _BaseRaster(object):
 
     def __init__(self, x, y, values, GeoTransform, SpatialReference):
         self._x = x

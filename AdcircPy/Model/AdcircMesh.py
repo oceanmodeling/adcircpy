@@ -5,6 +5,7 @@ import numpy as np
 from AdcircPy.Mesh import UnstructuredMesh
 from AdcircPy.Mesh.UnstructuredMesh import NodalAttributes
 from AdcircPy.Model._TidalRun import _TidalRun
+from AdcircPy.Model._BestTrackRun import _BestTrackRun
 
 # unittest imports
 import os
@@ -33,10 +34,21 @@ class AdcircMesh(UnstructuredMesh):
         return _TidalRun(self, start_date, end_date, spinup_days=spinup_days,
                          constituents=constituents, **fort15)
 
+    def get_BestTrackRun(self, storm_id, start_date=None, end_date=None,
+                         spinup_days=0., constituents='all', **fort15):
+        return _BestTrackRun(self, storm_id, start_date=start_date,
+                             end_date=end_date, spinup_days=spinup_days,
+                             constituents=constituents, **fort15)
+
     def TidalRun(self, start_date, end_date, spinup_days=0.,
                  constituents='all', **fort15):
         return self.get_TidalRun(start_date, end_date, spinup_days,
                                  constituents=constituents, **fort15)
+
+    def BestTrackRun(self, start_date=None, end_date=None, spinup_days=0.,
+                     constituents='all', **fort15):
+        return self.get_BestTrackRun(start_date, end_date, spinup_days,
+                                     constituents=constituents, **fort15)
 
     def add_nodal_attribute(self, attribute_name, full_values, defaults=None):
         self.NodalAttributes._add_attribute(self, attribute_name, full_values,

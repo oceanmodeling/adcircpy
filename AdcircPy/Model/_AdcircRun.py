@@ -42,7 +42,8 @@ class _AdcircRun(_Fort15):
              filename_coldstart='fort.15.coldstart',
              filename_hotstart='fort.15.hotstart',
              fort13_filename='fort.13'):
-        output_dir = Path(output_dir)
+        if output_dir is not None:
+            output_dir = Path(output_dir)
         self.AdcircMesh.NodalAttributes.dump(
                                         output_dir, filename=fort13_filename)
         if coldstart:
@@ -139,7 +140,7 @@ class _AdcircRun(_Fort15):
         if runtype == 'coldstart':
             RNDAY = self.start_date - self.forcing_start_date
         else:
-            RNDAY = self.end_date - self.start_date
+            RNDAY = self.end_date - self.forcing_start_date
         f += '{:<32.2f}! RNDAY\n'.format(RNDAY.total_seconds()/(60.*60.*24.))
         if runtype == 'coldstart':
             DRAMP = self.DRAMP
@@ -404,7 +405,10 @@ class _AdcircRun(_Fort15):
         f += "{}\n".format(self.NCHOST)
         f += "{}\n".format(self.NCCONV)
         f += "{}\n".format(self.NCCONT)
-        f += "{}\n".format(self.NCDATE)
+        f += "{} UTC".format(self.NCDATE)
+        f += 6*" "
+        f += "! model start_date {}\n".format(
+                            self.start_date.strftime('%Y-%m-%d %H:%M UTC'))
         return f
 
     def __set_start_date(self):
