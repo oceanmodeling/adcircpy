@@ -33,10 +33,12 @@ setuptools.setup(
         'console_scripts': [
             'PlotMesh=AdcircPy.entrypoints.PlotMesh:main',
             'GenerateTidalRun=AdcircPy.entrypoints.GenerateTidalRun:main',
-            # 'PlotMaxele=AdcircPy.Outputs.Maxele:PlotMaxeleEntrypoint',
+            'PlotTidalStationsOutput=AdcircPy.entrypoints.PlotTidalStationsOutput:main',  # noqa:E501
+            'GenerateBestTrackFile=AdcircPy.entrypoints.GenerateBestTrackFile:main',  # noqa:E501
+            'PlotMaxele=AdcircPy.entrypoints.PlotMaxele:main',
+            'GenerateBestTrackRun=AdcircPy.entrypoints.GenerateBestTrackRun:main',  # noqa:E501
             # 'GenerateHindcast=AdcircPy.entrypoints.GenerateHindcast:main',
-            # 'HighWaterMarkValidation=AdcircPy.entrypoints.HighWaterMarkValidation:main',
-            # 'TidalTimeseriesStationsValidation=AdcircPy.entrypoints.TidalTimeseriesStationsValidation:main',
+            'HighWaterMarkValidation=AdcircPy.entrypoints.HighWaterMarkValidation:main',  # noqa:E501
             # 'TaylorDiagram=AdcircPy.entrypoints.TaylorDiagram:main',
             # 'PlayAnthem=AdcircPy.utils:anthem'
             ]},
