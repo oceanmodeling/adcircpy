@@ -1,131 +1,119 @@
-# AdcircPy </h1>
+# AdcircPy
 ### A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model. 
 
-## Basic Installation:
+### Basic Installation:
 You can install this software through conda or through pip.</br>
-The dependecies of Python packages installed through pip must be satisfied by the operating system (for example, the headers for HDF5 for use with netCDF4). Therefore, the recommended method of installation is through conda. </br>
+The dependecies of Python packages installed through pip must be satisfied by the operating system (see Method 2 for details). On a normal user's computer, the recommended method of installation is through conda. Whether you are using the pip method or the conda method, it is generally good practice to always make use of a virtual environment for your project. If you are a Python newcomer, make sure to read upon Python environments and their usage as you dive more into Python development.</br>
 
-It is recommended that this package is used on Linux, but Windows should work as well. Not tested in MacOS, but should also work as well.</br>
+If you are doing development on a Windows machine it is highly recommended to use the Windows Subsystem for Linux, and run this software from a Widows-Subsystem-for-Linux shell. MingW64, Cygwin, the git-shell-for-windows, or any other off-the-shelf POSIX layer on Windows should work.</br>
 
+### Method 1: Conda
+The advantage of using conda is that it provides the necessary dependencies as precompiled binaries, therefore no local compilations are required, and cuts the installation time substantially. This is the recommended method to use. </br>
 
-Method 1 describes the steps to install thorugh conda, while method 2 describes the steps to perform a pip only install.
+Install Miniconda3 (recommended) or Anaconda3 on your system. Rememeber to make this installation on the POSIX layer when using Windows.</br>
 
-### Method 1: Conda (the easy way!)
-#### Windows:
-Install Anaconda for Windows</br>
-Using the Anaconda Command Prompt, navigate to the directory where the AdcircPy has been downloaded and run the following command:
-```cmd
-conda env create -f conda-windows-x86_64.yml
-```
-After the installation of the dependecies is done, you should activate the AdcircPy environment by running:
-```cmd
-conda activate AdcircPy
-```
-Finally, you can install the package by issuing the command:
-```cmd
-python setup.py install
-```
-This will install the AdcircPy on your conda environment. Remember to alwasy activate the AdcircPy enviroment by running the command
-```cmd
-conda activate AdcircPy
-```
-#### Linux:
-Same as Windows but use conda-linux-x86_64.yml instead.
-
-### Method 2: Pip-only (for the hardcore purist)
-
-pyproj needs to be installed prior the installation on pip by running:</br>
+Create a new conda environment for your project, and inside the environment run:
 
 ```cmd
-pip install git+https://github.com/jswhit/pyproj.git@master
+conda update -n base -c defaults conda
+conda install -c conda-forge gdal
+pip install AdcircPy
 ```
 
-Now you can install the package through pip by executing:
+
+### Method 2: Pip-only (requires compilation of system libraries).
+
+Pip requires that some system libraries are precompiled and installed before running pip install command. _It is highly recommended that you use the system packge manager to satisfy these dependencies_, or, they may be compiled from source. The [.docker](.docker/) directory contains a full piecewise build on an Alpine distribution, which may be used for reference in case further guidance is required with respect to the full compilation procedure. Note that "dev" versions mean that the headers are required along with the compiled library. Also note that some of these libraries you may already have in your system.
+
+
+#### Full system dependency list:
+* g++
+* gcc
+* m4
+* make
+* autoconf
+* zlib-dev
+* libc-dev
+* curl-dev
+* linux-headers
+* hdf5-dev
+* netcdf-c-dev
+* python3-dev
+* sqlite-dev
+* Proj4-dev
+* GDAL-dev
+* openblas-dev  (for scipy)
+* freetype-dev  (for matplotlib)
+* py3-pip
+
+Once these dependencies have been met, you may simply do
 ```cmd
 pip install AdcircPy
 ```
-If the package fails to install through pip, check if you have the correct headers installed in your operating system. Using conda is highly recommended.
 
-#### NOTE: If you are developer and would like to debug the package, you may install this package on developer mode by doing:
+#### NOTE: If you are developer and would like to debug the package, you may install this package on developer mode by first cloning the package, and then doing:
+
 ```cmd
 pip install -e .
 ```
 
 ### Usage
 
+#### CLI interface
+After installation a few new commands are available on the command line interface.
 
-This package is an API to handle input and output files for the [ADCIRC](http://adcirc.org) hydrodynamic model. 
+A few of the available commands are:
 
-Create a new directory where you plan to start your project and create a new file with the following content:
+* PlotMesh
+* GenerateTidalRun
+* GenerateBestTrackFile
+* PlotMaxele
+* HighWaterMarkValidation
+* PlotTidalStationsOutput
+
+Since this package is in development, the list above may not be up to date, therefore you may check  [setup.py](setup.py), where the entrypoints for the present release are listed. 
+
+
+#### As an API
+
+This package is an API to handle input and output files for the [ADCIRC](http://adcirc.org) hydrodynamic model.
+You can load an Adcirc mesh and plot it by doing: 
 
 ```Python
-from AdcircPy import AdcircPy
-```
-
-If it's the first time running AdircPy on this user account, the TPXO database will be cached to disk.
-
-Now you can load an Adcirc mesh or an output file by doing: 
-
-```Python
-mesh = AdcircPy.read_mesh('/path/to/fort.14')
-output = AdcircPy.read_output('/path/to/outputfile.nc')
-```
-
-The most basic you can do with this software is create plots:
-
-```Python
-import matplotlib.pyplot as plt 
-mesh.make_plot()
-output.make_plot()
-plt.show()
+from AdcircPy import read_mesh
+mesh = read_mesh('/path/to/fort.14')
+# The most basic you can do with this software is create plots:
+mesh.make_plot(show=True)
 ```
 
 ### Example of fort.15 generation:
 #### Tidal only run:
 
 ```Python
-from AdcircPy import AdcircPy
+from AdcircPy import read_mesh
 from datetime import datetime, timedelta
-Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
-	                      fort13='/path/to/fort.13')
+mesh = read_mesh('/path/to/fort.14', epsg=4326, vertical_datum='LSML')
 start_date = datetime.now()
-end_date = start_date+timedelta(days=5)
-tidalRun = Mesh.TidalRun(start_date, end_date)
-tidalRun.dump('/directory/to/dump')
-```
-
-#### Generation of a Best Track Meteorological run:
-
-```Python
-from datetime import datetime, timedelta
-from AdcircPy import AdcircPy
-storm_id = 'AL182012'
-spinup_date = datetime(2012, 10, 11, 0)
-start_time  = spinup_date + timedelta(days=15)
-end_time    = spinup_date + timedelta(days=19.25)
-Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
-	                      fort13='/path/to/fort.13')
-BestTrackRun = Mesh.BestTrackRun('AL182012', start_time, end_time, spinup_date=spinup_date)
-BestTrackRun.dump('/directory/to/dump')
+end_date = start_date + timedelta(days=5)
+tidal_run = mesh.TidalRun(start_date, end_date, spinup_days=7)
+tidal_run.dump()  # will write to stdout if no output path is given.
 ```
 
 #### Example where global outputs are requested:
 
 ```Python
-from AdcircPy import AdcircPy
+from AdcircPy import read_mesh
 from AdcircPy import ElevationGlobalOutput as EGO
 from datetime import datetime, timedelta
-Mesh = AdcircPy.read_mesh(fort14='/path/to/fort.14',
-	                      fort13='/path/to/fort.13')
+mesh = read_mesh('/path/to/fort.14')
 start_date = datetime.now()
-end_date = start_date+timedelta(days=5)
-tidalRun = Mesh.TidalRun(start_date, end_date,
-			ElevationGlobalOutput=EGO(sampling_frequency=timedelta(minutes=15)))
-tidalRun.dump('/directory/to/dump')
+end_date = start_date + timedelta(days=5)
+tidal_run = mesh.TidalRun(
+            start_date, end_date,
+            ElevationGlobalOutput=EGO(sampling_frequency=15))
+tidal_run.dump()
 ```
 
-See the "examples" directory for more examples where the Elevation stations outputs are requested.
+#### * Examples will be updated as development continues. *
 
 Please report bugs to jreniel@gmail.com
-
-pyproj, netCDF, scipy and gdal should be sourced from conda-forge. 
