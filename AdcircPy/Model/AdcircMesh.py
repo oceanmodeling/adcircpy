@@ -29,23 +29,23 @@ class AdcircMesh(UnstructuredMesh):
         if datum_mesh is not None:
             self.convert_datum(datum_mesh)
 
-    def get_TidalRun(self, start_date, end_date, spinup_days=0.,
+    def get_TidalRun(self, start_date, end_date, spinup_days=7,
                      constituents='all', **fort15):
         return _TidalRun(self, start_date, end_date, spinup_days=spinup_days,
                          constituents=constituents, **fort15)
 
     def get_BestTrackRun(self, storm_id, start_date=None, end_date=None,
-                         spinup_days=0., constituents='all', **fort15):
+                         spinup_days=7, constituents='all', **fort15):
         return _BestTrackRun(self, storm_id, start_date=start_date,
                              end_date=end_date, spinup_days=spinup_days,
                              constituents=constituents, **fort15)
 
-    def TidalRun(self, start_date, end_date, spinup_days=0.,
+    def TidalRun(self, start_date, end_date, spinup_days=7.,
                  constituents='all', **fort15):
         return self.get_TidalRun(start_date, end_date, spinup_days,
                                  constituents=constituents, **fort15)
 
-    def BestTrackRun(self, start_date=None, end_date=None, spinup_days=0.,
+    def BestTrackRun(self, start_date=None, end_date=None, spinup_days=7.,
                      constituents='all', **fort15):
         return self.get_BestTrackRun(start_date, end_date, spinup_days,
                                      constituents=constituents, **fort15)

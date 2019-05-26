@@ -10,7 +10,7 @@ from AdcircPy import Model
 
 
 class _TidalRun(_AdcircRun):
-    def __init__(self, AdcircMesh, start_date, end_date, spinup_days=0.,
+    def __init__(self, AdcircMesh, start_date, end_date, spinup_days=7.,
                  constituents='all', netcdf=True, ElevationGlobalOutput=None,
                  VelocityGlobalOutput=None, MeteorologicalGlobalOutput=None,
                  ElevationStationsOutput=None, VelocityStationsOutput=None,

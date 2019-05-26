@@ -6,14 +6,17 @@ from netCDF4 import Dataset
 from requests.structures import CaseInsensitiveDict
 
 # local imports
-from AdcircPy.utils import __init_TPXO_cache
+from AdcircPy.utils import get_cache_dir, __init_TPXO_cache
 
 # unittest imports
 import unittest
 import os
 from AdcircPy import Model
 
-tpxo_path = __init_TPXO_cache()
+if os.getenv('DOCKERENV') is not None:
+    tpxo_path = __init_TPXO_cache()
+else:
+    tpxo_path = get_cache_dir() + "/h_tpxo9.v1.nc"
 
 
 class _TidalForcing(object):
@@ -111,11 +114,16 @@ class _TidalForcing(object):
                                'O1': 0.695,
                                'P1': 0.706,
                                'Q1': 0.695}
-    __nc = Dataset(tpxo_path)
+
+    if os.getenv('DOCKERENV') is not None:
+        __nc = Dataset(tpxo_path)
+    else:
+        __nc = None
+
     __constituents = set()
     __major8 = ['K1', 'O1', 'P1', 'Q1', 'M2', 'S2', 'N2', 'K2']
 
-    def __init__(self, start_date, end_date, spinup_days=0.,
+    def __init__(self, start_date, end_date, spinup_days=7.,
                  constituents='all'):
         self.__set_start_date(start_date)
         self.__set_spinup_days(spinup_days)
@@ -197,6 +205,7 @@ class _TidalForcing(object):
     def __set_spinup_days(self, spinup_days):
         spinup_days = float(spinup_days)
         spinup_days = np.abs(spinup_days)
+        assert spinup_days > 0.
         self.__spinup_days = spinup_days
 
     def __set_forcing_start_date(self):
