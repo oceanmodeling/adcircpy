@@ -50,11 +50,10 @@ def anthem():
 
 from AdcircPy.utils.PBS import PBS  # noqa:E402
 from AdcircPy.utils.ServerConfiguration import ServerConfiguration  # noqa:E402
-from AdcircPy.utils.CTFS import CTFS  # noqa:E402
+# from AdcircPy.utils.CTFS import CTFS  # noqa:E402
 
 __all__ = ['PBS',
-           'ServerConfiguration',
-           'CTFS']
+           'ServerConfiguration']
 
 if __name__ == '__main__':
     anthem()
