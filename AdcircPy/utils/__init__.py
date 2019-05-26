@@ -1,11 +1,6 @@
 import os
 import wget
 import tarfile
-from AdcircPy.utils.PBS import PBS
-from AdcircPy.utils.ServerConfiguration import ServerConfiguration
-
-__all__ = ['PBS',
-           'ServerConfiguration']
 
 
 def get_cache_dir():
@@ -39,14 +34,27 @@ def anthem():
     try:
         import pygame
     except ImportError:
-        raise
+        raise ImportError("Richard Stallman says: you can install pygame from "
+                          + "pip if you want to hear me sing!")
 
     cachedir = get_cache_dir()
     if os.path.isfile(cachedir+"/free-sotfware-song.au") is False:
         wget.download('https://www.gnu.org/music/free-software-song.au',
-                      out=cachedir+"/free-sotfware-song.au",
+                      out=cachedir+"/free-software-song.au",
                       bar=None)
     pygame.mixer.init()
     song = pygame.mixer.Sound(cachedir+"/free-sotfware-song.au")
     song.play()
     pygame.quit()
+
+
+from AdcircPy.utils.PBS import PBS  # noqa:E402
+from AdcircPy.utils.ServerConfiguration import ServerConfiguration  # noqa:E402
+from AdcircPy.utils.CTFS import CTFS  # noqa:E402
+
+__all__ = ['PBS',
+           'ServerConfiguration',
+           'CTFS']
+
+if __name__ == '__main__':
+    anthem()
