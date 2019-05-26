@@ -23,7 +23,7 @@ pip install AdcircPy
 
 ### Method 2: Pip-only (requires compilation of system libraries).
 
-Pip requires that some system libraries are precompiled and installed before running pip install command. _It is highly recommended that you use the system packge manager to satisfy these dependencies_, or, they may be compiled from source. The [.docker](.docker/) directory contains a full piecewise build on an Alpine distribution, which may be used for reference in case further guidance is required with respect to the full compilation procedure. Note that "dev" versions mean that the headers are required along with the compiled library. Also note that some of these libraries you may already have in your system.
+Pip requires that some system libraries are precompiled and installed before running pip install command. _It is highly recommended that you use the system packge manager to satisfy these dependencies_, or, they may be compiled from source. The [Dockerfile](./Dockerfile) contains a full build on an Alpine distribution, which may be used for reference. Note that "dev" versions mean that the headers are required along with the compiled library. Also note that some of these libraries you may already have in your system.
 
 
 #### Full system dependency list:
