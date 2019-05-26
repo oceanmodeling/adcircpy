@@ -1,5 +1,8 @@
-import colored_traceback
-colored_traceback.add_hook(always=True)
+try:
+    import colored_traceback
+    colored_traceback.add_hook(always=True)
+except ModuleNotFoundError:
+    pass
 
 # required for plotting a large number of mesh-elements.
 import matplotlib as mpl  # noqa: E402
