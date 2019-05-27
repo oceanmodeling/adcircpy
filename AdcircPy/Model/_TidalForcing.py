@@ -6,7 +6,7 @@ from netCDF4 import Dataset
 from requests.structures import CaseInsensitiveDict
 
 # local imports
-from AdcircPy.utils import get_cache_dir, __init_TPXO_cache
+from AdcircPy.utils import __init_TPXO_cache
 
 # unittest imports
 import unittest
