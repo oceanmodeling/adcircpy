@@ -120,6 +120,6 @@ tidal_run = mesh.TidalRun(
 tidal_run.dump()
 ```
 
-#### _ Examples will be updated as development continues. _
+#### Examples will be updated as development continues.
 
-Please report bugs to jreniel@gmail.com
+Please use the issue tracker for bug reports.
