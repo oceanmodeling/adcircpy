@@ -106,15 +106,17 @@ tidal_run.dump()  # will write to stdout if no output path is given.
 #### Example where global outputs are requested:
 
 ```Python
-from AdcircPy import read_mesh
+from AdcircPy.Model import AdcircMesh # This is a different way of importing your mesh.
 from AdcircPy.Model import ElevationGlobalOutput as EGO
 from datetime import datetime, timedelta
-mesh = read_mesh('/path/to/fort.14')
+mesh = AdcircMesh('/path/to/fort.14', SpatialReference=4326, vertical_datum='LSML')
 start_date = datetime.now()
 end_date = start_date + timedelta(days=5)
+# sampling frequency is a timedelta object, so you can specify days, minutes, hours or seconds
+sampling_frequency = timedelta(minutes=15)
 tidal_run = mesh.TidalRun(
             start_date, end_date,
-            ElevationGlobalOutput=EGO(sampling_frequency=15))
+            ElevationGlobalOutput=EGO(sampling_frequency=sampling_frequency))
 tidal_run.dump()
 ```
 
