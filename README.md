@@ -54,6 +54,16 @@ Once these dependencies have been met, you may simply do
 pip install AdcircPy
 ```
 
+### Ugrading:
+
+If you have installed AdcircPy and you would like to upgrade, simply do:
+
+```cmd
+pip install AdcircPy -U
+```
+
+You can always run this command to make sure you have the latest version since the latest in PyPi should correspond to the latest tagged version of this repository.
+
 #### NOTE: If you are developer and would like to debug the package, you may install this package on developer mode by first cloning the package, and then doing:
 
 ```cmd
