@@ -13,10 +13,10 @@ import unittest
 import os
 from AdcircPy import Model
 
-if os.getenv('DOCKERENV') is not None:
+if os.getenv('DOCKERENV') is None:
     tpxo_path = __init_TPXO_cache()
 else:
-    tpxo_path = get_cache_dir() + "/h_tpxo9.v1.nc"
+    tpxo_path = None
 
 
 class _TidalForcing(object):
@@ -115,7 +115,7 @@ class _TidalForcing(object):
                                'P1': 0.706,
                                'Q1': 0.695}
 
-    if os.getenv('DOCKERENV') is not None:
+    if tpxo_path is not None:
         __nc = Dataset(tpxo_path)
     else:
         __nc = None
@@ -187,9 +187,9 @@ class _TidalForcing(object):
                     constituents[constituent] = dict()
                     idx = self.tpxo_constituents[constituent]
                     ha = self.nc['ha'][idx, :, :].reshape(
-                                            self.nc['ha'][idx, :, :].size)
+                        self.nc['ha'][idx, :, :].size)
                     hp = self.nc['hp'][idx, :, :].reshape(
-                                            self.nc['hp'][idx, :, :].size)
+                        self.nc['hp'][idx, :, :].size)
                     ha = griddata((x[_idx], y[_idx]), ha[_idx], (_x, _y),
                                   method=method)
                     hp = griddata((x[_idx], y[_idx]), hp[_idx], (_x, _y),
@@ -210,7 +210,7 @@ class _TidalForcing(object):
 
     def __set_forcing_start_date(self):
         forcing_start_date = self.start_date - timedelta(
-                                            minutes=self.spinup_days*24.*60.)
+            minutes=self.spinup_days*24.*60.)
         self.__forcing_start_date = forcing_start_date
 
     def __set_end_date(self, end_date):
@@ -260,9 +260,11 @@ class _TidalForcing(object):
         self.N = np.deg2rad(self.DN)
         self.DP = self.__get_lunar_perigee(self.hour_middle)  # HR
         self.P = np.deg2rad(self.DP)
-        self.DH = self.__get_solar_mean_longitude(self.forcing_start_date.hour)  # HR
+        self.DH = self.__get_solar_mean_longitude(
+            self.forcing_start_date.hour)  # HR
         self.H = np.deg2rad(self.DH)
-        self.DS = self.__get_lunar_mean_longitude(self.forcing_start_date.hour)  % 360.# HR
+        self.DS = self.__get_lunar_mean_longitude(
+            self.forcing_start_date.hour) % 360.  # HR
         self.S = np.deg2rad(self.DS)
         self.DP1 = self.__get_solar_perigee(self.forcing_start_date.hour)  # HR
         self.P1 = np.deg2rad(self.DP1)
@@ -286,7 +288,7 @@ class _TidalForcing(object):
         self.DR = np.rad2deg(self.R)
         self.NUP2 = np.arctan(np.sin(2.*self.NU)
                               / (np.cos(2.*self.NU)+.0726184
-                              / np.sin(self.I)**2))/2.
+                                 / np.sin(self.I)**2))/2.
         self.DNUP2 = np.rad2deg(self.NUP2)
         self.Q = np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC),
                             (7.*np.cos(self.I)+1.)*np.cos(self.PC))
@@ -391,7 +393,7 @@ class _TidalForcing(object):
             return 2.*self.DT
         elif constituent == "N2":
             return 2.*(self.DT+self.DH)-3.*self.DS+self.DP+2. \
-                    * (self.DXI-self.DNU)
+                * (self.DXI-self.DNU)
         elif constituent == "K1":
             return self.DT+self.DH-90.-self.DNUP
         elif constituent == "M4":
@@ -402,22 +404,22 @@ class _TidalForcing(object):
             return 6.*(self.DT-self.DS+self.DH)+6.*(self.DXI-self.DNU)
         elif constituent == "MK3":
             return 3.*(self.DT+self.DH)-2.*self.DS-90.+2.*(self.DXI-self.DNU) \
-                    - self.DNUP
+                - self.DNUP
         elif constituent == "S4":
             return 4.*self.DT
         elif constituent == "MN4":
             return 4.*(self.DT+self.DH)-5.*self.DS+self.DP+4.\
-                    * (self.DXI-self.DNU)
+                * (self.DXI-self.DNU)
         elif constituent == "Nu2":
             return 2.*self.DT-3.*self.DS+4.*self.DH-self.DP+2. \
-                    * (self.DXI-self.DNU)
+                * (self.DXI-self.DNU)
         elif constituent == "S6":
             return 6.*self.DT
         elif constituent == "MU2":
             return 2.*(self.DT+2.*(self.DH-self.DS))+2.*(self.DXI-self.DNU)
         elif constituent == "2N2":
             return 2.*(self.DT-2.*self.DS+self.DH+self.DP)+2. \
-                    * (self.DXI-self.DNU)
+                * (self.DXI-self.DNU)
         elif constituent == "OO1":
             return self.DT+2.*self.DS+self.DH-90.-2.*self.DXI-self.DNU
         elif constituent == "lambda2":
@@ -440,7 +442,7 @@ class _TidalForcing(object):
             return 2.*self.DS-2.*self.DXI
         elif constituent == "RHO":
             return self.DT+3.*(self.DH-self.DS)-self.DP+90.+2.\
-                   * self.DXI-self.DNU
+                * self.DXI-self.DNU
         elif constituent == "Q1":
             return self.DT-3.*self.DS+self.DH+self.DP+90.+2.*self.DXI-self.DNU
         elif constituent == "T2":
@@ -449,7 +451,7 @@ class _TidalForcing(object):
             return 2.*self.DT+self.DH-self.DP1+180.
         elif constituent == "2Q1":
             return self.DT-4.*self.DS+self.DH+2.*self.DP+90.+2.*self.DXI \
-                   - self.DNU
+                - self.DNU
         elif constituent == "P1":
             return self.DT-self.DH+90.
         elif constituent == "2SM2":
@@ -458,10 +460,10 @@ class _TidalForcing(object):
             return 3.*(self.DT-self.DS+self.DH)+3.*(self.DXI-self.DNU)
         elif constituent == "L2":
             return 2.*(self.DT+self.DH)-self.DS-self.DP+180.+2.\
-                    * (self.DXI-self.DNU)-self.DR
+                * (self.DXI-self.DNU)-self.DR
         elif constituent == "2MK3":
             return 3.*(self.DT+self.DH)-4.*self.DS+90.+4.*(self.DXI-self.DNU) \
-                    + self.DNUP
+                + self.DNUP
         elif constituent == "K2":
             return 2.*(self.DT+self.DH)-2.*self.DNUP2
         elif constituent == "M8":

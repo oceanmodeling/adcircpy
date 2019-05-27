@@ -96,7 +96,7 @@ mesh.make_plot(show=True)
 ```Python
 from AdcircPy import read_mesh
 from datetime import datetime, timedelta
-mesh = read_mesh('/path/to/fort.14', epsg=4326, vertical_datum='LSML')
+mesh = read_mesh('/path/to/fort.14', SpatialReference=4326, vertical_datum='LSML')
 start_date = datetime.now()
 end_date = start_date + timedelta(days=5)
 tidal_run = mesh.TidalRun(start_date, end_date, spinup_days=7)
