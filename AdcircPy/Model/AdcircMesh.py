@@ -239,7 +239,15 @@ class AdcircMesh(UnstructuredMesh):
                                               + 'time being.')
                 fort14['elements'].append([int(x)-1 for x in line[2:]])
                 _NE += 1
-            NOPE = int(f.readline().split()[0])
+            # Assume EOF if NBOU is empty.
+            try:
+                NOPE = int(f.readline().split()[0])
+            except IndexError:
+                return fort14
+            # For now, let -1 mean a self closing mesh
+            # reassigning NBOU to 0 until further implementation is applied.
+            if NOPE == -1:
+                NOPE = 0
             _NOPE = len([])
             f.readline()  # Number of total open ocean nodes. Not used.
             while _NOPE < NOPE:
@@ -251,15 +259,7 @@ class AdcircMesh(UnstructuredMesh):
                                                 int(f.readline().split()[0])-1)
                     _NETA += 1
                 _NOPE += 1
-            # Assume EOF if NBOU is empty.
-            try:
-                NBOU = int(f.readline().split()[0])
-            except IndexError:
-                return fort14
-            # For now, let -1 mean a self closing mesh
-            # reassigning NBOU to 0 until further implementation is applied.
-            if NBOU == -1:
-                NBOU = 0
+            NBOU = int(f.readline().split()[0])
             _NBOU = len([])
             f.readline()
             while _NBOU < NBOU:
