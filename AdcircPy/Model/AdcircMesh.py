@@ -251,7 +251,15 @@ class AdcircMesh(UnstructuredMesh):
                                                 int(f.readline().split()[0])-1)
                     _NETA += 1
                 _NOPE += 1
-            NBOU = int(f.readline().split()[0])
+            # Assume EOF if NBOU is empty.
+            try:
+                NBOU = int(f.readline().split()[0])
+            except IndexError:
+                return fort14
+            # For now, let -1 mean a self closing mesh
+            # reassigning NBOU to 0 until further implementation is applied.
+            if NBOU == -1:
+                NBOU = 0
             _NBOU = len([])
             f.readline()
             while _NBOU < NBOU:
