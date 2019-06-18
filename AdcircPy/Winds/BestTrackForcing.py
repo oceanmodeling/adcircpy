@@ -7,6 +7,7 @@ import utm
 from haversine import haversine
 import pyproj
 from pathlib import Path
+from copy import deepcopy
 
 # local imports
 from AdcircPy.Winds import _WindForcing
@@ -55,55 +56,57 @@ class BestTrackForcing(_WindForcing):
             f.write(fort22)
 
     def get_fort22(self):
+        _self = deepcopy(self)
+        _self.filter_to_six_hourly()
         fort22 = ''
-        for i in range(len(self.datetime)):
-            fort22 += "{:<2},".format(self.basin[i])
-            fort22 += "{:>3},".format(self.storm_number[i])
-            fort22 += "{:>11},".format(self.datetime[i].strftime('%Y%m%d%H'))
+        for i in range(len(_self.datetime)):
+            fort22 += "{:<2},".format(_self.basin[i])
+            fort22 += "{:>3},".format(_self.storm_number[i])
+            fort22 += "{:>11},".format(_self.datetime[i].strftime('%Y%m%d%H'))
             fort22 += "{:3},".format("")
-            fort22 += "{:>5},".format(self.record_type[i])
-            fort22 += "{:>4},".format(int((self.datetime[i]-self.start_date)
+            fort22 += "{:>5},".format(_self.record_type[i])
+            fort22 += "{:>4},".format(int((_self.datetime[i]-_self.start_date)
                                           .total_seconds()/3600))
-            if self.latitude[i] >= 0:
-                fort22 += "{:>4}N,".format(int(self.latitude[i]/.1))
+            if _self.latitude[i] >= 0:
+                fort22 += "{:>4}N,".format(int(_self.latitude[i]/.1))
             else:
-                fort22 += "{:>4}S,".format(int(self.latitude[i]/-.1))
-            if self.longitude[i] >= 0:
-                fort22 += "{:>5}E,".format(int(self.longitude[i]/.1))
+                fort22 += "{:>4}S,".format(int(_self.latitude[i]/-.1))
+            if _self.longitude[i] >= 0:
+                fort22 += "{:>5}E,".format(int(_self.longitude[i]/.1))
             else:
-                fort22 += "{:>5}W,".format(int(self.longitude[i]/-.1))
-            fort22 += "{:>4},".format(int(self.max_sustained_wind_speed[i]))
-            fort22 += "{:>5},".format(int(self.central_pressure[i]))
-            fort22 += "{:>3},".format(self.development_level[i])
-            fort22 += "{:>4},".format(int(self.isotach[i]))
-            fort22 += "{:>4},".format(self.quadrant[i])
-            fort22 += "{:>5},".format(int(self.radius_for_NEQ[i]))
-            fort22 += "{:>5},".format(int(self.radius_for_SEQ[i]))
-            fort22 += "{:>5},".format(int(self.radius_for_SWQ[i]))
-            fort22 += "{:>5},".format(int(self.radius_for_NWQ[i]))
-            if self.background_pressure is None:
-                self.background_pressure[i] = self.background_pressure[i-1]
-            if (self.background_pressure[i] <= self.central_pressure[i]
-                    and 1013 > self.central_pressure[i]):
+                fort22 += "{:>5}W,".format(int(_self.longitude[i]/-.1))
+            fort22 += "{:>4},".format(int(_self.max_sustained_wind_speed[i]))
+            fort22 += "{:>5},".format(int(_self.central_pressure[i]))
+            fort22 += "{:>3},".format(_self.development_level[i])
+            fort22 += "{:>4},".format(int(_self.isotach[i]))
+            fort22 += "{:>4},".format(_self.quadrant[i])
+            fort22 += "{:>5},".format(int(_self.radius_for_NEQ[i]))
+            fort22 += "{:>5},".format(int(_self.radius_for_SEQ[i]))
+            fort22 += "{:>5},".format(int(_self.radius_for_SWQ[i]))
+            fort22 += "{:>5},".format(int(_self.radius_for_NWQ[i]))
+            if _self.background_pressure is None:
+                _self.background_pressure[i] = _self.background_pressure[i-1]
+            if (_self.background_pressure[i] <= _self.central_pressure[i]
+                    and 1013 > _self.central_pressure[i]):
                 fort22 += "{:>5},".format(1013)
-            elif (self.background_pressure[i] <= self.central_pressure[i]
-                  and 1013 <= self.central_pressure[i]):
-                fort22 += "{:>5},".format(int(self.central_pressure[i]+1))
+            elif (_self.background_pressure[i] <= _self.central_pressure[i]
+                  and 1013 <= _self.central_pressure[i]):
+                fort22 += "{:>5},".format(int(_self.central_pressure[i]+1))
             else:
-                fort22 += "{:>5},".format(int(self.background_pressure[i]))
+                fort22 += "{:>5},".format(int(_self.background_pressure[i]))
             fort22 += "{:>5},".format(int(
-                                        self.radius_of_last_closed_isobar[i]))
-            fort22 += "{:>4},".format(int(self.radius_of_maximum_winds[i]))
+                                        _self.radius_of_last_closed_isobar[i]))
+            fort22 += "{:>4},".format(int(_self.radius_of_maximum_winds[i]))
             fort22 += "{:>5},".format('')  # gust
             fort22 += "{:>4},".format('')  # eye
             fort22 += "{:>4},".format('')  # subregion
             fort22 += "{:>4},".format('')  # maxseas
             fort22 += "{:>4},".format('')  # initials
-            fort22 += "{:>3},".format(self.direction[i])
-            fort22 += "{:>4},".format(self.speed[i])
-            fort22 += "{:^12},".format(self.name[i])
+            fort22 += "{:>3},".format(_self.direction[i])
+            fort22 += "{:>4},".format(_self.speed[i])
+            fort22 += "{:^12},".format(_self.name[i])
             # from this point forwards it's all aswip
-            fort22 += "{:>4},".format(self.record_number[i])
+            fort22 += "{:>4},".format(_self.record_number[i])
             fort22 += "\n"
         return fort22
 
@@ -126,7 +129,7 @@ class BestTrackForcing(_WindForcing):
         self.__ATCF = gzip.GzipFile(fileobj=compressed_file)
 
     def __parse_ATCF(self):
-        for i, line in enumerate(self. ATCF):
+        for i, line in enumerate(self.__ATCF):
             line = line.decode('UTF-8').split(',')
             # filter out lines with no isotach data
             _NEQ = int(line[13].strip(' '))
@@ -182,6 +185,7 @@ class BestTrackForcing(_WindForcing):
                     self.radius_of_maximum_winds.append(
                         self.radius_of_maximum_winds[-1])
                     self.name.append('')
+        del self.__ATCF
 
     def __cleanup_data(self):
         # get the start and end indexes based on dates provided
@@ -212,6 +216,32 @@ class BestTrackForcing(_WindForcing):
             = self.radius_of_last_closed_isobar[si:ei]
         self.__radius_of_maximum_winds = self.radius_of_maximum_winds[si:ei]
         self.__name = self.name[si:ei]
+
+    def filter_to_six_hourly(self):
+        idx = []
+        for i, datetime in enumerate(self.datetime):
+            if datetime.hour not in [0, 6, 12, 18]:
+                idx.append(i)
+        for i in reversed(idx):
+            self.basin.pop(i)
+            self.storm_number.pop(i)
+            self.record_type.pop(i)
+            self.latitude.pop(i)
+            self.longitude.pop(i)
+            self.datetime.pop(i)
+            self.max_sustained_wind_speed.pop(i)
+            self.central_pressure.pop(i)
+            self.development_level.pop(i)
+            self.isotach.pop(i)
+            self.quadrant.pop(i)
+            self.radius_for_NEQ.pop(i)
+            self.radius_for_SEQ.pop(i)
+            self.radius_for_SWQ.pop(i)
+            self.radius_for_NWQ.pop(i)
+            self.background_pressure.pop(i)
+            self.radius_of_last_closed_isobar.pop(i)
+            self.radius_of_maximum_winds.pop(i)
+            self.name.pop(i)
 
     def __init_speed_and_direction(self):
         zone = utm.from_latlon(self.latitude[0], self.longitude[0])[2]
@@ -272,10 +302,6 @@ class BestTrackForcing(_WindForcing):
     @property
     def url(self):
         return self.__url
-
-    @property
-    def ATCF(self):
-        return self.__ATCF
 
     @property
     def basin(self):
@@ -359,11 +385,11 @@ class BestTrackForcing(_WindForcing):
 
     @property
     def start_date(self):
-        return self._start_date
+        return self.datetime[0]
 
     @property
     def end_date(self):
-        return self._end_date
+        return self.datetime[-1]
 
     @property
     def speed(self):
@@ -396,10 +422,6 @@ class BestTrackForcing(_WindForcing):
     @property
     def _storm_number(self):
         return self.__storm_number
-
-    @property
-    def _datetime(self):
-        return self.__datetime
 
     @property
     def _record_type(self):
@@ -600,6 +622,5 @@ class BestTrackForcingTestCase(unittest.TestCase):
         fort22 = BTF.get_fort22()
         print(fort22)
 
-    def test_badname(self):
-
-        BestTrackForcing('badname')
+    def test_raise_incorrect_storm_id(self):
+        BestTrackForcing(' ')
