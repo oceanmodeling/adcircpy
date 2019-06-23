@@ -20,7 +20,7 @@ setuptools.setup(
         'haversine',
         'wget',
         'utm',
-        'gdal',
+        'pygdal',
         'requests',
         'tqdm',
         'eventlet',
