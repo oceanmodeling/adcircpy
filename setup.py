@@ -20,7 +20,7 @@ setuptools.setup(
         'haversine',
         'wget',
         'utm',
-        'pygdal',
+        'gdal',
         'requests',
         'tqdm',
         'eventlet',
@@ -31,13 +31,13 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'PlotMesh=AdcircPy.entrypoints.PlotMesh:main',
-            'GenerateTidalRun=AdcircPy.entrypoints.GenerateTidalRun:main',
-            'PlotTidalStationsOutput=AdcircPy.entrypoints.PlotTidalStationsOutput:main',  # noqa:E501
-            'GenerateBestTrackFile=AdcircPy.entrypoints.GenerateBestTrackFile:main',  # noqa:E501
-            'PlotMaxele=AdcircPy.entrypoints.PlotMaxele:main',
-            'GenerateBestTrackRun=AdcircPy.entrypoints.GenerateBestTrackRun:main',  # noqa:E501
-            'HighWaterMarkValidation=AdcircPy.entrypoints.HighWaterMarkValidation:main',  # noqa:E501
+            'PlotMesh=adcircpy.scripts.PlotMesh:main',
+            'GenerateTidalRun=adcircpy.scripts.GenerateTidalRun:main',
+            'PlotTidalStationsOutput=adcircpy.scripts.PlotTidalStationsOutput:main',  # noqa:E501
+            'GenerateBestTrackFile=adcircpy.scripts.GenerateBestTrackFile:main',  # noqa:E501
+            'PlotMaxele=adcircpy.scripts.PlotMaxele:main',
+            'GenerateBestTrackRun=adcircpy.scripts.GenerateBestTrackRun:main',  # noqa:E501
+            'HighWaterMarkValidation=adcircpy.scripts.HighWaterMarkValidation:main',  # noqa:E501
         ]
     },
     test_suite='nose.collector',
