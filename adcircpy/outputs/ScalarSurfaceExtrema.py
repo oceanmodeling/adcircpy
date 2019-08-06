@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 
 # local imports
-from AdcircPy.Mesh import UnstructuredMesh
+from adcircpy.mesh import UnstructuredMesh
 
 
 class ScalarSurfaceExtrema(UnstructuredMesh):

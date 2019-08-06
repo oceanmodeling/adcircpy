@@ -31,13 +31,36 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'PlotMesh=adcircpy.scripts.PlotMesh:main',
-            'GenerateTidalRun=adcircpy.scripts.GenerateTidalRun:main',
-            'PlotTidalStationsOutput=adcircpy.scripts.PlotTidalStationsOutput:main',  # noqa:E501
-            'GenerateBestTrackFile=adcircpy.scripts.GenerateBestTrackFile:main',  # noqa:E501
-            'PlotMaxele=adcircpy.scripts.PlotMaxele:main',
-            'GenerateBestTrackRun=adcircpy.scripts.GenerateBestTrackRun:main',  # noqa:E501
-            'HighWaterMarkValidation=adcircpy.scripts.HighWaterMarkValidation:main',  # noqa:E501
+
+            # Plotters
+            'PlotMesh='
+            + 'adcircpy.scripts.PlotMesh:main',
+
+            'PlotMaxele='
+            + 'adcircpy.scripts.PlotMaxele:main',
+
+            'PlotElevationStationsOutput='
+            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+
+            'PlotTidalStations='
+            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+
+            'PlotFort61='
+            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+
+            # Generators
+            'GenerateTidalRun='
+            + 'adcircpy.scripts.GenerateTidalRun:main',
+
+            'GenerateBestTrackFile='
+            + 'adcircpy.scripts.GenerateBestTrackFile:main',
+
+            'GenerateBestTrackRun='
+            + 'adcircpy.scripts.GenerateBestTrackRun:main',
+
+            # Validations
+            'HighWaterMarkValidation='
+            + 'adcircpy.scripts.HighWaterMarkValidation:main',
         ]
     },
     test_suite='nose.collector',

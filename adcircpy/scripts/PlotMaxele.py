@@ -1,12 +1,12 @@
 import argparse
 import matplotlib.pyplot as plt
-from AdcircPy import read_output
+from adcircpy.outputs import Maxele
 
 
 class PlotMaxele(object):
 
     def __init__(self, args):
-        maxele = read_output(args.maxele)
+        maxele = Maxele.from_netcdf(args.maxele)
         maxele.make_plot(title=args.title,
                          vmin=args.vmin,
                          vmax=args.vmax)

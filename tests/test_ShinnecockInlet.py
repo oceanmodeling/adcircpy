@@ -18,11 +18,19 @@ class ShinnecockInletTestCase(unittest.TestCase):
     def _test(self):
         AdcircRun(self.mesh)
 
+    def _test_get_timestep(self):
+        self.mesh._SpatialReference = 4326
+        self.mesh.get_timestep()
+
+    def _test_ocean_boundaries(self):
+        self.mesh.ocean_boundaries
+
     def _test_AdcircRun_TidalForcing(self):
         end_date = datetime.now()
         start_date = end_date - timedelta(days=30.)
-        _TidalForcing = TidalForcing(start_date, end_date)
-        AdcircRun(self.mesh, _TidalForcing)
+        run = AdcircRun(start_date, end_date)
+        run.TidalForcing = TidalForcing()
+        run.TidalForcing.use_major()
 
     def _test_set_SpatialReference(self):
         print('case 1')

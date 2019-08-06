@@ -12,6 +12,9 @@ from adcircpy.lib._get_cache_directory import _get_cache_directory
 
 class _TPXO(object):
 
+    __tpxo_constituents = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1',
+                           'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1']
+
     def __init__(self):
         try:
             self.__nc = Dataset(os.getenv('TPXO_NCFILE'))
@@ -63,7 +66,9 @@ class _TPXO(object):
     ):
         x = self.nc['lon_z'][:][:].reshape(self.nc['lon_z'].size)
         y = self.nc['lat_z'][:][:].reshape(self.nc['lat_z'].size)
-        h = self.nc[interp_type][:].reshape(self.nc[interp_type].size)
+        idx = self.tpxo_constituents.index(constituent)
+        h = self.nc[interp_type][idx, :, :].reshape(
+            self.nc[interp_type][idx, :, :].size)
         _x = vertices[:, 0]
         _y = vertices[:, 1]
         _x = np.asarray([_ + 360. for _ in _x if _ < 0])
@@ -136,6 +141,11 @@ class _TPXO(object):
                     os.remove(cachedir+"/tpxo9_netcdf.tar.gz")
             self.__nc = Dataset(tpxo_path)
         return self.__nc
+
+    @property
+    def tpxo_constituents(self):
+        return self.__tpxo_constituents
+
 
 #     def _set_TPXO_interp(self, AdcircMesh, method='nearest'):
 #         """

@@ -6,9 +6,6 @@ import unittest
 from adcircpy.mesh import AdcircMesh
 from adcircpy.model import BestTrackForcing, TidalForcing, AdcircRun
 
-DelawareBayMesh = str(Path(os.getenv('DelawareBayOceanMesh2D_fort14')))
-HsofsSandyFort15 = str(Path(os.getenv('HSOFS_SANDY_HOTSTART')))
-
 
 class DelawareBayOceanMesh2DTestCase(unittest.TestCase):
 
@@ -16,7 +13,8 @@ class DelawareBayOceanMesh2DTestCase(unittest.TestCase):
 
         #  ----------- instantiante run
         adcirc_run = AdcircRun()
-        adcirc_run.AdcircMesh = AdcircMesh.open(DelawareBayMesh, 4326)
+        adcirc_run.AdcircMesh = AdcircMesh.open(
+            str(Path(os.getenv('DelawareBayOceanMesh2D_fort14'))), 4326)
         adcirc_run.AdcircMesh.import_nodal_attributes(
             os.getenv('DelawareBayOceanMesh2D_fort13'))
         for attribute in adcirc_run.AdcircMesh.get_nodal_attribute_names():
@@ -34,23 +32,28 @@ class DelawareBayOceanMesh2DTestCase(unittest.TestCase):
         # adcirc_run.WindForcing.remove_EX()
 
         #  ----------- request outputs
-        adcirc_run.copy_fort15_stations(HsofsSandyFort15)
-        adcirc_run.set_elevation_stations_output(timedelta(minutes=6.))
-        adcirc_run.set_elevation_global_output(timedelta(minutes=15.))
+        adcirc_run.copy_fort15_stations(
+            str(Path(os.getenv('HSOFS_SANDY_HOTSTART'))))
+        adcirc_run.set_elevation_stations_output(
+            timedelta(minutes=6.), spinup=True)
+        adcirc_run.set_elevation_global_output(
+            timedelta(minutes=15.), spinup=True)
 
         #  ----------- set additional run options
+        start_date = 
         adcirc_run.start_date = adcirc_run.WindForcing.start_date
         adcirc_run.end_date = adcirc_run.WindForcing.end_date
         adcirc_run.spinup_time = timedelta(days=7.)
         adcirc_run.DTDP = 2.
-        adcirc_run.ESLM = -0.05
+        adcirc_run.ESLM = 10
 
         #  ----------- dump run
         output_directory = str(Path('test_DelawareBayOceanMesh2D'))
         os.makedirs(output_directory, exist_ok=True)
-        adcirc_run.dump(output_directory, overwrite=True)
+        adcirc_run.dump(
+            output_directory,
+            overwrite=True)
 
 
 if __name__ == '__main__':
     unittest.main()
-

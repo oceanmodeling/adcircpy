@@ -38,17 +38,7 @@ class BestTrackForcing(_WindForcing):
         self.__container['radius_of_last_closed_isobar'] = list()
         self.__container['radius_of_maximum_winds'] = list()
         self.__container['name'] = list()
-
-    def clip_data_by_datetime(self, start_date, end_date):
-        idx = list(np.where(np.asarray(self.datetime) < start_date)[0])
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
-
-        idx = list(np.where(np.asarray(self.datetime) > end_date)[0])
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
+        self.__NWS = 20
 
     def is_constant_dt(self):
         """ returns True if output data is at constant dt """
@@ -58,41 +48,37 @@ class BestTrackForcing(_WindForcing):
         else:
             return False
 
-    def only_HU(self):
-        idx = []
-        for i, datetime in enumerate(self.datetime):
-            if self.development_level[i] != 'HU':
-                idx.append(i)
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
-
     def remove_TS(self):
-        idx = []
-        for i, datetime in enumerate(self.datetime):
-            if self.development_level[i] == 'TS':
-                idx.append(i)
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
+        mask = np.logical_or(
+            self.__container['development_level'] == 'TS',
+            self.__get_active_mask())
+        self.__set_active_mask(mask)
 
     def remove_EX(self):
-        idx = []
-        for i, datetime in enumerate(self.datetime):
-            if self.development_level[i] == 'EX':
-                idx.append(i)
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
+        mask = np.logical_or(
+            self.__container['development_level'] == 'EX',
+            self.__get_active_mask())
+        self.__set_active_mask(mask)
+
+    def only_HU(self):
+        self.remove_TS()
+        self.remove_EX()
+        mask = np.logical_or(
+            self.__container['development_level'] == 'HU',
+            self.__get_active_mask())
+        self.__set_active_mask(mask)
 
     def remove_non_six_hourly(self):
-        idx = []
-        for i, datetime in enumerate(self.datetime):
+        new_mask = np.ma.getmaskarray(
+            np.ma.asarray(self.__container['datetime']))
+        for i, datetime in enumerate(self.__container['datetime']):
             if datetime.hour not in [0, 6, 12, 18]:
-                idx.append(i)
-        for i in reversed(idx):
-            for key in list(self.__container.keys()):
-                self.__container[key].pop(i)
+                new_mask[i] = True
+        mask = np.logical_or(new_mask, self.__get_active_maks())
+        self.__set_active_mask(mask)
+
+    def reset_filters(self):
+        self.__reset_active_mask()
 
     def dump(self, path, overwrite=False):
         if os.path.isfile(path) and not overwrite:
@@ -119,14 +105,17 @@ class BestTrackForcing(_WindForcing):
 
     def __fetch_ATCF(self):
         try:
-            response = urllib.request.urlopen(self.url)
-        except urllib.error.URLError:
-            raise NameError(
-                'Did not find storm with id '
-                + '{}. '.format(self.storm_id)
-                + 'Submitted URL was {}'.format(self.url))
-        compressed_file = io.BytesIO(response.read())
-        self.__ATCF = gzip.GzipFile(fileobj=compressed_file)
+            return self.__ATCF
+        except AttributeError:
+            try:
+                response = urllib.request.urlopen(self.url)
+            except urllib.error.URLError:
+                raise NameError(
+                    'Did not find storm with id '
+                    + '{}. '.format(self.storm_id)
+                    + 'Submitted URL was {}'.format(self.url))
+            compressed_file = io.BytesIO(response.read())
+            self.__ATCF = gzip.GzipFile(fileobj=compressed_file)
 
     def __fetch_coastline(self):
         cache = _get_cache_directory()
@@ -221,48 +210,81 @@ class BestTrackForcing(_WindForcing):
                     self.__container['radius_of_maximum_winds'].append(
                         self.__container['radius_of_maximum_winds'][-1])
                     self.__container['name'].append('')
-        self.__init_velocity()
+        for key, values in self.__container.items():
+            self.__container[key] = np.asarray(values)
+
+    def __get_active_mask(self):
+        try:
+            return self.__active_mask
+        except AttributeError:
+            self.__reset_active_mask()
+            return self.__active_mask
+
+    def __set_active_mask(self, mask):
+        self.__active_mask = mask
+
+    def __reset_active_mask(self):
+        self.__active_mask = np.ma.getmaskarray(
+            np.ma.asarray(self.__container['datetime']))
 
     def __init_velocity(self):
         self.__container['speed'] = list()
         self.__container['direction'] = list()
-        zone = utm.from_latlon(self.latitude[0], self.longitude[0])[2]
+        zone = utm.from_latlon(
+            self.__container['latitude'][0],
+            self.__container['longitude'][0])[2]
         utm_proj = pyproj.Proj(proj='utm', zone=zone)
-        x, y = utm_proj(self.longitude, self.latitude)
-        unique_datetimes = np.unique(self.datetime)
+        x, y = utm_proj(
+            self.__container['longitude'], self.__container['latitude'])
+        unique_datetimes = np.unique(self.__container['datetime'])
         for i, datetime in enumerate(unique_datetimes):
-            indexes, = np.where(np.asarray(self.datetime) == datetime)
+            indexes, = np.where(
+                np.asarray(self.__container['datetime']) == datetime)
             for idx in indexes:
-                if indexes[-1]+1 < len(self.datetime):
-                    dt = ((self.datetime[indexes[-1]+1] - self.datetime[idx])
+                if indexes[-1]+1 < len(self.__container['datetime']):
+                    dt = ((self.__container['datetime'][indexes[-1]+1]
+                           - self.__container['datetime'][idx])
                           .total_seconds()/(60.*60.))
-                    dx = haversine((self.latitude[idx],
-                                    self.longitude[indexes[-1]+1]),
-                                   (self.latitude[idx],
-                                    self.longitude[idx]), unit='nmi')
-                    dy = haversine((self.latitude[indexes[-1]+1],
-                                    self.longitude[idx]),
-                                   (self.latitude[idx],
-                                    self.longitude[idx]), unit='nmi')
-                    vx = np.copysign(dx/dt, self.longitude[indexes[-1]+1] -
-                                     self.longitude[idx])
-                    vy = np.copysign(dy/dt, self.latitude[indexes[-1]+1] -
-                                     self.latitude[idx])
+                    dx = haversine(
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][indexes[-1]+1]),
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][idx]), unit='nmi')
+                    dy = haversine(
+                        (self.__container['latitude'][indexes[-1]+1],
+                         self.__container['longitude'][idx]),
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][idx]), unit='nmi')
+                    vx = np.copysign(
+                        dx/dt,
+                        self.__container['longitude'][indexes[-1]+1]
+                        - self.__container['longitude'][idx])
+                    vy = np.copysign(
+                        dy/dt,
+                        self.__container['latitude'][indexes[-1]+1]
+                        - self.__container['latitude'][idx])
                 else:
-                    dt = ((self.datetime[idx]-self.datetime[indexes[0]-1])
+                    dt = ((self.__container['datetime'][idx]
+                          - self.__container['datetime'][indexes[0]-1])
                           .total_seconds()/(60.*60.))
-                    dx = haversine((self.latitude[idx],
-                                    self.longitude[indexes[0]-1]),
-                                   (self.latitude[idx],
-                                    self.longitude[idx]), unit='nmi')
-                    dy = haversine((self.latitude[indexes[0]-1],
-                                    self.longitude[idx]),
-                                   (self.latitude[idx],
-                                    self.longitude[idx]), unit='nmi')
-                    vx = np.copysign(dx/dt, self.longitude[idx] -
-                                     self.longitude[indexes[0]-1])
-                    vy = np.copysign(dy/dt, self.latitude[idx] -
-                                     self.latitude[indexes[0]-1])
+                    dx = haversine(
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][indexes[0]-1]),
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][idx]), unit='nmi')
+                    dy = haversine(
+                        (self.__container['latitude'][indexes[0]-1],
+                         self.__container['longitude'][idx]),
+                        (self.__container['latitude'][idx],
+                         self.__container['longitude'][idx]), unit='nmi')
+                    vx = np.copysign(
+                        dx/dt,
+                        self.__container['longitude'][idx]
+                        - self.__container['longitude'][indexes[0]-1])
+                    vy = np.copysign(
+                        dy/dt,
+                        self.__container['latitude'][idx]
+                        - self.__container['latitude'][indexes[0]-1])
                 speed = np.sqrt(dx**2+dy**2)/dt
                 bearing = (360. + np.rad2deg(np.arctan2(vx, vy))) % 360
                 self.__container['speed'].append(int(np.around(speed, 0)))
@@ -271,16 +293,12 @@ class BestTrackForcing(_WindForcing):
 
     @property
     def storm_id(self):
-        try:
-            return self.__storm_id
-        except AttributeError:
-            raise AttributeError(
-                'Must set storm_id before operation can take place.')
+        return self.__storm_id
 
     @property
     def fort22(self):
         fort22 = ''
-        for i in self._index_view:
+        for i in np.arange(len(self.datetime)):
             fort22 += "{:<2},".format(self.basin[i])
             fort22 += "{:>3},".format(self.storm_number[i])
             fort22 += "{:>11},".format(self.datetime[i].strftime('%Y%m%d%H'))
@@ -333,91 +351,100 @@ class BestTrackForcing(_WindForcing):
 
     @property
     def url(self):
-        if not hasattr(self, "__url"):
-            url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/'
-            url += self.storm_id[4:]
-            url += '/b'
-            url += self.storm_id[0:2].lower()
-            url += self.storm_id[2:]
-            url += '.dat.gz'
-            self.__url = url
-        return self.__url
+        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/'
+        url += self.storm_id[4:]
+        url += '/b'
+        url += self.storm_id[0:2].lower()
+        url += self.storm_id[2:]
+        url += '.dat.gz'
+        return url
+
+    @property
+    def start_date(self):
+        return self.__container['datetime'][self._active_indexes][0]
+
+    @property
+    def end_date(self):
+        return self.__container['datetime'][self._active_indexes][-1]
 
     @property
     def basin(self):
-        return self.__container['basin']
+        return self.__container['basin'][self._active_indexes]
 
     @property
     def storm_number(self):
-        return self.__container['storm_number']
+        return self.__container['storm_number'][self._active_indexes]
 
     @property
     def datetime(self):
-        return self.__container['datetime']
+        return self.__container['datetime'][self._active_indexes]
 
     @property
     def record_type(self):
-        return self.__container['record_type']
+        return self.__container['record_type'][self._active_indexes]
 
     @property
     def latitude(self):
-        return self.__container['latitude']
+        return self.__container['latitude'][self._active_indexes]
 
     @property
     def longitude(self):
-        return self.__container['longitude']
+        return self.__container['longitude'][self._active_indexes]
 
     @property
     def max_sustained_wind_speed(self):
-        return self.__container['max_sustained_wind_speed']
+        return self.__container[
+            'max_sustained_wind_speed'][self._active_indexes]
 
     @property
     def central_pressure(self):
-        return self.__container['central_pressure']
+        return self.__container['central_pressure'][self._active_indexes]
 
     @property
     def development_level(self):
-        return self.__container['development_level']
+        return self.__container['development_level'][self._active_indexes]
 
     @property
     def isotach(self):
-        return self.__container['isotach']
+        return self.__container['isotach'][self._active_indexes]
 
     @property
     def quadrant(self):
-        return self.__container['quadrant']
+        return self.__container['quadrant'][self._active_indexes]
 
     @property
     def radius_for_NEQ(self):
-        return self.__container['radius_for_NEQ']
+        return self.__container['radius_for_NEQ'][self._active_indexes]
 
     @property
     def radius_for_SEQ(self):
-        return self.__container['radius_for_SEQ']
+        return self.__container['radius_for_SEQ'][self._active_indexes]
 
     @property
     def radius_for_SWQ(self):
-        return self.__container['radius_for_SWQ']
+        return self.__container['radius_for_SWQ'][self._active_indexes]
 
     @property
     def radius_for_NWQ(self):
-        return self.__container['radius_for_NWQ']
+        return self.__container['radius_for_NWQ'][self._active_indexes]
 
     @property
     def background_pressure(self):
-        return self.__container['background_pressure']
+        return self.__container['background_pressure'][self._active_indexes]
 
     @property
     def radius_of_last_closed_isobar(self):
-        return self.__container['radius_of_last_closed_isobar']
+        return self.__container[
+            'radius_of_last_closed_isobar'][self._active_indexes]
 
     @property
     def radius_of_maximum_winds(self):
-        return self.__container['radius_of_maximum_winds']
+        return self.__container[
+            'radius_of_maximum_winds'][self._active_indexes]
 
     @property
     def name(self):
-        return self.__container['name']
+        return self.__container['name'][self._active_indexes]
 
     @property
     def record_number(self):
@@ -428,20 +455,6 @@ class BestTrackForcing(_WindForcing):
             for idx in indexes:
                 record_number[idx] = i+1
         return [int(x) for x in record_number]
-
-    @property
-    def start_date(self):
-        try:
-            return self.__start_date
-        except AttributeError:
-            return self.__container['datetime'][0]
-
-    @property
-    def end_date(self):
-        try:
-            return self.__end_date
-        except AttributeError:
-            return self.__container['datetime'][-1]
 
     @property
     def speed(self):
@@ -455,48 +468,74 @@ class BestTrackForcing(_WindForcing):
             self.__init_velocity()
         return self.__container['direction']
 
+    @property
+    def NWS(self):
+        return self.__NWS
+
+    @property
+    def WTIMINC(self):
+        WTIMINC = self.start_date.strftime('%Y %m %d %H ')
+        WTIMINC += '{} '.format(self.storm_number[0])
+        WTIMINC += '{} '.format(self.BLADj)
+        WTIMINC += '{}'.format(self.geofactor)
+        return WTIMINC
+
+    @property
+    def BLADj(self):
+        try:
+            return self.__BLADj
+        except AttributeError:
+            return 0.9
+
+    @property
+    def geofactor(self):
+        try:
+            return self.__geofactor
+        except AttributeError:
+            return 1
+
     @start_date.setter
     def start_date(self, start_date):
-        if isinstance(start_date, str):
-            start_date = datetime.strptime(start_date, '%Y%m%d%H')
         assert isinstance(start_date, datetime)
-        if (self.datetime[0] > start_date
-                or self.start_date > self.datetime[-1]):
-            raise Exception("start_date provided is out of range with "
-                            + "the record")
-        self.clip_data_by_datetime(start_date, self.end_date)
+        mask = np.logical_or(
+            self.__container['datetime'] < start_date,
+            self.__get_active_mask())
+        self.__set_active_mask(mask)
 
     @end_date.setter
     def end_date(self, end_date):
-        self.__parse_ATCF()
-        if isinstance(end_date, str):
-            end_date = datetime.strptime(end_date, '%Y%m%d%H')
         assert isinstance(end_date, datetime)
-        if end_date <= self.start_date:
-            raise Exception("start_date must be previous to end_date.")
-        if (self.datetime[0] > end_date
-                or end_date > self.datetime[-1]):
-            raise Exception("end_date provided is out of range with the "
-                            + "record\n end_date provided is "
-                            + "{}".format(self.end_date.strftime(
-                                                        '%Y-%m-%d %H:%M'))
-                            + " but the ""last available data point is "
-                            + "{}".format(self.datetime[-1].strftime(
-                                                        '%Y-%m-%d %H:%M')))
-        self.clip_data_by_datetime(self.start_date, end_date)
+        mask = np.logical_or(
+            self.__container['datetime'] > end_date,
+            self.__get_active_mask())
+        self.__set_active_mask(mask)
+
+    @property
+    def _active_indexes(self):
+        return np.where(~self.__get_active_mask())[0]
 
     @storm_id.setter
     def storm_id(self, storm_id):
-        self.__storm_id = storm_id
-        self.__fetch_ATCF()
-        self.__parse_ATCF()
+        if storm_id is None:
+            self.__storm_id = None
+            del self.__ATCF
+        else:
+            self.__storm_id = storm_id
+            self.__fetch_ATCF()
+            self.__parse_ATCF()
 
-    @property
-    def _index_view(self):
-        if not hasattr(self, "__index_view"):
-            self._index_view = np.arange(len(self.__container['datetime']))
-        return self.__index_view
+    @NWS.setter
+    def NWS(self, NWS):
+        self.__NWS = int(NWS)
 
-    @_index_view.setter
-    def _index_view(self, indexes):
-        self.__index_view = indexes
+    @BLADj.setter
+    def BLADj(self, BLADj):
+        BLADj = float(BLADj)
+        assert BLADj >= 0 and BLADj <= 1
+        self.__BLADj = BLADj
+
+    @geofactor.setter
+    def geofactor(self, geofactor):
+        geofactor = float(geofactor)
+        assert geofactor >= 0 and geofactor <= 1
+        self.__geofactor = geofactor

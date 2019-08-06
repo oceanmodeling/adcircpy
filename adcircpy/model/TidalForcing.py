@@ -81,10 +81,16 @@ class TidalForcing(object):
 
     def __init__(self):
         self.__active_constituents = OrderedSet()
+        self.__start_date = None
+        self.__end_date = None
+        self.__spinup_time = timedelta(0.)
+
+    def __call__(self, constituent):
+        return self.get_tidal_constituent(constituent)
 
     def __iter__(self):
         for constituent in self.__active_constituents:
-            yield (constituent, self.__get_tidal_constituent(constituent))
+            yield (constituent, self.get_tidal_constituent(constituent))
 
     def __len__(self):
         return len(self.__active_constituents)
@@ -105,234 +111,122 @@ class TidalForcing(object):
 
     def drop_constituent(self, constituent):
         msg = "constituent must be one of: "
-        msg += "{}".format(self.__active_constituents)
-        assert constituent in self.__active_constituents, msg
+        msg += "{}".format(self.active_constituents)
+        assert constituent in self.active_constituents, msg
         self.__active_constituents.pop(
-            self.__active_constituents.index(constituent))
+            self.active_constituents.index(constituent))
 
     def get_active_constituents(self):
-        return self.__active_constituents
+        return self.active_constituents
 
     def get_tidal_potential_amplitude(self, constituent):
         try:
-            return self.__tidal_potential_amplitudes[constituent]
+            return self.tidal_potential_amplitudes[constituent]
         except KeyError:
             pass
 
     def get_earth_tidal_potential(self, constituent):
         try:
-            return self.__earth_tidal_potentials[constituent]
+            return self.earth_tidal_potentials[constituent]
         except KeyError:
             pass
 
     def get_orbital_frequency(self, constituent):
-        return self.__orbital_frequencies[constituent]
+        return self.orbital_frequencies[constituent]
 
-    def get_nodal_factor(self, constituent):
-        if not hasattr(self, "__nodal_factors"):
-            self.__init_nodal_factors()
-        return self.__nodal_factors[constituent]
-
-    def get_greenwich_term(self, constituent):
-        if not hasattr(self, "__nodal_factors"):
-            self.__init_greenwich_terms()
-        return self.__greenwich_terms[constituent]
-
-    def get_M2(self):
-        return self.__get_tidal_constituent('M2')
-
-    def get_S2(self):
-        return self.__get_tidal_constituent('S2')
-
-    def get_N2(self):
-        return self.__get_tidal_constituent('N2')
-
-    def get_K2(self):
-        return self.__get_tidal_constituent('K2')
-
-    def get_K1(self):
-        return self.__get_tidal_constituent('K1')
-
-    def get_O1(self):
-        return self.__get_tidal_constituent('O1')
-
-    def get_P1(self):
-        return self.__get_tidal_constituent('P1')
-
-    def get_Q1(self):
-        return self.__get_tidal_constituent('Q1')
-
-    def get_Mm(self):
-        return self.__get_tidal_constituent('Mm')
-
-    def get_Mf(self):
-        return self.__get_tidal_constituent('Mf')
-
-    def get_M4(self):
-        return self.__get_tidal_constituent('M4')
-
-    def get_MN4(self):
-        return self.__get_tidal_constituent('MN4')
-
-    def get_MS4(self):
-        return self.__get_tidal_constituent('MS4')
-
-    def get_2N2(self):
-        return self.__get_tidal_constituent('2N2')
-
-    def get_S1(self):
-        return self.__get_tidal_constituent('S1')
-
-    def __get_tidal_constituent(self, constituent):
+    def get_tidal_constituent(self, constituent):
         return (self.get_tidal_potential_amplitude(constituent),
                 self.get_orbital_frequency(constituent),
                 self.get_earth_tidal_potential(constituent),
                 self.get_nodal_factor(constituent),
                 self.get_greenwich_term(constituent))
 
-    def __init_orbital_parameters(self):
-        self.DYR = self.start_date.year - 1900.
-        self.DDAY = (self.start_date.timetuple().tm_yday
-                     + int((self.start_date.year-1901.)/4.) - 1)
-        self.hour_middle = (
-            self.start_date.hour + (
-                self.end_date - self.start_date).total_seconds() / 3600 / 2)
-        self.DN = self.__get_lunar_node(self.hour_middle)  # HR
-        self.N = np.deg2rad(self.DN)
-        self.DP = self.__get_lunar_perigee(self.hour_middle)  # HR
-        self.P = np.deg2rad(self.DP)
-        self.DH = self.__get_solar_mean_longitude(
-            self.start_date.hour)  # HR
-        self.H = np.deg2rad(self.DH)
-        self.DS = self.__get_lunar_mean_longitude(
-            self.start_date.hour) % 360.  # HR
-        self.S = np.deg2rad(self.DS)
-        self.DP1 = self.__get_solar_perigee(self.start_date.hour)  # HR
-        self.P1 = np.deg2rad(self.DP1)
-        self.I = np.arccos(.9136949-.0356926*np.cos(self.N))
-        self.DI = np.rad2deg(self.I)
-        self.NU = np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
-        self.DNU = np.rad2deg(self.NU)
-        self.XI = self.N-2.*np.arctan(.64412*np.tan(self.N/2)) - self.NU
-        self.DXI = np.rad2deg(self.XI)
-
-        self.DT = (180.+self.start_date.hour*(360./24))
-        self.T = np.deg2rad(self.DT)
-        self.NUP = np.arctan(np.sin(self.NU)
-                             / (np.cos(self.NU)+.334766/np.sin(2.*self.I)))
-        self.DNUP = np.rad2deg(self.NUP)
-        self.DPC = (self.DP - self.DXI)
-        self.PC = np.deg2rad(self.DPC)
-        self.R = np.arctan(np.sin(2.*self.PC)
-                           / ((1./6.)*(1./np.tan(.5*self.I))**2
-                              - np.cos(2.*self.PC)))
-        self.DR = np.rad2deg(self.R)
-        self.NUP2 = np.arctan(np.sin(2.*self.NU)
-                              / (np.cos(2.*self.NU)+.0726184
-                                 / np.sin(self.I)**2))/2.
-        self.DNUP2 = np.rad2deg(self.NUP2)
-        self.Q = np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC),
-                            (7.*np.cos(self.I)+1.)*np.cos(self.PC))
-        self.DQ = np.rad2deg(self.Q)
-
-    def __init_nodal_factors(self):
-        if not hasattr(self, "__orbital_parameters"):
-            self.__init_orbital_parameters()
-        nodal_factors = dict()
-        for constituent in self.__constituents:
-            nodal_factors[constituent] \
-                = self.__get_nodal_factor(constituent)
-        self.__nodal_factors = nodal_factors
-
-    def __init_greenwich_terms(self):
-        if not hasattr(self, "__orbital_parameters"):
-            self.__init_orbital_parameters()
-        greenwich_terms = dict()
-        for constituent in self.__constituents:
-            greenwich_terms[constituent] \
-                = self.__get_greenwich_term(constituent) % 360.
-        self.__greenwich_terms = greenwich_terms
-
-    def __get_nodal_factor(self, constituent):
+    def get_nodal_factor(self, constituent):
         if constituent == "M2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "S2":
             return 1.0
         elif constituent == "N2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "K1":
-            return self.__EQ227()
+            return self.EQ227
         elif constituent == "M4":
-            return (self.__EQ78())**2.
+            return (self.EQ78)**2.
         elif constituent == "O1":
-            return self.__EQ75()
+            return self.EQ75
         elif constituent == "M6":
-            return (self.__EQ78())**3.
+            return (self.EQ78)**3.
         elif constituent == "MK3":
-            return self.__EQ78()*self.__EQ227()
+            return self.EQ78*self.EQ227
         elif constituent == "S4":
             return 1.0
         elif constituent == "MN4":
-            return (self.__EQ78())**2.
+            return (self.EQ78)**2.
         elif constituent == "Nu2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "S6":
             return 1.0
         elif constituent == "MU2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "2N2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "OO1":
-            return self.__EQ77()
+            return self.EQ77
         elif constituent == "lambda2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "S1":
             return 1.0
         elif constituent == "M1":
-            return self.__EQ207()
+            return self.EQ207
         elif constituent == "J1":
-            return self.__EQ76()
+            return self.EQ76
         elif constituent == "Mm":
-            return self.__EQ73()
+            return self.EQ73
         elif constituent == "Ssa":
             return 1.0
         elif constituent == "Sa":
             return 1.0
         elif constituent == "Msf":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "Mf":
-            return self.__EQ74()
+            return self.EQ74
         elif constituent == "RHO":
-            return self.__EQ75()
+            return self.EQ75
         elif constituent == "Q1":
-            return self.__EQ75()
+            return self.EQ75
         elif constituent == "T2":
             return 1.0
         elif constituent == "R2":
             return 1.0
         elif constituent == "2Q1":
-            return self.__EQ75()
+            return self.EQ75
         elif constituent == "P1":
             return 1.0
         elif constituent == "2SM2":
-            return self.__EQ78()
+            return self.EQ78
         elif constituent == "M3":
-            return self.__EQ149()
+            return self.EQ149
         elif constituent == "L2":
-            return self.__EQ215()
+            return self.EQ215
         elif constituent == "2MK3":
-            return self.__EQ227()*self.__EQ78()**2
+            return self.EQ227*self.EQ78**2
         elif constituent == "K2":
-            return self.__EQ235()
+            return self.EQ235
         elif constituent == "M8":
-            return self.__EQ78()**4
+            return self.EQ78**4
         elif constituent == "MS4":
-            return self.__EQ78()
+            return self.EQ78
         else:
             raise RuntimeError('Unrecognized constituent '
                                + '{}.'.format(constituent))
 
-    def __get_greenwich_term(self, constituent):
+    def normalize_to_360(f):
+        def decorator(self, constituent):
+            return f(self, constituent) % 360.
+        return decorator
+
+    @normalize_to_360
+    def get_greenwich_term(self, constituent):
         if constituent == "M2":
             return 2.*(self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
         elif constituent == "S2":
@@ -420,77 +314,90 @@ class TidalForcing(object):
             raise RuntimeError('Unrecognized constituent '
                                + '{}.'.format(constituent))
 
-    def __get_lunar_node(self, hours):
+    def get_lunar_node(self):
         return (259.1560564 - 19.328185764 * self.DYR - .0529539336 * self.DDAY
-                - .0022064139 * hours)
+                - .0022064139 * self.hour_middle)
 
-    def __get_lunar_perigee(self, hours):
+    def get_lunar_perigee(self):
         return (334.3837214 + 40.66246584 * self.DYR + .111404016 * self.DDAY
-                + .004641834 * hours)
+                + .004641834 * self.hour_middle)
 
-    def __get_lunar_mean_longitude(self, hours):
+    def get_lunar_mean_longitude(self):
         return (277.0256206 + 129.38482032 * self.DYR + 13.176396768
-                * self.DDAY + .549016532 * hours)
+                * self.DDAY + .549016532 * self.forcing_start_date.hour)
 
-    def __get_solar_perigee(self, hours):
+    def get_solar_perigee(self):
         return (281.2208569 + .01717836 * self.DYR + .000047064 * self.DDAY
-                + .000001961 * hours)
+                + .000001961 * self.start_date.hour)
 
-    def __get_solar_mean_longitude(self, hours):
+    def get_solar_mean_longitude(self):
         return (280.1895014 - .238724988 * self.DYR + .9856473288 * self.DDAY
-                + .0410686387 * hours)
+                + .0410686387 * self.start_date.hour)
 
-    def __EQ73(self):
+    @property
+    def EQ73(self):
         """ """
         return (2./3.-np.sin(self.I)**2)/.5021
 
-    def __EQ74(self):
+    @property
+    def EQ74(self):
         """ """
         return np.sin(self.I)**2/.1578
 
-    def __EQ75(self):
+    @property
+    def EQ75(self):
         """ """
         return np.sin(self.I)*np.cos(self.I/2.)**2/.37988
 
-    def __EQ76(self):
+    @property
+    def EQ76(self):
         """ """
         return np.sin(2.*self.I)/.7214
 
-    def __EQ77(self):
+    @property
+    def EQ77(self):
         """ """
         return np.sin(self.I)*np.sin(self.I/2.)**2/.0164
 
-    def __EQ78(self):
+    @property
+    def EQ78(self):
         """ """
         return (np.cos(self.I/2)**4)/.91544
 
-    def __EQ149(self):
+    @property
+    def EQ149(self):
         """ """
         return np.cos(self.I/2.)**6/.8758
 
-    def __EQ197(self):
+    @property
+    def EQ197(self):
         """ """
         return np.sqrt(2.310+1.435*np.cos(2.*(self.P - self.XI)))
 
-    def __EQ207(self):
+    @property
+    def EQ207(self):
         """ """
-        return self.__EQ75()*self.__EQ197()
+        return self.EQ75*self.EQ197
 
-    def __EQ213(self):
+    @property
+    def EQ213(self):
         """ """
         return np.sqrt(1.-12.*np.tan(self.I/2.)**2*np.cos(2.*self.P)
                        + 36.*np.tan(self.I/2.)**4)
 
-    def __EQ215(self):
+    @property
+    def EQ215(self):
         """ """
-        return self.__EQ78()*self.__EQ213()
+        return self.EQ78*self.EQ213
 
-    def __EQ227(self):
+    @property
+    def EQ227(self):
         """ """
         return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)
                        * np.cos(self.NU)+.1006)
 
-    def __EQ235(self):
+    @property
+    def EQ235(self):
         """ """
         return .001+np.sqrt(19.0444*np.sin(self.I)**4+2.7702*np.sin(self.I)**2
                             * np.cos(2.*self.NU)+.0981)
@@ -506,8 +413,7 @@ class TidalForcing(object):
     @property
     def start_date(self):
         try:
-            start_date = self.__start_date
-            return start_date - self.spinup_time
+            return self.__start_date
         except AttributeError:
             raise AttributeError(
                 "Must set start_date before operation can take place.")
@@ -519,6 +425,10 @@ class TidalForcing(object):
         except AttributeError:
             raise AttributeError(
                 "Must set end_date before operation can take place.")
+
+    @property
+    def forcing_start_date(self):
+        return self.start_date - self.spinup_time
 
     @property
     def spinup_time(self):
@@ -539,17 +449,163 @@ class TidalForcing(object):
     def all_constituents(self):
         return self.__constituents
 
+    @property
+    def orbital_frequencies(self):
+        return self.__orbital_frequencies
+
+    @property
+    def tidal_potential_amplitudes(self):
+        return self.__tidal_potential_amplitudes
+
+    @property
+    def earth_tidal_potentials(self):
+        return self.__earth_tidal_potentials
+
+    @property
+    def hour_middle(self):
+        return self.forcing_start_date.hour + (
+            (self.end_date - self.forcing_start_date).total_seconds()
+            / 3600 / 2)
+
+    @property
+    def I(self):  # noqa:E743
+        return np.arccos(.9136949-.0356926*np.cos(self.N))
+
+    @property
+    def N(self):
+        return np.deg2rad(self.DN)
+
+    @property
+    def DN(self):
+        return self.get_lunar_node()
+
+    @property
+    def DYR(self):
+        return self.forcing_start_date.year - 1900.
+
+    @property
+    def DDAY(self):
+        return (self.forcing_start_date.timetuple().tm_yday
+                + int((self.forcing_start_date.year-1901.)/4.) - 1)
+
+    @property
+    def NU(self):
+        return np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
+
+    @property
+    def DT(self):
+        return (180.+self.start_date.hour*(360./24))
+
+    @property
+    def DS(self):
+        return self.get_lunar_mean_longitude()
+
+    @property
+    def DP(self):
+        return self.get_lunar_perigee()
+
+    @property
+    def P(self):
+        return np.deg2rad(self.DP)
+
+    @property
+    def DH(self):
+        return self.get_solar_mean_longitude()
+
+    @property
+    def H(self):
+        return np.deg2rad(self.DH)
+
+    @property
+    def S(self):
+        return np.deg2rad(self.DS)
+
+    @property
+    def DP1(self):
+        return self.get_solar_perigee()  # HR
+
+    @property
+    def P1(self):
+        return np.deg2rad(self.DP1)
+
+    @property
+    def DI(self):
+        return np.rad2deg(self.I)
+
+    @property
+    def DNU(self):
+        return np.rad2deg(self.NU)
+
+    @property
+    def XI(self):
+        return self.N-2.*np.arctan(.64412*np.tan(self.N/2)) - self.NU
+
+    @property
+    def DXI(self):
+        return np.rad2deg(self.XI)
+
+    @property
+    def T(self):
+        return np.deg2rad(self.DT)
+
+    @property
+    def NUP(self):
+        return np.arctan(np.sin(self.NU) / (
+            np.cos(self.NU)+.334766/np.sin(2.*self.I)))
+
+    @property
+    def DNUP(self):
+        return np.rad2deg(self.NUP)
+
+    @property
+    def DPC(self):
+        return self.DP - self.DXI
+
+    @property
+    def PC(self):
+        return np.deg2rad(self.DPC)
+
+    @property
+    def R(self):
+        return (np.arctan(np.sin(2.*self.PC)
+                / ((1./6.)*(1./np.tan(.5*self.I))**2 - np.cos(2.*self.PC))))
+
+    @property
+    def DR(self):
+        return np.rad2deg(self.R)
+
+    @property
+    def NUP2(self):
+        return (np.arctan(np.sin(2.*self.NU)
+                / (np.cos(2.*self.NU)+.0726184 / np.sin(self.I)**2))/2.)
+
+    @property
+    def DNUP2(self):
+        return np.rad2deg(self.NUP2)
+
+    @property
+    def Q(self):
+        return np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC),
+                          (7.*np.cos(self.I)+1.)*np.cos(self.PC))
+
+    @property
+    def DQ(self):
+        return np.rad2deg(self.Q)
+
     @start_date.setter
     def start_date(self, start_date):
-        assert isinstance(start_date, datetime), \
+        assert isinstance(start_date, (datetime, type(None))), \
             "start_date must be a datetime instance."
+        if self.__end_date is not None and start_date is not None:
+            assert start_date < self.end_date
         self.__start_date = start_date
 
     @end_date.setter
     def end_date(self, end_date):
-        assert isinstance(end_date, datetime), \
+        assert isinstance(end_date, (datetime, type(None))), \
             "end_date must be a datetime instance."
-        assert end_date > self.start_date
+        if self.__start_date is not None and end_date is not None:
+            assert end_date > self.start_date
         self.__end_date = end_date
 
     @spinup_time.setter

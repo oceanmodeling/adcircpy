@@ -6,7 +6,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 from osgeo import osr
-from datetime import datetime
+import os
+from pathlib import Path
+import uuid
 from collections import defaultdict
 from itertools import permutations
 from matplotlib.tri import Triangulation
@@ -242,23 +244,26 @@ class AdcircMesh(UnstructuredMesh):
 
     def import_nodal_attributes(self, fort13):
         fort13 = self.parse_fort13(fort13)
+        if fort13.pop('NumOfNodes') != len(self.node_id):
+            raise Exception('fort.13 file does not match the mesh.')
+        self.AGRID = fort13.pop('AGRID')
         for attribute, data in fort13.items():
-            values = list()
-            for i in range(len(data['default_values'])):
-                _values = np.full((self.values.size,), np.nan)
-                idxs = np.where(np.in1d(data['indexes'], self.node_id))
-                for j, idx in enumerate(idxs):
-                    _values[idx] = data['values'][i][j]
-                _values[np.where(np.isnan(_values))] = \
-                    data['default_values'][i]
-                values.append(_values)
-            values = np.asarray(values)
-            if values.size//self.vertices.shape[0] == 1:
-                values = values.flatten()
-            else:
-                values = values.reshape((self.vertices.shape[0],
-                                         values.size//self.vertices.shape[0]))
-            self.add_nodal_attribute(attribute, values, units=data['units'])
+            values = np.asarray(data['values'])
+            if values.ndim == 1:
+                values = values.reshape((values.shape[0], 1))
+            full_values = np.full(
+                (self.values.size,
+                    np.asarray(data['default_values']).flatten().size),
+                np.nan)
+            for i, idx in enumerate(data['indexes']):
+                for j, value in enumerate(values[i, :].tolist()):
+                    full_values[idx, j] = value
+            idxs = np.where(np.isnan(full_values).all(axis=1))[0]
+            for idx in idxs:
+                for i, value in enumerate(data['default_values']):
+                    full_values[idx, i] = value
+            self.add_nodal_attribute(
+                attribute, full_values, units=data['units'])
 
     def get_nodal_attribute_names(self):
         return list(self.__nodal_attributes.keys())
@@ -269,6 +274,29 @@ class AdcircMesh(UnstructuredMesh):
             + ": attribute does not exist."
         return {'values': self.get_attribute(attribute),
                 **self.__nodal_attributes[attribute]}
+
+    def get_nodal_attributes(self):
+        def mode_rows(a):
+            a = np.ascontiguousarray(a)
+            void_dt = np.dtype(
+                (np.void, a.dtype.itemsize * np.prod(a.shape[1:])))
+            _, ids, count = np.unique(
+                a.view(void_dt).ravel(), return_index=1, return_counts=1)
+            largest_count_id = ids[count.argmax()]
+            most_frequent_row = a[largest_count_id]
+            return most_frequent_row
+        nodal_attributes = list()
+        for attribute in self.get_nodal_attribute_names():
+            _attr = self.get_nodal_attribute(attribute)
+            _attr['name'] = attribute
+            if _attr['values'].ndim == 1:
+                _attr['values'] = _attr['values'].reshape(
+                    (_attr['values'].shape[0], 1))
+            _attr['defaults'] = mode_rows(_attr['values']).flatten()
+            _attr['non_default_indexes'] = np.where(
+                (_attr['values'] != _attr['defaults']).all(axis=1))[0]
+            nodal_attributes.append(_attr)
+        return nodal_attributes
 
     def get_coldstart_attributes(self):
         coldstart_attributes = dict()
@@ -349,6 +377,7 @@ class AdcircMesh(UnstructuredMesh):
             True, True)
 
     def has_primitive_weighting(self, runtype=None):
+        assert runtype in [None, 'coldstart', 'hotstart']
         if runtype is None:
             runtype = ['coldstart', 'hotstart']
         else:
@@ -389,118 +418,42 @@ class AdcircMesh(UnstructuredMesh):
     def remove_culvert_boundary(self, key):
         self.__remove_boundary(key, self.__culvert_boundaries, "culvert")
 
-    def write_fort14(self, path=None):
-        fort14 = "{}\n".format(self.description)
-        fort14 += "{}  {}\n".format(self.num_elements, self.num_nodes)
-        for i in range(self.num_nodes):
-            fort14 += "{:d} ".format(self.node_id[i])
-            fort14 += "{:<.16E} ".format(self.x[i])
-            fort14 += " {:<.16E} ".format(self.y[i])
-            fort14 += "{:<.16E}\n".format(-self.values[i])
-        for i in range(self.num_elements):
-            fort14 += "{:d} ".format(self.element_id[i])
-            fort14 += "{:d} ".format(3)
-            fort14 += "{:d} ".format(self.elements[i, 0]+1)
-            fort14 += "{:d} ".format(self.elements[i, 1]+1)
-            fort14 += "{:d}\n".format(self.elements[i, 2]+1)
-        fort14 += "{:d} ! total number of ocean boundaries\n".format(
-            len(self.ocean_boundaries.keys()))
-        fort14 += "{:d} ! total number of ocean boundary nodes\n".format(
-            len(self.ocean_boundary))
-        for key, indexes in self.ocean_boundaries.items():
-            fort14 += "{:d}".format(len(indexes))
-            fort14 += " ! number of nodes for ocean_boundary_"
-            fort14 += "{}\n".format(key)
-            for idx in indexes:
-                fort14 += "{:d}\n".format(idx+1)
-        fort14 += "{:d}".format(
-            len(self.land_boundaries.keys()) +
-            len(self.inner_boundaries.keys()) +
-            len(self.inflow_boundaries.keys()) +
-            len(self.outflow_boundaries.keys()) +
-            len(self.weir_boundaries.keys()) +
-            len(self.culvert_boundaries.keys()))
-        fort14 += " ! total number of non-ocean boundaries\n"
-        fort14 += "{:d}".format(
-            len(self.land_boundary) +
-            len(self.inner_boundary) +
-            len(self.inflow_boundary) +
-            len(self.outflow_boundary) +
-            len(self.weir_boundary) +
-            len(self.culvert_boundary))
-        fort14 += "! total number of non-ocean boundary nodes\n"
-        for key, _ in self.land_boundaries.items():
-            fort14 += "{:d} ".format(len(_['indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for land_boundary_"
-            fort14 += "{}\n".format(key)
-            for idx in _['indexes']:
-                fort14 += "{:d}\n".format(idx+1)
-        for key, _ in self.inner_boundaries.items():
-            fort14 += "{:d} ".format(len(_['indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for inner_boundary_"
-            fort14 += "{}\n".format(key)
-            for idx in _['indexes']:
-                fort14 += "{:d}\n".format(idx+1)
-        for key, _ in self.inflow_boundaries.items():
-            fort14 += "{:d} ".format(len(_['indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for inflow_boundary_"
-            fort14 += "{}\n".format(key)
-            for idx in _['indexes']:
-                fort14 += "{:d}\n".format(idx+1)
-        for key, _ in self.outflow_boundaries.items():
-            fort14 += "{:d} ".format(len(_['indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for outflow_boundary_"
-            fort14 += "{}\n".format(key)
-            for i in range(len(_['indexes'])):
-                fort14 += "{:d} ".format(_['indexes'][i]+1)
-                fort14 += "{:<.16E} ".format(_["barrier_heights"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["subcritical_flow_coefficients"][i])
-                fort14 += "\n"
-        for key, _ in self.weir_boundaries.items():
-            fort14 += "{:d} ".format(len(_['front_face_indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for weir_boundary_"
-            fort14 += "{}\n".format(key)
-            for i in range(len(_['front_face_indexes'])):
-                fort14 += "{:d} ".format(_['front_face_indexes'][i]+1)
-                fort14 += "{:d} ".format(_['back_face_indexes'][i]+1)
-                fort14 += "{:<.16E} ".format(_["barrier_heights"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["subcritical_flow_coefficients"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["supercritical_flow_coefficients"][i])
-                fort14 += "\n"
-        for key, _ in self.culvert_boundaries.items():
-            fort14 += "{:d} ".format(len(_['indexes']))
-            fort14 += "{:d} ".format(_['ibtype'])
-            fort14 += "! number of nodes and ibtype for culvert_boundary_"
-            fort14 += "{}\n".format(key)
-            for i in range(len(_['front_face_indexes'])):
-                fort14 += "{:d} ".format(_['front_face_indexes'][i]+1)
-                fort14 += "{:d} ".format(_['back_face_indexes'][i]+1)
-                fort14 += "{:<.16E} ".format(_["barrier_heights"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["subcritical_flow_coefficients"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["supercritical_flow_coefficients"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["cross_barrier_pipe_heights"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["friction_factors"][i])
-                fort14 += "{:<.16E} ".format(
-                        _["pipe_diameters"][i])
-                fort14 += "\n"
-        fort14 += "{}\n".format(self.SpatialReference.ExportToWkt())
+    def write_fort14(self, path, overwrite=False):
         if path is not None:
-            with open(path, 'w') as f:
-                f.write(fort14)
+            path = str(Path(path))
+            if os.path.isfile(path) and not overwrite:
+                raise Exception(
+                    'File exists, pass overwrite=True to allow overwrite.')
+            else:
+                with open(path, 'w') as f:
+                    f.write(self.fort14)
         else:
-            print(fort14)
+            print(self.fort14)
+
+    def write_fort13(self, path, overwrite=False):
+        if path is not None:
+            path = str(Path(path))
+            if os.path.isfile(path) and not overwrite:
+                raise Exception(
+                    'File exists, pass overwrite=True to allow overwrite.')
+            else:
+                with open(path, 'w') as f:
+                    f.write(self.fort13)
+        else:
+            print(self.fort13)
+
+    def get_timestep(self, cfl=0.7, maxvel=5.):
+        """
+        maxvel must be in meters per second.
+        """
+        edges = self.mpl_tri.edges
+        x = self.get_x(3395)
+        y = self.get_y(3395)
+        dx = x[edges[:, 1]] - x[edges[:, 0]]
+        dy = y[edges[:, 1]] - y[edges[:, 0]]
+        array = np.asarray(np.sqrt(dx ** 2 + dy**2))
+        timesteps = cfl*array/np.abs(maxvel)
+        return np.min(timesteps)
 
     def make_plot(
         self,
@@ -608,11 +561,57 @@ class AdcircMesh(UnstructuredMesh):
         attribute[nodal_attribute] = self.get_attribute(nodal_attribute)
         return attribute
 
+    def __get_ordered_indexes(self, indexes):
+        boundary_edges = list()
+        idxs = np.vstack(list(np.where(self.mpl_tri.neighbors == -1))).T
+        for i, j in idxs:
+            boundary_edges.append((self.mpl_tri.triangles[i, j],
+                                   self.mpl_tri.triangles[i, (j+1) % 3]))
+        boundary_edges = np.asarray(boundary_edges)
+        idxs = np.where(np.in1d(boundary_edges[:, 0], indexes))[0]
+        boundary_edges = boundary_edges[idxs, :]
+        # put the edge nodes at top and bottom before swap sort
+        _, unique_counts = np.unique(
+            boundary_edges.flatten(), return_counts=True)
+        end_points = np.where(unique_counts == 1)[0]
+        # might be open or closed.
+        if len(end_points) > 1:  # open boundary
+            idx0 = end_points[0] % len(boundary_edges)
+            idx1 = end_points[1] % len(boundary_edges)
+            edge0 = boundary_edges[idx0]
+            edge1 = boundary_edges[idx1]
+            if np.any(edge0[0] == boundary_edges[:, 1]):
+                boundary_edges[[-1, idx0]] = boundary_edges[[idx0, -1]]
+            else:
+                boundary_edges[[0, idx0]] = boundary_edges[[idx0, 0]]
+            if np.any(edge1[0] == boundary_edges[:, 1]):
+                boundary_edges[[-1, idx1]] = boundary_edges[[idx1, -1]]
+            else:
+                boundary_edges[[0, idx1]] = boundary_edges[[idx1, 0]]
+            # swap sort
+            for i in range(1, len(boundary_edges-1)):
+                if boundary_edges[i-1, 1] != boundary_edges[i, 0]:
+                    try:
+                        idx = np.where(
+                            boundary_edges[i-1, 1]
+                            == boundary_edges[i:, 0])[0][0]
+                        boundary_edges[[i, idx+i]] = boundary_edges[[idx+i, i]]
+                    except IndexError:
+                        # treats the case in which the fort.14 has the
+                        # boundary written backwards (by OM2D).
+                        if boundary_edges[-1, 1] == boundary_edges[0, 0]:
+                            boundary_edges = np.roll(boundary_edges, 1, axis=0)
+                        if boundary_edges[-1, 1] == boundary_edges[0, 0]:
+                            raise
+        else:  # closed boundary
+            raise NotImplementedError
+        return boundary_edges[:, 0]
+
     @classmethod
     def open(cls, fort14, SpatialReference=None):
         fort14 = cls.parse_fort14(fort14)
-        vertices = np.vstack([fort14.pop('x'), fort14.pop('y')]).T
-        cls = cls(vertices, fort14.pop('elements'), fort14.pop('values'),
+        cls = cls(np.vstack([fort14.pop('x'), fort14.pop('y')]).T,
+                  fort14.pop('elements'), fort14.pop('values'),
                   SpatialReference, fort14.pop('node_id'),
                   fort14.pop('element_id'))
         cls.description = fort14.pop('description')
@@ -636,174 +635,19 @@ class AdcircMesh(UnstructuredMesh):
                     raise Exception('Duck-typing error.')
         return cls
 
-    @staticmethod
-    def parse_fort14(path):
-        fort14 = dict()
-        fort14['x'] = list()
-        fort14['y'] = list()
-        fort14['values'] = list()
-        fort14['node_id'] = list()
-        fort14['elements'] = list()
-        fort14['element_id'] = list()
-        fort14['ocean_boundaries'] = list()
-        fort14['land_boundaries'] = list()
-        fort14['inner_boundaries'] = list()
-        fort14['inflow_boundaries'] = list()
-        fort14['outflow_boundaries'] = list()
-        fort14['weir_boundaries'] = list()
-        fort14['culvert_boundaries'] = list()
-        with open(path, 'r') as f:
-            fort14['description'] = "{}".format(f.readline())
-            NE, NP = map(int, f.readline().split())
-            _NP = len([])
-            while _NP < NP:
-                node_id, x, y, z = f.readline().split()
-                fort14['node_id'].append(int(node_id)-1)
-                fort14['x'].append(float(x))
-                fort14['y'].append(float(y))
-                fort14['values'].append(-float(z))
-                _NP += 1
-            _NE = len([])
-            while _NE < NE:
-                line = f.readline().split()
-                fort14['element_id'].append(float(line[0]))
-                if int(line[1]) != 3:
-                    raise NotImplementedError(
-                        'Package only supports triangular meshes.')
-                fort14['elements'].append([int(x)-1 for x in line[2:]])
-                _NE += 1
-            # Assume EOF if NOPE is empty.
-            try:
-                NOPE = int(f.readline().split()[0])
-            except IndexError:
-                return fort14
-            # For now, let NOPE=-1 mean a self closing mesh
-            # reassigning NOPE to 0 until further implementation is applied.
-            if NOPE == -1:
-                NOPE = 0
-            _NOPE = len([])
-            f.readline()  # Number of total open ocean nodes. Not used.
-            while _NOPE < NOPE:
-                fort14['ocean_boundaries'].append({'indexes': list()})
-                NETA = int(f.readline().split()[0])
-                _NETA = len([])
-                while _NETA < NETA:
-                    fort14['ocean_boundaries'][_NOPE]['indexes'].append(
-                                                int(f.readline().split()[0])-1)
-                    _NETA += 1
-                _NOPE += 1
-            NBOU = int(f.readline().split()[0])
-            _NBOU = len([])
-            f.readline()
-            while _NBOU < NBOU:
-                NVELL, IBTYPE = map(int, f.readline().split()[:2])
-                _NVELL = 0
-                if IBTYPE in [0, 10, 20]:
-                    fort14['land_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'indexes': list()})
-                elif IBTYPE in [1, 11, 21]:
-                    fort14['inner_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'indexes': list()})
-                elif IBTYPE in [2, 12, 22, 102, 122]:
-                    fort14['inflow_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'indexes': list()})
-                elif IBTYPE in [3, 13, 23]:
-                    fort14['outflow_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'indexes': list(),
-                                    'barrier_heights': list(),
-                                    'supercritical_flow_coefficients': list()})
-
-                elif IBTYPE in [4, 24]:
-                    fort14['weir_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'front_face_indexes': list(),
-                                    'back_face_indexes': list(),
-                                    'barrier_heights': list(),
-                                    'subcritical_flow_coefficients': list(),
-                                    'supercritical_flow_coefficients': list()})
-                elif IBTYPE in [5, 25]:
-                    fort14['culvert_boundaries'].append({
-                                    'ibtype': IBTYPE,
-                                    'front_face_indexes': list(),
-                                    'back_face_indexes': list(),
-                                    'barrier_heights': list(),
-                                    'subcritical_flow_coefficients': list(),
-                                    'supercritical_flow_coefficients': list(),
-                                    'cross_barrier_pipe_heights': list(),
-                                    'friction_factors': list(),
-                                    'pipe_diameters': list()})
-                else:
-                    raise Exception('IBTYPE={} '.format(IBTYPE)
-                                    + 'found in fort.14 not recongnized. ')
-                while _NVELL < NVELL:
-                    line = f.readline().split()
-                    if IBTYPE in [0, 10, 20]:
-                        fort14['land_boundaries'][-1][
-                            'indexes'].append(int(line[0])-1)
-                    elif IBTYPE in [1, 11, 21]:
-                        fort14['inner_boundaries'][-1][
-                            'indexes'].append(int(line[0])-1)
-                    elif IBTYPE in [3, 13, 23]:
-                        fort14['outflow_boundaries'][-1][
-                            'indexes'].append(int(line[0])-1)
-                        fort14['outflow_boundaries'][-1][
-                            'external_barrier_heights'].append(float(line[1]))
-                        fort14['outflow_boundaries'][-1][
-                            'supercritical_flow_coefficients'].append(
-                                float(line[2]))
-                    elif IBTYPE in [2, 12, 22, 102, 122]:
-                        fort14['iflowBoundaries'][-1][
-                            'indexes'].append(int(line[0])-1)
-                    elif IBTYPE in [4, 24]:
-                        fort14['weir_boundaries'][-1][
-                            'front_face_indexes'].append(int(line[0])-1)
-                        fort14['weir_boundaries'][-1][
-                            'back_face_indexes'].append(int(line[1])-1)
-                        fort14['weir_boundaries'][-1][
-                            'barrier_heights'].append(float(line[2]))
-                        fort14['weir_boundaries'][-1][
-                            'subcritical_flow_coefficients'].append(
-                                float(line[3]))
-                        fort14['weir_boundaries'][-1][
-                            'supercritical_flow_coefficients'].append(
-                                float(line[4]))
-                    elif IBTYPE in [5, 25]:
-                        fort14['culvert_boundaries'][-1][
-                            'front_face_indexes'].append(int(line[0])-1)
-                        fort14['culvert_boundaries'][-1][
-                            'back_face_indexes'].append(int(line[1])-1)
-                        fort14['culvert_boundaries'][-1][
-                            'barrier_heights'].append(float(line[2]))
-                        fort14['culvert_boundaries'][-1][
-                            'subcritical_flow_coefficients'].append(
-                                float(line[3]))
-                        fort14['culvert_boundaries'][-1][
-                            'supercritical_flow_coefficients'].append(
-                                float(line[4]))
-                        fort14['culvert_boundaries'][-1][
-                            'friction_factors'].append(float(line[5]))
-                        fort14['culvert_boundaries'][-1][
-                            'pipe_diameters'].append(float(line[6]))
-                    else:
-                        Exception("Duck-typing error. "
-                                  + "This exception should be unreachable.")
-                    _NVELL += 1
-                _NBOU += 1
-        return fort14
+    @classmethod
+    def parse_fort14(cls, path):
+        return cls.parse_gr3(path)
 
     @staticmethod
     def parse_fort13(path):
         fort13 = dict()
         with open(path, 'r') as f:
-            f.readline()
-            f.readline()
-            NAttr = int(f.readline().split()[0])
+            fort13['AGRID'] = f.readline()
+            fort13['NumOfNodes'] = int(f.readline())
+            num_of_attributes = int(f.readline().split()[0])
             i = 0
-            while i < NAttr:
+            while i < num_of_attributes:
                 attribute_name = f.readline().strip()
                 units = f.readline().strip()
                 if units == '1':
@@ -814,13 +658,13 @@ class AdcircMesh(UnstructuredMesh):
                 fort13[attribute_name]['units'] = units
                 fort13[attribute_name]['default_values'] = defaults
                 i += 1
-            for i in range(NAttr):
+            for i in range(num_of_attributes):
                 attribute_name = f.readline().strip()
-                numOfNodes = int(f.readline())
+                num_of_nodes = int(f.readline())
                 indexes = list()
                 values = list()
                 j = 0
-                while j < numOfNodes:
+                while j < num_of_nodes:
                     line = f.readline().split()
                     indexes.append(int(line.pop(0))-1)
                     line = [float(x) for x in line]
@@ -832,10 +676,10 @@ class AdcircMesh(UnstructuredMesh):
 
     @property
     def description(self):
-        if not hasattr(self, "__description"):
-            self.__description = "AdcircPy mesh created on " \
-                                 + "{}".format(datetime.now())
-        return self.__description
+        try:
+            return self.__description
+        except AttributeError:
+            return uuid.uuid4().hex[:8]
 
     @property
     def node_id(self):
@@ -916,7 +760,11 @@ class AdcircMesh(UnstructuredMesh):
         ocean_boundaries = dict()
         __ocean_boundaries = deepcopy(self.__ocean_boundaries)
         for key, _ in __ocean_boundaries.items():
-            ocean_boundaries[key] = list(np.where(_.pop('__bool'))[0])
+            # ---- original
+            # ocean_boundaries[key] = list(np.where(_.pop('__bool'))[0])
+            # ---- end
+            indexes = np.where(_.pop('__bool'))[0].tolist()
+            ocean_boundaries[key] = self.__get_ordered_indexes(indexes)
         return ocean_boundaries
 
     @property
@@ -1042,6 +890,141 @@ class AdcircMesh(UnstructuredMesh):
     def initial_river_elevation(self):
         return self.__get_nodal_attribute("initial_river_elevation")
 
+    @property
+    def fort14(self):
+        f = "{}\n".format(self.description)
+        f += "{}  {}\n".format(self.num_elements, self.num_nodes)
+        for i in range(self.num_nodes):
+            f += "{:d} ".format(self.node_id[i]+1)
+            f += "{:<.16E} ".format(self.x[i])
+            f += " {:<.16E} ".format(self.y[i])
+            f += "{:<.16E}\n".format(-self.values[i])
+        for i in range(self.num_elements):
+            f += "{:d} ".format(self.element_id[i]+1)
+            f += "{:d} ".format(3)
+            f += "{:d} ".format(self.elements[i, 0]+1)
+            f += "{:d} ".format(self.elements[i, 1]+1)
+            f += "{:d}\n".format(self.elements[i, 2]+1)
+        f += "{:d} ! total number of ocean boundaries\n".format(
+            len(self.ocean_boundaries.keys()))
+        f += "{:d} ! total number of ocean boundary nodes\n".format(
+            len(self.ocean_boundary))
+        for key, indexes in self.ocean_boundaries.items():
+            f += "{:d}".format(len(indexes))
+            f += " ! number of nodes for ocean_boundary_"
+            f += "{}\n".format(key)
+            for idx in indexes:
+                f += "{:d}\n".format(idx+1)
+        f += "{:d}".format(
+            len(self.land_boundaries.keys()) +
+            len(self.inner_boundaries.keys()) +
+            len(self.inflow_boundaries.keys()) +
+            len(self.outflow_boundaries.keys()) +
+            len(self.weir_boundaries.keys()) +
+            len(self.culvert_boundaries.keys()))
+        f += " ! total number of non-ocean boundaries\n"
+        f += "{:d}".format(
+            len(self.land_boundary) +
+            len(self.inner_boundary) +
+            len(self.inflow_boundary) +
+            len(self.outflow_boundary) +
+            len(self.weir_boundary) +
+            len(self.culvert_boundary))
+        f += " ! total number of non-ocean boundary nodes\n"
+        for key, _ in self.land_boundaries.items():
+            f += "{:d} ".format(len(_['indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for land_boundary_"
+            f += "{}\n".format(key)
+            for idx in _['indexes']:
+                f += "{:d}\n".format(idx+1)
+        for key, _ in self.inner_boundaries.items():
+            f += "{:d} ".format(len(_['indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for inner_boundary_"
+            f += "{}\n".format(key)
+            for idx in _['indexes']:
+                f += "{:d}\n".format(idx+1)
+        for key, _ in self.inflow_boundaries.items():
+            f += "{:d} ".format(len(_['indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for inflow_boundary_"
+            f += "{}\n".format(key)
+            for idx in _['indexes']:
+                f += "{:d}\n".format(idx+1)
+        for key, _ in self.outflow_boundaries.items():
+            f += "{:d} ".format(len(_['indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for outflow_boundary_"
+            f += "{}\n".format(key)
+            for i in range(len(_['indexes'])):
+                f += "{:d} ".format(_['indexes'][i]+1)
+                f += "{:<.16E} ".format(_["barrier_heights"][i])
+                f += "{:<.16E} ".format(
+                        _["subcritical_flow_coefficients"][i])
+                f += "\n"
+        for key, _ in self.weir_boundaries.items():
+            f += "{:d} ".format(len(_['front_face_indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for weir_boundary_"
+            f += "{}\n".format(key)
+            for i in range(len(_['front_face_indexes'])):
+                f += "{:d} ".format(_['front_face_indexes'][i]+1)
+                f += "{:d} ".format(_['back_face_indexes'][i]+1)
+                f += "{:<.16E} ".format(_["barrier_heights"][i])
+                f += "{:<.16E} ".format(
+                        _["subcritical_flow_coefficients"][i])
+                f += "{:<.16E} ".format(
+                        _["supercritical_flow_coefficients"][i])
+                f += "\n"
+        for key, _ in self.culvert_boundaries.items():
+            f += "{:d} ".format(len(_['indexes']))
+            f += "{:d} ".format(_['ibtype'])
+            f += "! number of nodes and ibtype for culvert_boundary_"
+            f += "{}\n".format(key)
+            for i in range(len(_['front_face_indexes'])):
+                f += "{:d} ".format(_['front_face_indexes'][i]+1)
+                f += "{:d} ".format(_['back_face_indexes'][i]+1)
+                f += "{:<.16E} ".format(_["barrier_heights"][i])
+                f += "{:<.16E} ".format(_["subcritical_flow_coefficients"][i])
+                f += "{:<.16E} ".format(
+                    _["supercritical_flow_coefficients"][i])
+                f += "{:<.16E} ".format(_["cross_barrier_pipe_heights"][i])
+                f += "{:<.16E} ".format(_["friction_factors"][i])
+                f += "{:<.16E} ".format(_["pipe_diameters"][i])
+                f += "\n"
+        f += "{}\n".format(self.SpatialReference.ExportToWkt())
+        return f
+
+    @property
+    def fort13(self):
+        f = "{}\n".format(self.AGRID)
+        f += "{}\n".format(len(self.node_id))
+        f += "{}\n".format(len(self.get_nodal_attribute_names()))
+        for attribute in self.get_nodal_attributes():
+            f += "{}\n".format(attribute['name'])
+            f += "{}\n".format(attribute['units'])
+            f += '{}\n'.format(len(attribute['defaults']))
+            for n in attribute['defaults']:
+                f += '{:<.16E} '.format(n)
+            f += '\n'
+        for attribute in self.get_nodal_attributes():
+            f += "{}\n".format(attribute['name'])
+            f += "{}\n".format(len(attribute['non_default_indexes']))
+            for idx in attribute['non_default_indexes']:
+                f += "{:d} ".format(idx+1)
+                for val in attribute['values'][idx, :]:
+                    f += "{:<.16E} ".format(val)
+                f += "\n"
+        return f
+
+    @property
+    def AGRID(self):
+        try:
+            return self.__AGRID
+        except AttributeError:
+            return self.description
+
     @description.setter
     def description(self, description):
         self.__decription = str(description)
@@ -1059,3 +1042,7 @@ class AdcircMesh(UnstructuredMesh):
             element_id = np.asarray(element_id)
             assert element_id.shape[0] == self.elements.shape[0]
         self.__element_id = element_id
+
+    @AGRID.setter
+    def AGRID(self, AGRID):
+        self.__AGRID = AGRID.strip('\n')
