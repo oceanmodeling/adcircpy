@@ -93,8 +93,8 @@ This package is an API to handle input and output files for the [ADCIRC](http://
 You can load an Adcirc mesh and plot it by doing:
 
 ```Python
-from AdcircPy import read_mesh
-mesh = read_mesh('/path/to/fort.14')
+from adcircpy.mesh import AdcircMesh
+mesh = AdcircMesh.open('/path/to/fort.14', SpatialReference=4326)
 # The most basic you can do with this software is create plots:
 mesh.make_plot(show=True)
 ```
