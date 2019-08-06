@@ -100,36 +100,56 @@ mesh.make_plot(show=True)
 ```
 
 ### Example of fort.15 generation:
-
-#### Tidal only run:
-
 ```Python
-from AdcircPy import read_mesh
-from datetime import datetime, timedelta
-mesh = read_mesh('/path/to/fort.14', SpatialReference=4326, vertical_datum='LSML')
-start_date = datetime.now()
-end_date = start_date + timedelta(days=5)
-tidal_run = mesh.TidalRun(start_date, end_date, spinup_days=7)
-tidal_run.dump()  # will write to stdout if no output path is given.
+#! /usr/bin/env python
+"""
+Isabel 2003 - DelawareBayOceanMesh2D
+"""
+import os
+from datetime import timedelta
+from adcircpy.mesh import AdcircMesh
+from adcircpy.model import BestTrackForcing, TidalForcing, AdcircRun
+
+
+def main():
+    #  ----------- instantiante run
+    adcirc_run = AdcircRun()
+    adcirc_run.AdcircMesh = AdcircMesh.open(
+        os.path.abspath('../fort.14'), 4326)
+
+    #  ----------- add nodal attributes
+    adcirc_run.AdcircMesh.import_nodal_attributes(
+        os.path.abspath('../fort.13'))
+    for attribute in adcirc_run.AdcircMesh.get_nodal_attribute_names():
+        adcirc_run.AdcircMesh.set_nodal_attribute_state(attribute, True, True)
+
+    #  ----------- add tidal forcing
+    adcirc_run.TidalForcing = TidalForcing()
+    adcirc_run.TidalForcing.use_major()
+
+    #  ----------- add wind forcing
+    adcirc_run.WindForcing = BestTrackForcing()
+    adcirc_run.WindForcing.storm_id = 'AL182012'
+    adcirc_run.WindForcing.remove_TS()
+    # adcirc_run.WindForcing.remove_EX()
+
+    #  ----------- request outputs
+    adcirc_run.copy_fort15_stations(os.path.abspath('stations.txt'))
+    adcirc_run.set_elevation_stations_output(timedelta(minutes=6.))
+    adcirc_run.set_elevation_global_output(timedelta(minutes=60.))
+
+    #  ----------- set additional run options
+    adcirc_run.start_date = adcirc_run.WindForcing.start_date
+    adcirc_run.end_date = adcirc_run.WindForcing.end_date
+    adcirc_run.spinup_time = timedelta(days=15.)
+    adcirc_run.gwce_solution_scheme = 'explicit'
+    adcirc_run.DTDP = 2.
+
+    #  ----------- dump run
+    os.makedirs(os.path.abspath('./'), exist_ok=True)
+    adcirc_run.dump(os.path.abspath('./'), overwrite=True)
+
+
+if __name__ == '__main__':
+    main()
 ```
-
-#### Example where global outputs are requested:
-
-```Python
-from AdcircPy.Model import AdcircMesh # This is a different way of importing your mesh.
-from AdcircPy.Model import ElevationGlobalOutput as EGO
-from datetime import datetime, timedelta
-mesh = AdcircMesh('/path/to/fort.14', SpatialReference=4326, vertical_datum='LSML')
-start_date = datetime.now()
-end_date = start_date + timedelta(days=5)
-# sampling frequency is a timedelta object, so you can specify days, minutes, hours or seconds
-sampling_frequency = timedelta(minutes=15)
-tidal_run = mesh.TidalRun(
-            start_date, end_date,
-            ElevationGlobalOutput=EGO(sampling_frequency=sampling_frequency))
-tidal_run.dump()
-```
-
-#### Examples will be updated as development continues.
-
-Please use the issue tracker for bug reports.
