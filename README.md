@@ -20,7 +20,7 @@ Create a new conda environment for your project, and inside the environment run:
 ```cmd
 conda update -n base -c defaults conda
 conda install -c conda-forge gdal
-pip install AdcircPy
+pip install adcircpy
 ```
 
 ### Method 2: Pip-only (requires compilation of system libraries).
