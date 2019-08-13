@@ -1,8 +1,7 @@
-from adcircpy.model.TidalForcing import TidalForcing
+from adcircpy.model.winds._WindForcing import _WindForcing
 from adcircpy.model.winds.BestTrackForcing import BestTrackForcing
 from adcircpy.model.winds.OwiForcing import OwiForcing
-from adcircpy.model.AdcircRun import AdcircRun
-__all__ = ['AdcircRun',
+
+__all__ = ['_WindForcing',
            'BestTrackForcing',
-           'TidalForcing',
            'OwiForcing']

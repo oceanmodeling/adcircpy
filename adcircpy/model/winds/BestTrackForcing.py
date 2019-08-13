@@ -11,7 +11,7 @@ import pyproj
 from pathlib import Path
 from osgeo import ogr
 import zipfile
-from adcircpy.lib._WindForcing import _WindForcing
+from adcircpy.model.winds._WindForcing import _WindForcing
 from adcircpy.lib._get_cache_directory import _get_cache_directory
 
 
@@ -38,7 +38,6 @@ class BestTrackForcing(_WindForcing):
         self.__container['radius_of_last_closed_isobar'] = list()
         self.__container['radius_of_maximum_winds'] = list()
         self.__container['name'] = list()
-        self.__NWS = 20
 
     def is_constant_dt(self):
         """ returns True if output data is at constant dt """
@@ -48,33 +47,45 @@ class BestTrackForcing(_WindForcing):
         else:
             return False
 
-    def remove_TS(self):
-        mask = np.logical_or(
-            self.__container['development_level'] == 'TS',
-            self.__get_active_mask())
+    def remove_TS(self, which='leading'):
+        assert which in ['leading', 'all']
+        if which == 'all':
+            mask = np.logical_or(
+                self.__container['development_level'] == 'TS',
+                self.__get_active_mask())
+        else:
+            mask = self.__get_active_mask()
+            i = 0
+            while self.__container['development_level'][i] != 'HU':
+                mask[i] = True
+                i += 1
         self.__set_active_mask(mask)
 
-    def remove_EX(self):
-        mask = np.logical_or(
-            self.__container['development_level'] == 'EX',
-            self.__get_active_mask())
+    def remove_EX(self, which='trailing'):
+        assert which in ['trailing', 'all']
+        if which == 'all':
+            mask = np.logical_or(
+                self.__container['development_level'] == 'EX',
+                self.__get_active_mask())
+        else:
+            mask = np.flip(self.__get_active_mask())
+            i = 0
+            while np.flip(self.__container['development_level'])[i] != 'HU':
+                mask[i] = True
+                i += 1
         self.__set_active_mask(mask)
 
     def only_HU(self):
-        self.remove_TS()
-        self.remove_EX()
-        mask = np.logical_or(
-            self.__container['development_level'] == 'HU',
-            self.__get_active_mask())
+        mask = np.full(self.__container['datetime'].shape, False)
+        mask[np.where(self.__container['development_level'] == 'HU')] = True
         self.__set_active_mask(mask)
 
     def remove_non_six_hourly(self):
-        new_mask = np.ma.getmaskarray(
-            np.ma.asarray(self.__container['datetime']))
+        mask = np.full(self.__container['datetime'].shape, False)
         for i, datetime in enumerate(self.__container['datetime']):
             if datetime.hour not in [0, 6, 12, 18]:
-                new_mask[i] = True
-        mask = np.logical_or(new_mask, self.__get_active_maks())
+                mask[i] = True
+        mask = np.logical_or(mask, self.__get_active_maks())
         self.__set_active_mask(mask)
 
     def reset_filters(self):
@@ -470,7 +481,7 @@ class BestTrackForcing(_WindForcing):
 
     @property
     def NWS(self):
-        return self.__NWS
+        return 20
 
     @property
     def WTIMINC(self):

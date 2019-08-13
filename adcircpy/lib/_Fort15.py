@@ -306,11 +306,11 @@ class _Fort15(object):
             return False
 
     @property
-    def CFL(self):
+    def predictor_corrector(self):
         try:
-            return self.__CFL
+            return self.__predictor_corrector
         except AttributeError:
-            return 0.7
+            return True
 
     @property
     def fort15(self):
@@ -333,9 +333,9 @@ class _Fort15(object):
         f += '{:<32d}! NOLICAT\n'.format(self.NOLICAT)
         f += '{:<32d}! NWP\n'.format(self.NWP)
         if self.runtype == 'coldstart':
-            attributes = self.AdcircMesh.get_coldstart_attributes()
+            attributes = self.mesh.get_coldstart_attributes()
         elif self.runtype == 'hotstart':
-            attributes = self.AdcircMesh.get_hotstart_attributes()
+            attributes = self.mesh.get_hotstart_attributes()
         for attribute in attributes.keys():
             f += '{:<32}\n'.format(attribute)
         f += '{:<32d}! NCOR\n'.format(self.NCOR)
@@ -394,8 +394,8 @@ class _Fort15(object):
         # Not exactly sure how ADCIRC handles multiple open boundaries.
         for constituent in self.TidalForcing.get_active_constituents():
             f += '{}\n'.format(constituent)
-            for indexes in self.AdcircMesh.ocean_boundaries.values():
-                vertices = self.AdcircMesh.xy[indexes, :]
+            for indexes in self.mesh.ocean_boundaries.values():
+                vertices = self.mesh.xy[indexes, :]
                 amp, phase = self.TPXO(constituent, vertices)
                 for i in range(len(vertices)):
                     f += '{:<.16E} '.format(amp[i])
@@ -599,6 +599,10 @@ class _Fort15(object):
             raise AttributeError('Must set runtype attribute.')
 
     @property
+    def timestep(self):
+        return self.__DTDP
+
+    @property
     def RUNDES(self):
         try:
             self.__RUNDES
@@ -610,7 +614,7 @@ class _Fort15(object):
         try:
             self.__RUNID
         except AttributeError:
-            return self.AdcircMesh.description
+            return self.mesh.description
 
     @property
     def IHOT(self):
@@ -684,7 +688,7 @@ class _Fort15(object):
 
     @property
     def ICS(self):
-        if self.AdcircMesh.SpatialReference.IsGeographic():
+        if self.mesh.SpatialReference.IsGeographic():
             return 2
         else:
             return 1
@@ -805,7 +809,7 @@ class _Fort15(object):
                     'mannings_n_at_sea_floor',
                     'chezy_friction_coefficient_at_sea_floor']:
                 try:
-                    attr = self.AdcircMesh.get_nodal_attribute(attribute)
+                    attr = self.mesh.get_nodal_attribute(attribute)
                     if self.runtype == 'coldstart':
                         if attr['coldstart'] is True:
                             NOLIBF = 1
@@ -840,9 +844,9 @@ class _Fort15(object):
     @property
     def NWP(self):
         if self.runtype == 'coldstart':
-            return len(self.AdcircMesh.get_coldstart_attributes())
+            return len(self.mesh.get_coldstart_attributes())
         else:
-            return len(self.AdcircMesh.get_hotstart_attributes())
+            return len(self.mesh.get_hotstart_attributes())
 
     @property
     def NRAMP(self):
@@ -879,16 +883,22 @@ class _Fort15(object):
     @property
     def DTDP(self):
         try:
-            return self.__DTDP
+            if self.predictor_corrector:
+                return self.__DTDP
+            else:
+                return -self.__DTDP
         except AttributeError:
-            return np.floor(self.AdcircMesh.get_timestep())
+            if self.predictor_corrector:
+                return np.floor(self.mesh.get_timestep())
+            else:
+                return -np.floor(self.mesh.get_timestep())
 
     @property
     def TAU0(self):
         try:
             return self.__TAU0
         except AttributeError:
-            if self.AdcircMesh.has_primitive_weighting(self.runtype):
+            if self.mesh.has_primitive_weighting(self.runtype):
                 return -3
             if self.NOLIBF != 2:
                 return self.CF
@@ -1120,14 +1130,14 @@ class _Fort15(object):
         try:
             return self.__SLAM0
         except AttributeError:
-            return np.median(self.AdcircMesh.x)
+            return np.median(self.mesh.x)
 
     @property
     def SFEA0(self):
         try:
             return self.__SFEA0
         except AttributeError:
-            return np.median(self.AdcircMesh.y)
+            return np.median(self.mesh.y)
 
     # @property
     # def TAU(self):
@@ -1870,6 +1880,11 @@ class _Fort15(object):
         assert runtype in ['coldstart', 'hotstart']
         self.__runtype = runtype
 
+    @predictor_corrector.setter
+    def predictor_corrector(self, predictor_corrector):
+        assert isinstance(predictor_corrector, bool)
+        self.__predictor_corrector = predictor_corrector
+
     @RUNDES.setter
     def RUNDES(self, RUNDES):
         self.__RUNDES = str(RUNDES)
@@ -1987,8 +2002,7 @@ class _Fort15(object):
 
     @DTDP.setter
     def DTDP(self, DTDP):
-        DTDP = float(DTDP)
-        DTDP = np.abs(DTDP)
+        DTDP = np.abs(float(DTDP))
         assert DTDP != 0.
         self.__DTDP = DTDP
 
@@ -2209,16 +2223,14 @@ class _Fort15(object):
     def NCCONT(self, NCCONT):
         self.__NCCONT = str(NCCONT)
 
-    @CFL.setter
-    def CFL(self, CFL):
-        CFL = float(CFL)
-        assert CFL > 0 and CFL < 1
-        self.__CFL = CFL
-
     @vertical_mode.setter
     def vertical_mode(self, vertical_mode):
         assert vertical_mode in ['2D', '3D']
         self.__vertical_mode = vertical_mode
+
+    @timestep.setter
+    def timestep(self, timestep):
+        self.DTDP = timestep
 
     @lateral_stress_in_gwce.setter
     def lateral_stress_in_gwce(self, lateral_stress_in_gwce):

@@ -4,7 +4,7 @@ import numpy as np
 from adcircpy.lib._Fort15 import _Fort15
 from adcircpy.mesh import AdcircMesh as _AdcircMesh
 from adcircpy.model import TidalForcing as _TidalForcing
-from adcircpy.lib._WindForcing import _WindForcing
+from adcircpy.model.winds._WindForcing import _WindForcing
 
 
 class AdcircRun(_Fort15):
@@ -174,14 +174,14 @@ class AdcircRun(_Fort15):
         output_directory = str(Path(output_directory))
         if fort14:
             path = str(Path(output_directory + '/' + fort14))
-            self.AdcircMesh.write_fort14(path, overwrite)
+            self.mesh.write_fort14(path, overwrite)
         if fort13:
             path = str(Path(output_directory + '/' + fort13))
-            self.AdcircMesh.write_fort13(path, overwrite)
+            self.mesh.write_fort13(path, overwrite)
         if fort22:
-            if self.WindForcing is not None:
+            if self.wind_forcing is not None:
                 path = str(Path(output_directory + '/' + fort22))
-                self.WindForcing.dump(path, overwrite)
+                self.wind_forcing.dump(path, overwrite)
         if coldstart:
             path = str(Path(output_directory + '/' + coldstart))
             self.write_fort15('coldstart', path, overwrite)
@@ -269,7 +269,7 @@ class AdcircRun(_Fort15):
             'stations'][station_type]['station_id'].keys())
         assert station_name not in self.__container[
             'stations'][station_type]['station_id'].keys(), msg
-        # assert self.AdcircMesh.has_station(vertices)
+        # assert self.mesh.has_station(vertices)
         self.__container['stations'][station_type][
             'station_id'][station_name] = vertices
 
@@ -303,32 +303,32 @@ class AdcircRun(_Fort15):
         return self.__container[output_type_1][output_type_2]
 
     @property
-    def AdcircMesh(self):
+    def mesh(self):
         try:
-            return self.__AdcircMesh
+            return self.__mesh
         except AttributeError:
-            raise AttributeError('Must set AdcircMesh attribute.')
+            raise AttributeError('Must set mesh attribute.')
 
     @property
-    def TidalForcing(self):
+    def tidal_forcing(self):
         try:
             if self.__start_date is not None:
-                self.__TidalForcing.start_date = self.start_date
+                self.__tidal_forcing.start_date = self.start_date
             if self.__end_date is not None:
-                self.__TidalForcing.end_date = self.end_date
-            self.__TidalForcing.spinup_time = self.spinup_time
-            return self.__TidalForcing
+                self.__tidal_forcing.end_date = self.end_date
+            self.__tidal_forcing.spinup_time = self.spinup_time
+            return self.__tidal_forcing
         except AttributeError:
             return
 
     @property
-    def WindForcing(self):
+    def wind_forcing(self):
         try:
             if self.__start_date is not None:
-                self.__WindForcing.start_date = self.start_date
+                self.__wind_forcing.start_date = self.start_date
             if self.__end_date is not None:
-                self.__WindForcing.end_date = self.end_date
-            return self.__WindForcing
+                self.__wind_forcing.end_date = self.end_date
+            return self.__wind_forcing
         except AttributeError:
             return
 
@@ -348,8 +348,8 @@ class AdcircRun(_Fort15):
         try:
             return self.__spinup_time
         except AttributeError:
-            if self.TidalForcing is not None:
-                self.TidalForcing.spinup_time = timedelta(0.)
+            if self.tidal_forcing is not None:
+                self.tidal_forcing.spinup_time = timedelta(0.)
             return timedelta(0.)
 
     @property
@@ -390,8 +390,8 @@ class AdcircRun(_Fort15):
     def spinup_time(self, spinup_time):
         assert isinstance(spinup_time, timedelta)
         self.__spinup_time = np.abs(spinup_time)
-        if self.TidalForcing is not None:
-            self.TidalForcing.spinup_time = self.__spinup_time
+        if self.tidal_forcing is not None:
+            self.tidal_forcing.spinup_time = self.__spinup_time
 
     @spinup_factor.setter
     def spinup_factor(self, spinup_factor):
@@ -404,21 +404,21 @@ class AdcircRun(_Fort15):
         assert isinstance(netcdf, bool)
         self.__netcdf = netcdf
 
-    @AdcircMesh.setter
-    def AdcircMesh(self, AdcircMesh):
+    @mesh.setter
+    def mesh(self, AdcircMesh):
         assert isinstance(AdcircMesh, _AdcircMesh)
         if AdcircMesh.SpatialReference is None:
             raise RuntimeError(
                 'AdcircMesh._SpatialReference must be set before AdcircRun '
                 + 'instantiation.')
-        self.__AdcircMesh = AdcircMesh
+        self.__mesh = AdcircMesh
 
-    @TidalForcing.setter
-    def TidalForcing(self, TidalForcing):
+    @tidal_forcing.setter
+    def tidal_forcing(self, TidalForcing):
         assert isinstance(TidalForcing, _TidalForcing)
-        self.__TidalForcing = TidalForcing
+        self.__tidal_forcing = TidalForcing
 
-    @WindForcing.setter
-    def WindForcing(self, WindForcing):
+    @wind_forcing.setter
+    def wind_forcing(self, WindForcing):
         assert isinstance(WindForcing, _WindForcing)
-        self.__WindForcing = WindForcing
+        self.__wind_forcing = WindForcing

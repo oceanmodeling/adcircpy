@@ -27,7 +27,8 @@ setuptools.setup(
         'bs4',
         'seaborn',
         'pandas',
-        'pyproj'
+        'pyproj',
+        'pygrib'
     ],
     entry_points={
         'console_scripts': [
