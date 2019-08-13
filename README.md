@@ -1,4 +1,4 @@
-# AdcircPy
+# adcircpy
 
 ### A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model.
 
@@ -105,49 +105,49 @@ mesh.make_plot(show=True)
 """
 Isabel 2003 - DelawareBayOceanMesh2D
 """
-import os
 from datetime import timedelta
 from adcircpy.mesh import AdcircMesh
 from adcircpy.model import BestTrackForcing, TidalForcing, AdcircRun
 
 
 def main():
-    #  ----------- instantiante run
+
+    # --------------  Instantiate Adcirc mesh
+    mesh = AdcircMesh.open('./fort.14', SpatialReference=4326)
+    mesh.import_nodal_attributes('./fort.13')
+    for attribute in mesh.get_nodal_attribute_names():
+        mesh.set_nodal_attribute_state(
+            attribute, coldstart=True, hotstart=True)
+
+    # ---------------- instantiate tidal forcing
+    tidal_forcing = TidalForcing()
+    tidal_forcing.use_major()  # Activates major tidal constituents
+
+    # ---------------- instantiate wind forcings
+    wind_forcing = BestTrackForcing()
+    wind_forcing.storm_id = 'AL182012'
+    wind_forcing.remove_TS()  # filters out leading TS entries
+
+    #  ----------- instantiate adcirc run
     adcirc_run = AdcircRun()
-    adcirc_run.AdcircMesh = AdcircMesh.open(
-        os.path.abspath('../fort.14'), 4326)
 
-    #  ----------- add nodal attributes
-    adcirc_run.AdcircMesh.import_nodal_attributes(
-        os.path.abspath('../fort.13'))
-    for attribute in adcirc_run.AdcircMesh.get_nodal_attribute_names():
-        adcirc_run.AdcircMesh.set_nodal_attribute_state(attribute, True, True)
+    # ------------ add mesh and forcings
+    adcirc_run.mesh = mesh
+    adcirc_run.tidal_forcing = tidal_forcing
+    adcirc_run.wind_forcing = wind_forcing
 
-    #  ----------- add tidal forcing
-    adcirc_run.TidalForcing = TidalForcing()
-    adcirc_run.TidalForcing.use_major()
-
-    #  ----------- add wind forcing
-    adcirc_run.WindForcing = BestTrackForcing()
-    adcirc_run.WindForcing.storm_id = 'AL182012'
-    adcirc_run.WindForcing.remove_TS()
-    # adcirc_run.WindForcing.remove_EX()
-
-    #  ----------- request outputs
-    adcirc_run.copy_fort15_stations(os.path.abspath('stations.txt'))
-    adcirc_run.set_elevation_stations_output(timedelta(minutes=6.))
-    adcirc_run.set_elevation_global_output(timedelta(minutes=60.))
-
-    #  ----------- set additional run options
-    adcirc_run.start_date = adcirc_run.WindForcing.start_date
-    adcirc_run.end_date = adcirc_run.WindForcing.end_date
+    # ------------ set run dates
+    adcirc_run.start_date = wind_forcing.start_date
+    adcirc_run.end_date = wind_forcing.end_date
     adcirc_run.spinup_time = timedelta(days=15.)
-    adcirc_run.gwce_solution_scheme = 'explicit'
-    adcirc_run.DTDP = 2.
 
-    #  ----------- dump run
-    os.makedirs(os.path.abspath('./'), exist_ok=True)
-    adcirc_run.dump(os.path.abspath('./'), overwrite=True)
+    #  ----------- set output requests
+    adcirc_run.copy_fort15_stations('stations.txt')
+    adcirc_run.set_elevation_stations_output(timedelta(minutes=6.))
+    adcirc_run.set_elevation_global_output(timedelta(0.))
+
+    #  ----------- write files to disk
+    adcirc_run.dump('./', overwrite=True)
 
 
 if __name__ == '__main__':
