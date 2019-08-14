@@ -11,7 +11,7 @@ from AdcircPy.Outputs import Maxele
 import warnings
 
 
-class HighWaterMarkValidation(object):
+class HighWaterMarkValidation:
     def __init__(self, args):
         self.args = args
         self._init_maxele()

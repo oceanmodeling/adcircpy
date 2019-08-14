@@ -2,7 +2,7 @@ import argparse
 from AdcircPy.mesh import AdcircMesh
 
 
-class GenerateBestTrackRun(object):
+class GenerateBestTrackRun:
 
     def __init__(self):
         adcirc_mesh = AdcircMesh.open(self.args.fort14)

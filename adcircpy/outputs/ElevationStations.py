@@ -3,7 +3,7 @@ from pathlib import Path
 from netCDF4 import Dataset
 
 
-class ElevationStations(object):
+class ElevationStations:
 
     def __init__(self, path):
         self.__path = str(Path(path))

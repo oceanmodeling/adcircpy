@@ -1,7 +1,7 @@
 
 
 
-class _RESTWrapper(object):
+class _RESTWrapper:
 
     def __init__(self, product, start_date, end_date, format='json',
                  units='metric', time_zone='gmt', datum='msl'):

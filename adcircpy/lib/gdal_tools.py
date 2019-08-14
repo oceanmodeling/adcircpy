@@ -4,7 +4,7 @@ from matplotlib.transforms import Bbox
 from osgeo import osr, gdal
 
 
-class gdal_tools(object):
+class gdal_tools:
     """
     From gdal docs:
         adfGeoTransform[0] /* top left x */

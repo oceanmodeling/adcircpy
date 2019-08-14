@@ -7,7 +7,7 @@ from AdcircPy.mesh import AdcircMesh
 from AdcircPy.model import AdcircRun
 
 
-class GenerateTidalRun(object):
+class GenerateTidalRun:
 
     def __init__(self):
         print(self.fort15_kwargs)

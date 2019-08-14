@@ -6,7 +6,7 @@ from osgeo import osr, ogr
 # from adcircpy.lib._SpatialReference import _SpatialReference
 
 
-class PlanarStraightLineGraph(object):
+class PlanarStraightLineGraph:
     """
     Planar straight line graph representing the outer and inner hulls of a
     geospatial domain.

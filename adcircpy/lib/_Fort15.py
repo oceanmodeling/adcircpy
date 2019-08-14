@@ -3,7 +3,7 @@ from datetime import datetime
 from adcircpy.lib._TPXO import _TPXO
 
 
-class _Fort15(object):
+class _Fort15:
 
     def __init__(self):
         self.__TPXO = _TPXO()
@@ -680,9 +680,9 @@ class _Fort15(object):
         if self.runtype == 'coldstart':
             return 0
         else:
-            if self.WindForcing is not None:
+            if self.wind_forcing is not None:
                 # check for wave forcing here as well.
-                return self.WindForcing.NWS
+                return self.wind_forcing.NWS
             else:
                 return 0
 
@@ -964,7 +964,7 @@ class _Fort15(object):
     @property
     def WTIMINC(self):
         if self.NWS not in [0, 1, 9, 11]:
-            return self.WindForcing.WTIMINC
+            return self.wind_forcing.WTIMINC
         else:
             return 0
 

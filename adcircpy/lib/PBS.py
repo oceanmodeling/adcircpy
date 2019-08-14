@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-class PBS(object):
+class PBS:
   def __init__(self, account, walltime, numprocs, queue='batch', description=None, email=None):
     self._account = account
     self._walltime = walltime

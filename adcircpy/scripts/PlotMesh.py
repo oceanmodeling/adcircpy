@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from adcircpy.mesh import AdcircMesh
 
 
-class PlotMesh(object):
+class PlotMesh:
 
     def __init__(self):
         mesh = AdcircMesh.open(self.args.mesh_path)

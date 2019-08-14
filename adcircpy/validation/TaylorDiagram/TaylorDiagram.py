@@ -17,7 +17,7 @@ from scipy.spatial import cKDTree
 from AdcircPy.Validation.USGS import HighWaterMarks
 
 
-class TaylorDiagram(object):
+class TaylorDiagram:
     """Taylor diagram: plot model standard deviation and correlation
     to reference (data) sample in a single-quadrant polar plot, with
     r=stddev and theta=arccos(correlation).

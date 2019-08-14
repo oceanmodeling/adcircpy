@@ -9,7 +9,7 @@ import json
 from adcircpy.utils import get_cache_dir
 
 
-class _VDatumWrapper(object):
+class _VDatumWrapper:
     """
     This class retrieves the value of the vertical datum transformation from
     the VDatum REST API.

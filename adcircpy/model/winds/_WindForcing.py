@@ -1,4 +1,4 @@
 
 
-class _WindForcing(object):
+class _WindForcing:
     pass

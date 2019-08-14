@@ -6,7 +6,7 @@ from ordered_set import OrderedSet
 # from requests.structures import CaseInsensitiveDict
 
 
-class TidalForcing(object):
+class TidalForcing:
     __orbital_frequencies = {'M4':      0.0002810378050173,
                              'M6':      0.0004215567080107,
                              'MK3':     0.0002134400613513,

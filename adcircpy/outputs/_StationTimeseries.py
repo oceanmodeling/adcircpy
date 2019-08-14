@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class _StationTimeseries(object):
+class _StationTimeseries:
 
     def __init__(self, x, y, values, time, name=None):
         self._x = x

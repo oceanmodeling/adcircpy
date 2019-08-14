@@ -2,7 +2,7 @@ import numpy as np
 import getpass
 # import paramiko
 
-class ServerConfiguration(object):
+class ServerConfiguration:
     """
     This class is used for configuring the server 
     """

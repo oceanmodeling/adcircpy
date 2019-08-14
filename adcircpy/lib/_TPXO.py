@@ -10,7 +10,7 @@ from pathlib import Path
 from adcircpy.lib._get_cache_directory import _get_cache_directory
 
 
-class _TPXO(object):
+class _TPXO:
 
     __tpxo_constituents = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1',
                            'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1']

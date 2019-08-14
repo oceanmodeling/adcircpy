@@ -2,7 +2,7 @@ import numpy as np
 from osgeo import osr
 
 
-class _SpatialReference(object):
+class _SpatialReference:
 
     def __init__(self):
         self.__SpatialReference = None
