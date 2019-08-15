@@ -760,9 +760,6 @@ class AdcircMesh(UnstructuredMesh):
         ocean_boundaries = dict()
         __ocean_boundaries = deepcopy(self.__ocean_boundaries)
         for key, _ in __ocean_boundaries.items():
-            # ---- original
-            # ocean_boundaries[key] = list(np.where(_.pop('__bool'))[0])
-            # ---- end
             indexes = np.where(_.pop('__bool'))[0].tolist()
             ocean_boundaries[key] = self.__get_ordered_indexes(indexes)
         return ocean_boundaries

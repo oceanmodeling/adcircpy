@@ -47,7 +47,7 @@ class AdcircRun(_Fort15):
             'stations', 'velocity', sampling_frequency, spinup, netcdf,
             harmonic_analysis)
 
-    def set_meteorological_station_output(
+    def set_meteorological_stations_output(
         self,
         sampling_frequency,
         spinup=False,
@@ -58,7 +58,7 @@ class AdcircRun(_Fort15):
             'stations', 'meteorological', sampling_frequency, spinup, netcdf,
             harmonic_analysis)
 
-    def set_concentration_station_output(
+    def set_concentration_stations_output(
         self,
         sampling_frequency,
         spinup=False,
@@ -310,6 +310,11 @@ class AdcircRun(_Fort15):
             raise AttributeError('Must set mesh attribute.')
 
     @property
+    def adcirc_mesh(self):
+        """ alias for mesh attribute """
+        return self.mesh
+
+    @property
     def tidal_forcing(self):
         try:
             if self.__start_date is not None:
@@ -412,6 +417,10 @@ class AdcircRun(_Fort15):
                 'AdcircMesh._SpatialReference must be set before AdcircRun '
                 + 'instantiation.')
         self.__mesh = AdcircMesh
+
+    @adcirc_mesh.setter
+    def adcirc_mesh(self, AdcircMesh):
+        self.mesh = AdcircMesh
 
     @tidal_forcing.setter
     def tidal_forcing(self, TidalForcing):

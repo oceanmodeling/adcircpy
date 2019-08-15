@@ -373,8 +373,8 @@ class _Fort15:
         # tidal forcings
         # ----------------
         f += '{:<32d}! NTIF\n'.format(self.NTIF)
-        for constituent, forcing in self.TidalForcing:
-            if constituent in self.TidalForcing.major_constituents:
+        for constituent, forcing in self.tidal_forcing:
+            if constituent in self.tidal_forcing.major_constituents:
                 f += '{:<32}\n'.format(constituent)
                 f += '{:<.8E} '.format(forcing[0])
                 f += '{:<.8E} '.format(forcing[1])
@@ -382,8 +382,8 @@ class _Fort15:
                 f += '{:<.8E} '.format(forcing[3])
                 f += '{:<.8E} '.format(forcing[4])
                 f += '\n'
-        f += '{:<32d}! NBFR\n'.format(len(self.TidalForcing))
-        for constituent, forcing in self.TidalForcing:
+        f += '{:<32d}! NBFR\n'.format(len(self.tidal_forcing))
+        for constituent, forcing in self.tidal_forcing:
             f += '{:<32}\n'.format(constituent)
             f += '{:<.8E} '.format(forcing[1])
             f += '{:<.8E} '.format(forcing[3])
@@ -392,7 +392,7 @@ class _Fort15:
         # NOTE:  This part is written as one-constituent then all boundaries
         # as opposed to one-boundary then all constituents for that boundary.
         # Not exactly sure how ADCIRC handles multiple open boundaries.
-        for constituent in self.TidalForcing.get_active_constituents():
+        for constituent in self.tidal_forcing.get_active_constituents():
             f += '{}\n'.format(constituent)
             for indexes in self.mesh.ocean_boundaries.values():
                 vertices = self.mesh.xy[indexes, :]
@@ -543,7 +543,7 @@ class _Fort15:
                     break
         if harmonic_analysis:
             f += '{:<32d}! NFREQ\n'.format(self.NFREQ)
-            for constituent, forcing in self.TidalForcing:
+            for constituent, forcing in self.tidal_forcing:
                 f += '{:<32}\n'.format(constituent)
                 f += '{:<.16E} '.format(forcing[1])
                 f += '{:<.16E} '.format(forcing[3])
@@ -1180,8 +1180,8 @@ class _Fort15:
     @property
     def NTIF(self):
         NTIF = 0
-        for constituent in self.TidalForcing.get_active_constituents():
-            if constituent in self.TidalForcing.major_constituents:
+        for constituent in self.tidal_forcing.get_active_constituents():
+            if constituent in self.tidal_forcing.major_constituents:
                 NTIF += 1
         return NTIF
 
@@ -1638,11 +1638,11 @@ class _Fort15:
             if np.any([_['spinup'] for _ in self._outputs]):
                 if np.any([_['sampling_frequency'] for _ in self._outputs]):
                     if np.any([_['harmonic_analysis'] for _ in self._outputs]):
-                        return len(self.TidalForcing.get_active_constituents())
+                        return len(self.tidal_forcing.get_active_constituents())
         else:
             if np.any([_['sampling_frequency'] for _ in self._outputs]):
                 if np.any([_['harmonic_analysis'] for _ in self._outputs]):
-                    return len(self.TidalForcing.get_active_constituents())
+                    return len(self.tidal_forcing.get_active_constituents())
         return 0
 
     @property
@@ -2118,13 +2118,13 @@ class _Fort15:
 
     # @NTIF.setter
     # def NTIF(self, NTIF):
-    #     if self.TidalForcing is None:
+    #     if self.tidal_forcing is None:
     #         NTIF = []
     #     else:
     #         if NTIF == 'all':
     #             NTIF = []
-    #             for constituent in self.TidalForcing.constituents:
-    #                 if constituent in self.TidalForcing.major8:
+    #             for constituent in self.tidal_forcing.constituents:
+    #                 if constituent in self.tidal_forcing.major8:
     #                     NTIF.append(constituent)
     #         else:
     #             NTIF = list(NTIF)
