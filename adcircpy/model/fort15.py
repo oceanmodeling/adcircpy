@@ -31,7 +31,7 @@ class Fort15:
         elif self._runtype == 'hotstart':
             attributes = self.mesh.get_hotstart_attributes()
         for attribute in attributes.keys():
-            f += f'{attribute}\n'.ljust(131)
+            f += f'{attribute}'.ljust(131) + ' \n'
         f += f'{self.NCOR:d}'.ljust(131) + ' ! NCOR\n'
         f += f'{self.NTIP:d}'.ljust(131) + ' ! NTIP\n'
         f += f'{self.NWS:d}'.ljust(131) + ' ! NWS\n'
@@ -39,8 +39,8 @@ class Fort15:
         f += f'{self.G:G}'.ljust(131) + ' ! gravitational acceleration\n'
         f += f'{self.TAU0:G}'.ljust(131) + ' ! TAU0\n'
         if self.TAU0 == -5:
-            f += f'{self.Tau0FullDomainMin:G} ' \
-                + f'{self.Tau0FullDomainMax:G}'.ljust(131)
+            f += (f'{self.Tau0FullDomainMin:G} '
+                  + f'{self.Tau0FullDomainMax:G}').ljust(131)
             f += ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
         f += f'{self.DTDP:G}'.ljust(131) + ' ! DTDP\n'
         f += f'{self.STATIM:G}'.ljust(131) + ' ! STATIM\n'
@@ -1518,7 +1518,7 @@ class Fort15:
         try:
             return self.__TOUTGM
         except AttributeError:
-            output = self.get_meteorological_surface_output()
+            output = self.meteorological_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_TOUTG_('meteorological')
@@ -1539,7 +1539,7 @@ class Fort15:
         try:
             return self.__TOUTFGM
         except AttributeError:
-            output = self.get_meteorological_surface_output()
+            output = self.meteorological_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_TOUTFG_('meteorological')
@@ -1561,7 +1561,7 @@ class Fort15:
         try:
             return self.__NSPOOLGM
         except AttributeError:
-            output = self.get_meteorological_surface_output()
+            output = self.meteorological_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_NSPOOLG_('meteorological')
@@ -1590,7 +1590,7 @@ class Fort15:
         try:
             return self.__TOUTGC
         except AttributeError:
-            output = self.get_concentration_surface_output()
+            output = self.concentration_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_TOUTG_('concentration')
@@ -1611,7 +1611,7 @@ class Fort15:
         try:
             return self.__TOUTFGC
         except AttributeError:
-            output = self.get_concentration_surface_output()
+            output = self.concentration_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_TOUTFG_('concentration')
@@ -1633,7 +1633,7 @@ class Fort15:
         try:
             return self.__NSPOOLGC
         except AttributeError:
-            output = self.get_concentration_surface_output()
+            output = self.concentration_surface_output
             if output['sampling_frequency'] is not None:
                 if output['sampling_frequency'].total_seconds() > 0:
                     return self._get_NSPOOLG_('concentration')

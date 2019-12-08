@@ -4,6 +4,7 @@ import io
 import gzip
 from datetime import datetime
 from pandas import DataFrame
+import pathlib
 from shapely.geometry import Point, Polygon
 import utm
 from haversine import haversine
@@ -26,39 +27,45 @@ class BestTrackForcing(WindForcing):
         self._end_date = end_date
         self._dst_crs = dst_crs
 
-    def crop_to_bbox(self, bbox, eye_only=False):
+    def clip_to_bbox(self, bbox, eye_only=False):
         """
         Bbox must be expressed in WGS84 (EPSG:4326)
         """
         msg = f"bbox must be a {Bbox} instance."
         assert isinstance(bbox, Bbox), msg
         if eye_only:
-            min_lon_mask = self.df["longitude"] >= bbox.xmin
-            max_lon_mask = self.df["longitude"] <= bbox.xmax
-            min_lat_mask = self.df["latitude"] >= bbox.ymin
-            max_lat_mask = self.df["latitude"] <= bbox.ymax
-            df = self._df[
-                min_lon_mask & max_lon_mask & min_lat_mask & max_lat_mask]
-            self._start_date = df.iloc[0]['datetime']
-            self._end_date = df.iloc[-1]['datetime']
+            # min_lon_mask = self.df["longitude"] >= bbox.xmin
+            # max_lon_mask = 
+            # min_lat_mask = self.df["latitude"] >= bbox.ymin
+            # max_lat_mask = self.df["latitude"] <= bbox.ymax
+            cond = np.logical_and(
+                    np.logical_and(
+                        self.df["longitude"] >= bbox.xmin,
+                        self.df["longitude"] <= bbox.xmax),
+                    np.logical_and(
+                        self.df["latitude"] >= bbox.ymin,
+                        self.df["latitude"] <= bbox.ymax))
+            breakpoint()
+            self.df.mask(cond, inplace=True)
+            breakpoint()
         else:
             unique_dates = np.unique(self._df['datetime'])
             for _datetime in unique_dates:
                 records = self._df[self._df['datetime'] == _datetime]
                 radii = records['radius_of_last_closed_isobar'].iloc[0]
-                radii = 1852.*radii # convert to meters
-                merc = Proj(init="EPSG:3395")
-                x, y = merc(records['longitude'].iloc[0], records['latitude'].iloc[0])
+                radii = 1852.*radii  # convert to meters
+                merc = Proj("EPSG:3395")
+                x, y = merc(
+                    records['longitude'].iloc[0],
+                    records['latitude'].iloc[0])
                 p = Point(x, y)
                 pol = p.buffer(radii)
+                # if pol.
                 # x, y = Polygon([merc(*pol.exterior.xy)])
                 return pol
-
-
-
             exit()
 
-    def plot_trajectory(self, ax=None, show=False, color='blue', **kwargs):
+    def plot_trajectory(self, ax=None, show=False, color='k', **kwargs):
         kwargs.update({'color': color})
         if ax is None:
             fig = plt.figure()
@@ -72,6 +79,14 @@ class BestTrackForcing(WindForcing):
         if show:
             ax.axis('scaled')
             plt.show()
+
+    def dump(self, path, overwrite=False):
+        path = pathlib.Path(path)
+        if path.is_file() and not overwrite:
+            raise Exception(
+                'Files exist, set overwrite=True to allow overwrite.')
+        with open(path, 'w') as f:
+            f.write(self.fort22)
 
     @property
     def storm_id(self):
@@ -303,7 +318,7 @@ class BestTrackForcing(WindForcing):
         """
         Output has units of meters per second.
         """
-        merc = Proj(init="EPSG:3395")
+        merc = Proj("EPSG:3395")
         x, y = merc(data['longitude'], data['latitude'])
         unique_datetimes = np.unique(data['datetime'])
         for i, _datetime in enumerate(unique_datetimes):
@@ -364,6 +379,35 @@ class BestTrackForcing(WindForcing):
     def transform_to(self, crs):
         pass
 
+    @property
+    def NWS(self):
+        try:
+            return self.__NWS
+        except AttributeError:
+            return 20
+
+    @property
+    def WTIMINC(self):
+        WTIMINC = self.start_date.strftime('%Y %m %d %H ')
+        WTIMINC += f'{self.df["storm_number"].iloc[0]} '
+        WTIMINC += f'{self.BLADj} '
+        WTIMINC += f'{self.geofactor}'
+        return WTIMINC
+
+    @property
+    def BLADj(self):
+        try:
+            return self.__BLADj
+        except AttributeError:
+            return 0.9
+
+    @property
+    def geofactor(self):
+        try:
+            return self.__geofactor
+        except AttributeError:
+            return 1
+
     @start_date.setter
     def start_date(self, start_date):
         self._start_date = start_date
@@ -371,6 +415,23 @@ class BestTrackForcing(WindForcing):
     @end_date.setter
     def end_date(self, end_date):
         self._end_date = end_date
+
+    @NWS.setter
+    def NWS(self, NWS):
+        assert NWS in [19, 20]
+        self.__NWS = int(NWS)
+
+    @BLADj.setter
+    def BLADj(self, BLADj):
+        BLADj = float(BLADj)
+        assert BLADj >= 0 and BLADj <= 1
+        self.__BLADj = BLADj
+
+    @geofactor.setter
+    def geofactor(self, geofactor):
+        geofactor = float(geofactor)
+        assert geofactor >= 0 and geofactor <= 1
+        self.__geofactor = geofactor
 
     @_storm_id.setter
     def _storm_id(self, storm_id):
@@ -818,32 +879,7 @@ class BestTrackForcing(WindForcing):
     #         self.__container['name'] = list()
     #         return self.__container
 
-    # @property
-    # def NWS(self):
-    #     return 20
-
-    # @property
-    # def WTIMINC(self):
-    #     WTIMINC = self.start_date.strftime('%Y %m %d %H ')
-    #     WTIMINC += '{} '.format(self.storm_number[0])
-    #     WTIMINC += '{} '.format(self.BLADj)
-    #     WTIMINC += '{}'.format(self.geofactor)
-    #     return WTIMINC
-
-    # @property
-    # def BLADj(self):
-    #     try:
-    #         return self.__BLADj
-    #     except AttributeError:
-    #         return 0.9
-
-    # @property
-    # def geofactor(self):
-    #     try:
-    #         return self.__geofactor
-    #     except AttributeError:
-    #         return 1
-
+  
     # @start_date.setter
     # def start_date(self, start_date):
     #     assert isinstance(start_date, datetime)
@@ -870,19 +906,4 @@ class BestTrackForcing(WindForcing):
     #     self.__fetch_ATCF()
     #     self.__parse_ATCF()
 
-    # @NWS.setter
-    # def NWS(self, NWS):
-    #     self.__NWS = int(NWS)
-
-    # @BLADj.setter
-    # def BLADj(self, BLADj):
-    #     BLADj = float(BLADj)
-    #     assert BLADj >= 0 and BLADj <= 1
-    #     self.__BLADj = BLADj
-
-    # @geofactor.setter
-    # def geofactor(self, geofactor):
-    #     geofactor = float(geofactor)
-    #     assert geofactor >= 0 and geofactor <= 1
-    #     self.__geofactor = geofactor
 

@@ -5,7 +5,7 @@ Hurrican Sandy GAHM on HSOFS
 
 import pathlib
 from datetime import datetime, timedelta
-from adcircpy import AdcircMesh, TidalForcing, AdcircRun
+from adcircpy import AdcircMesh, TidalForcing, BestTrackForcing, AdcircRun
 
 try:
     import colored_traceback
@@ -17,8 +17,8 @@ except ModuleNotFoundError:
 def main():
 
     # set paths
-    parent = pathlib.Path(__file__).parent
-    data = parent.absolute() / "data"
+    parent = pathlib.Path(__file__).parent.absolute()
+    data = parent / "data"
     # fort14 = parent.joinpath("data/HSOFS/CubaIkeModNOMA1enoflux.grd")
     # fort13 = parent.joinpath("data/HSOFS/fort.14")
 
@@ -74,10 +74,20 @@ def main():
     start_date = datetime(2012, 10, 11) + spinup_time
     end_date = (start_date - spinup_time) + timedelta(days=19.25)
 
+    # set winds
+    wind_forcing = BestTrackForcing(
+        'AL182012',  # Sandy
+        # start_date=start_date,
+        # end_date=end_date
+        )
+    # ax = mesh.make_plot()
+    # wind_forcing.plot_trajectory(ax=ax, show=True)
+
     # instantiate AdcircRun object.
     driver = AdcircRun(
         mesh,
         tidal_forcing,
+        wind_forcing,
         start_date=start_date,
         end_date=end_date,
         spinup_time=spinup_time
@@ -94,9 +104,10 @@ def main():
     driver.horizontal_mixing_coefficient = 10.
 
     # write files to disk
-    outdir = data.absolute() / 'example_3'
+    outdir = data / 'example_3'
     # driver.adcirc(outdir, overwrite=True)
-    driver.padcirc(outdir, overwrite=True)
+    # driver.padcirc(outdir, overwrite=True)
+    driver.dump(outdir, overwrite=True)
 
 
 if __name__ == '__main__':
