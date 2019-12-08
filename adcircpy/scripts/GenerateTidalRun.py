@@ -3,8 +3,7 @@
 Script to generate an ADCIRC tidal only run.
 """
 import argparse
-from AdcircPy.mesh import AdcircMesh
-from AdcircPy.model import AdcircRun
+
 
 
 class GenerateTidalRun:

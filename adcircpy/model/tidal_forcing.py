@@ -7,83 +7,11 @@ from ordered_set import OrderedSet
 
 
 class TidalForcing:
-    __orbital_frequencies = {'M4':      0.0002810378050173,
-                             'M6':      0.0004215567080107,
-                             'MK3':     0.0002134400613513,
-                             'S4':      0.0002908882086657,
-                             'MN4':     0.0002783986019952,
-                             'S6':      0.0004363323129986,
-                             'M3':      0.0002107783537630,
-                             '2MK3':    0.0002081166466594,
-                             'M8':      0.0005620756090649,
-                             'MS4':     0.0002859630068415,
-                             'M2':      0.0001405189025086,
-                             'S2':      0.0001454441043329,
-                             'N2':      0.0001378796994865,
-                             'Nu2':     0.0001382329037065,
-                             'MU2':     0.0001355937006844,
-                             '2N2':     0.0001352404964644,
-                             'lambda2': 0.0001428049013108,
-                             'T2':      0.0001452450073529,
-                             'R2':      0.0001456432013128,
-                             '2SM2':    0.0001503693061571,
-                             'L2':      0.0001431581055307,
-                             'K2':      0.0001458423172006,
-                             'K1':      0.0000729211583579,
-                             'O1':      0.0000675977441508,
-                             'OO1':     0.0000782445730498,
-                             'S1':      0.0000727220521664,
-                             'M1':      0.0000702594512543,
-                             'J1':      0.0000755603613800,
-                             'RHO':     0.0000653117453487,
-                             'Q1':      0.0000649585411287,
-                             '2Q1':     0.0000623193381066,
-                             'P1':      0.0000725229459750,
-                             'Mm':      0.0000026392030221,
-                             'Ssa':     0.0000003982128677,
-                             'Sa':      0.0000001991061914,
-                             'Msf':     0.0000049252018242,
-                             'Mf':      0.0000053234146919}
 
-    __tidal_potential_amplitudes = {'M2': 0.242334,
-                                    'S2': 0.112841,
-                                    'N2': 0.046398,
-                                    'K2': 0.030704,
-                                    'K1': 0.141565,
-                                    'O1': 0.100514,
-                                    'P1': 0.046843,
-                                    'Q1': 0.019256}
-    __earth_tidal_potentials = {'M2': 0.693,
-                                'S2': 0.693,
-                                'N2': 0.693,
-                                'K2': 0.693,
-                                'K1': 0.736,
-                                'O1': 0.695,
-                                'P1': 0.706,
-                                'Q1': 0.695}
-    __major_constituents = ['Q1',
-                            'O1',
-                            'P1',
-                            'K1',
-                            'N2',
-                            'M2',
-                            'S2',
-                            'K2']
-
-    __constituents = [*__major_constituents,
-                      'Mm',
-                      'Mf',
-                      'M4',
-                      'MN4',
-                      'MS4',
-                      '2N2',
-                      'S1']
-
-    def __init__(self):
-        self.__active_constituents = OrderedSet()
-        self.__start_date = None
-        self.__end_date = None
-        self.__spinup_time = timedelta(0.)
+    def __init__(self, start_date=None, end_date=None, spinup_time=None):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.spinup_time = spinup_time
 
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)
@@ -105,15 +33,15 @@ class TidalForcing:
 
     def use_constituent(self, constituent):
         msg = "Constituent must be one of "
-        msg += "{}".format(self.__constituents)
-        assert constituent in self.__constituents, msg
-        self.__active_constituents.add(constituent)
+        msg += f"{self.constituents}"
+        assert constituent in self.constituents, msg
+        self.active_constituents.add(constituent)
 
     def drop_constituent(self, constituent):
         msg = "constituent must be one of: "
         msg += "{}".format(self.active_constituents)
         assert constituent in self.active_constituents, msg
-        self.__active_constituents.pop(
+        self.active_constituents.pop(
             self.active_constituents.index(constituent))
 
     def get_active_constituents(self):
@@ -220,12 +148,12 @@ class TidalForcing:
             raise RuntimeError('Unrecognized constituent '
                                + '{}.'.format(constituent))
 
-    def normalize_to_360(f):
+    def _normalize_to_360(f):
         def decorator(self, constituent):
             return f(self, constituent) % 360.
         return decorator
 
-    @normalize_to_360
+    @_normalize_to_360
     def get_greenwich_term(self, constituent):
         if constituent == "M2":
             return 2.*(self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
@@ -407,24 +335,20 @@ class TidalForcing:
         return 'rad/sec'
 
     @property
-    def nc(self):
-        return self.__nc
-
-    @property
     def start_date(self):
         try:
             return self.__start_date
         except AttributeError:
-            raise AttributeError(
-                "Must set start_date before operation can take place.")
+            msg = "Must set start_date attribute."
+            raise AttributeError(msg)
 
     @property
     def end_date(self):
         try:
             return self.__end_date
         except AttributeError:
-            raise AttributeError(
-                "Must set end_date before operation can take place.")
+            msg = "Must set end_date attribute."
+            raise AttributeError(msg)
 
     @property
     def forcing_start_date(self):
@@ -439,27 +363,92 @@ class TidalForcing:
 
     @property
     def active_constituents(self):
-        return self.__active_constituents
+        try:
+            return self.__active_constituents
+        except AttributeError:
+            self.__active_constituents = OrderedSet()
+            return self.__active_constituents
 
     @property
     def major_constituents(self):
-        return self.__major_constituents
+        return ('Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2')
 
     @property
-    def all_constituents(self):
-        return self.__constituents
+    def constituents(self):
+        return (
+            *self.major_constituents,
+            'Mm',
+            'Mf',
+            'M4',
+            'MN4',
+            'MS4',
+            '2N2',
+            'S1')
 
     @property
     def orbital_frequencies(self):
-        return self.__orbital_frequencies
+        return {
+            'M4':      0.0002810378050173,
+            'M6':      0.0004215567080107,
+            'MK3':     0.0002134400613513,
+            'S4':      0.0002908882086657,
+            'MN4':     0.0002783986019952,
+            'S6':      0.0004363323129986,
+            'M3':      0.0002107783537630,
+            '2MK3':    0.0002081166466594,
+            'M8':      0.0005620756090649,
+            'MS4':     0.0002859630068415,
+            'M2':      0.0001405189025086,
+            'S2':      0.0001454441043329,
+            'N2':      0.0001378796994865,
+            'Nu2':     0.0001382329037065,
+            'MU2':     0.0001355937006844,
+            '2N2':     0.0001352404964644,
+            'lambda2': 0.0001428049013108,
+            'T2':      0.0001452450073529,
+            'R2':      0.0001456432013128,
+            '2SM2':    0.0001503693061571,
+            'L2':      0.0001431581055307,
+            'K2':      0.0001458423172006,
+            'K1':      0.0000729211583579,
+            'O1':      0.0000675977441508,
+            'OO1':     0.0000782445730498,
+            'S1':      0.0000727220521664,
+            'M1':      0.0000702594512543,
+            'J1':      0.0000755603613800,
+            'RHO':     0.0000653117453487,
+            'Q1':      0.0000649585411287,
+            '2Q1':     0.0000623193381066,
+            'P1':      0.0000725229459750,
+            'Mm':      0.0000026392030221,
+            'Ssa':     0.0000003982128677,
+            'Sa':      0.0000001991061914,
+            'Msf':     0.0000049252018242,
+            'Mf':      0.0000053234146919}
 
     @property
     def tidal_potential_amplitudes(self):
-        return self.__tidal_potential_amplitudes
+        return {
+            'M2': 0.242334,
+            'S2': 0.112841,
+            'N2': 0.046398,
+            'K2': 0.030704,
+            'K1': 0.141565,
+            'O1': 0.100514,
+            'P1': 0.046843,
+            'Q1': 0.019256}
 
     @property
     def earth_tidal_potentials(self):
-        return self.__earth_tidal_potentials
+        return {
+            'M2': 0.693,
+            'S2': 0.693,
+            'N2': 0.693,
+            'K2': 0.693,
+            'K1': 0.736,
+            'O1': 0.695,
+            'P1': 0.706,
+            'Q1': 0.695}
 
     @property
     def hour_middle(self):
@@ -594,22 +583,56 @@ class TidalForcing:
 
     @start_date.setter
     def start_date(self, start_date):
-        assert isinstance(start_date, (datetime, type(None))), \
-            "start_date must be a datetime instance."
-        if self.__end_date is not None and start_date is not None:
-            assert start_date < self.end_date
+        if start_date is None:
+            del(self.start_date)
+            return
+        msg = f"start_date must be an instance of type {datetime}."
+        assert isinstance(start_date, datetime), msg
+        try:
+            msg = "start_date must be smaller than end_date."
+            assert start_date < self.end_date, msg
+        except AttributeError:
+            pass
         self.__start_date = start_date
 
     @end_date.setter
     def end_date(self, end_date):
-        assert isinstance(end_date, (datetime, type(None))), \
-            "end_date must be a datetime instance."
-        if self.__start_date is not None and end_date is not None:
-            assert end_date > self.start_date
+        if end_date is None:
+            del(self.end_date)
+            return
+        msg = f"end_date must be an instance of type {datetime}."
+        assert isinstance(end_date, datetime), msg
+        try:
+            msg = f"end_date ({end_date}) must be larger than "
+            msg += f"start_date ({self.start_date})."
+            assert end_date > self.start_date, msg
+        except AttributeError:
+            pass
         self.__end_date = end_date
 
     @spinup_time.setter
     def spinup_time(self, spinup_time):
-        msg = "spinup_time must be timedelta object"
+        if spinup_time is None:
+            del(self.spinup_time)
+            return
+        msg = f"spinup_time must be of and instance of type {timedelta}."
         assert isinstance(spinup_time, timedelta), msg
         self.__spinup_time = np.abs(spinup_time)
+
+    @start_date.deleter
+    def start_date(self):
+        try:
+            del(self.__start_date)
+        except AttributeError:
+            pass
+
+    @end_date.deleter
+    def end_date(self):
+        try:
+            del(self.__end_date)
+        except AttributeError:
+            pass
+
+    @spinup_time.deleter
+    def spinup_time(self):
+        self.__spinup_time = timedelta(0.)

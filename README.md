@@ -1,15 +1,22 @@
-# adcircpy
+# AdcircPy
 
-### A Python interface for handling inputs and outputs for the ADCIRC hydrodynamic model.
+### A Python interface for handling inputs and outputs for the [ADCIRC](https://adcirc.org) hydrodynamic model.
 
-### Basic Installation:
+### Requirements:
+This package was developed using Python>=3.7. It has not been tested on previous Python versionm, and it will not work with Python 2. Please use a Python environment when using this software.
 
-You can install this software through conda or through pip.</br>
-The dependecies of Python packages installed through pip must be satisfied by the operating system (see Method 2 for details). On a normal user's computer, the recommended method of installation is through conda. Whether you are using the pip method or the conda method, it is generally good practice to always make use of a virtual environment for your project. If you are a Python newcomer, make sure to read upon Python environments and their usage as you dive more into Python development.</br>
 
-If you are doing development on a Windows machine it is highly recommended to use the Windows Subsystem for Linux, and run this software from a Widows-Subsystem-for-Linux shell. MingW64, Cygwin, the git-shell-for-windows, or any other off-the-shelf POSIX layer on Windows should work.</br>
+### Installation:
+```bash
+pip install adcircpy
+```
 
-### Method 1: Conda
+```bash
+conda install -c 
+```
+
+
+#### Method 1: Conda
 
 The advantage of using conda is that it provides the necessary dependencies as precompiled binaries, therefore no local compilations are required, and cuts the installation time substantially. This is the recommended method to use. </br>
 
@@ -23,7 +30,7 @@ conda install -c conda-forge gdal
 pip install adcircpy
 ```
 
-### Method 2: Pip-only (requires compilation of system libraries).
+#### Method 2: Pip-only (requires compilation of system libraries).
 
 Pip requires that some system libraries are precompiled and installed before running pip install command. _It is highly recommended that you use the system packge manager to satisfy these dependencies_, or, they may be compiled from source. The [Dockerfile](./Dockerfile) contains a full build on an Alpine distribution, which may be used for reference. Note that "dev" versions mean that the headers are required along with the compiled library. Also note that some of these libraries you may already have in your system.
 

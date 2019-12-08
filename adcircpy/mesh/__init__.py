@@ -1,6 +1,5 @@
-from adcircpy.mesh.PlanarStraightLineGraph import PlanarStraightLineGraph
-from adcircpy.mesh.UnstructuredMesh import UnstructuredMesh
-from adcircpy.mesh.AdcircMesh import AdcircMesh
+from adcircpy.mesh.unstructured_mesh import UnstructuredMesh
+from adcircpy.mesh.adcirc_mesh import AdcircMesh
 __all__ = ["UnstructuredMesh",
-           "AdcircMesh",
-           "PlanarStraightLineGraph"]
+           "AdcircMesh"
+           ]

@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 import argparse
 import matplotlib.pyplot as plt
-from adcircpy.mesh import AdcircMesh
+from adcircpy import AdcircMesh
 
 
 class PlotMesh:
 
     def __init__(self):
         mesh = AdcircMesh.open(self.args.mesh_path)
-        ax = mesh.make_plot(vmin=self.args.vmin, vmax=self.args.vmax)
+        ax = mesh.make_plot(
+            vmin=self.args.vmin,
+            vmax=self.args.vmax,
+            # levels=self.args.levels
+            )
         if self.args.show_elements:
-            ax.triplot(mesh.mpl_tri, color='k', linewidth=0.07)
+            ax.triplot(mesh.triangulation, color='k', linewidth=0.07)
         plt.show()
 
     def parse_args(self):
@@ -21,13 +25,16 @@ class PlotMesh:
                             default=False)
         parser.add_argument("--vmin", type=float)
         parser.add_argument("--vmax", type=float)
+        # parser.add_argument("--levels", default=256, type=int)
         return parser.parse_args()
 
     @property
     def args(self):
-        if not hasattr(self, "__args"):
+        try:
+            return self.__args
+        except AttributeError:
             self.__args = self.parse_args()
-        return self.__args
+            return self.__args
 
 
 def main():

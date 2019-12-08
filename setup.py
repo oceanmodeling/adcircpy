@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 import setuptools
+
 conf = setuptools.config.read_configuration('./setup.cfg')
 meta = conf['metadata']
 setuptools.setup(
@@ -11,57 +13,58 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=meta['url'],
     packages=setuptools.find_packages(),
-    setup_requires=['wheel'],
+    # setup_requires=['pyproj', 'numpy'],
     install_requires=[
-        'numpy',
         'matplotlib',
         'netCDF4',
         'scipy',
         'haversine',
         'wget',
         'utm',
-        'gdal',
         'requests',
-        'tqdm',
         'eventlet',
         'bs4',
         'seaborn',
         'pandas',
         'pyproj',
-        'pygrib'
+        'numpy',
+        'ordered_set',
+        # 'pygrib', # TODO: make separate install
+        'psutil',
+        'shapely'
     ],
     entry_points={
         'console_scripts': [
 
+            # Generators
+            'generate_hindcast=adcircpy.scripts.generate_hindcast:main',
+
             # Plotters
-            'PlotMesh='
-            + 'adcircpy.scripts.PlotMesh:main',
+            'plot_mesh=adcircpy.scripts.plot_mesh:main',
 
-            'PlotMaxele='
-            + 'adcircpy.scripts.PlotMaxele:main',
+            # 'PlotMaxele='
+            # + 'adcircpy.scripts.PlotMaxele:main',
 
-            'PlotElevationStationsOutput='
-            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+            # 'PlotElevationStationsOutput='
+            # + 'adcircpy.scripts.PlotElevationStationsOutput:main',
 
-            'PlotTidalStations='
-            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+            # 'PlotTidalStations='
+            # + 'adcircpy.scripts.PlotElevationStationsOutput:main',
 
-            'PlotFort61='
-            + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+            'plot_fort61=adcircpy.scripts.plot_fort61:main',
 
             # Generators
-            'GenerateTidalRun='
-            + 'adcircpy.scripts.GenerateTidalRun:main',
+            # 'GenerateTidalRun='
+            # + 'adcircpy.scripts.GenerateTidalRun:main',
 
-            'GenerateBestTrackFile='
-            + 'adcircpy.scripts.GenerateBestTrackFile:main',
+            'best_track_file=adcircpy.scripts.GenerateBestTrackFile:main',
 
-            'GenerateBestTrackRun='
-            + 'adcircpy.scripts.GenerateBestTrackRun:main',
+            # 'GenerateBestTrackRun='
+            # + 'adcircpy.scripts.GenerateBestTrackRun:main',
 
             # Validations
-            'HighWaterMarkValidation='
-            + 'adcircpy.scripts.HighWaterMarkValidation:main',
+            # 'HighWaterMarkValidation='
+            # + 'adcircpy.scripts.HighWaterMarkValidation:main',
         ]
     },
     test_suite='nose.collector',

@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib.colors import Normalize
 
 
-class _FixPointNormalize(Normalize):
+class FixPointNormalize(Normalize):
     """
     This class is used for plotting. The reason it is declared here is that
     it is used by more than one submodule. In the future, this class will be
