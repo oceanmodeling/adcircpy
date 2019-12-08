@@ -48,10 +48,9 @@ def main():
     mesh.set_nodal_attribute_state('surface_submergence_state', True, True)
 
     # trun 'on' nodal attributes on hotstart only
+    mesh.set_nodal_attribute_hotstart_state('surface_canopy_coefficient', True)
     mesh.set_nodal_attribute_hotstart_state(
         'surface_directional_effective_roughness_length', True)
-    mesh.set_nodal_attribute_hotstart_state('surface_submergence_state', True)
-    mesh.set_nodal_attribute_hotstart_state('surface_canopy_coefficient', True)
 
     # init tidal forcing and add constituents
     tidal_forcing = TidalForcing()
