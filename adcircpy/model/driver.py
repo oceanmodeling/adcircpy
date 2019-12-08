@@ -18,6 +18,7 @@ class AdcircRun(Fort15):
         adcirc_mesh,
         tidal_forcing=None,
         wind_forcing=None,
+        # wave_coupling=None,
         start_date=None,
         end_date=None,
         netcdf=True,
@@ -26,6 +27,7 @@ class AdcircRun(Fort15):
         self._mesh = adcirc_mesh
         self._tidal_forcing = tidal_forcing
         self._wind_forcing = wind_forcing
+        # self._wave_coupling = wave_coupling
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
@@ -157,23 +159,22 @@ class AdcircRun(Fort15):
         coldstart='fort.15.coldstart',
         hotstart='fort.15.hotstart'
     ):
-        from pathlib import Path
-        output_directory = str(Path(output_directory))
+        output_directory = pathlib.Path(output_directory).absolute()
         if fort14:
-            path = str(Path(output_directory + '/' + fort14))
+            path = output_directory / fort14
             self.mesh.write_fort14(path, overwrite)
         if fort13:
-            path = str(Path(output_directory + '/' + fort13))
+            path = output_directory / fort13
             self.mesh.write_fort13(path, overwrite)
         if fort22:
             if self.wind_forcing is not None:
-                path = str(Path(output_directory + '/' + fort22))
+                path = output_directory / fort22
                 self.wind_forcing.dump(path, overwrite)
         if coldstart:
-            path = str(Path(output_directory + '/' + coldstart))
+            path = output_directory / coldstart
             self.write_fort15('coldstart', path, overwrite)
         if hotstart:
-            path = str(Path(output_directory + '/' + hotstart))
+            path = output_directory / hotstart
             self.write_fort15('hotstart', path, overwrite)
 
     def import_stations(self, fort15):
