@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import setuptools
-
-conf = setuptools.config.read_configuration('./setup.cfg')
+import pathlib
+module_path = pathlib.Path(__file__).parent.absolute()
+conf = setuptools.config.read_configuration(module_path / 'setup.cfg')
 meta = conf['metadata']
 setuptools.setup(
     name=meta['name'],
@@ -37,34 +38,33 @@ setuptools.setup(
         'console_scripts': [
 
             # Generators
-            'generate_hindcast=adcircpy.scripts.generate_hindcast:main',
+            'generate_hindcast=adcircpy.cmd.generate_hindcast:main',
 
             # Plotters
-            'plot_mesh=adcircpy.scripts.plot_mesh:main',
+            'plot_mesh=adcircpy.cmd.plot_mesh:main',
 
-            # 'PlotMaxele='
-            # + 'adcircpy.scripts.PlotMaxele:main',
+            'plot_maxele=adcircpy.cmd.plot_maxele:main',
 
             # 'PlotElevationStationsOutput='
-            # + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+            # + 'adcircpy.cmd.PlotElevationStationsOutput:main',
 
             # 'PlotTidalStations='
-            # + 'adcircpy.scripts.PlotElevationStationsOutput:main',
+            # + 'adcircpy.cmd.PlotElevationStationsOutput:main',
 
-            'plot_fort61=adcircpy.scripts.plot_fort61:main',
+            'plot_fort61=adcircpy.cmd.plot_fort61:main',
 
             # Generators
             # 'GenerateTidalRun='
-            # + 'adcircpy.scripts.GenerateTidalRun:main',
+            # + 'adcircpy.cmd.GenerateTidalRun:main',
 
-            'best_track_file=adcircpy.scripts.GenerateBestTrackFile:main',
+            'best_track_file=adcircpy.cmd.GenerateBestTrackFile:main',
 
             # 'GenerateBestTrackRun='
-            # + 'adcircpy.scripts.GenerateBestTrackRun:main',
+            # + 'adcircpy.cmd.GenerateBestTrackRun:main',
 
             # Validations
             # 'HighWaterMarkValidation='
-            # + 'adcircpy.scripts.HighWaterMarkValidation:main',
+            # + 'adcircpy.cmd.HighWaterMarkValidation:main',
         ]
     },
     test_suite='nose.collector',
