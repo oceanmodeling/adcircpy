@@ -39,32 +39,13 @@ setuptools.setup(
 
             # Generators
             'generate_hindcast=adcircpy.cmd.generate_hindcast:main',
+            'best_track_file=adcircpy.cmd.GenerateBestTrackFile:main',
 
             # Plotters
             'plot_mesh=adcircpy.cmd.plot_mesh:main',
-
             'plot_maxele=adcircpy.cmd.plot_maxele:main',
-
-            # 'PlotElevationStationsOutput='
-            # + 'adcircpy.cmd.PlotElevationStationsOutput:main',
-
-            # 'PlotTidalStations='
-            # + 'adcircpy.cmd.PlotElevationStationsOutput:main',
-
             'plot_fort61=adcircpy.cmd.plot_fort61:main',
 
-            # Generators
-            # 'GenerateTidalRun='
-            # + 'adcircpy.cmd.GenerateTidalRun:main',
-
-            'best_track_file=adcircpy.cmd.GenerateBestTrackFile:main',
-
-            # 'GenerateBestTrackRun='
-            # + 'adcircpy.cmd.GenerateBestTrackRun:main',
-
-            # Validations
-            # 'HighWaterMarkValidation='
-            # + 'adcircpy.cmd.HighWaterMarkValidation:main',
         ]
     },
     test_suite='nose.collector',

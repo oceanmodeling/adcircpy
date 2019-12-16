@@ -2,8 +2,7 @@
 # from adcircpy.outputs.ElevationStationsTimeseries \
 #     import ElevationStationsTimeseries
 from adcircpy.outputs.Maxele import Maxele
-from adcircpy.outputs.ElevationStations import ElevationStations
-from adcircpy.outputs.ElevationStations import Fort61
+from adcircpy.outputs.fort61 import ElevationStations, Fort61
 
 # from AdcircPy.Outputs.HarmonicConstituentsElevationStations import \
 #                                         HarmonicConstituentsElevationStations

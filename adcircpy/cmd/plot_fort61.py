@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 import os
 import argparse
-import numpy as np
 from pathlib import Path
+import numpy as np
 from adcircpy.outputs import Fort61
 from adcircpy.validation import COOPS
 import matplotlib.pyplot as plt
@@ -61,6 +61,7 @@ def main():
             plt.plot(
                 fort61.datetime, data['values'], label='ADCIRC',
                 color='r', linewidth=.7)
+
         else:
             if not args.coops_only:
                 plt.plot(

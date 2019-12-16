@@ -2,8 +2,9 @@
 """
 Hurrican Sandy GAHM on HSOFS
 """
-
+import os
 import pathlib
+import warnings
 from datetime import datetime, timedelta
 from adcircpy import AdcircMesh, TidalForcing, BestTrackForcing, AdcircRun
 
@@ -16,29 +17,34 @@ except ModuleNotFoundError:
 
 def main():
 
-    # set paths
-    parent = pathlib.Path(__file__).parent.absolute()
-    data = parent / "data"
-    # fort14 = parent.joinpath("data/HSOFS/CubaIkeModNOMA1enoflux.grd")
-    # fort13 = parent.joinpath("data/HSOFS/fort.14")
+    fort14 = os.getenv('HSOFS')
+    fort13 = os.getenv('HSOFS_FORT13')
+    stations = os.getenv('STATIONS')
 
-    # download HSOFS data
-    # if not fort14.is_file():
-    #     url = "https://www.dropbox.com/s/1wk91r67cacf132/"
-    #     url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
-    #     g = urllib.request.urlopen(url)
-    #     tmpfile = tempfile.NamedTemporaryFile()
-    #     with open(tmpfile.name, 'b+w') as f:
-    #         f.write(g.read())
-    #     with tarfile.open(tmpfile.name, "r:bz2") as tar:
-    #         tar.extractall(parent.joinpath("data/NetCDF_Shinnecock_Inlet/"))
+    if fort14 is None:
+        msg = 'Please set the enviroment variable\n'
+        msg += 'export HSOFS=/path/to/HSOFS'
+        raise IOError(msg)
+
+    if fort13 is None:
+        msg = 'Please set the enviroment variable\n'
+        msg += 'export HSOFS_FORT13=/path/to/HSOFS_FORT13'
+        raise IOError(msg)
+
+    if stations is None:
+        msg = 'No STATIONS environment variable was found. '
+        msg += 'ADCIRC input files will be created but they will not contain '
+        msg += 'output station data. Please set the STATIONS envrionment '
+        msg += 'variable with station data in the same format as a fort.15. '
+        msg += 'You may simple pass an existing fort.15 as it is and the '
+        msg += 'station data will be extracted from it.'
+        warnings.warn(msg)
 
     # open mesh file
-    import os
     mesh = AdcircMesh.open(
-        os.getenv('HSOFS'),
+        fort14,
         crs=4326,
-        fort13=os.getenv('HSOFS_FORT13')
+        fort13=fort13
         )
 
     # turn 'on' nodal attributes on both coldstart and hotstart
@@ -74,13 +80,7 @@ def main():
     end_date = (start_date - spinup_time) + timedelta(days=19.25)
 
     # set winds
-    wind_forcing = BestTrackForcing(
-        'AL182012',  # Sandy
-        # start_date=start_date,
-        # end_date=end_date
-        )
-    # ax = mesh.make_plot()
-    # wind_forcing.plot_trajectory(ax=ax, show=True)
+    wind_forcing = BestTrackForcing('AL182012')  # Hurricane Sandy
 
     # instantiate AdcircRun object.
     driver = AdcircRun(
@@ -92,9 +92,13 @@ def main():
         spinup_time=spinup_time
     )
 
-    # request surface outputs
-    # timedelta(0.) enable maximum surface while disabling surface timeseries
+    # Request surface outputs. timedelta(0) enables maximum surface output
+    # (e.g. maxele.63.nc) while disabling surface timeseries.
     driver.set_elevation_surface_output(timedelta(0.))
+
+    if stations is not None:
+        driver.import_stations(stations)
+        driver.set_elevation_stations_output(timedelta(minutes=6))
 
     # override defaults to match original test case options
     driver.timestep = 2.
@@ -103,10 +107,8 @@ def main():
     driver.horizontal_mixing_coefficient = 10.
 
     # write files to disk
-    outdir = data / 'example_3'
-    # driver.adcirc(outdir, overwrite=True)
-    # driver.padcirc(outdir, overwrite=True)
-    driver.dump(outdir, overwrite=True)
+    parent = pathlib.Path(__file__).parent.absolute()
+    driver.dump(parent / 'data/example_3', overwrite=True)
 
 
 if __name__ == '__main__':

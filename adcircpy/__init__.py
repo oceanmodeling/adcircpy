@@ -1,3 +1,4 @@
+from pandas.plotting import register_matplotlib_converters
 import matplotlib as mpl
 from adcircpy.mesh import AdcircMesh
 from adcircpy.model import AdcircRun
@@ -14,3 +15,4 @@ __all__ = [
 ]
 
 mpl.rcParams['agg.path.chunksize'] = 10000
+register_matplotlib_converters()

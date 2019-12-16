@@ -110,11 +110,11 @@ class Fort15:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(131)
+                        f += f"{x:G} {y:G}"
                         f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
-                    f += f"{x:G} {y:G}".ljust(131)
+                    f += f"{x:G} {y:G}"
                     f += f" ! {station_id}\n"
         # velocity out stations
         f += (f"{self.NOUTV:G} {self.TOUTSV:G} " +
@@ -126,7 +126,7 @@ class Fort15:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(131)
+                        f += f"{x:G} {y:G}"
                         f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
@@ -149,7 +149,7 @@ class Fort15:
                 else:
                     for station_id, (x, y) \
                       in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(131)
+                        f += f"{x:G} {y:G}"
                         f += f" ! {station_id}\n"
         if self.NWS > 0:
             # meteorological out stations
@@ -164,12 +164,12 @@ class Fort15:
                         if stations['spinup']:
                             for station_id, (x, y) \
                               in stations['collection'].items():
-                                f += f"{x:G} {y:G}".ljust(131)
+                                f += f"{x:G} {y:G}"
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
                           in stations['collection'].items():
-                            f += f"{x:G} {y:G}".ljust(131)
+                            f += f"{x:G} {y:G}"
                             f += f" ! {station_id}\n"
         # elevation global outputs
         f += (f"{self.NOUTGE:G} {self.TOUTGE:G} "
