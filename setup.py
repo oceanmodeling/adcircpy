@@ -1,5 +1,8 @@
+#!/usr/bin/env python
 import setuptools
-conf = setuptools.config.read_configuration('./setup.cfg')
+import pathlib
+module_path = pathlib.Path(__file__).parent.absolute()
+conf = setuptools.config.read_configuration(module_path / 'setup.cfg')
 meta = conf['metadata']
 setuptools.setup(
     name=meta['name'],
@@ -11,33 +14,38 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=meta['url'],
     packages=setuptools.find_packages(),
-    setup_requires=['wheel'],
+    # setup_requires=['pyproj', 'numpy'],
     install_requires=[
-        'numpy',
         'matplotlib',
         'netCDF4',
         'scipy',
         'haversine',
         'wget',
         'utm',
-        'gdal',
         'requests',
-        'tqdm',
         'eventlet',
         'bs4',
         'seaborn',
         'pandas',
-        'pyproj'
+        'pyproj',
+        'numpy',
+        'ordered_set',
+        # 'pygrib', # TODO: make separate install
+        'psutil',
+        'shapely'
     ],
     entry_points={
         'console_scripts': [
-            'PlotMesh=AdcircPy.entrypoints.PlotMesh:main',
-            'GenerateTidalRun=AdcircPy.entrypoints.GenerateTidalRun:main',
-            'PlotTidalStationsOutput=AdcircPy.entrypoints.PlotTidalStationsOutput:main',  # noqa:E501
-            'GenerateBestTrackFile=AdcircPy.entrypoints.GenerateBestTrackFile:main',  # noqa:E501
-            'PlotMaxele=AdcircPy.entrypoints.PlotMaxele:main',
-            'GenerateBestTrackRun=AdcircPy.entrypoints.GenerateBestTrackRun:main',  # noqa:E501
-            'HighWaterMarkValidation=AdcircPy.entrypoints.HighWaterMarkValidation:main',  # noqa:E501
+
+            # Generators
+            'generate_hindcast=adcircpy.cmd.generate_hindcast:main',
+            'best_track_file=adcircpy.cmd.GenerateBestTrackFile:main',
+
+            # Plotters
+            'plot_mesh=adcircpy.cmd.plot_mesh:main',
+            'plot_maxele=adcircpy.cmd.plot_maxele:main',
+            'plot_fort61=adcircpy.cmd.plot_fort61:main',
+
         ]
     },
     test_suite='nose.collector',
