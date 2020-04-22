@@ -17,9 +17,8 @@ Alternatively, you many manually install the repo by cloning it and then running
 pip install .
 ```
 
-See the examples directory for usage examples.
 
-### Additional Notes:
+### Additional installation notes:
 In order to be able to generate the tidal boundary conditions for the model, the TPXO<sup>[[1]](https://www.tpxo.net/tpxo-products-and-registration)</sup> file (h_tpxo9.v1.nc) needs to be available in the system.
 This file can be obtained by following the registration found [here](https://www.tpxo.net/tpxo-products-and-registration). Once you obtained the h_tpxo9.v1.nc file, you may execute
 ```bash
@@ -27,6 +26,10 @@ tpxo_install /path/to/your/h_tpxo9.v1.nc
 ```
 This will stage the file in the installation directory for AdcircPy.
 In the future, the requirement for this proprietary file will be dropped in favor of an open source variant.
+
+### Examples: 
+See the [examples](examples) directory for usage examples.
+
 
 ### Command Line:
 This program exposes a few commands available from the command line interface. You may pass the `-h` flag to any of this commands to explore their functionality. 
