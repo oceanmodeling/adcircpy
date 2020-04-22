@@ -3,6 +3,11 @@ import uuid
 from datetime import datetime, timedelta
 from netCDF4 import Dataset
 
+"""
+This class could probably be improved by following the suggestions found
+https://stackoverflow.com/questions/4014621/a-python-class-that-acts-like-dict
+"""
+
 
 class ElevationStations:
 

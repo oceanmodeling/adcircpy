@@ -4,50 +4,302 @@ import pathlib
 import shutil
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+import tempfile
 from psutil import cpu_count
 from adcircpy.model.fort15 import Fort15
 from adcircpy.mesh.adcirc_mesh import AdcircMesh
 from adcircpy.model.tidal_forcing import TidalForcing
 from adcircpy.model.winds.wind_forcing import WindForcing
+from adcircpy.outputs.collection import OutputCollection
 
 
 class AdcircRun(Fort15):
 
     def __init__(
         self,
-        adcirc_mesh,
+        mesh,
+        start_date,
+        end_date,
+        spinup_time=None,
         tidal_forcing=None,
         wind_forcing=None,
-        # wave_coupling=None,
-        start_date=None,
-        end_date=None,
+        waves=None,
         netcdf=True,
-        spinup_time=None
     ):
-        self._mesh = adcirc_mesh
-        self._tidal_forcing = tidal_forcing
-        self._wind_forcing = wind_forcing
-        # self._wave_coupling = wave_coupling
+        self._mesh = mesh
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
+        self._tidal_forcing = tidal_forcing
+        self._wind_forcing = wind_forcing
+        self._waves = waves
         self._netcdf = netcdf
 
     def add_elevation_output_station(self, station_name, vertices):
-        self._elevation_stations[station_name] = self._certify_station(
-            station_name, vertices, 'elevation')
+        self._certify_station('elevation', station_name, vertices)
+        self._elevation_stations[station_name] = vertices
 
     def add_velocity_output_station(self, station_name, vertices):
-        self._velocity_stations[station_name] = self._certify_station(
-            station_name, vertices, 'velocity')
+        self._certify_station('velocity', station_name, vertices)
+        self._velocity_stations[station_name] = vertices
 
     def add_meteorological_output_station(self, station_name, vertices):
-        self._meteorological_stations[station_name] = self._certify_station(
-            station_name, vertices, 'meteorological')
+        self._certify_station('meteorological', station_name, vertices)
+        self._meteorological_stations[station_name] = vertices
 
     def add_concentration_output_station(self, station_name, vertices):
-        self._concentration_stations[station_name] = self._certify_station(
-            station_name, vertices, 'concentration')
+        self._certify_station('concentration', station_name, vertices)
+        self._concentration_stations[station_name] = vertices
+
+    def set_elevation_stations_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis
+            )
+        self._container['stations']['elevation'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_velocity_stations_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['stations']['velocity'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_meteorological_stations_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['stations']['meteorological'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_concentration_stations_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['stations']['concentration'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_elevation_surface_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['surface']['elevation'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_velocity_surface_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['surface']['velocity'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_meteorological_surface_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['surface']['meteorological'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
+
+    def set_concentration_surface_output(
+        self,
+        sampling_frequency,
+        start=None,
+        end=None,
+        spinup=None,
+        spinup_start=None,
+        spinup_end=None,
+        netcdf=True,
+        harmonic_analysis=False,
+    ):
+        self._certify_output_request(
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis)
+        self._container['surface']['concentration'].update({
+            'sampling_frequency': sampling_frequency,
+            'start': start,
+            'end': end,
+            'spinup': spinup,
+            'spinup_start': spinup_start,
+            'spinup_end': spinup_end,
+            'netcdf': netcdf,
+            'harmonic_analysis': harmonic_analysis
+            })
 
     def remove_elevation_output_station(self, station_name):
         self._elevation_stations.pop(station_name)
@@ -61,121 +313,61 @@ class AdcircRun(Fort15):
     def remove_concentration_output_station(self, station_name):
         self._concentration_stations.pop(station_name)
 
-    def set_elevation_stations_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._elevation_stations_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_velocity_stations_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._velocity_stations_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_meteorological_stations_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._meterological_stations_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_concentration_stations_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._concentration_stations_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_elevation_surface_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._elevation_surface_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_velocity_surface_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._velocity_surface_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_meteorological_surface_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._meteorological_surface_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def set_concentration_surface_output(
-        self,
-        sampling_frequency,
-        spinup=False,
-        netcdf=True,
-        harmonic_analysis=False
-    ):
-        self._concentration_surface_output.update(
-            self._certify_schema(
-                sampling_frequency, spinup, netcdf, harmonic_analysis))
-
-    def dump(
+    def write(
         self,
         output_directory,
         overwrite=False,
         fort14='fort.14',
         fort13='fort.13',
-        fort22='fort.22.best_track',
+        fort22='fort.22',
+        fort15='fort.15',
         coldstart='fort.15.coldstart',
         hotstart='fort.15.hotstart'
     ):
-        output_directory = pathlib.Path(output_directory).absolute()
+        output_directory = pathlib.Path(output_directory)
+        output_directory.mkdir(parents=True, exist_ok=overwrite)
+
         if fort14:
             path = output_directory / fort14
             self.mesh.write_fort14(path, overwrite)
+
         if fort13:
-            path = output_directory / fort13
-            self.mesh.write_fort13(path, overwrite)
-        if fort22:
+            if len(self.mesh.get_nodal_attribute_names()) > 0:
+                self.mesh.write_fort13(
+                        output_directory / fort13,
+                        overwrite
+                        )
+
+        # when wind forcing is present, one has to divide the run
+        # (almost) necessarily in two phases
+        if self.spinup_time.total_seconds() == 0:
+            # no spiunp time given means single phase
+            # easiest way is to override IHOT for the hotstart writer.
+            self._IHOT = 0
+            super().write(
+                'hotstart',
+                output_directory / fort15,
+                overwrite
+                )
+        else:
             if self.wind_forcing is not None:
-                path = output_directory / fort22
-                self.wind_forcing.dump(path, overwrite)
-        if coldstart:
-            path = output_directory / coldstart
-            self.write_fort15('coldstart', path, overwrite)
-        if hotstart:
-            path = output_directory / hotstart
-            self.write_fort15('hotstart', path, overwrite)
+                if fort22:
+                    self.wind_forcing.write(
+                        output_directory / fort22,
+                        overwrite
+                        )
+            if coldstart:
+                super().write(
+                        'coldstart',
+                        output_directory / coldstart,
+                        overwrite
+                        )
+            if hotstart:
+                super().write(
+                        'hotstart',
+                        output_directory / hotstart,
+                        overwrite
+                        )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -184,113 +376,58 @@ class AdcircRun(Fort15):
             for name, vertices in stations.items():
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
-                elif station_type == 'NOUTV':
+                if station_type == 'NOUTV':
                     self.add_velocity_output_station(name, vertices)
-                elif station_type == 'NOUTM':
+                if station_type == 'NOUTM':
                     self.add_meteorological_output_station(name, vertices)
-                elif station_type == 'NOUTC':
+                if station_type == 'NOUTC':
                     self.add_concentration_output_station(name, vertices)
 
-    def write_fort15(self, runtype, path, overwrite=False):
-        if isinstance(path, bool) and path is True:
-            print(self.fort15(runtype))
-        else:
-            if overwrite:
-                with open(str(pathlib.Path(path)), 'w') as f:
-                    f.write(self.fort15(runtype))
-
-    def adcirc(self, outdir, overwrite=False):
-        outdir = pathlib.Path(outdir)
-        outdir.mkdir(parents=True, exist_ok=True)
-        self.dump(outdir, overwrite=overwrite)
-        self._run_serial_coldstart(outdir, "adcirc")
-        self._run_serial_hotstart(outdir, "adcirc")
-
-    def padcirc(self, outdir, overwrite=False, nproc=-1, cmd='mpiexec'):
-        assert cmd in ['mpiexec', 'srun']
-        if cmd == 'mpiexec':
-            nproc = cpu_count(logical=False) if nproc == -1 else nproc
-            cmd += f" {nproc}"
-            self._run_padcirc_coldstart(outdir, cmd)
-
-    def _run_adcprep(self, rundir, nproc):
-        wd = pathlib.Path.cwd()
-        os.chdir(rundir.absolute())
-        subprocess.check_call(['adcprep', '--np', f"{nproc:d}", '--partmesh'])
-        subprocess.check_call(['adcprep', '--np', f"{nproc:d}", '--prepall'])
-        os.chdir(wd.absolute())
-
-    def _run_padcirc_coldstart(self, outdir, nproc, cmd):
-        coldstart = outdir / 'coldstart'
-        if coldstart.exists():
-            shutil.rmtree(coldstart.absolute())
-        coldstart.mkdir()
-        os.symlink(
-            outdir.absolute() / 'fort.14', coldstart.absolute() / 'fort.14')
-        os.symlink(
-            outdir.absolute() / 'fort.13', coldstart.absolute() / 'fort.13')
-        os.symlink(
-            outdir.absolute() / 'fort.15.coldstart',
-            coldstart.absolute() / 'fort.15')
-        self._run_adcprep(coldstart, nproc)
-        wd = pathlib.Path.cwd()
-        os.chdir(coldstart.absolute())
-        subprocess.check_call([cmd, '-n', f"{nproc:d}", 'padcirc'])
-        os.chdir(wd.absolute())
-
-    def _run_serial_coldstart(self, outdir, cmd):
-        coldstart = outdir / 'coldstart'
-        if coldstart.exists():
-            shutil.rmtree(coldstart.absolute())
-        coldstart.mkdir()
-        os.symlink(
-            outdir.absolute() / 'fort.14', coldstart.absolute() / 'fort.14')
-        os.symlink(
-            outdir.absolute() / 'fort.13', coldstart.absolute() / 'fort.13')
-        os.symlink(
-            outdir.absolute() / 'fort.15.coldstart',
-            coldstart.absolute() / 'fort.15')
-        wd = pathlib.Path.cwd()
-        os.chdir(coldstart.absolute())
-        subprocess.check_call(cmd)
-        os.chdir(wd.absolute())
-
-    def _certify_station(self, station_name, vertices, physical_var):
-        keys = list(self._container['stations'][physical_var].keys())
-        vertices = np.asarray(vertices)
-        msg = "vertices argument must be a two-tuple of floats."
-        assert vertices.shape == (2,), msg
-        msg = f"station_name {station_name} "
-        msg += "already exists. Station names must be unique."
-        msg += f"{keys}"
-        assert station_name not in keys, msg
-        return tuple(vertices)
-
-    def _certify_schema(
+    def run(
         self,
-        sampling_frequency,
-        spinup,
-        netcdf,
-        harmonic_analysis,
+        outdir=None,
+        nproc=-1,
+        overwrite=False,
+        coldstart=True,
+        hotstart=True,
+        server_config=None,
     ):
-        # certify sampling frequency
-        msg = "Error: sampling_frequency must be None or an instance of "
-        msg += f"type {timedelta}."
-        assert isinstance(sampling_frequency, (type(None), timedelta)), msg
-        # certify spinup
-        msg = f"Error: spinup must be of type {bool}."
-        assert isinstance(spinup, bool), msg
-        # certify netcdf
-        msg = f"Error: netcdf must be of type {bool}."
-        assert isinstance(netcdf, bool), msg
-        # certify harmonic_analysis
-        msg = f"Error: harmonic_analysis must be of type {bool}."
-        assert isinstance(harmonic_analysis, bool), msg
-        return {
-            'sampling_frequency': sampling_frequency,
-            'spinup': spinup,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis}
+
+        if outdir is None:
+            self._outdir_tmpdir = tempfile.TemporaryDirectory()
+            outdir = pathlib.Path(self._outdir_tmpdir.name)
+        else:
+            outdir = pathlib.Path(outdir)
+        #     if outdir.exists() and not overwrite:
+        #         msg = f"{outdir} exists and overwrite is not enabled."
+        #         raise IOError(msg)
+
+        # if not outdir.exists():
+        #     outdir.mkdir(parents=True)
+
+        # local adcirc run
+        if server_config is None:
+            self._run_local(
+                nproc=nproc,
+                outdir=outdir,
+                overwrite=overwrite,
+                coldstart=coldstart,
+                hotstart=hotstart
+                )
+
+        # server adcirc run
+        else:
+            server_config.run(
+                driver=self,
+                outdir=outdir,
+                overwrite=overwrite,
+                coldstart=coldstart,
+                hotstart=hotstart
+            )
+
+        self._load_outdir(outdir)
+
+        return self._output_collection
 
     @property
     def mesh(self):
@@ -303,6 +440,10 @@ class AdcircRun(Fort15):
     @property
     def wind_forcing(self):
         return self._wind_forcing
+
+    @property
+    def waves(self):
+        return self._waves
 
     @property
     def spinup_time(self):
@@ -400,6 +541,249 @@ class AdcircRun(Fort15):
         return self.surface_outputs['concentration']
 
     @property
+    def output_collection(self):
+        return self._output_collection
+
+    def _load_outdir(self, outdir):
+
+        # gather outputs
+        maxele = pathlib.Path(outdir / 'hotstart/maxele.63.nc')
+
+        self._output_collection = OutputCollection(
+            maxele=maxele if maxele.is_file() else None,
+            crs=self.mesh.crs
+            )
+
+        if len(self._output_collection) == 0:
+            raise Exception('No outputs found.')
+
+        # for output in self._output_collection:
+        #     output.make_plot(show=True)
+
+        return self.output_collection
+
+    def _run_padcirc(self, rundir, nproc=-1):
+        nproc = self._get_nproc(nproc)
+        cmd = list()
+        cmd.append('mpiexec')
+        cmd.append('-n')
+        cmd.append(str(nproc))
+        cmd.append('padcirc')
+        err = self._launch_command(cmd, rundir)
+
+        msg = "** ERROR: Elevation.gt.ErrorElev, ADCIRC stopping. **"
+        if msg in "".join(err):
+            print(msg)
+            self._handle_blowup(err)
+
+        # filter IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
+        msg = "Note: The following floating-point exceptions are signalling:"
+        err = [line for line in err if msg not in line]
+        if len(err) > 0:
+            if msg not in "".join(err):
+                msg = "\n"
+                msg += "".join(err)
+                raise Exception(msg)
+            else:
+                raise Exception(msg)
+
+        return err
+
+    def _run_local(self, nproc, outdir, overwrite, coldstart, hotstart):
+        self.write(outdir, overwrite)
+        if self.spinup_time.total_seconds() != 0:
+            if coldstart:
+                self._run_coldstart(nproc, outdir)
+            if hotstart:
+                self._run_hotstart(nproc, outdir)
+        else:
+            self._run_single(nproc, outdir)
+
+    def _run_coldstart(self, nproc, wdir):
+        self._stage_files('coldstart', nproc, wdir)
+        self._run_adcprep('coldstart', nproc, wdir)
+        self._run_padcirc(wdir / 'coldstart', nproc)
+
+    def _run_hotstart(self, nproc, wdir):
+        self._stage_files('hotstart', nproc, wdir)
+        self._run_adcprep('hotstart', nproc, wdir)
+        if self.waves:
+            if self.waves.model.lower() == 'swan':
+                self._run_padcswan(wdir / 'hotstart', nproc)
+            else:
+                msg = "Unknown wave coupling type."
+                raise NotImplementedError(msg)
+        else:
+            self._run_padcirc(wdir / 'hotstart', nproc)
+
+    def _run_single(self, nproc, wdir):
+        self._run_adcprep('./', nproc, wdir)
+        self._run_padcirc(wdir, nproc)
+
+    def _stage_files(self, runtype, nproc, wdir):
+
+        # create run directory
+        cwdir = wdir / runtype
+        if cwdir.exists():
+            shutil.rmtree(cwdir.absolute())
+        cwdir.mkdir()
+
+        # symlink files
+        os.symlink(wdir / 'fort.14', cwdir / 'fort.14')
+        os.symlink(wdir / 'fort.13', cwdir / 'fort.13')
+        os.symlink(wdir / f'fort.15.{runtype}', cwdir / 'fort.15')
+        if runtype == 'hotstart':
+            os.symlink(wdir / f'coldstart/fort.67.nc', cwdir / 'fort.67.nc')
+
+    def _run_adcprep(self, runtype, nproc, wdir):
+
+        # run directory
+        cwdir = wdir / runtype
+        nproc = self._get_nproc(nproc)
+
+        if nproc > 1:
+            cmd = list()
+            cmd.append('adcprep')
+            cmd.append('--np')
+            cmd.append(f"{nproc:d}")
+            self._launch_command(cmd + ['--partmesh'], cwdir)
+            self._launch_command(cmd + ['--prepall'], cwdir)
+
+        else:
+            raise NotImplementedError('run serial')
+
+    def _certify_station(self, physical_var, station_name, vertices):
+        keys = list(self._container['stations'][physical_var].keys())
+        vertices = np.asarray(vertices)
+        msg = "vertices argument must be a two-tuple of floats."
+        assert vertices.shape == (2,), msg
+        msg = f"station_name {station_name} "
+        msg += "already exists. Station names must be unique."
+        msg += f"{keys}"
+        assert station_name not in keys, msg
+        return tuple(vertices)
+
+    def _handle_blowup(self, err):
+        data = self._get_blowup_data(err)
+        idx = np.asarray(data['maxele_node']) - 1
+        ax = self.mesh.make_plot()
+        self.mesh.triplot(axes=ax)
+        ax.scatter(
+            self.mesh.x[idx],
+            self.mesh.y[idx],
+            s=80,
+            facecolors='none',
+            edgecolors='r'
+            )
+        ax.axis('scaled')
+        plt.show()
+
+    def _certify_output_request(
+        self,
+        sampling_frequency,
+        start,
+        end,
+        spinup,
+        spinup_start,
+        spinup_end,
+        netcdf,
+        harmonic_analysis,
+    ):
+        self._certify_sampling_frequency(sampling_frequency)
+        self._certify__OUT__('start', start)
+        self._certify__OUT__('end', end)
+        self._certify_spinup(spinup)
+        self._certify__OUT__('spinup_start', spinup_start)
+        self._certify__OUT__('spinup_end', spinup_end)
+        self._certify_netcdf(netcdf)
+        self._certify_harmonic_analysis(harmonic_analysis)
+
+    @staticmethod
+    def _certify_sampling_frequency(sampling_frequency):
+        msg = f"Error: sampling_frequency argument must be either None, "
+        msg += f"or an instance of type {timedelta}."
+        if sampling_frequency is not None:
+            assert isinstance(sampling_frequency, timedelta), msg
+        return sampling_frequency
+
+    @staticmethod
+    def _certify_spinup(spinup):
+        msg = "Error: spinup argument must be either None "
+        msg += f"or an instance of type {timedelta}."
+        if spinup is not None:
+            assert isinstance(spinup, timedelta), msg
+        return spinup
+
+    @staticmethod
+    def _certify__OUT__(name, var):
+        # certifies TOUTS* and TOUTF*
+        msg = f"Error: {name} argument must be either {None}, "
+        msg += f"{int} or an instance of type {timedelta}."
+        assert isinstance(var, (
+                type(None),
+                timedelta,
+                int)
+            ), msg
+
+    @staticmethod
+    def _certify_netcdf(netcdf):
+        # certify netcdf ouptut request
+        msg = f"Error: netcdf must be of type {bool}."
+        assert isinstance(netcdf, bool), msg
+
+    @staticmethod
+    def _certify_harmonic_analysis(harmonic_analysis):
+        # certify harmonic_analysis
+        msg = f"Error: harmonic_analysis must be of type {bool}."
+        assert isinstance(harmonic_analysis, bool), msg
+
+    @staticmethod
+    def _launch_command(cmd, rundir):
+        p = subprocess.Popen(
+            cmd,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=rundir.absolute()
+            )
+        for line in p.stdout:
+            if "MPI terminated with Status =" in line:
+                break
+            print(line, end='')
+        p.wait()
+        return p.stderr.readlines()
+
+    @staticmethod
+    def _get_nproc(nproc):
+        return cpu_count(logical=False) if nproc == -1 else nproc
+
+    @staticmethod
+    def _get_blowup_data(err):
+        s = "".join(err).split('** WARNING: Elevation.gt.WarnElev **')
+        s = [_ for _ in s if 'TIME' in _]
+        blowup = {
+            'timestep': list(),
+            'time': list(),
+            'maxele': list(),
+            'maxele_node': list(),
+            'maxvel': list(),
+            'maxvel_node': list(),
+        }
+        for output in s:
+            blowup['timestep'].append(
+                int(output.split('TIME STEP =')[1].split()[0]))
+            blowup['time'].append(
+                float(output.split('TIME =')[1].split()[0]))
+            blowup['maxele'].append(
+                float(output.split('ELMAX =')[1].split()[0]))
+            blowup['maxvel'].append(
+                float(output.split('SPEEDMAX =')[1].split()[0]))
+            nodes = output.split('AT NODE')
+            blowup['maxele_node'].append(int(nodes[1].split()[0]))
+            blowup['maxvel_node'].append(int(nodes[2].split()[0]))
+        return blowup
+
+    @property
     def _mesh(self):
         return self.__mesh
 
@@ -410,6 +794,10 @@ class AdcircRun(Fort15):
     @property
     def _wind_forcing(self):
         return self.__wind_forcing
+
+    @property
+    def _waves(self):
+        return self.__waves
 
     @property
     def _spinup_time(self):
@@ -432,36 +820,42 @@ class AdcircRun(Fort15):
         try:
             return self.__container
         except AttributeError:
-            # init container
-            self.__container = dict()
-            # init surface outputs attributes
-            schema = {
-                'sampling_frequency': None,
-                'spinup': False,
-                'netcdf': self.netcdf,
-                'harmonic_analysis': False,
-                }
-            self.__container['surface'] = dict()
-            self.__container['surface']['elevation'] = schema.copy()
-            self.__container['surface']['velocity'] = schema.copy()
-            self.__container['surface']['meteorological'] = schema.copy()
-            self.__container['surface']['concentration'] = schema.copy()
-            # init stations output attributes
-            self.__container['stations'] = dict()
-            self.__container['stations']['elevation'] = schema.copy()
-            self.__container['stations']['velocity'] = schema.copy()
-            self.__container['stations']['meteorological'] = schema.copy()
-            self.__container['stations']['concentration'] = schema.copy()
-            # add a 'collections' key to hold the stations.
-            self.__container['stations']['elevation'].update(
-                {'collection': dict()})
-            self.__container['stations']['velocity'].update(
-                {'collection': dict()})
-            self.__container['stations']['meteorological'].update(
-                {'collection': dict()})
-            self.__container['stations']['concentration'].update(
-                {'collection': dict()})
-            return self.__container
+            pass
+        # init container
+        container = dict()
+        # init surface outputs attributes
+        schema = {
+            'sampling_frequency': None,
+            'start': None,
+            'end': None,
+            'spinup': None,
+            'spinup_start': None,
+            'spinup_end': None,
+            'netcdf': self.netcdf,
+            'harmonic_analysis': False,
+            }
+        container['surface'] = dict()
+        container['surface']['elevation'] = schema.copy()
+        container['surface']['velocity'] = schema.copy()
+        container['surface']['meteorological'] = schema.copy()
+        container['surface']['concentration'] = schema.copy()
+        # init stations output attributes
+        container['stations'] = dict()
+        container['stations']['elevation'] = schema.copy()
+        container['stations']['velocity'] = schema.copy()
+        container['stations']['meteorological'] = schema.copy()
+        container['stations']['concentration'] = schema.copy()
+        # add a 'collections' key to hold the stations.
+        container['stations']['elevation'].update(
+            {'collection': dict()})
+        container['stations']['velocity'].update(
+            {'collection': dict()})
+        container['stations']['meteorological'].update(
+            {'collection': dict()})
+        container['stations']['concentration'].update(
+            {'collection': dict()})
+        self.__container = container
+        return self.__container
 
     @property
     def _stations_output(self):
@@ -519,11 +913,9 @@ class AdcircRun(Fort15):
     def _concentration_surface_output(self):
         return self._surface_outputs['concentration']
 
-    @spinup_factor.setter
-    def spinup_factor(self, spinup_factor):
-        spinup_factor = float(spinup_factor)
-        assert (spinup_factor >= 0 and spinup_factor <= 1.)
-        self.__spinup_factor = np.abs(spinup_factor)
+    @property
+    def _output_collection(self):
+        return self.__output_collection
 
     @_mesh.setter
     def _mesh(self, mesh):
@@ -534,10 +926,31 @@ class AdcircRun(Fort15):
             raise RuntimeError(msg)
         self.__mesh = mesh
 
+    @_start_date.setter
+    def _start_date(self, start_date):
+        assert isinstance(start_date, datetime)
+        self.__start_date = start_date
+
+    @_end_date.setter
+    def _end_date(self, end_date):
+        assert isinstance(end_date, datetime)
+        assert end_date > self.start_date
+        self.__end_date = end_date
+
+    @_spinup_time.setter
+    def _spinup_time(self, spinup_time):
+        if spinup_time is None:
+            spinup_time = timedelta(0)
+        assert isinstance(spinup_time, timedelta)
+        self.__spinup_time = spinup_time
+
     @_tidal_forcing.setter
     def _tidal_forcing(self, tidal_forcing):
         if tidal_forcing is not None:
             assert isinstance(tidal_forcing, TidalForcing)
+            tidal_forcing.start_date = self.start_date
+            tidal_forcing.end_date = self.end_date
+            tidal_forcing.spinup_time = self.spinup_time
         self.__tidal_forcing = tidal_forcing
 
     @_wind_forcing.setter
@@ -546,63 +959,18 @@ class AdcircRun(Fort15):
             assert isinstance(wind_forcing, WindForcing)
         self.__wind_forcing = wind_forcing
 
-    @_spinup_time.setter
-    def _spinup_time(self, spinup_time):
-        if spinup_time is None:
-            spinup_time = timedelta(0)
-        msg = f'spinup_time must be a {timedelta} instance.'
-        assert isinstance(spinup_time, timedelta), msg
-        if self.tidal_forcing is not None:
-            self.tidal_forcing.spinup_time = spinup_time
-        self.__spinup_time = spinup_time
-
-    @_start_date.setter
-    def _start_date(self, start_date):
-        if start_date is None:
-            if self.wind_forcing is None:
-                if self.tidal_forcing is None:
-                    raise AttributeError('Error: No forcings provided.')
-                else:
-                    if self.tidal_forcing.start_date is None:
-                        raise AttributeError('Must pass start_date argument.')
-                    else:
-                        start_date = self.tidal_forcing.start_date
-            else:
-                start_date = self.wind_forcing.start_date
-        msg = 'Must pass start_date argument.'
-        assert isinstance(start_date, datetime), msg
-        msg = f'start_date must be a {type(datetime)} instance.'
-        assert isinstance(start_date, datetime), msg
-        if self.tidal_forcing is not None:
-            self.tidal_forcing.start_date = start_date
-        if self.wind_forcing is not None:
-            self.wind_forcing.start_date = start_date
-        self.__start_date = start_date
-
-    @_end_date.setter
-    def _end_date(self, end_date):
-        if end_date is None:
-            if self.wind_forcing is None:
-                if self.tidal_forcing is None:
-                    raise AttributeError('Error: No forcings provided.')
-                else:
-                    if self.tidal_forcing.end_date is None:
-                        raise AttributeError('Must pass end_date argument.')
-                    else:
-                        end_date = self.tidal_forcing.end_date
-            else:
-                end_date = self.wind_forcing.end_date
-        msg = 'Must pass end_date argument.'
-        assert isinstance(end_date, datetime), msg
-        msg = f'end_date must be a {type(datetime)} instance.'
-        assert isinstance(end_date, datetime), msg
-        if self.tidal_forcing is not None:
-            self.tidal_forcing.end_date = end_date
-        if self.wind_forcing is not None:
-            self.wind_forcing.end_date = end_date
-        self.__end_date = end_date
+    @_waves.setter
+    def _waves(self, waves):
+        # if waves is not None:
+        #     assert isinstance(waves, WindForcing)
+        self.__waves = waves
 
     @_netcdf.setter
     def _netcdf(self, netcdf):
         assert isinstance(netcdf, bool)
         self.__netcdf = netcdf
+
+    @_output_collection.setter
+    def _output_collection(self, output_collection):
+        assert isinstance(output_collection, OutputCollection)
+        self.__output_collection = output_collection

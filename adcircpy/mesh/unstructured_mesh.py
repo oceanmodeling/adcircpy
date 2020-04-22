@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from itertools import permutations
 from matplotlib.transforms import Bbox
+from matplotlib.path import Path
+from shapely.geometry import Polygon
 from pyproj import Transformer
 
 
@@ -101,7 +103,9 @@ class UnstructuredMesh:
         if name not in self.get_attribute_names():
             raise AttributeError(
                 f'Cannot set attribute: {name} is not an attribute.')
-        values = np.asarray(values)
+        msg = "values cannot be None"
+        assert values is not None, msg
+        values = np.array(values)
         assert isinstance(elements, bool)
         if elements:
             assert values.shape[0] == self.elements.shape[0]
@@ -119,7 +123,7 @@ class UnstructuredMesh:
 
     def transform_to(self, dst_crs):
         dst_crs = CRS.from_user_input(dst_crs)
-        if self.srs != dst_crs.srs:
+        if self.crs.srs != dst_crs.srs:
             transformer = Transformer.from_crs(
                 self.crs, dst_crs, always_xy=True)
             x, y = transformer.transform(self.x, self.y)
@@ -192,6 +196,10 @@ class UnstructuredMesh:
         return self.vertices[:, 1]
 
     @property
+    def xy(self):
+        return self._vertices
+
+    @property
     def triangulation(self):
         try:
             return self.__triangulation
@@ -204,10 +212,6 @@ class UnstructuredMesh:
         return self._elements
 
     @property
-    def node_neighbors(self):
-        return self._node_neighbors
-
-    @property
     def proj(self):
         return CRS.from_user_input(self.crs)
 
@@ -218,6 +222,162 @@ class UnstructuredMesh:
     @property
     def bbox(self):
         return self.get_bbox()
+
+    @property
+    def node_neighbors(self):
+        try:
+            return self.__node_neighbors
+        except AttributeError:
+            self.__node_neighbors = defaultdict(set)
+            for simplex in self.triangulation.triangles:
+                for i, j in permutations(simplex, 2):
+                    self.__node_neighbors[i].add(j)
+            return self.__node_neighbors
+
+    @property
+    def boundary_edges(self):
+        try:
+            return tuple(self.__boundary_edges)
+        except AttributeError:
+            boundary_edges = list()
+            idxs = np.vstack(
+                list(np.where(self.triangulation.neighbors == -1))).T
+            for i, j in idxs:
+                boundary_edges.append(
+                    (int(self.triangulation.triangles[i, j]),
+                        int(self.triangulation.triangles[i, (j+1) % 3])))
+            self.__boundary_edges = boundary_edges
+            return tuple(self.__boundary_edges)
+
+    @property
+    def index_ring_collection(self):
+        try:
+            return self.__index_ring_collection
+        except AttributeError:
+            pass
+        boundary_edges = list()
+        tri = self.triangulation
+        idxs = np.vstack(
+            list(np.where(tri.neighbors == -1))).T
+        for i, j in idxs:
+            boundary_edges.append(
+                (int(tri.triangles[i, j]),
+                    int(tri.triangles[i, (j+1) % 3])))
+        # start ordering the edges into linestrings
+        index_ring_collection = list()
+        ordered_edges = [boundary_edges.pop(-1)]
+        e0, e1 = [list(t) for t in zip(*boundary_edges)]
+        while len(boundary_edges) > 0:
+
+            if ordered_edges[-1][1] in e0:
+                idx = e0.index(ordered_edges[-1][1])
+                ordered_edges.append(boundary_edges.pop(idx))
+
+            elif ordered_edges[0][0] in e1:
+                idx = e1.index(ordered_edges[0][0])
+                ordered_edges.insert(0, boundary_edges.pop(idx))
+
+            else:
+                if ordered_edges[-1][-1] == ordered_edges[0][0]:
+                    index_ring_collection.append(tuple(ordered_edges))
+                    idx = -1
+                    ordered_edges = [boundary_edges.pop(idx)]
+                else:
+                    msg = 'duck-type error: unreachable'
+                    raise Exception(msg)
+            e0.pop(idx)
+            e1.pop(idx)
+
+        # finalize
+        if len(index_ring_collection) == 0 and len(boundary_edges) == 0:
+            index_ring_collection.append(tuple(ordered_edges))
+        else:
+            index_ring_collection.append(tuple(ordered_edges))
+
+        # sort rings into corresponding "polygons"
+        # first gather areas
+        areas = list()
+        vertices = self.vertices
+        for index_ring in index_ring_collection:
+            e0, e1 = [list(t) for t in zip(*index_ring)]
+            areas.append(float(Polygon(vertices[e0, :]).area))
+
+        # maximum area must be main mesh
+        idx = areas.index(np.max(areas))
+        exterior = index_ring_collection.pop(idx)
+        areas.pop(idx)
+        _id = 0
+        _index_ring_collection = dict()
+        _index_ring_collection[_id] = {
+            'exterior': np.asarray(exterior),
+            'interiors': []
+            }
+        e0, e1 = [list(t) for t in zip(*exterior)]
+        path = Path(vertices[e0 + [e0[0]], :], closed=True)
+        while len(index_ring_collection) > 0:
+            # find all internal rings
+            potential_interiors = list()
+            for i, index_ring in enumerate(index_ring_collection):
+                e0, e1 = [list(t) for t in zip(*index_ring)]
+                if path.contains_point(vertices[e0[0], :]):
+                    potential_interiors.append(i)
+            # filter out nested rings
+            real_interiors = list()
+            for i, p_interior in reversed(
+                    list(enumerate(potential_interiors))):
+                _p_interior = index_ring_collection[p_interior]
+                check = [index_ring_collection[_]
+                         for j, _ in reversed(
+                            list(enumerate(potential_interiors)))
+                         if i != j]
+                has_parent = False
+                for _path in check:
+                    e0, e1 = [list(t) for t in zip(*_path)]
+                    _path = Path(vertices[e0 + [e0[0]], :], closed=True)
+                    if _path.contains_point(vertices[_p_interior[0][0], :]):
+                        has_parent = True
+                if not has_parent:
+                    real_interiors.append(p_interior)
+            # pop real rings from collection
+            for i in reversed(sorted(real_interiors)):
+                _index_ring_collection[_id]['interiors'].append(
+                    np.asarray(index_ring_collection.pop(i)))
+                areas.pop(i)
+            # if no internal rings found reset dictionary
+            if len(index_ring_collection) > 0:
+                idx = areas.index(np.max(areas))
+                exterior = index_ring_collection.pop(idx)
+                areas.pop(idx)
+                _id += 1
+                _index_ring_collection[_id] = {
+                    'exterior': np.asarray(exterior),
+                    'interiors': []
+                    }
+                e0, e1 = [list(t) for t in zip(*exterior)]
+                path = Path(vertices[e0 + [e0[0]], :], closed=True)
+        return _index_ring_collection
+
+    @property
+    def outer_ring_collection(self):
+        try:
+            return self.__outer_ring_collection
+        except AttributeError:
+            outer_rings = defaultdict()
+            for i, rings in self.index_ring_collection.items():
+                outer_rings[i] = rings['exterior']
+            self.__outer_ring_collection = outer_rings
+            return self.__outer_ring_collection
+
+    @property
+    def interior_rings_collection(self):
+        try:
+            return self.__interior_rings_collection
+        except AttributeError:
+            interior_rings = defaultdict()
+            for key, rings in self.index_ring_collection.items():
+                interior_rings[key] = rings['interior']
+            self.__interior_rings_collection = interior_rings
+            return self.__interior_rings_collection
 
     @property
     def _attributes(self):
@@ -238,17 +398,6 @@ class UnstructuredMesh:
     @property
     def _crs(self):
         return self.__crs
-
-    @property
-    def _node_neighbors(self):
-        try:
-            return self.__node_neighbors
-        except AttributeError:
-            self.__node_neighbors = defaultdict(set)
-            for simplex in self.triangulation.triangles:
-                for i, j in permutations(simplex, 2):
-                    self.__node_neighbors[i].add(j)
-            return self.__node_neighbors
 
     @_vertices.setter
     def _vertices(self, vertices):

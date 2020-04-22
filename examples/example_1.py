@@ -1,30 +1,34 @@
 #! /usr/bin/env python
 """
-Shinnecock Inlet example analogous to canonical test case
+This example recreates the Shinnecock Inlet test case in it's canonical form.
+The only difference between this example and the canonical case is the model
+start date. The actual start date for the Shinnecock Inlet canonical example is
+not documented, therefore the NCDATE that appears on the canonical files is
+used.
+
+The output files are found in outputs/example_1
+
+If either the padcirc or adcirc binaries are found in PATH, this script will
+execute the run. Otherwise it will write the files and exit.
 """
 
 import pathlib
 import tarfile
 import tempfile
+import shutil
+import warnings
 import urllib.request
 from datetime import datetime, timedelta
 from adcircpy import AdcircMesh, TidalForcing, AdcircRun
 
-try:
-    import colored_traceback
-    colored_traceback.add_hook(always=True)
-except ModuleNotFoundError:
-    pass
+PARENT = pathlib.Path(__file__).parent.absolute()
+FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
 
 
 def main():
 
-    # set paths
-    parent = pathlib.Path(__file__).parent
-    fort14 = parent.joinpath("data/NetCDF_Shinnecock_Inlet/fort.14")
-
-    # download_shinnecock_data
-    if not fort14.is_file():
+    # fetch shinnecock inlet test data
+    if not FORT14.is_file():
         url = "https://www.dropbox.com/s/1wk91r67cacf132/"
         url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
         g = urllib.request.urlopen(url)
@@ -32,10 +36,10 @@ def main():
         with open(tmpfile.name, 'b+w') as f:
             f.write(g.read())
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
-            tar.extractall(parent.joinpath("data/NetCDF_Shinnecock_Inlet/"))
+            tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
 
     # open mesh file
-    mesh = AdcircMesh.open(fort14, crs=4326)
+    mesh = AdcircMesh.open(FORT14, crs=4326)
 
     # init tidal forcing and setup requests
     tidal_forcing = TidalForcing()
@@ -52,20 +56,21 @@ def main():
     # instantiate AdcircRun object.
     driver = AdcircRun(
         mesh,
-        tidal_forcing,
-        start_date=start_date,
-        end_date=end_date,
+        start_date,
+        end_date,
+        tidal_forcing=tidal_forcing,
     )
 
     # request outputs
     driver.set_elevation_surface_output(
         sampling_frequency=timedelta(minutes=30),
-        spinup=True)
+        )
     driver.set_velocity_surface_output(
         sampling_frequency=timedelta(minutes=30),
-        spinup=True)
+        )
 
-    # override defaults to match original test case options
+    # override the AdcircPy defaults so that the fort.15
+    # matches the original Shinnecock test case options
     driver.timestep = 6.
     driver.DRAMP = 2.
     driver.smagorinsky = False
@@ -73,9 +78,18 @@ def main():
     driver.TOUTGE = 3.8
     driver.TOUTGV = 3.8
 
-    # write files to disk
-    outdir = parent / pathlib.Path('example_1')
-    driver.adcirc(outdir, overwrite=True)
+    # run parallel ADCIRC if binary is installed
+    if shutil.which('padcirc') is not None:
+        driver.run(PARENT / "outputs/example_1", overwrite=True)
+    # run serial ADCIRC if binary is installed
+    elif shutil.which('adcirc') is not None:
+        driver.run(PARENT / "outputs/example_1", overwrite=True, nproc=1)
+    # binaries are not installed, write to disk and exit
+    else:
+        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg += "Writing files to disk..."
+        warnings.warn(msg)
+        driver.write(PARENT / "outputs/example_1", overwrite=True)
 
 
 if __name__ == '__main__':

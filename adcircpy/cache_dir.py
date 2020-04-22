@@ -1,7 +1,7 @@
 import os
 
 
-def _get_cache_directory():
+def cache_dir():
     cachedir = os.getenv('LOCALAPPDATA')
     if cachedir is None:
         cachedir = os.getenv('HOME')+'/.cache/adcircpy'

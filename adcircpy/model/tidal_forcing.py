@@ -8,11 +8,6 @@ from ordered_set import OrderedSet
 
 class TidalForcing:
 
-    def __init__(self, start_date=None, end_date=None, spinup_time=None):
-        self.start_date = start_date
-        self.end_date = end_date
-        self.spinup_time = spinup_time
-
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)
 

@@ -1,12 +1,15 @@
 import pathlib
 import uuid
 import numpy as np
-from matplotlib.tri import Triangulation
 import matplotlib.pyplot as plt
-from adcircpy.lib.fix_point_normalize import FixPointNormalize
+from haversine import haversine, Unit
+# import warnings
+# from matplotlib.path import Path
+from functools import lru_cache
 from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LinearSegmentedColormap
+from adcircpy.figures import FixPointNormalize
 from adcircpy.mesh.unstructured_mesh import UnstructuredMesh
 
 
@@ -32,8 +35,8 @@ class AdcircMesh(UnstructuredMesh):
     ):
         super().__init__(vertices, elements, crs)
         self._description = description
-        self._node_id = node_id,
-        self._element_id = element_id,
+        self._node_id = node_id
+        self._element_id = element_id
         self._values = values
         self._ocean_boundaries = ocean_boundaries
         self._land_boundaries = land_boundaries
@@ -43,26 +46,26 @@ class AdcircMesh(UnstructuredMesh):
         self._weir_boundaries = weir_boundaries
         self._culvert_boundaries = culvert_boundaries
         self._fort13 = fort13
+        # self.pad_lakes(H0=0.05, factor=2.)
 
     @classmethod
     def open(cls, file, crs=None, fort13=None):
         return cls(**cls.parse_fort14(file), crs=crs, fort13=fort13)
 
-    def add_nodal_attribute(self, name):
+    def add_nodal_attribute(self, name, units):
         if name in self.get_nodal_attribute_names():
             raise AttributeError(
                 f'Cannot add nodal attribute with name {name}:'
                 + ' attribute already exists.')
         else:
             self.add_attribute(
-                name, units=None, coldstart=False, hotstart=False)
+                name, units=units, coldstart=False, hotstart=False)
             self._nodal_attribute_collection[name] = None
 
     def set_nodal_attribute(
         self,
         attribute_name,
         values,
-        units=None,
         coldstart=False,
         hotstart=False
     ):
@@ -73,7 +76,7 @@ class AdcircMesh(UnstructuredMesh):
         assert isinstance(coldstart, bool)
         assert isinstance(hotstart, bool)
         properties = {
-            'units': units,
+            'units': self._attributes[attribute_name]['units'],
             'coldstart': coldstart,
             'hotstart': hotstart
         }
@@ -180,9 +183,8 @@ class AdcircMesh(UnstructuredMesh):
             # converts from column major to row major, leave it column major.
             # if full_values.shape[1] == 1:
             #     full_values = full_values.flatten()
-            self.add_nodal_attribute(attribute)
-            self.set_nodal_attribute(
-                attribute, full_values, units=data['units'])
+            self.add_nodal_attribute(attribute, data['units'])
+            self.set_nodal_attribute(attribute, full_values)
 
     def generate_tau0(
         self,
@@ -222,27 +224,132 @@ class AdcircMesh(UnstructuredMesh):
         if 'primitive_weighting_in_continuity_equation' \
                 not in self.get_nodal_attribute_names():
             self.add_nodal_attribute(
-                'primitive_weighting_in_continuity_equation')
+                'primitive_weighting_in_continuity_equation',
+                'unitless'
+                )
         self.set_nodal_attribute(
             'primitive_weighting_in_continuity_equation',
-            values, 'unitless', True, True)
+            values
+            )
 
-    def get_critical_timestep(self, cfl=0.7, maxvel=5., g=9.8):
+    @property
+    @lru_cache
+    def node_distances_meters(self):
+        points = self.get_xy("EPSG:4326")
+        node_distances = {}
+        for k, v in self.node_neighbors.items():
+            x0, y0 = points[k]
+            node_distances[k] = {}
+            for idx in v:
+                x1, y1 = points[idx]
+                node_distances[k][idx] = haversine(
+                    (x0, y0),
+                    (x1, y1),
+                    unit=Unit.METERS
+                    )
+        return node_distances
+
+    def critical_timestep(self, cfl, maxvel=5., g=9.8):
         """
         http://swash.sourceforge.net/online_doc/swashuse/node47.html
         """
-        points = self.get_xy(3395)
-        distances = list()
-        for k, v in self.node_neighbors.items():
-            x0, y0 = points[k]
-            _distances = list()
+        dxdy = len(self.values)*[None]
+        for k, v in self.node_distances_meters.items():
+            _dxdy = []
             for idx in v:
-                x1, y1 = points[idx]
-                _distances.append(np.sqrt((x0 - x1)**2 + (y0 - y1)**2))
-            distances.append(np.mean(_distances))
-        dt = cfl * np.asarray(distances) / np.sqrt(
-            g*np.abs(self.values+np.finfo(float).eps)) + np.abs(maxvel)
-        return np.min(dt)
+                _dxdy.append(self.node_distances_meters[k][idx])
+            dxdy[k] = np.min(_dxdy)
+        n = cfl * np.asarray(dxdy)
+        d = np.sqrt(g*np.abs(self.values)) + np.abs(maxvel)
+        return np.min(np.divide(n, d))
+
+    def limgrad(self, dfdx, imax=100, ftol=None, verbose=False, minimize=True):
+        if not self.crs.is_geographic:
+            original_crs = self.crs
+            self.transform_to("EPSG:3395")
+        ffun = self.values.copy()
+        edges = self.triangulation.edges
+        if ftol is None:
+            ftol = np.min(ffun) * np.sqrt(np.finfo(float).eps)
+        ftol = float(ftol)
+
+        # precompute distances
+        distances = np.sqrt(
+            (self.x[edges[:, 0]] - self.x[edges[:, 1]])**2
+            +
+            (self.y[edges[:, 0]] - self.y[edges[:, 1]])**2
+        )
+        dz = np.abs(ffun[edges[:, 0]] - ffun[edges[:, 1]])
+
+        def get_active_edges_wetdry():
+            idxs = np.where(np.sum(np.sign(self.values[edges]), axis=1) == 0)
+            _active_eges = np.zeros(edges.shape[0], dtype=bool)
+            _active_eges[idxs] = True
+            active_edges = edges[np.where(
+                np.logical_and(
+                    np.divide(dz, distances) > dfdx,
+                    _active_eges
+                    ))]
+            return active_edges
+
+        def get_active_edges_traditional():
+            return edges[np.divide(dz, distances) > dfdx]
+
+        active_edges = get_active_edges_traditional()
+        # active_edges = get_active_edges_wetdry
+        cnt = 0
+        cnt_table = [len(active_edges)]
+        if verbose:
+            msg = f"iteration: {cnt}, "
+            msg += f"remaining points: {len(active_edges)}"
+            print(msg)
+        _iter = False
+        while len(active_edges) > 0:
+            cnt += 1
+            active_distances = np.sqrt(
+                (self.x[active_edges[:, 0]] - self.x[active_edges[:, 1]])**2
+                +
+                (self.y[active_edges[:, 0]] - self.y[active_edges[:, 1]])**2
+            )
+            for i, (p0, p1) in enumerate(active_edges):
+                z0, z1 = ffun[p0], ffun[p1]
+                # push down method
+                # if z0 > z1:
+                #     ffun[p0] = z0 - dfdx*active_distances[i]
+                # elif z0 < z1:
+                #     ffun[p1] = z0 - dfdx*active_distances[i]
+
+                # traditional method
+                z0, z1 = ffun[p0], ffun[p1]
+                if z0 < z1:
+                    ffun[p1] = z0 + dfdx*active_distances[i]
+                elif z0 > z1:
+                    ffun[p1] = z0 - dfdx*active_distances[i]
+
+            dz = np.abs(ffun[edges[:, 0]] - ffun[edges[:, 1]])
+            active_edges = get_active_edges_traditional()
+            # active_edges = get_active_edges_wetdry()
+            cnt_table.append(len(active_edges))
+            if verbose:
+                msg = f"iteration: {cnt}, "
+                msg += f"remaining points: {len(active_edges)}"
+                print(msg)
+            if imax == cnt:
+                break
+        if cnt == imax:
+            if minimize:
+                idx = cnt_table.index(min(cnt_table))
+                if idx > 0:
+                    self.limgrad(
+                        dfdx,
+                        idx,
+                        verbose=verbose,
+                        minimize=False
+                    )
+
+        if 'original_crs' in locals():
+            self.transform_to(original_crs)
+        self._values = ffun
 
     def triplot(
         self,
@@ -313,8 +420,12 @@ class AdcircMesh(UnstructuredMesh):
         mappable.set_clim(vmin, vmax)
         divider = make_axes_locatable(axes)
         cax = divider.append_axes("bottom", size="2%", pad=0.5)
-        cbar = plt.colorbar(mappable, cax=cax,  # extend=cmap_extend,
-                            orientation='horizontal')
+        cbar = plt.colorbar(
+            mappable,
+            cax=cax,
+            # extend=cmap_extend,
+            orientation='horizontal'
+        )
         if col_val != 0:
             cbar.set_ticks([vmin, vmin + col_val * (vmax-vmin), vmax])
             cbar.set_ticklabels([np.around(vmin, 2), 0.0, np.around(vmax, 2)])
@@ -323,19 +434,23 @@ class AdcircMesh(UnstructuredMesh):
             cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
         if cbar_label is not None:
             cbar.set_label(cbar_label)
+        # plt.gcf().canvas.mpl_connect(
+        #     'button_press_event',
+        #     lambda e: print(self.get_value(e.xdata, e.ydata))
+        #     )
         if show is True:
             plt.show()
         return axes
 
     def plot_ocean_boundaries(
         self,
-        ax=None,
+        axes=None,
         show=False,
         title=None,
         **kwargs
     ):
         kwargs.update({
-            "ax": ax,
+            "axes": axes,
             "show": show,
             "title": title
             })
@@ -343,13 +458,13 @@ class AdcircMesh(UnstructuredMesh):
 
     def plot_land_boundary(
         self,
-        ax=None,
+        axes=None,
         show=False,
         title=None,
         **kwargs
     ):
         kwargs.update({
-            "ax": ax,
+            "axes": axes,
             "show": show,
             "title": title
             })
@@ -374,142 +489,29 @@ class AdcircMesh(UnstructuredMesh):
         if path is not None:
             path = pathlib.Path(path)
             if path.is_file() and not overwrite:
-                raise Exception(
-                    'File exists, pass overwrite=True to allow overwrite.')
+                msg = 'File exists, pass overwrite=True to allow overwrite.'
+                raise Exception(msg)
             else:
                 with open(path, 'w') as f:
                     f.write(self.fort13)
         else:
             print(self.fort13)
 
-    def generate_ocean_boundaries(self):
-        raise NotImplementedError
-        # if self.has_attribute('ocean_boundaries'):
-        #     self.remove_attribute('ocean_boundaries')
-        triangulation = self.triangulation
-        boundary_edges = list()
-        idxs = np.vstack(list(np.where(triangulation.neighbors == -1))).T
-        for i, j in idxs:
-            boundary_edges.append((triangulation.triangles[i, j],
-                                   triangulation.triangles[i, (j+1) % 3]))
-        boundary_edges = np.asarray(boundary_edges)
-
-        
-
-
-        _, unique = np.unique(boundary_edges.flatten(), return_counts=True)
-        end_points = np.where(unique == 1)[0]
-        if len(end_points) == 0:
-            boundary_edges = boundary_edges.tolist()
-            ordered_edges = [boundary_edges.pop(-1)]
-        else:
-            end_points = end_points % boundary_edges.shape[0]
-            boundary_edges = boundary_edges.tolist()
-            ordered_edges = [boundary_edges.pop(np.max(end_points))]
-        while len(boundary_edges) > 0:
-            current_length = len(boundary_edges)  # for avoiding infinite loop
-            try:
-                idx = np.where(
-                    np.asarray(
-                        boundary_edges)[:, 0] == ordered_edges[-1][1])[0][0]
-                ordered_edges.append(boundary_edges.pop(idx))
-            except IndexError:
-                try:
-                    idx = np.where(
-                        np.asarray(
-                            boundary_edges)[:, 1] == ordered_edges[0][0])[0][0]
-                    ordered_edges.insert(0, boundary_edges.pop(idx))
-                except IndexError:
-                    breakpoint()
-            # raise on infinite loop
-            msg = 'ERROR: Went into infinite loop when reading boundary data.'
-            assert len(boundary_edges) == current_length - 1, msg
-        print(np.asarray(ordered_edges)[:, 0])
-        exit()
-        return np.asarray(ordered_edges)[:, 0]
-
     def _make_boundary_plot(
         self,
         boundary_collection,
-        ax=None,
+        axes=None,
         show=False,
         title=None,
         **kwargs
     ):
-        if ax is None:
+        if axes is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111)
+            axes = fig.add_subplot(111)
         for boundary in boundary_collection:
-            ax.plot(self.x[boundary], self.y[boundary], **kwargs)
+            axes.plot(self.x[boundary], self.y[boundary], **kwargs)
         if show:
             plt.show()
-
-    # def _get_boundary_collection(self, boundary_type):
-    #     data = self.boundary_collection[boundary_type]
-    #     if len(data.keys()) == 0:
-    #         msg = 'No boundary information present for boundary type '
-    #         msg += f'{boundary_type}.'
-    #         raise AttributeError(msg)
-    #     return data
-
-
-        ##
-        # values = self.get_attribute(boundary_type)['values']
-        # boundary = np.ma.masked_equal(values, -99999)
-        # boundary_collection = list()
-        # for boundary_id in np.unique(boundary):
-        #     if not isinstance(boundary_id, np.ma.core.MaskedConstant):
-        #         # handles most boundary types
-        #         if values.ndim == 1:
-        #             idxs = np.where(boundary == boundary_id)[0]
-        #             boundary_collection.append(
-        #                 self._get_ordered_indexes(idxs))
-        #         # handles boundary duals (weir, culvert)
-        #         elif values.ndim == 2:
-        #             _b = list()
-        #             for i in range(values.ndim):
-        #                 idxs = np.where(boundary[:, i] == boundary_id)[0]
-        #                 _b.append(self._get_ordered_indexes(idxs))
-        #             boundary_collection.append(_b)
-        #         else:
-        #             raise Exception('Boundary must be a simplex or dual.')
-        # return boundary_collection
-
-    def _get_ordered_indexes(self, indexes):
-        triangulation = self.triangulation
-        boundary_edges = list()
-        idxs = np.vstack(list(np.where(triangulation.neighbors == -1))).T
-        for i, j in idxs:
-            boundary_edges.append((triangulation.triangles[i, j],
-                                   triangulation.triangles[i, (j+1) % 3]))
-        boundary_edges = np.asarray(boundary_edges)
-        idxs = np.where(np.in1d(boundary_edges[:, 0], indexes))[0]
-        boundary_edges = boundary_edges[idxs, :]
-        _, unique = np.unique(boundary_edges.flatten(), return_counts=True)
-        end_points = np.where(unique == 1)[0]
-        if len(end_points) == 0:
-            boundary_edges = boundary_edges.tolist()
-            ordered_edges = [boundary_edges.pop(-1)]
-        else:
-            end_points = end_points % boundary_edges.shape[0]
-            boundary_edges = boundary_edges.tolist()
-            ordered_edges = [boundary_edges.pop(np.max(end_points))]
-        while len(boundary_edges) > 0:
-            current_length = len(boundary_edges)  # for avoiding infinite loop
-            try:
-                idx = np.where(
-                    np.asarray(
-                        boundary_edges)[:, 0] == ordered_edges[-1][1])[0][0]
-                ordered_edges.append(boundary_edges.pop(idx))
-            except IndexError:
-                idx = np.where(
-                    np.asarray(
-                        boundary_edges)[:, 1] == ordered_edges[0][0])[0][0]
-                ordered_edges.insert(0, boundary_edges.pop(idx))
-            # raise on infinite loop
-            msg = 'ERROR: Went into infinite loop when reading boundary data.'
-            assert len(boundary_edges) == current_length - 1, msg
-        return np.asarray(ordered_edges)[:, 0]
 
     def _get_cmap(
         self,
@@ -758,7 +760,7 @@ class AdcircMesh(UnstructuredMesh):
             while _NBOU < NBOU:
                 NVELL, IBTYPE = map(int, f.readline().split()[:2])
                 _NVELL = 0
-                if IBTYPE in [0, 10, 20]:
+                if IBTYPE in [0, 10, 20, 52]:  # ADDED IBTYPE 52 HERE ALTOUGH THAT MIGHT NOT BE TECHNICALLY CORRECT
                     grd['land_boundaries'].append(
                         {'ibtype': IBTYPE,
                          'indexes': list()})
@@ -801,7 +803,7 @@ class AdcircMesh(UnstructuredMesh):
                                     + 'found in fort.14 not recongnized. ')
                 while _NVELL < NVELL:
                     line = f.readline().split()
-                    if IBTYPE in [0, 10, 20]:
+                    if IBTYPE in [0, 10, 20, 52]:  # ADDED IBTYPE 52 HERE ALTOUGH THAT MIGHT NOT BE TECHNICALLY CORRECT
                         grd['land_boundaries'][-1][
                             'indexes'].append(int(line[0])-1)
                     elif IBTYPE in [1, 11, 21]:
@@ -887,11 +889,22 @@ class AdcircMesh(UnstructuredMesh):
                     values.append(line)
                     j += 1
                 fort13[attribute_name]['indexes'] = indexes
-                values = np.asarray(values)
-                if values.shape[1] == 1:
-                    values = values.flatten()
+                values = np.asarray(values).flatten()
+                # if values.shape[1] == 1:
+                #     values = values.flatten()
                 fort13[attribute_name]['values'] = values
         return fort13
+
+    @staticmethod
+    def _signed_polygon_area(vertices):
+        # https://code.activestate.com/recipes/578047-area-of-polygon-using-shoelace-formula/
+        n = len(vertices)  # of vertices
+        area = 0.0
+        for i in range(n):
+            j = (i + 1) % n
+            area += vertices[i][0] * vertices[j][1]
+            area -= vertices[j][0] * vertices[i][1]
+        return area / 2.0
 
     @property
     def description(self):
@@ -1011,29 +1024,28 @@ class AdcircMesh(UnstructuredMesh):
         f = f"{self.description}\n"
         f += f"{self.NE} {self.NP}\n"
         for i in range(self.NP):
-            f += "{:d} ".format(self.node_id[i]+1)
-            f += "{:<.16E} ".format(self.x[i])
-            f += " {:<.16E} ".format(self.y[i])
-            f += "{:<.16E}\n".format(-self.values[i])
+            f += f"{i+1:d} "
+            f += f"{self.x[i]:<.16E} "
+            f += f"{self.y[i]:<.16E} "
+            f += f"{-self.values[i]:<.16E}\n"
         for i in range(self.NE):
-            f += "{:d} ".format(self.element_id[i]+1)
-            f += "{:d} ".format(3)
-            f += "{:d} ".format(self.elements[i, 0]+1)
-            f += "{:d} ".format(self.elements[i, 1]+1)
-            f += "{:d}\n".format(self.elements[i, 2]+1)
+            f += f"{i+1:d} "
+            f += f"{len(self.elements[i])} "
+            f += f"{self.elements[i, 0]+1:d} "
+            f += f"{self.elements[i, 1]+1:d} "
+            f += f"{self.elements[i, 2]+1:d}\n"
         # ocean boundaries
-        f += "{:d} ! total number of ocean boundaries\n".format(
-            len(self.ocean_boundaries))
+        f += f"{len(self.ocean_boundaries):d} "
+        f += "! total number of ocean boundaries\n"
         # count total number of ocean boundaries
-        f += "{:d} ! total number of ocean boundary nodes\n".format(
-            np.sum([len(boundary) for boundary in self.ocean_boundaries]))
+        _sum = np.sum([len(boundary) for boundary in self.ocean_boundaries])
+        f += f"{int(_sum):d} ! total number of ocean boundary nodes\n"
         # write ocean boundary indexes
         for i, boundary in enumerate(self.ocean_boundaries):
-            f += "{:d}".format(len(boundary))
-            f += " ! number of nodes for ocean_boundary_"
-            f += "{}\n".format(i)
+            f += f"{len(boundary):d}"
+            f += f" ! number of nodes for ocean_boundary_{i}\n"
             for idx in boundary:
-                f += "{:d}\n".format(idx+1)
+                f += f"{idx+1:d}\n"
         # count remaining boundaries
         f += "{:d}".format(
             len(self.land_boundaries) +
@@ -1157,6 +1169,20 @@ class AdcircMesh(UnstructuredMesh):
         return self.elements.shape[0]
 
     @property
+    def H0(self):
+        try:
+            return self.__H0
+        except AttributeError:
+            self.pad_lakes(H0=0.05)
+            return self.__H0
+
+    @mannings_n_at_sea_floor.setter
+    def mannings_n_at_sea_floor(self, mannings_n_at_sea_floor):
+        self.add_nodal_attribute('mannings_n_at_sea_floor', 'meters')
+        self.set_nodal_attribute(
+            'mannings_n_at_sea_floor', mannings_n_at_sea_floor)
+
+    @property
     def _description(self):
         return self.__description
 
@@ -1272,7 +1298,7 @@ class AdcircMesh(UnstructuredMesh):
         for i, land_boundary in enumerate(land_boundaries):
             assert 'indexes' in land_boundary.keys()
             assert 'ibtype' in land_boundary.keys()
-            assert land_boundary['ibtype'] in [0, 10, 20]
+            assert land_boundary['ibtype'] in [0, 10, 20, 52]  # ADDED IBTYPE 52 HERE ALTOUGH THAT MIGHT NOT BE TECHNICALLY CORRECT
         self._add_boundary_data('land_boundaries', land_boundaries)
 
     @_inner_boundaries.setter
@@ -1550,3 +1576,70 @@ class AdcircMesh(UnstructuredMesh):
 #     def remove_culvert_boundary(self, key):
 #         self.__remove_boundary(key, self.__culvert_boundaries, "culvert")
 
+
+    # def _get_boundary_collection(self, boundary_type):
+    #     data = self.boundary_collection[boundary_type]
+    #     if len(data.keys()) == 0:
+    #         msg = 'No boundary information present for boundary type '
+    #         msg += f'{boundary_type}.'
+    #         raise AttributeError(msg)
+    #     return data
+
+
+        ##
+        # values = self.get_attribute(boundary_type)['values']
+        # boundary = np.ma.masked_equal(values, -99999)
+        # boundary_collection = list()
+        # for boundary_id in np.unique(boundary):
+        #     if not isinstance(boundary_id, np.ma.core.MaskedConstant):
+        #         # handles most boundary types
+        #         if values.ndim == 1:
+        #             idxs = np.where(boundary == boundary_id)[0]
+        #             boundary_collection.append(
+        #                 self._get_ordered_indexes(idxs))
+        #         # handles boundary duals (weir, culvert)
+        #         elif values.ndim == 2:
+        #             _b = list()
+        #             for i in range(values.ndim):
+        #                 idxs = np.where(boundary[:, i] == boundary_id)[0]
+        #                 _b.append(self._get_ordered_indexes(idxs))
+        #             boundary_collection.append(_b)
+        #         else:
+        #             raise Exception('Boundary must be a simplex or dual.')
+        # return boundary_collection
+
+    # def _get_ordered_indexes(self, indexes):
+    #     triangulation = self.triangulation
+    #     boundary_edges = list()
+    #     idxs = np.vstack(list(np.where(triangulation.neighbors == -1))).T
+    #     for i, j in idxs:
+    #         boundary_edges.append((triangulation.triangles[i, j],
+    #                                triangulation.triangles[i, (j+1) % 3]))
+    #     boundary_edges = np.asarray(boundary_edges)
+    #     idxs = np.where(np.in1d(boundary_edges[:, 0], indexes))[0]
+    #     boundary_edges = boundary_edges[idxs, :]
+    #     _, unique = np.unique(boundary_edges.flatten(), return_counts=True)
+    #     end_points = np.where(unique == 1)[0]
+    #     if len(end_points) == 0:
+    #         boundary_edges = boundary_edges.tolist()
+    #         ordered_edges = [boundary_edges.pop(-1)]
+    #     else:
+    #         end_points = end_points % boundary_edges.shape[0]
+    #         boundary_edges = boundary_edges.tolist()
+    #         ordered_edges = [boundary_edges.pop(np.max(end_points))]
+    #     while len(boundary_edges) > 0:
+    #         current_length = len(boundary_edges)  # for avoiding infinite loop
+    #         try:
+    #             idx = np.where(
+    #                 np.asarray(
+    #                     boundary_edges)[:, 0] == ordered_edges[-1][1])[0][0]
+    #             ordered_edges.append(boundary_edges.pop(idx))
+    #         except IndexError:
+    #             idx = np.where(
+    #                 np.asarray(
+    #                     boundary_edges)[:, 1] == ordered_edges[0][0])[0][0]
+    #             ordered_edges.insert(0, boundary_edges.pop(idx))
+    #         # raise on infinite loop
+    #         msg = 'ERROR: Went into infinite loop when reading boundary data.'
+    #         assert len(boundary_edges) == current_length - 1, msg
+    #     return np.asarray(ordered_edges)[:, 0]

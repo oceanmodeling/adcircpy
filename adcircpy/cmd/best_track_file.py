@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import argparse
-from adcircpy.model import BestTrackForcing
+from adcircpy.model.winds import BestTrackForcing
 
 
 def parse_args():
@@ -39,37 +39,37 @@ def parse_args():
 
 def main():
     args = parse_args()
-    bt = BestTrackForcing()
-    bt.storm_id = args.storm_id
-    # set custom start date
-    if args.start_date is not None:
-        bt.start_date = args.start_date
-    # set custom end date
-    if args.end_date is not None:
-        bt.end_date = args.end_date
-    # filter non-six-hourly data
-    if args.six_hourly:
-        bt.remove_non_six_hourly()
-    # remove non-HU data
-    if args.show_HU_only:
-        bt.only_HU()
-    # remove TS data
-    if args.remove_TS:
-        bt.remove_TS()
-    # remove EX data
-    if args.remove_EX:
-        bt.remove_EX()
-    # print fort22
-    if args.quiet is False:
-        print(bt.fort22)
-    # show cheap plot
-    if args.plot_track:
-        bt.plot_track()
-    # save fort22
-    if args.save_path is not None:
-        bt.dump(args.save_path)
-        if args.quiet is False:
-            print('File written to: {}'.format(args.save_path))
+    bt = BestTrackForcing(args.storm_id)
+    print(bt.fort22)
+    # # set custom start date
+    # if args.start_date is not None:
+    #     bt.start_date = args.start_date
+    # # set custom end date
+    # if args.end_date is not None:
+    #     bt.end_date = args.end_date
+    # # filter non-six-hourly data
+    # if args.six_hourly:
+    #     bt.remove_non_six_hourly()
+    # # remove non-HU data
+    # if args.show_HU_only:
+    #     bt.only_HU()
+    # # remove TS data
+    # if args.remove_TS:
+    #     bt.remove_TS()
+    # # remove EX data
+    # if args.remove_EX:
+    #     bt.remove_EX()
+    # # print fort22
+    # if args.quiet is False:
+    #     print(bt.fort22)
+    # # show cheap plot
+    # if args.plot_track:
+    #     bt.plot_track()
+    # # save fort22
+    # if args.save_path is not None:
+    #     bt.dump(args.save_path)
+    #     if args.quiet is False:
+    #         print('File written to: {}'.format(args.save_path))
 
 
 if __name__ == "__main__":

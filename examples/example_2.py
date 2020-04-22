@@ -1,30 +1,32 @@
 #! /usr/bin/env python
 """
-Shinnecock Inlet example with coldstart and hotstart parts
+This example recreates the Shinnecock Inlet test case with some added
+improvements in order to demonstrate some of the capabilities of AdcircPy.
+
+In contrast to example_1, this example generates input files that are separated
+by a coldstart and hotstart phase.
+
+The behaviour of this program is similar to the example_1.
 """
 
 import pathlib
 import tarfile
 import tempfile
+import shutil
 import urllib.request
+import numpy as np
+import warnings
 from datetime import datetime, timedelta
 from adcircpy import AdcircMesh, TidalForcing, AdcircRun
 
-try:
-    import colored_traceback
-    colored_traceback.add_hook(always=True)
-except ModuleNotFoundError:
-    pass
+PARENT = pathlib.Path(__file__).parent.absolute()
+FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
 
 
 def main():
 
-    # set paths
-    parent = pathlib.Path(__file__).parent
-    fort14 = parent.joinpath("data/NetCDF_Shinnecock_Inlet/fort.14")
-
-    # download_shinnecock_data
-    if not fort14.is_file():
+    # fetch shinnecock inlet test data
+    if not FORT14.is_file():
         url = "https://www.dropbox.com/s/1wk91r67cacf132/"
         url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
         g = urllib.request.urlopen(url)
@@ -32,10 +34,16 @@ def main():
         with open(tmpfile.name, 'b+w') as f:
             f.write(g.read())
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
-            tar.extractall(parent.joinpath("data/NetCDF_Shinnecock_Inlet/"))
+            tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
 
     # open mesh file
-    mesh = AdcircMesh.open(fort14, crs=4326)
+    mesh = AdcircMesh.open(FORT14, crs=4326)
+
+    # let's generate the tau0 factor
+    mesh.generate_tau0()
+
+    # let's also add a mannings to the domain (constant for this example)
+    mesh.mannings_n_at_sea_floor = np.full(mesh.values.shape, 0.025)
 
     # init tidal forcing and setup requests
     tidal_forcing = TidalForcing()
@@ -51,26 +59,35 @@ def main():
     end_date = start_date + timedelta(days=3)
 
     # instantiate AdcircRun object.
-    adcirc_run = AdcircRun(
+    driver = AdcircRun(
         mesh,
+        start_date,
+        end_date,
+        spinup_time,
         tidal_forcing,
-        start_date=start_date,
-        end_date=end_date,
-        spinup_time=spinup_time
     )
 
     # request outputs
-    adcirc_run.set_elevation_surface_output(
+    driver.set_elevation_surface_output(
         sampling_frequency=timedelta(minutes=30))
-    adcirc_run.set_velocity_surface_output(
+    driver.set_velocity_surface_output(
         sampling_frequency=timedelta(minutes=30))
 
     # override defaults options
-    adcirc_run.timestep = 6.0
+    driver.timestep = 6.0
 
-    outdir = parent / pathlib.Path('example_2')
-    outdir.mkdir(parents=True, exist_ok=True)
-    adcirc_run.dump(outdir, overwrite=True)
+    # run parallel ADCIRC if binary is installed
+    if shutil.which('padcirc') is not None:
+        driver.run(PARENT / "outputs/example_2", overwrite=True)
+    # run serial ADCIRC if binary is installed
+    elif shutil.which('adcirc') is not None:
+        driver.run(PARENT / "outputs/example_2", overwrite=True, nproc=1)
+    # binaries are not installed, write to disk and exit
+    else:
+        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg += "Writing files to disk..."
+        warnings.warn(msg)
+        driver.write(PARENT / "outputs/example_2", overwrite=True)
 
 
 if __name__ == '__main__':

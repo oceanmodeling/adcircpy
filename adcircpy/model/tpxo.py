@@ -1,32 +1,37 @@
-from scipy.interpolate import RectBivariateSpline, griddata
+from scipy.interpolate import griddata
 import numpy as np
-import warnings
 import os
 import sys
-import wget
-import tarfile
 from netCDF4 import Dataset
-from pathlib import Path
-from adcircpy.lib._get_cache_directory import _get_cache_directory
+import pathlib
 
 
 class TPXO:
+    """
+    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204
+    """
 
     def __init__(self):
-        """
-        TODO: Change this part so that instead of using a
-        _get_cached_directory() function, is either looks for the TPXO file
-        pyenv_prefix = "/".join(sys.executable.split('/')[:-2])
-        """
-        try:
-            self.__nc = Dataset(os.getenv('TPXO_NCFILE'))
-        except FileNotFoundError:
-            try:
-                path = str(
-                    Path(_get_cache_directory() + '/' + 'h_tpxo9.v1.nc'))
-                self.__nc = Dataset(path)
-            except FileNotFoundError:
-                self.__nc = None
+        file = os.getenv('TPXO_NCFILE')
+        if file is not None:
+            self._nc = Dataset(file)
+            return
+
+        else:
+            prefix = "/".join(sys.executable.split('/')[:-2])
+            file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
+        if isinstance(file, pathlib.Path):
+            if file.is_file():
+                self._nc = Dataset(file)
+                return
+
+        else:
+            msg = "No TPXO file found. You need to register and request a "
+            msg += "copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)"
+            msg += " from the authors at https://www.tpxo.net. Once you obtain"
+            msg += " this copy, set the environment variable TPXO_NCFILE "
+            msg += "to point to the path of the h_tpxo9.v1.nc file."
+            raise FileNotFoundError(msg)
 
     def __call__(self, constituent, vertices):
         """
@@ -42,12 +47,39 @@ class TPXO:
         "method" can be 'spline' or any string accepted by griddata()'s method
         kwarg.
         """
-        vertices = self._assert_vertices(vertices)
+        vertices = np.asarray(vertices)
+        self._assert_vertices(vertices)
         return self._get_interpolation(self.ha, constituent, vertices)
 
     def get_phase(self, constituent, vertices):
-        vertices = self._assert_vertices(vertices)
+        vertices = np.asarray(vertices)
+        self._assert_vertices(vertices)
         return self._get_interpolation(self.hp, constituent, vertices)
+
+    @property
+    def x(self):
+        return self.nc['lon_z'][:, 0].data
+
+    @property
+    def y(self):
+        return self.nc['lat_z'][0, :].data
+
+    @property
+    def ha(self):
+        return self.nc['ha'][:]
+
+    @property
+    def hp(self):
+        return self.nc['hp'][:]
+
+    @property
+    def nc(self):
+        return self._nc
+
+    @property
+    def tpxo_constituents(self):
+        return ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
+                'M4', 'MN4', 'MS4', '2N2', 'S1']
 
     def _get_interpolation(self, tpxo_array, constituent, vertices):
         """
@@ -71,95 +103,19 @@ class TPXO:
             (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
 
     def _assert_vertices(self, vertices):
-        vertices = np.asarray(vertices)
         msg = "vertices must be of shape M x 2"
         assert vertices.shape[1] == 2, msg
-        return vertices
-
-    @staticmethod
-    def _query_yes_no(question, default="yes"):
-        """Ask a yes/no question via raw_input() and return their answer.
-        "question" is a string that is presented to the user.
-        "default" is the presumed answer if the user just hits <Enter>.
-            It must be "yes" (the default), "no" or None (meaning
-            an answer is required of the user).
-
-        The "answer" return value is one of "yes" or "no".
-        """
-        valid = {"yes": True,   "y": True,  "ye": True,
-                 "no": False,     "n": False}
-        if default is None:
-            prompt = " [y/n] "
-        elif default == "yes":
-            prompt = " [Y/n] "
-        elif default == "no":
-            prompt = " [y/N] "
-        else:
-            raise ValueError("invalid default answer: '%s'" % default)
-
-        while 1:
-            sys.stdout.write(question + prompt)
-            choice = input().lower()
-            if default is not None and choice == '':
-                return default
-            elif choice in valid.keys():
-                return valid[choice]
-            else:
-                sys.stdout.write("Please respond with 'yes' or 'no' "
-                                 "(or 'y' or 'n').\n")
 
     @property
-    def x(self):
-        return self.nc['lon_z'][:, 0].data
-
-    @property
-    def y(self):
-        return self.nc['lat_z'][0, :].data
-
-    @property
-    def ha(self):
-        return self.nc['ha'][:]
-
-    @property
-    def hp(self):
-        return self.nc['hp'][:]
-
-    @property
-    def nc(self):
-        if self.__nc is None:
-
-            url = 'ftp://ftp.oce.orst.edu/dist/tides/Global/'
-            url += 'tpxo9_netcdf.tar.gz'
-            msg = 'The TPXO database was not found the on system.'
-            warnings.warn(msg)
-            q = 'Would you like me to fetch the TPXO for you using the '
-            q += 'internet? \n You may also cancel this operation and provide '
-            q += 'the path to the h_tpxo9.v1.nc file using the TPXO_NCFILE '
-            q += 'environment variable. '
-            q += 'You may download the TPXO file from: {}'.format(url)
-            a = self._query_yes_no(q)
-            if a is False:
-                raise RuntimeError('No TPXO database found.')
-            else:
-                cachedir = str(Path(_get_cache_directory()))
-                tpxo_path = str(Path(cachedir + '/' + 'h_tpxo9.v1.nc'))
-                os.makedirs(cachedir, exist_ok=True)
-                if os.path.isfile(cachedir+"/h_tpxo9.v1.nc") is False:
-                    msg = 'Downloding TPXO database to {},'.format(tpxo_path)
-                    msg += ' please wait... \n'
-                    msg += 'The h_tpxo.v1.nc file will occupy about 1.1G.'
-                    print(msg)
-                    if os.path.isfile(str(Path(
-                            cachedir+"/tpxo9_netcdf.tar.gz"))) is False:
-                        wget.download(url, out=cachedir+"/tpxo9_netcdf.tar.gz")
-                    tpxo = tarfile.open(cachedir+"/tpxo9_netcdf.tar.gz")
-                    tpxo.extract('h_tpxo9.v1.nc', path=cachedir)
-                    tpxo.close()
-                    os.remove(cachedir+"/tpxo9_netcdf.tar.gz")
-            self.__nc = Dataset(tpxo_path)
+    def _nc(self):
         return self.__nc
 
-    @property
-    def tpxo_constituents(self):
-        return ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
-                'M4', 'MN4', 'MS4', '2N2', 'S1']
+    @_nc.setter
+    def _nc(self, nc):
+        self.__nc = nc
+
+
+def install():
+    import shutil
+    prefix = "/".join(sys.executable.split('/')[:-2])
+    shutil.copyfile(sys.argv[1], pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc')

@@ -27,43 +27,45 @@ class BestTrackForcing(WindForcing):
         self._end_date = end_date
         self._dst_crs = dst_crs
 
-    def clip_to_bbox(self, bbox, eye_only=False):
+    def clip_to_bbox(self, bbox):
         """
-        Bbox must be expressed in WGS84 (EPSG:4326)
+        Important: bbox must be expressed in Mercator projection (EPSG:3395)
         """
         msg = f"bbox must be a {Bbox} instance."
         assert isinstance(bbox, Bbox), msg
-        if eye_only:
-            # min_lon_mask = self.df["longitude"] >= bbox.xmin
-            # max_lon_mask = 
-            # min_lat_mask = self.df["latitude"] >= bbox.ymin
-            # max_lat_mask = self.df["latitude"] <= bbox.ymax
-            cond = np.logical_and(
-                    np.logical_and(
-                        self.df["longitude"] >= bbox.xmin,
-                        self.df["longitude"] <= bbox.xmax),
-                    np.logical_and(
-                        self.df["latitude"] >= bbox.ymin,
-                        self.df["latitude"] <= bbox.ymax))
-            breakpoint()
-            self.df.mask(cond, inplace=True)
-            breakpoint()
-        else:
-            unique_dates = np.unique(self._df['datetime'])
-            for _datetime in unique_dates:
-                records = self._df[self._df['datetime'] == _datetime]
-                radii = records['radius_of_last_closed_isobar'].iloc[0]
-                radii = 1852.*radii  # convert to meters
-                merc = Proj("EPSG:3395")
-                x, y = merc(
-                    records['longitude'].iloc[0],
-                    records['latitude'].iloc[0])
-                p = Point(x, y)
-                pol = p.buffer(radii)
-                # if pol.
-                # x, y = Polygon([merc(*pol.exterior.xy)])
-                return pol
-            exit()
+        bbox_pol = Polygon(
+            [[bbox.xmin, bbox.ymin],
+             [bbox.xmax, bbox.ymin],
+             [bbox.xmax, bbox.ymax],
+             [bbox.xmin, bbox.ymax],
+             [bbox.xmin, bbox.ymin]
+             ])
+        _switch = True
+        unique_dates = np.unique(self._df['datetime'])
+        for _datetime in unique_dates:
+            records = self._df[self._df['datetime'] == _datetime]
+            radii = records['radius_of_last_closed_isobar'].iloc[0]
+            radii = 1852.*radii  # convert to meters
+            merc = Proj("EPSG:3395")
+            x, y = merc(
+                records['longitude'].iloc[0],
+                records['latitude'].iloc[0])
+            p = Point(x, y)
+            pol = p.buffer(radii)
+            if _switch:
+                if not pol.intersects(bbox_pol):
+                    continue
+                else:
+                    self.start_date = records['datetime'].iloc[0]
+                    _switch = False
+                    continue
+                    # self.start_date = 
+            else:
+                if pol.intersects(bbox_pol):
+                    continue
+                else:
+                    self.end_date = records['datetime'].iloc[0]
+                    break
 
     def plot_trajectory(self, ax=None, show=False, color='k', **kwargs):
         kwargs.update({'color': color})
@@ -76,11 +78,15 @@ class BestTrackForcing(WindForcing):
             V = self.speed.iloc[i]*np.cos(np.deg2rad(self.direction.iloc[i]))
             ax.quiver(
                 self.longitude.iloc[i], self.latitude.iloc[i], U, V, **kwargs)
+            ax.annotate(
+                self.df['datetime'].iloc[i],
+                (self.longitude.iloc[i], self.latitude.iloc[i])
+                )
         if show:
             ax.axis('scaled')
             plt.show()
 
-    def dump(self, path, overwrite=False):
+    def write(self, path, overwrite=False):
         path = pathlib.Path(path)
         if path.is_file() and not overwrite:
             raise Exception(
@@ -139,7 +145,7 @@ class BestTrackForcing(WindForcing):
     @property
     def df(self):
         start_date_mask = self._df["datetime"] >= self.start_date
-        end_date_mask = self._df["datetime"] <= self.end_date
+        end_date_mask = self._df["datetime"] <= self._file_end_date
         return self._df[start_date_mask & end_date_mask]
 
     @property
@@ -432,6 +438,13 @@ class BestTrackForcing(WindForcing):
         geofactor = float(geofactor)
         assert geofactor >= 0 and geofactor <= 1
         self.__geofactor = geofactor
+
+    @property
+    def _file_end_date(self):
+        unique_dates = np.unique(self._df['datetime'])
+        for date in unique_dates:
+            if date >= self.end_date:
+                return date
 
     @_storm_id.setter
     def _storm_id(self, storm_id):

@@ -1,98 +1,99 @@
 import numpy as np
-from datetime import datetime
+import pathlib
+from datetime import datetime, timedelta
 from adcircpy.model import tpxo
 
 
 class Fort15:
 
-    def fort15(self, runtype=None):
-        if runtype is not None:
-            self._runtype = runtype
+    def fort15(self, runtype):
+        self._runtype = runtype
         # ----------------
         # model options
         # ----------------
-        f = f'{self.RUNDES}'.ljust(131) + ' ! RUNDES\n'
-        f += f'{self.RUNID}'.ljust(131) + ' ! RUNID\n'
-        f += f'{self.NFOVER:d}'.ljust(131) + ' ! NFOVER\n'
-        f += f'{self.NABOUT:d}'.ljust(131) + ' ! NABOUT\n'
-        f += f'{self.NSCREEN:d}'.ljust(131) + ' ! NSCREEN\n'
-        f += f'{self.IHOT:d}'.ljust(131) + ' ! IHOT\n'
-        f += f'{self.ICS:d}'.ljust(131) + ' ! ICS\n'
-        f += f'{self.IM:d}'.ljust(131) + ' ! IM\n'
+        f = f'{self.RUNDES}'.ljust(63) + ' ! RUNDES\n'
+        f += f'{self.RUNID}'.ljust(63) + ' ! RUNID\n'
+        f += f'{self.NFOVER:d}'.ljust(63) + ' ! NFOVER\n'
+        f += f'{self.NABOUT:d}'.ljust(63) + ' ! NABOUT\n'
+        f += f'{self.NSCREEN:d}'.ljust(63) + ' ! NSCREEN\n'
+        f += f'{self.IHOT:d}'.ljust(63) + ' ! IHOT\n'
+        f += f'{self.ICS:d}'.ljust(63) + ' ! ICS\n'
+        f += f'{self.IM:d}'.ljust(63) + ' ! IM\n'
         if self.IM in [21, 611113]:
-            f += f'{self.IDEN:d}\n'.ljust(131)
-        f += f'{self.NOLIBF:G}'.ljust(131) + ' ! NOLIBF\n'
-        f += f'{self.NOLIFA:d}'.ljust(131) + ' ! NOLIFA\n'
-        f += f'{self.NOLICA:d}'.ljust(131) + ' ! NOLICA\n'
-        f += f'{self.NOLICAT:d}'.ljust(131) + ' ! NOLICAT\n'
-        f += f'{self.NWP:d}'.ljust(131) + ' ! NWP\n'
+            f += f'{self.IDEN:d}\n'.ljust(63)
+            f += ' ! IDEN'
+        f += f'{self.NOLIBF:G}'.ljust(63) + ' ! NOLIBF\n'
+        f += f'{self.NOLIFA:d}'.ljust(63) + ' ! NOLIFA\n'
+        f += f'{self.NOLICA:d}'.ljust(63) + ' ! NOLICA\n'
+        f += f'{self.NOLICAT:d}'.ljust(63) + ' ! NOLICAT\n'
+        f += f'{self.NWP:d}'.ljust(63) + ' ! NWP\n'
         if self._runtype == 'coldstart':
             attributes = self.mesh.get_coldstart_attributes()
         elif self._runtype == 'hotstart':
             attributes = self.mesh.get_hotstart_attributes()
         for attribute in attributes.keys():
-            f += f'{attribute}'.ljust(131) + ' \n'
-        f += f'{self.NCOR:d}'.ljust(131) + ' ! NCOR\n'
-        f += f'{self.NTIP:d}'.ljust(131) + ' ! NTIP\n'
-        f += f'{self.NWS:d}'.ljust(131) + ' ! NWS\n'
-        f += f'{self.NRAMP:d}'.ljust(131) + ' ! NRAMP\n'
-        f += f'{self.G:G}'.ljust(131) + ' ! gravitational acceleration\n'
-        f += f'{self.TAU0:G}'.ljust(131) + ' ! TAU0\n'
+            f += f'{attribute}'.ljust(63) + ' \n'
+        f += f'{self.NCOR:d}'.ljust(63) + ' ! NCOR\n'
+        f += f'{self.NTIP:d}'.ljust(63) + ' ! NTIP\n'
+        f += f'{self.NWS:d}'.ljust(63) + ' ! NWS\n'
+        f += f'{self.NRAMP:d}'.ljust(63) + ' ! NRAMP\n'
+        f += f'{self.G:G}'.ljust(63) + ' ! gravitational acceleration\n'
+        f += f'{self.TAU0:G}'.ljust(63) + ' ! TAU0\n'
         if self.TAU0 == -5:
             f += (f'{self.Tau0FullDomainMin:G} '
-                  + f'{self.Tau0FullDomainMax:G}').ljust(131)
+                  + f'{self.Tau0FullDomainMax:G}').ljust(63)
             f += ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
-        f += f'{self.DTDP:G}'.ljust(131) + ' ! DTDP\n'
-        f += f'{self.STATIM:G}'.ljust(131) + ' ! STATIM\n'
-        f += f'{self.REFTIM:G}'.ljust(131) + ' ! REFTIM\n'
+        f += f'{self.DTDP:.6f}'.ljust(63) + ' ! DTDP\n'
+        f += f'{self.STATIM:G}'.ljust(63) + ' ! STATIM\n'
+        f += f'{self.REFTIM:G}'.ljust(63) + ' ! REFTIM\n'
         if self.NWS not in [0, 1, 9, 11]:
-            f += f'{self.WTIMINC}'.ljust(131) + '! WTIMINC\n'
-        f += f'{self.RNDAY:G}'.ljust(131) + ' ! RNDAY\n'
-        f += f'{self.DRAMP}'.ljust(131) + ' ! DRAMP\n'
-        f += f'{self.A00:G} {self.B00:G} {self.C00:G}'.ljust(131)
+            f += f'{self.WTIMINC}'.ljust(63) + '! WTIMINC\n'
+        f += f'{self.RNDAY:G}'.ljust(63) + ' ! RNDAY\n'
+        f += f'{self.DRAMP}'.ljust(63) + ' ! DRAMP\n'
+        f += f'{self.A00:G} {self.B00:G} {self.C00:G}'.ljust(63)
         f += ' ! A00 B00 C00\n'
-        f += f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(131)
+        f += f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(63)
         f += ' ! H0 ? ? VELMIN\n'
-        f += f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(131)
+        f += f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(63)
         f += ' ! SLAM0 SFEA0\n'
-        f += f'{self.FFACTOR}'.ljust(131)
+        f += f'{self.FFACTOR}'.ljust(63)
         if self.NOLIBF == 2:
             f += ' ! CF HBREAK FTHETA FGAMMA\n'
         else:
             f += ' ! FFACTOR\n'
-        f += f'{self.ESLM:G}'.ljust(131)
+        f += f'{self.ESLM:G}'.ljust(63)
         if not self.smagorinsky:
             f += ' ! ESL - LATERAL EDDY VISCOSITY COEFFICIENT\n'
         else:
             f += ' ! smagorinsky coefficient\n'
-        f += f'{self.CORI:G}'.ljust(131) + ' ! CORI\n'
+        f += f'{self.CORI:G}'.ljust(63) + ' ! CORI\n'
         # ----------------
         # tidal forcings
         # ----------------
-        f += f'{self.NTIF:d}'.ljust(131) + ' ! NTIF\n'
+        f += f'{self.NTIF:d}'.ljust(63) + ' ! NTIF\n'
         for constituent, forcing in self.tidal_forcing:
             if constituent in self.tidal_forcing.major_constituents:
-                f += f'{constituent}'.ljust(131)
+                f += f'{constituent}'.ljust(63)
                 f += ' \n'
                 f += f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} ' + \
-                     f'{forcing[3]:G} {forcing[4]:G}'.ljust(131)
+                     f'{forcing[3]:G} {forcing[4]:G}'.ljust(63)
                 f += '\n'
-        f += f'{len(self.tidal_forcing):d}'.ljust(131) + ' ! NBFR\n'
+        f += f'{len(self.tidal_forcing):d}'.ljust(63) + ' ! NBFR\n'
         for constituent, forcing in self.tidal_forcing:
-            f += f'{constituent}'.ljust(131) + ' \n'
-            f += f'{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}'.ljust(131)
+            f += f'{constituent}'.ljust(63) + ' \n'
+            f += f'{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}'.ljust(63)
             f += '\n'
         # NOTE:  This part is written as one-constituent then all boundaries
         # as opposed to one-boundary then all constituents for that boundary.
         # Not exactly sure how ADCIRC handles multiple open boundaries.
         for constituent in self.tidal_forcing.get_active_constituents():
-            f += f'{constituent}'.ljust(131) + ' \n'
+            f += f'{constituent}'.ljust(63) + ' \n'
             for boundary in self.mesh.ocean_boundaries:
                 vertices = self.mesh.get_xy(crs='EPSG:4326')[boundary, :]
                 amp, phase = self.TPXO(constituent, vertices)
                 for i in range(len(vertices)):
-                    f += f'{amp[i]:G} {phase[i]:G}'.ljust(131) + ' \n'
-        f += f'{self.ANGINN:G}'.ljust(131) + ' ! ANGINN\n'
+                    f += f'{amp[i]:.8e} {phase[i]:.8e}'.ljust(63) + ' \n'
+        f += f'{self.ANGINN:G}'.ljust(63) + ' ! ANGINN\n'
         # ----------------
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
@@ -102,61 +103,61 @@ class Fort15:
         # ----------------
         # elevation out stations
         f += (f"{self.NOUTE:G} {self.TOUTSE:G} " +
-              f"{self.TOUTFE:G} {self.NSPOOLE:G}").ljust(131)
+              f"{self.TOUTFE:G} {self.NSPOOLE:G}").ljust(63)
         f += " ! NOUTE TOUTSE TOUTFE NSPOOLE\n"
-        f += f"{self.NSTAE:d}".ljust(131) + ' ! NSTAE\n'
+        f += f"{self.NSTAE:d}".ljust(63) + ' ! NSTAE\n'
         stations = self.elevation_stations_output
         if stations['sampling_frequency'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}"
+                        f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
-                    f += f"{x:G} {y:G}"
+                    f += f"{x:G} {y:G}".ljust(63)
                     f += f" ! {station_id}\n"
         # velocity out stations
         f += (f"{self.NOUTV:G} {self.TOUTSV:G} " +
-              f"{self.TOUTFV:G} {self.NSPOOLV:G}").ljust(131)
+              f"{self.TOUTFV:G} {self.NSPOOLV:G}").ljust(63)
         f += " ! NOUTV TOUTSV TOUTFV NSPOOLV\n"
-        f += f"{self.NSTAV:G}".ljust(131) + " ! NSTAV\n"
+        f += f"{self.NSTAV:G}".ljust(63) + " ! NSTAV\n"
         stations = self.velocity_stations_output
         if stations['sampling_frequency'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}"
+                        f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
-                    f += f"{x:G} {y:G}".ljust(131)
+                    f += f"{x:G} {y:G}".ljust(63)
                     f += f" ! {station_id}\n"
         if self.IM == 10:
             # concentration out stations
             f += (f"{self.NOUTC:G} {self.TOUTSC:G} " +
-                  f"{self.TOUTFC:G} {self.NSPOOLC:G}").ljust(131)
+                  f"{self.TOUTFC:G} {self.NSPOOLC:G}").ljust(63)
             f += " ! NOUTC TOUTSC TOUTFC NSPOOLC\n"
-            f += f"{self.NSTAC:d}".ljust(131) + " ! NSTAC\n"
+            f += f"{self.NSTAC:d}".ljust(63) + " ! NSTAC\n"
             stations = self.concentration_stations_output
             if stations['sampling_frequency'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
                           in stations['collection'].items():
-                            f += f"{x:G} {y:G}".ljust(131)
+                            f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) \
                       in stations['collection'].items():
-                        f += f"{x:G} {y:G}"
+                        f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
         if self.NWS > 0:
             # meteorological out stations
             f += (f"{self.NOUTM:G} {self.TOUTSM:G} " +
-                  f"{self.TOUTFM:G} {self.NSPOOLM:G}").ljust(131)
+                  f"{self.TOUTFM:G} {self.NSPOOLM:G}").ljust(63)
             f += " ! NOUTM TOUTSM TOUTFM NSPOOLM\n"
-            f += f"{self.NSTAM:d}".ljust(131) + " ! NSTAM\n"
+            f += f"{self.NSTAM:d}".ljust(63) + " ! NSTAM\n"
             stations = self.meteorological_stations_output
             if stations['sampling_frequency'] is not None:
                 if stations['sampling_frequency'] is not None:
@@ -164,29 +165,29 @@ class Fort15:
                         if stations['spinup']:
                             for station_id, (x, y) \
                               in stations['collection'].items():
-                                f += f"{x:G} {y:G}"
+                                f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
                           in stations['collection'].items():
-                            f += f"{x:G} {y:G}"
+                            f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
         # elevation global outputs
-        f += (f"{self.NOUTGE:G} {self.TOUTGE:G} "
-              + f"{self.TOUTFGE:G} {self.NSPOOLGE:G}").ljust(131)
-        f += f" ! NOUTGE TOUTGE TOUTFGE NSPOOLGE\n"
+        f += (f"{self.NOUTGE:d} {self.TOUTSGE:f} "
+              + f"{self.TOUTFGE:f} {self.NSPOOLGE:d}").ljust(63)
+        f += f" ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n"
         # velocity global otuputs
-        f += (f"{self.NOUTGV:G} {self.TOUTGV:G} "
-              + f"{self.TOUTFGV:G} {self.NSPOOLGV:G}").ljust(131)
-        f += " ! NOUTGV TOUTGV TOUTFGV NSPOOLGV\n"
+        f += (f"{self.NOUTGV:d} {self.TOUTSGV:f} "
+              + f"{self.TOUTFGV:f} {self.NSPOOLGV:d}").ljust(63)
+        f += " ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV\n"
         if self.IM == 10:
-            f += (f"{self.NOUTGC:G} {self.TOUTGC:G} "
-                  + f"{self.TOUTFGC:G} {self.NSPOOLGC:G}").ljust(131)
-            f += " ! NOUTGC TOUTGC TOUTFGC NSPOOLGC\n"
+            f += (f"{self.NOUTGC:d} {self.TOUTSGC:f} "
+                  + f"{self.TOUTFGC:f} {self.NSPOOLGC:d}").ljust(63)
+            f += " ! NOUTSGC TOUTGC TOUTFGC NSPOOLGC\n"
         if self.NWS != 0:
-            f += (f"{self.NOUTGM:G} {self.TOUTGM:G} "
-                  + f"{self.TOUTFGM:G} {self.NSPOOLGM:G}").ljust(131)
-            f += " ! NOUTGM TOUTGM TOUTFGM NSPOOLGM\n"
+            f += (f"{self.NOUTGM:d} {self.TOUTSGM:f} "
+                  + f"{self.TOUTFGM:f} {self.NSPOOLGM:d}").ljust(63)
+            f += " ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM\n"
         # harmonic analysis requests
         harmonic_analysis = False
         self._outputs = [self.elevation_surface_output,
@@ -202,41 +203,51 @@ class Fort15:
                 else:
                     harmonic_analysis = True
                     break
-        f += f'{self.NFREQ:d}'.ljust(131) + ' ! NFREQ\n'
+        f += f'{self.NFREQ:d}'.ljust(63) + ' ! NFREQ\n'
         if harmonic_analysis:
             for constituent, forcing in self.tidal_forcing:
-                f += f'{constituent}'.ljust(131) + ' \n'
+                f += f'{constituent}'.ljust(63) + ' \n'
                 f += (f'{forcing[1]:<.16G} {forcing[3]:<.16G}'
-                      + f'{forcing[4]:<.16G}').ljust(131) + '\n'
+                      + f'{forcing[4]:<.16G}').ljust(63) + '\n'
         f += (f'{self.THAS:G} {self.THAF:G} '
-              + f"{self.NHAINC} {self.FMV}").ljust(131)
+              + f"{self.NHAINC} {self.FMV}").ljust(63)
         f += ' ! THAS THAF NHAINC FMV\n'
         f += (f"{self.NHASE:G} {self.NHASV:G} "
-              + f"{self.NHAGE:G} {self.NHAGV:G}").ljust(131)
+              + f"{self.NHAGE:G} {self.NHAGV:G}").ljust(63)
         f += " ! NHASE NHASV NHAGE NHAGV\n"
         # ----------------
         # hostart file generation
         # ----------------
-        f += f"{self.NHSTAR:G} {self.NHSINC:G}".ljust(131)
+        f += f"{self.NHSTAR:d} {self.NHSINC:d}".ljust(63)
         f += " ! NHSTAR NHSINC\n"
         f += (f"{self.ITITER:<1d} {self.ISLDIA:<1d} "
-              + f"{self.CONVCR:<.15G} {self.ITMAX:<4d}").ljust(131)
+              + f"{self.CONVCR:<.15G} {self.ITMAX:<4d}").ljust(63)
         f += f" ! ITITER ISLDIA CONVCR ITMAX\n"
         if self.vertical_mode == '3D':
             raise NotImplementedError('3D runs not yet implemented')
-        f += f"{self.NCPROJ}".ljust(131) + " ! NCPROJ\n"
-        f += f"{self.NCINST}".ljust(131) + " ! NCINST\n"
-        f += f"{self.NCSOUR}".ljust(131) + " ! NCSOUR\n"
-        f += f"{self.NCHIST}".ljust(131) + " ! NCHIST\n"
-        f += f"{self.NCREF}".ljust(131) + " ! NCREF\n"
-        f += f"{self.NCCOM}".ljust(131) + " ! NCCOM\n"
-        f += f"{self.NCHOST}".ljust(131) + " ! NCHOST\n"
-        f += f"{self.NCCONV}".ljust(131) + " ! NCONV\n"
-        f += f"{self.NCCONT}".ljust(131) + " ! NCCONT\n"
-        f += f"{self.NCDATE}".ljust(131)
+        f += f"{self.NCPROJ}".ljust(63) + " ! NCPROJ\n"
+        f += f"{self.NCINST}".ljust(63) + " ! NCINST\n"
+        f += f"{self.NCSOUR}".ljust(63) + " ! NCSOUR\n"
+        f += f"{self.NCHIST}".ljust(63) + " ! NCHIST\n"
+        f += f"{self.NCREF}".ljust(63) + " ! NCREF\n"
+        f += f"{self.NCCOM}".ljust(63) + " ! NCCOM\n"
+        f += f"{self.NCHOST}".ljust(63) + " ! NCHOST\n"
+        f += f"{self.NCCONV}".ljust(63) + " ! NCONV\n"
+        f += f"{self.NCCONT}".ljust(63) + " ! NCCONT\n"
+        f += f"{self.NCDATE}".ljust(63)
         f += " ! Forcing start date / NCDATE\n"
         del self._outputs
+        del self._runtype
         return f
+
+    def write(self, runtype, path, overwrite=False):
+        assert runtype in ['coldstart', 'hotstart']
+        fort15 = pathlib.Path(path)
+        if fort15.exists() and not overwrite:
+            msg = f"{fort15} exists. Pass overwrite=True to overwrite."
+            raise Exception(msg)
+        with open(fort15, 'w') as f:
+            f.write(self.fort15(runtype))
 
     def set_time_weighting_factors_in_gcwe(self, A00, B00, C00):
         A00 = float(A00)
@@ -247,8 +258,6 @@ class Fort15:
         self.__A00 = A00
         self.__B00 = B00
         self.__C00 = C00
-
-    # Output station handlers
 
     @staticmethod
     def parse_stations(path, station_type):
@@ -274,168 +283,6 @@ class Fort15:
                         except IndexError:
                             stations[station_name] = (x, y)
         return stations
-
-    def _get_output_stations(self, output_type):
-        if output_type == 'elevation':
-            return self.elevation_stations_output
-        elif output_type == 'velocity':
-            return self.velocity_stations_output
-        elif output_type == 'concentration':
-            return self.concentration_stations_output
-        elif output_type == 'meteorological':
-            return self.meteorological_stations_output
-
-    def _get_NOUT_(self, output_type):
-        stations = self._get_output_stations(output_type)
-        if stations['sampling_frequency'] is not None:
-            if self._runtype == 'coldstart':
-                if stations['spinup']:
-                    if stations['netcdf'] is True:
-                        return -5
-                    else:
-                        return -1
-                else:
-                    return 0
-            else:
-                if stations['netcdf'] is True:
-                    return -5
-                else:
-                    return -1
-        return 0
-
-    def _get_TOUTS_(self, output_type):
-        if np.abs(self._get_NOUT_(output_type)) > 0:
-            return self.spinup_time.total_seconds()/(60.*60.*24.)
-        else:
-            return 0
-
-    def _get_TOUTF_(self, output_type):
-        stations = self._get_output_stations(output_type)
-        if stations['sampling_frequency'] is not None:
-            if self._runtype == 'coldstart':
-                if stations['spinup'] is True:
-                    time = self.spinup_time.total_seconds()/(60.*60.*24.)
-                    if time > 0:
-                        return time
-                    else:
-                        dt = self.end_date - self.start_date
-                        return dt.total_seconds()/(60.*60.*24.)
-            else:
-                return (
-                    (self.end_date - self.forcing_start_date).total_seconds()
-                    / (60.*60.*24.))
-        return 0
-
-    def _get_NSPOOL_(self, output_type):
-        stations = self._get_output_stations(output_type)
-        if self._runtype == 'coldstart':
-            if stations['spinup'] is True:
-                return int((stations['sampling_frequency'].total_seconds()
-                            / self.DTDP))
-            else:
-                return 0
-        else:
-            if stations['sampling_frequency'] is not None:
-                return int((stations['sampling_frequency'].total_seconds()
-                            / self.DTDP))
-            else:
-                return 0
-
-    def _get_NSTA_(self, output_type):
-        stations = self._get_output_stations(output_type)
-        if self._runtype == 'coldstart':
-            if stations['spinup'] is True:
-                return len(stations['collection'].keys())
-            else:
-                return 0
-        else:
-            if np.abs(self._get_NOUT_(output_type)) > 0:
-                return len(stations['collection'].keys())
-            else:
-                return 0
-
-    # surface output handlers
-    def _get_surface_output_request(self, output_type):
-        if output_type == 'elevation':
-            return self.elevation_surface_output
-        elif output_type == 'velocity':
-            return self.velocity_surface_output
-        elif output_type == 'concentration':
-            return self.concentration_surface_output
-        elif output_type == 'meteorological':
-            return self.meteorological_surface_output
-
-    def _get_NOUTG_(self, output_type):
-        output = self._get_surface_output_request(output_type)
-        if output['sampling_frequency'] is not None:
-            if self._runtype == 'coldstart':
-                if output['spinup']:
-                    if output['netcdf'] is True:
-                        return -5
-                    else:
-                        return -1
-                else:
-                    return 0
-            else:
-                if output['netcdf'] is True:
-                    return -5
-                else:
-                    return -1
-        return 0
-
-    def _get_TOUTG_(self, output_type):
-        if np.abs(self._get_NOUTG_(output_type)) > 0:
-            return self.spinup_time.total_seconds()/(60.*60.*24.)
-        else:
-            return 0
-
-    def _get_TOUTFG_(self, output_type):
-        output = self._get_surface_output_request(output_type)
-        if output['sampling_frequency'] is not None:
-            if self._runtype == 'coldstart':
-                if output['spinup'] is True:
-                    time = self.spinup_time.total_seconds()/(60.*60.*24.)
-                    if time > 0:
-                        return time
-                    else:
-                        dt = self.end_date - self.start_date
-                        return dt.total_seconds()/(60.*60.*24.)
-            else:
-                return (
-                    (self.end_date - self.forcing_start_date).total_seconds()
-                    / (60.*60.*24.))
-        return 0
-
-    def _get_NSPOOLG_(self, output_type):
-        output = self._get_surface_output_request(output_type)
-        if self._runtype == 'coldstart':
-            if output['spinup'] is True:
-                return int((output['sampling_frequency'].total_seconds()
-                            / self.DTDP))
-            else:
-                return 0
-        else:
-            if output['sampling_frequency'] is not None:
-                return int((output['sampling_frequency'].total_seconds()
-                            / self.DTDP))
-            else:
-                return 0
-
-    def _get_harmonic_analysis_state(self, output):
-        state = 0
-        if self._runtype == 'coldstart':
-            if output['spinup'] and output['harmonic_analysis']:
-                if self.netcdf:
-                    return 5
-                else:
-                    return 1
-        else:
-            if output['harmonic_analysis']:
-                if self.netcdf:
-                    return 5
-                else:
-                    return 1
-        return state
 
     @property
     def vertical_mode(self):
@@ -558,17 +405,17 @@ class Fort15:
         try:
             return self.__smagorinsky_coefficient
         except AttributeError:
-            return 0.1
+            return 0.2
 
     @property
     def gwce_solution_scheme(self):
         """
-        'semi_implicit' (default) | 'explicit'
+        'semi-implicit' (default) | 'explicit'
         """
         try:
             return self.__gwce_solution_scheme
         except AttributeError:
-            return 'semi_implicit'
+            return 'semi-implicit'
 
     @property
     def horizontal_mixing_coefficient(self):
@@ -610,15 +457,8 @@ class Fort15:
             return self.__TPXO
 
     @property
-    def _runtype(self):
-        try:
-            return self.___runtype
-        except AttributeError:
-            raise AttributeError('Must set _runtype attribute.')
-
-    @property
     def timestep(self):
-        return self.__DTDP
+        return np.abs(self.DTDP)
 
     @property
     def RUNDES(self):
@@ -636,6 +476,10 @@ class Fort15:
 
     @property
     def IHOT(self):
+        return self._IHOT
+
+    @property
+    def _IHOT(self):
         try:
             return self.__IHOT
         except AttributeError:
@@ -791,13 +635,13 @@ class Fort15:
 
             def get_digit_6():
                 if (not self.baroclinicity and
-                        self.gwce_solution_scheme == 'semi_implicit'):
+                        self.gwce_solution_scheme == 'semi-implicit'):
                     return 1
                 elif (not self.baroclinicity and
                         self.gwce_solution_scheme == 'explicit'):
                     return 2
                 elif (self.baroclinicity and
-                        self.gwce_solution_scheme == 'semi_implicit'):
+                        self.gwce_solution_scheme == 'semi-implicit'):
                     return 3
                 elif (self.baroclinicity and
                         self.gwce_solution_scheme == 'explicit'):
@@ -866,6 +710,8 @@ class Fort15:
 
     @property
     def NRAMP(self):
+        if self.spinup_time.total_seconds() == 0:
+            return 1
         if self._runtype == 'coldstart':
             return 1
         else:
@@ -892,6 +738,13 @@ class Fort15:
             return 1
 
     @property
+    def CFL(self):
+        try:
+            return self.__CFL
+        except AttributeError:
+            return 0.7
+
+    @property
     def G(self):
         try:
             return self.__G
@@ -901,15 +754,13 @@ class Fort15:
     @property
     def DTDP(self):
         try:
-            if self.predictor_corrector:
-                return self.__DTDP
-            else:
-                return -self.__DTDP
+            return self.__DTDP
         except AttributeError:
-            if self.predictor_corrector:
-                return self.mesh.get_critical_timestep() / 2.
-            else:
-                return -self.mesh.get_critical_timestep() / 2.
+            DTDP = self.mesh.critical_timestep(self.CFL)
+            if not self.predictor_corrector:
+                DTDP = -DTDP
+            self.__DTDP = DTDP
+            return self.__DTDP
 
     @property
     def TAU0(self):
@@ -1120,7 +971,7 @@ class Fort15:
         try:
             return self.__H0
         except AttributeError:
-            return 0.05
+            return 0.01
 
     @property
     def NODEDRYMIN(self):
@@ -1141,7 +992,7 @@ class Fort15:
         try:
             return self.__VELMIN
         except AttributeError:
-            return 0.05
+            return 0.01
 
     @property
     def SLAM0(self):
@@ -1156,13 +1007,6 @@ class Fort15:
             return self.__SFEA0
         except AttributeError:
             return np.median(self.mesh.y)
-
-    # @property
-    # def TAU(self):
-    #     try:
-    #         return self.__TAU
-    #     except AttributeError:
-    #         return self.TAU0
 
     @property
     def HBREAK(self):
@@ -1212,34 +1056,31 @@ class Fort15:
 
     @property
     def NOUTE(self):
-        # netcdf, ascii or nothing
         try:
             self.__NOUTE
         except AttributeError:
-            return self._get_NOUT_('elevation')
+            return self._get_NOUT__('stations', 'elevation')
 
     @property
     def TOUTSE(self):
-        # number of days relative to coldstart after which data is recorded
         try:
             return self.__TOUTSE
         except AttributeError:
-            return self._get_TOUTS_('elevation')
+            return self._get_TOUTS__('stations', 'elevation')
 
     @property
     def TOUTFE(self):
         try:
             return self.__TOUTFE
         except AttributeError:
-            return self._get_TOUTF_('elevation')
+            return self._get_TOUTF__('stations', 'elevation')
 
     @property
     def NSPOOLE(self):
-        # sampling frequency
         try:
             return self.__NSPOOLE
         except AttributeError:
-            return self._get_NSPOOL_('elevation')
+            return self._get_NSPOOL__('stations', 'elevation')
 
     @property
     def NSTAE(self):
@@ -1250,34 +1091,31 @@ class Fort15:
 
     @property
     def NOUTV(self):
-        # netcdf, ascii or nothing
         try:
             self.__NOUTV
         except AttributeError:
-            return self._get_NOUT_('velocity')
+            return self._get_NOUT__('stations', 'velocity')
 
     @property
     def TOUTSV(self):
-        # number of days relative to coldstart after which data is recorded
         try:
             return self.__TOUTSV
         except AttributeError:
-            return self._get_TOUTS_('velocity')
+            return self._get_TOUTS__('stations', 'velocity')
 
     @property
     def TOUTFV(self):
         try:
             return self.__TOUTFV
         except AttributeError:
-            return self._get_TOUTF_('velocity')
+            return self._get_TOUTF__('stations', 'velocity')
 
     @property
     def NSPOOLV(self):
-        # sampling frequency
         try:
             return self.__NSPOOLV
         except AttributeError:
-            return self._get_NSPOOL_('velocity')
+            return self._get_NSPOOL__('stations', 'velocity')
 
     @property
     def NSTAV(self):
@@ -1288,34 +1126,31 @@ class Fort15:
 
     @property
     def NOUTM(self):
-        # netcdf, ascii or nothing
         try:
             self.__NOUTM
         except AttributeError:
-            return self._get_NOUT_('meteorological')
+            return self._get_NOUT__('stations', 'meteorological')
 
     @property
     def TOUTSM(self):
-        # number of days relative to coldstart after which data is recorded
         try:
             return self.__TOUTSM
         except AttributeError:
-            return self._get_TOUTS_('meteorological')
+            return self._get_TOUTS__('stations', 'meteorological')
 
     @property
     def TOUTFM(self):
         try:
             return self.__TOUTFM
         except AttributeError:
-            return self._get_TOUTF_('meteorological')
+            return self._get_TOUTF__('stations', 'meteorological')
 
     @property
     def NSPOOLM(self):
-        # sampling frequency
         try:
             return self.__NSPOOLM
         except AttributeError:
-            return self._get_NSPOOL_('meteorological')
+            return self._get_NSPOOL__('stations', 'meteorological')
 
     @property
     def NSTAM(self):
@@ -1326,34 +1161,31 @@ class Fort15:
 
     @property
     def NOUTC(self):
-        # netcdf, ascii or nothing
         try:
             self.__NOUTC
         except AttributeError:
-            return self._get_NOUT_('concentration')
+            return self._get_NOUT__('stations', 'concentration')
 
     @property
     def TOUTSC(self):
-        # number of days relative to coldstart after which data is recorded
         try:
             return self.__TOUTSC
         except AttributeError:
-            return self._get_TOUTS_('concentration')
+            return self._get_TOUTS__('stations', 'concentration')
 
     @property
     def TOUTFC(self):
         try:
             return self.__TOUTFC
         except AttributeError:
-            return self._get_TOUTF_('concentration')
+            return self._get_TOUTF__('stations', 'concentration')
 
     @property
     def NSPOOLC(self):
-        # sampling frequency
         try:
             return self.__NSPOOLC
         except AttributeError:
-            return self._get_NSPOOL_('concentration')
+            return self._get_NSPOOL__('stations', 'concentration')
 
     @property
     def NSTAC(self):
@@ -1367,288 +1199,112 @@ class Fort15:
         try:
             return self.__NOUTGE
         except AttributeError:
-            return self._get_NOUTG_('elevation')
+            return self._get_NOUT__('surface', 'elevation')
 
     @property
-    def TOUTGE(self):
+    def TOUTSGE(self):
         try:
-            return self.__TOUTGE
+            return self.__TOUTSGE
         except AttributeError:
-            output = self.elevation_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTG_('elevation')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGE) > 0:
-                            return float(self.DRAMP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTS__('surface', 'elevation')
 
     @property
     def TOUTFGE(self):
         try:
             return self.__TOUTFGE
         except AttributeError:
-            output = self.elevation_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTFG_('elevation')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGE) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return dt.total_seconds() / (60. * 60. * 24.)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTF__('surface', 'elevation')
 
     @property
     def NSPOOLGE(self):
         try:
             return self.__NSPOOLGE
         except AttributeError:
-            output = self.elevation_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_NSPOOLG_('elevation')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGE) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return int(dt.total_seconds() / self.DTDP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.start_date
-                        return int(dt.total_seconds() / self.DTDP)
-            else:
-                return 0
+            return self._get_NSPOOL__('surface', 'elevation')
 
     @property
     def NOUTGV(self):
         try:
             return self.__NOUTGV
         except AttributeError:
-            return self._get_NOUTG_('velocity')
+            return self._get_NOUT__('surface', 'velocity')
 
     @property
-    def TOUTGV(self):
+    def TOUTSGV(self):
         try:
-            return self.__TOUTGV
+            return self.__TOUTSGV
         except AttributeError:
-            output = self.velocity_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTG_('velocity')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGV) > 0:
-                            return float(self.DRAMP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTS__('surface', 'velocity')
 
     @property
     def TOUTFGV(self):
         try:
             return self.__TOUTFGV
         except AttributeError:
-            output = self.velocity_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTFG_('velocity')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGV) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return dt.total_seconds() / (60. * 60. * 24.)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTF__('surface', 'velocity')
 
     @property
     def NSPOOLGV(self):
         try:
             return self.__NSPOOLGV
         except AttributeError:
-            output = self.velocity_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_NSPOOLG_('velocity')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGV) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return int(dt.total_seconds() / self.DTDP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.start_date
-                        return int(dt.total_seconds() / self.DTDP)
-            else:
-                return 0
+            return self._get_NSPOOL__('surface', 'velocity')
 
     @property
     def NOUTGM(self):
         try:
             return self.__NOUTGM
         except AttributeError:
-            return self._get_NOUTG_('meteorological')
+            return self._get_NOUT__('surface', 'meteorological')
 
     @property
-    def TOUTGM(self):
+    def TOUTSGM(self):
         try:
-            return self.__TOUTGM
+            return self.__TOUTSGM
         except AttributeError:
-            output = self.meteorological_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTG_('meteorological')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGM) > 0:
-                            return float(self.DRAMP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.start_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTS__('surface', 'meteorological')
 
     @property
     def TOUTFGM(self):
         try:
             return self.__TOUTFGM
         except AttributeError:
-            output = self.meteorological_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTFG_('meteorological')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGM) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return dt.total_seconds() / (60. * 60. * 24.)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTF__('surface', 'meteorological')
 
     @property
     def NSPOOLGM(self):
         try:
             return self.__NSPOOLGM
         except AttributeError:
-            output = self.meteorological_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_NSPOOLG_('meteorological')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGM) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return int(dt.total_seconds() / self.DTDP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.start_date
-                        return int(dt.total_seconds() / self.DTDP)
-            else:
-                return 0
+            return self._get_NSPOOL__('surface', 'meteorological')
 
     @property
     def NOUTGC(self):
         try:
             return self.__NOUTGC
         except AttributeError:
-            return self._get_NOUTG_('concentration')
+            return self._get_NOUT__('surface', 'concentration')
 
     @property
-    def TOUTGC(self):
+    def TOUTSGC(self):
         try:
-            return self.__TOUTGC
+            return self.__TOUTSGC
         except AttributeError:
-            output = self.concentration_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTG_('concentration')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGC) > 0:
-                            return float(self.DRAMP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTS__('surface', 'concentration')
 
     @property
     def TOUTFGC(self):
         try:
             return self.__TOUTFGC
         except AttributeError:
-            output = self.concentration_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_TOUTFG_('concentration')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGC) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return dt.total_seconds() / (60. * 60. * 24.)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60. * 60. * 24.)
-            else:
-                return 0
+            return self._get_TOUTF__('surface', 'concentration')
 
     @property
     def NSPOOLGC(self):
         try:
             return self.__NSPOOLGC
         except AttributeError:
-            output = self.concentration_surface_output
-            if output['sampling_frequency'] is not None:
-                if output['sampling_frequency'].total_seconds() > 0:
-                    return self._get_NSPOOLG_('concentration')
-                else:
-                    if self._runtype == 'coldstart':
-                        if np.abs(self.NOUTGC) > 0:
-                            dt = self.start_date - self.forcing_start_date
-                            return int(dt.total_seconds() / self.DTDP)
-                        else:
-                            return 0
-                    else:
-                        dt = self.end_date - self.start_date
-                        return int(dt.total_seconds() / self.DTDP)
-            else:
-                return 0
+            return self._get_NSPOOL__('surface', 'concentration')
 
     @property
     def NFREQ(self):
@@ -1785,9 +1441,9 @@ class Fort15:
                 dt = self.start_date - self.forcing_start_date
                 if dt.total_seconds() == 0:
                     dt = self.end_date - self.forcing_start_date
-                    return int((dt.total_seconds())/self.DTDP)
+                    return int(dt.total_seconds()/np.around(self.DTDP, 6))
                 else:
-                    return int((dt.total_seconds())/self.DTDP)
+                    return int(dt.total_seconds()/np.around(self.DTDP, 6))
 
     @property
     def ITITER(self):
@@ -1890,11 +1546,6 @@ class Fort15:
     def FortranNamelists(self):
         return self.__FortranNamelists
 
-    @_runtype.setter
-    def _runtype(self, _runtype):
-        assert _runtype in ['coldstart', 'hotstart']
-        self.___runtype = _runtype
-
     @predictor_corrector.setter
     def predictor_corrector(self, predictor_corrector):
         assert isinstance(predictor_corrector, bool)
@@ -1904,9 +1555,9 @@ class Fort15:
     def RUNDES(self, RUNDES):
         self.__RUNDES = str(RUNDES)
 
-    @IHOT.setter
-    def IHOT(self, IHOT):
-        assert IHOT in [0]
+    @_IHOT.setter
+    def _IHOT(self, IHOT):
+        assert IHOT in [0, 567, 568]
         self.__IHOT = IHOT
 
     @RUNID.setter
@@ -2120,13 +1771,69 @@ class Fort15:
     def ESLM(self, ESLM):
         self.__ESLM = float(np.abs(ESLM))
 
-    @TOUTGE.setter
-    def TOUTGE(self, TOUTGE):
-        self.__TOUTGE = float(np.abs(TOUTGE))
+    @NOUTGE.setter
+    def NOUTGE(self, NOUTGE):
+        self.__NOUTGE = NOUTGE
 
-    @TOUTGV.setter
-    def TOUTGV(self, TOUTGV):
-        self.__TOUTGV = float(np.abs(TOUTGV))
+    @TOUTSGE.setter
+    def TOUTSGE(self, TOUTSGE):
+        self.__TOUTSGE = float(np.abs(TOUTSGE))
+
+    @TOUTFGE.setter
+    def TOUTFGE(self, TOUTFGE):
+        self.__TOUTFGE = float(np.abs(TOUTFGE))
+
+    @NSPOOLGE.setter
+    def NSPOOLGE(self, NSPOOLGE):
+        self.__NSPOOLGE = int(np.abs(NSPOOLGE))
+
+    @NOUTGV.setter
+    def NOUTGV(self, NOUTGV):
+        self.__NOUTGV = NOUTGV
+
+    @TOUTSGV.setter
+    def TOUTSGV(self, TOUTSGV):
+        self.__TOUTSGV = float(np.abs(TOUTSGV))
+
+    @TOUTFGV.setter
+    def TOUTFGV(self, TOUTFGV):
+        self.__TOUTFGV = float(np.abs(TOUTFGV))
+
+    @NSPOOLGV.setter
+    def NSPOOLGV(self, NSPOOLGV):
+        self.__NSPOOLGV = int(np.abs(NSPOOLGV))
+
+    @NOUTGM.setter
+    def NOUTGM(self, NOUTGM):
+        self.__NOUTGM = NOUTGM
+
+    @TOUTSGM.setter
+    def TOUTSGM(self, TOUTSGM):
+        self.__TOUTSGM = float(np.abs(TOUTSGM))
+
+    @TOUTFGM.setter
+    def TOUTFGM(self, TOUTFGM):
+        self.__TOUTFGM = float(np.abs(TOUTFGM))
+
+    @NSPOOLGM.setter
+    def NSPOOLGM(self, NSPOOLGM):
+        self.__NSPOOLGM = int(np.abs(NSPOOLGM))
+
+    @NOUTGC.setter
+    def NOUTGC(self, NOUTGC):
+        self.__NOUTGC = NOUTGC
+
+    @TOUTSGC.setter
+    def TOUTSGC(self, TOUTSGC):
+        self.__TOUTSGC = float(np.abs(TOUTSGC))
+
+    @TOUTFGC.setter
+    def TOUTFGC(self, TOUTFGC):
+        self.__TOUTFGC = float(np.abs(TOUTFGC))
+
+    @NSPOOLGC.setter
+    def NSPOOLGC(self, NSPOOLGC):
+        self.__NSPOOLGC = int(np.abs(NSPOOLGC))
 
     @CORI.setter
     def CORI(self, CORI):
@@ -2138,20 +1845,6 @@ class Fort15:
         else:
             CORI = float(CORI)
         self.__CORI = CORI
-
-    # @NTIF.setter
-    # def NTIF(self, NTIF):
-    #     if self.tidal_forcing is None:
-    #         NTIF = []
-    #     else:
-    #         if NTIF == 'all':
-    #             NTIF = []
-    #             for constituent in self.tidal_forcing.constituents:
-    #                 if constituent in self.tidal_forcing.major8:
-    #                     NTIF.append(constituent)
-    #         else:
-    #             NTIF = list(NTIF)
-    #     self.__NTIF = NTIF
 
     @ANGINN.setter
     def ANGINN(self, ANGINN):
@@ -2314,7 +2007,7 @@ class Fort15:
 
     @gwce_solution_scheme.setter
     def gwce_solution_scheme(self, gwce_solution_scheme):
-        assert gwce_solution_scheme in ['semi_implicit', 'explicit']
+        assert gwce_solution_scheme in ['semi-implicit', 'explicit']
         self.__gwce_solution_scheme = gwce_solution_scheme
 
     @passive_scalar_transport.setter
@@ -2337,3 +2030,151 @@ class Fort15:
     def horizontal_mixing_coefficient(self, horizontal_mixing_coefficient):
         self.__horizontal_mixing_coefficient = np.abs(
             float(horizontal_mixing_coefficient))
+
+    @CFL.setter
+    def CFL(self, CFL):
+        self.__CFL = float(CFL)
+
+    def _get_NSTA_(self, physical_var):
+        stations = self._container['stations'][physical_var]
+        if self._runtype == 'coldstart':
+            if stations['spinup'] is not None:
+                return len(stations['collection'].keys())
+            else:
+                return 0
+        else:
+            if np.abs(self._get_NOUT__('stations', physical_var)) > 0:
+                return len(stations['collection'].keys())
+            else:
+                return 0
+
+    def _get_NOUT__(self, output_type, physical_var):
+        output = self._container[output_type][physical_var]
+        if self._runtype == "coldstart":
+            if output['spinup'] is not None:
+                if output['netcdf'] is True:
+                    return -5
+                else:
+                    return -1
+            else:
+                return 0
+
+        elif self._runtype == "hotstart":
+            if output['sampling_frequency'] is not None:
+                if output['netcdf'] is True:
+                    return -5
+                else:
+                    return -1
+            else:
+                return 0
+
+    def _get_TOUTS__(self, output_type, physical_var):
+        output = self._container[output_type][physical_var]
+        # coldstart
+        if self._runtype == 'coldstart':
+            if output['spinup'] is not None:
+                start = output['spinup_start']
+            else:
+                return 0
+
+        # hotstart
+        else:
+            if output['sampling_frequency'] is not None:
+                start = output['start']
+            else:
+                return 0
+
+        # typecast
+        if isinstance(start, int):  # int interpreted as literal timestep
+            start = timedelta(seconds=(start * self.timestep))
+            if self._runtype == 'coldstart':
+                start = start - self.forcing_start_date
+            else:
+                start = start - self.start_date
+
+        elif isinstance(start, type(None)):
+            if self._runtype == 'hotstart':
+                dt = self.start_date - self.forcing_start_date
+                return dt.total_seconds() / (60*60*24)
+            else:
+                return 0
+
+        return start.total_seconds() / (60.*60.*24.)
+
+    def _get_TOUTF__(self, output_type, physical_var):
+        output = self._container[output_type][physical_var]
+        # coldstart
+        if self._runtype == 'coldstart':
+            if output['spinup'] is not None:
+                if output['spinup_end'] is None:
+                    if self.NOUTGE != 0:
+                        time = self.spinup_time.total_seconds()/(60.*60.*24.)
+                        if time > 0:
+                            return time
+                        else:
+                            dt = self.end_date - self.start_date
+                            return dt.total_seconds()/(60.*60.*24.)
+                    else:
+                        return 0
+                else:
+                    raise NotImplementedError
+            else:
+                return 0
+
+        # hotstart
+        elif self._runtype == 'hotstart':
+            if output['sampling_frequency'] is not None:
+                if output['end'] is None:
+                    if self._runtype == 'hotstart':
+                        dt = self.end_date - self.forcing_start_date
+                        return dt.total_seconds() / (60*60*24)
+                    # if self.NOUTGE != 0:
+                    #     time = self.spinup_time.total_seconds()/(60.*60.*24.)
+                    #     if time > 0:
+                    #         return time
+                    #     else:
+                    #         dt = self.end_date - self.forcing_start_date
+                    #         return dt.total_seconds()/(60.*60.*24.)
+                    else:
+                        dt = self.start_date - self.forcing_start_date
+                        return dt.total_seconds() / (60*60*24)
+                else:
+                    raise NotImplementedError
+            else:
+                return 0
+
+    def _get_NSPOOL__(self, output_type, physical_var):
+        output = self._container[output_type][physical_var]
+        if self._runtype == 'coldstart':
+            if output['spinup']:
+                return int(round(output['spinup'].total_seconds() / self.DTDP))
+            else:
+                return 0
+        else:
+            if output['sampling_frequency'] is not None:
+                if (output_type == 'surface'
+                        and output['sampling_frequency'].total_seconds() == 0):
+                    return int(
+                        (self.end_date - self.start_date).total_seconds()
+                        / self.DTDP)
+                return int(round(
+                    (output['sampling_frequency'].total_seconds() / self.DTDP))
+                )
+            else:
+                return 0
+
+    def _get_harmonic_analysis_state(self, output):
+        state = 0
+        if self._runtype == 'coldstart':
+            if output['spinup'] and output['harmonic_analysis']:
+                if self.netcdf:
+                    return 5
+                else:
+                    return 1
+        else:
+            if output['harmonic_analysis']:
+                if self.netcdf:
+                    return 5
+                else:
+                    return 1
+        return state
