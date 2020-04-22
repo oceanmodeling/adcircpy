@@ -12,10 +12,10 @@ from adcircpy.model.winds import (
     BestTrackForcing,
     OwiForcing
     )
-from adcircpy.server import (
-    ServerConfig,
-    SlurmConfig,
-    )
+# from adcircpy.server import (
+#     ServerConfig,
+#     SlurmConfig,
+#     )
 
 __all__ = [
     "AdcircMesh",
@@ -23,8 +23,8 @@ __all__ = [
     "TidalForcing",
     "BestTrackForcing",
     "OwiForcing",
-    "ServerConfig",
-    "SlurmConfig"
+    # "ServerConfig",
+    # "SlurmConfig"
 ]
 
 mpl.rcParams['agg.path.chunksize'] = 10000

@@ -26,11 +26,15 @@ class TPXO:
                 return
 
         else:
+            prefix = pathlib.Path("/".join(sys.executable.split('/')[:-2]))
+            file = prefix / 'lib/h_tpxo9.v1.nc'
             msg = "No TPXO file found. You need to register and request a "
             msg += "copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)"
             msg += " from the authors at https://www.tpxo.net. Once you obtain"
             msg += " this copy, set the environment variable TPXO_NCFILE "
-            msg += "to point to the path of the h_tpxo9.v1.nc file."
+            msg += "to point to the path of the h_tpxo9.v1.nc file. \n"
+            msg += "You may also install this file manually by placing it on "
+            msg += f"the {str(file)} path."
             raise FileNotFoundError(msg)
 
     def __call__(self, constituent, vertices):
