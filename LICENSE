@@ -1,3 +1,11 @@
+All parts of this software are covered by the GNU GENERAL PUBLIC LICENSE
+except for the TPXO tidal model file which is covered by the license
+agreement found in the following link:
+https://drive.google.com/file/d/1f00WojHqu7_VE5Hg9OdiVBjymH76dFCy/view
+The use of this software (AdcircPy) constitutes implicit agreement to 
+the License Agreement for the use of the TPXO tidal model as well as the
+GNU GPL-3.0 as described below.
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

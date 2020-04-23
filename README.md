@@ -17,16 +17,6 @@ Alternatively, you many manually install the repo by cloning it and then running
 pip install .
 ```
 
-
-### Additional installation notes:
-In order to be able to generate the tidal boundary conditions for the model, the TPXO<sup>[[1]](https://www.tpxo.net/tpxo-products-and-registration)</sup> file (h_tpxo9.v1.nc) needs to be available in the system.
-This file can be obtained by following the registration found [here](https://www.tpxo.net/tpxo-products-and-registration). Once you obtained the h_tpxo9.v1.nc file, you may execute
-```bash
-tpxo_install /path/to/your/h_tpxo9.v1.nc
-```
-This will stage the file in the installation directory for AdcircPy.
-In the future, the requirement for this proprietary file will be dropped in favor of an open source variant.
-
 ### Examples: 
 See the [examples](examples) directory for usage examples.
 
@@ -73,5 +63,4 @@ plot_mesh /path/to/fort.14 --show-elements
 
 ### Contact
 For questions comments and suggestions, please email me at jreniel@gmail.com
-### References
-[1] Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204. https://www.tpxo.net/
+
