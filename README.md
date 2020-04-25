@@ -3,8 +3,7 @@
 
 ### Installation notes:
 
-Please use a virtual environment with >=Python3.6. You may use conda or the OS's Python to provide a virtual environment for the application.
-This is usually developed using the latest Python, but it should work with Python version >=3.6.
+Please use a virtual environment with >=Python3.8. You may use conda or the OS's Python to provide a virtual environment for the application.
 
 You may install the application though pip. This will install the latest tagged version.
 ```bash
@@ -63,4 +62,3 @@ plot_mesh /path/to/fort.14 --show-elements
 
 ### Contact
 For questions comments and suggestions, please email me at jreniel@gmail.com
-
