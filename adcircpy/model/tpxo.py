@@ -6,13 +6,12 @@ from netCDF4 import Dataset
 import pathlib
 import wget
 import tempfile
-import warnings
 import tarfile
 
 
 class TPXO:
     """
-    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204
+    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204  # noqa:E501
     """
 
     def __init__(self):
@@ -118,8 +117,8 @@ class TPXO:
 
     @staticmethod
     def _fetch_tpxo_file(prefix, file):
-        url = "https://srv-file12.gofile.io/download/8r26Wj"
-        url += "/h_tpxo9.v1.tar.gz"
+        url = "https://www.dropbox.com/s/uc44cbo5s2x4n93/"
+        url += "h_tpxo9.v1.tar.gz?dl=1"
 
         def query_yes_no(question, default="yes"):
             """Ask a yes/no question via raw_input() and return their answer.
@@ -150,12 +149,12 @@ class TPXO:
                 else:
                     sys.stdout.write("Please respond with 'yes' or 'no' "
                                      "(or 'y' or 'n').\n")
-        print("*** PLEASE READ ***")
-        q = "A function that is being invoked requires the TPXO file. "
-        q += 'This software can automatically fetch the TPXO file for you using'
-        q += 'your internet connection. You may also cancel this operation and'
-        q += ' provide the path to the h_tpxo9.v1.nc file using the '
-        q += 'TPXO_NCFILE environment variable. \n'
+        q = "******* PLEASE READ *******\n"
+        q += "A function that is being invoked requires the TPXO file.\n"
+        q += 'This software can automatically fetch the TPXO file for you usin'
+        q += 'g your internet connection.\n'
+        q += 'You may also cancel this operation and provide the path to the '
+        q += 'h_tpxo9.v1.nc file using the TPXO_NCFILE environment variable.\n'
         q += "By downloading this file and using this software, you are "
         q += "accepting the licensing agreement for the TPXO file found here:"
         q += "\nhttps://drive.google.com/file/d/1f00WojHqu7_VE5Hg9OdiVBjymH76d"
@@ -163,7 +162,7 @@ class TPXO:
         q += 'If you accept the agreement, you may also download the TPXO '
         q += f"file from: {url}\n"
         q += "Would you like this software to fetch and stage the TPXO file "
-        q += "from the internet now?"
+        q += "from the internet now?\n"
         a = query_yes_no(q)
         if a is False:
             raise RuntimeError('No TPXO database found.')
