@@ -249,19 +249,24 @@ class AdcircMesh(UnstructuredMesh):
                     )
         return node_distances
 
-    def critical_timestep(self, cfl, maxvel=5., g=9.8):
+    def critical_timestep(self, cfl, maxvel=5., g=9.8, method='simple'):
         """
         http://swash.sourceforge.net/online_doc/swashuse/node47.html
         """
+        msg = "method keyword must be 'simple' or 'conservative'"
+        assert method in ['simple', 'conservative'], msg
         dxdy = len(self.values)*[None]
         for k, v in self.node_distances_meters.items():
             _dxdy = []
             for idx in v:
                 _dxdy.append(self.node_distances_meters[k][idx])
             dxdy[k] = np.min(_dxdy)
-        n = cfl * np.asarray(dxdy)
-        d = np.sqrt(g*np.abs(self.values)) + np.abs(maxvel)
-        return np.min(np.divide(n, d))
+        if method == 'simple':
+            return cfl*np.min(dxdy)/np.abs(maxvel)
+        elif method == 'conservative':
+            n = cfl * np.asarray(dxdy)
+            d = np.sqrt(g*np.abs(self.values)) + np.abs(maxvel)
+            return np.min(np.divide(n, d))
 
     def limgrad(self, dfdx, imax=100, ftol=None, verbose=False, minimize=True):
         if not self.crs.is_geographic:
