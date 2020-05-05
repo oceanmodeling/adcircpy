@@ -74,7 +74,7 @@ def main():
         sampling_frequency=timedelta(minutes=30))
 
     # override defaults options
-    driver.timestep = 6.0
+    driver.timestep = 4.0
 
     # run parallel ADCIRC if binary is installed
     if shutil.which('padcirc') is not None:
