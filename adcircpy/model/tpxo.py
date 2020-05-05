@@ -26,12 +26,10 @@ class TPXO:
             file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
 
         if isinstance(file, pathlib.Path):
-            if file.is_file():
-                self._nc = Dataset(file)
-                return
-            else:
+            if not file.is_file():
                 self._fetch_tpxo_file(prefix, file)
-                return
+            self._nc = Dataset(file)
+            return
 
         msg = "No TPXO file found. You need to register and request a "
         msg += "copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)"
@@ -175,7 +173,7 @@ class TPXO:
             _tmpdir = pathlib.Path(tmpdir.name)
             wget.download(url, out=str(_tmpdir / "h_tpxo9.v1.tar.gz"))
             with tarfile.open(_tmpdir / "h_tpxo9.v1.tar.gz") as f:
-                f.extract('h_tpxo9.v1.nc', path=prefix)
+                f.extract('h_tpxo9.v1.nc', path=prefix+'/lib')
 
     @property
     def _nc(self):

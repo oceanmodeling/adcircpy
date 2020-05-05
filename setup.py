@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url=meta['url'],
     packages=setuptools.find_packages(),
-    python_requires='>=3.8',
+    python_requires='>=3.6',
     install_requires=[
         'matplotlib',
         'netCDF4',

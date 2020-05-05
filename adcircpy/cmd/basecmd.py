@@ -39,7 +39,7 @@ class AdcircCommand:
         # outputs.maxele.make_plot(show=True)
 
     @property
-    @lru_cache
+    @lru_cache(maxsize=None)
     def driver(self):
         driver = AdcircRun(
             self.mesh,

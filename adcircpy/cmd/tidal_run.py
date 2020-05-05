@@ -15,12 +15,12 @@ class TidalRunCommand(AdcircCommand):
     """ CLI wrapper for AdcircCommand to generate tidal only runs """
 
     @property
-    @lru_cache
+    @lru_cache(maxsize=None)
     def _start_date(self):
         return datetime.strptime(self.args.start_date, "%Y-%m-%dT%H:%M")
 
     @property
-    @lru_cache
+    @lru_cache(maxsize=None)
     def _end_date(self):
         return datetime.strptime(self.args.end_date, "%Y-%m-%dT%H:%M")
 

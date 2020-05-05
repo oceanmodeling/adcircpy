@@ -233,7 +233,7 @@ class AdcircMesh(UnstructuredMesh):
             )
 
     @property
-    @lru_cache
+    @lru_cache(maxsize=None)
     def node_distances_meters(self):
         points = self.get_xy("EPSG:4326")
         node_distances = {}
