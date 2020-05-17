@@ -27,7 +27,7 @@ setuptools.setup(
         'bs4',
         'seaborn',
         'pandas',
-        'pyproj',
+        'pyproj>=2.6',
         'numpy',
         'ordered_set',
         # 'pygrib', # TODO: make separate install
