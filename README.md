@@ -3,7 +3,7 @@
 
 ### Installation notes:
 
-Please use a virtual environment with >=Python3.6. You may use conda or the OS's Python to provide a virtual environment for the application.
+Please use a virtual environment with Python>=3.6. You may use conda or the OS's Python to provide a virtual environment for the application.
 
 You may install the application though pip. This will install the latest tagged version.
 ```bash
