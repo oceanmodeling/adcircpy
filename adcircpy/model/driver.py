@@ -1,14 +1,17 @@
 from datetime import datetime, timedelta
-import subprocess
+import os
 import pathlib
 import shutil
-import os
-import numpy as np
-import matplotlib.pyplot as plt
+import subprocess
 import tempfile
+
+import matplotlib.pyplot as plt
+import numpy as np
 from psutil import cpu_count
-from adcircpy.model.fort15 import Fort15
+
 from adcircpy.mesh.adcirc_mesh import AdcircMesh
+from adcircpy.model.fort15 import Fort15
+from adcircpy.model.slurm.server_config import SlurmScript
 from adcircpy.model.tidal_forcing import TidalForcing
 from adcircpy.model.winds.wind_forcing import WindForcing
 from adcircpy.outputs.collection import OutputCollection
@@ -17,15 +20,15 @@ from adcircpy.outputs.collection import OutputCollection
 class AdcircRun(Fort15):
 
     def __init__(
-        self,
-        mesh,
-        start_date,
-        end_date,
-        spinup_time=None,
-        tidal_forcing=None,
-        wind_forcing=None,
-        waves=None,
-        netcdf=True,
+            self,
+            mesh,
+            start_date,
+            end_date,
+            spinup_time=None,
+            tidal_forcing=None,
+            wind_forcing=None,
+            waves=None,
+            netcdf=True,
     ):
         self._mesh = mesh
         self._start_date = start_date
@@ -53,15 +56,15 @@ class AdcircRun(Fort15):
         self._concentration_stations[station_name] = vertices
 
     def set_elevation_stations_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -72,28 +75,28 @@ class AdcircRun(Fort15):
             spinup_end,
             netcdf,
             harmonic_analysis
-            )
+        )
         self._container['stations']['elevation'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_velocity_stations_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -106,25 +109,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['stations']['velocity'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_meteorological_stations_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -137,25 +140,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['stations']['meteorological'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_concentration_stations_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -168,25 +171,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['stations']['concentration'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_elevation_surface_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -199,25 +202,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['surface']['elevation'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_velocity_surface_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -230,25 +233,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['surface']['velocity'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_meteorological_surface_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -261,25 +264,25 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['surface']['meteorological'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def set_concentration_surface_output(
-        self,
-        sampling_frequency,
-        start=None,
-        end=None,
-        spinup=None,
-        spinup_start=None,
-        spinup_end=None,
-        netcdf=True,
-        harmonic_analysis=False,
+            self,
+            sampling_frequency,
+            start=None,
+            end=None,
+            spinup=None,
+            spinup_start=None,
+            spinup_end=None,
+            netcdf=True,
+            harmonic_analysis=False,
     ):
         self._certify_output_request(
             sampling_frequency,
@@ -292,14 +295,14 @@ class AdcircRun(Fort15):
             harmonic_analysis)
         self._container['surface']['concentration'].update({
             'sampling_frequency': sampling_frequency,
-            'start': start,
-            'end': end,
-            'spinup': spinup,
-            'spinup_start': spinup_start,
-            'spinup_end': spinup_end,
-            'netcdf': netcdf,
-            'harmonic_analysis': harmonic_analysis
-            })
+            'start'             : start,
+            'end'               : end,
+            'spinup'            : spinup,
+            'spinup_start'      : spinup_start,
+            'spinup_end'        : spinup_end,
+            'netcdf'            : netcdf,
+            'harmonic_analysis' : harmonic_analysis
+        })
 
     def remove_elevation_output_station(self, station_name):
         self._elevation_stations.pop(station_name)
@@ -313,17 +316,16 @@ class AdcircRun(Fort15):
     def remove_concentration_output_station(self, station_name):
         self._concentration_stations.pop(station_name)
 
-    def write(
-        self,
-        output_directory,
-        overwrite=False,
-        fort14='fort.14',
-        fort13='fort.13',
-        fort22='fort.22',
-        fort15='fort.15',
-        coldstart='fort.15.coldstart',
-        hotstart='fort.15.hotstart'
-    ):
+    def write(self,
+              output_directory: str,
+              overwrite: bool = False,
+              fort14: str = 'fort.14',
+              fort13: str = 'fort.13',
+              fort22: str = 'fort.22',
+              fort15: str = 'fort.15',
+              coldstart: str = 'fort.15.coldstart',
+              hotstart: str = 'fort.15.hotstart',
+              slurm_config: SlurmScript = None):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
 
@@ -334,9 +336,9 @@ class AdcircRun(Fort15):
         if fort13:
             if len(self.mesh.get_nodal_attribute_names()) > 0:
                 self.mesh.write_fort13(
-                        output_directory / fort13,
-                        overwrite
-                        )
+                    output_directory / fort13,
+                    overwrite
+                )
 
         # when wind forcing is present, one has to divide the run
         # (almost) necessarily in two phases
@@ -344,30 +346,18 @@ class AdcircRun(Fort15):
             # no spiunp time given means single phase
             # easiest way is to override IHOT for the hotstart writer.
             self._IHOT = 0
-            super().write(
-                'hotstart',
-                output_directory / fort15,
-                overwrite
-                )
+            super().write('hotstart', output_directory / fort15, overwrite)
         else:
             if self.wind_forcing is not None:
                 if fort22:
-                    self.wind_forcing.write(
-                        output_directory / fort22,
-                        overwrite
-                        )
+                    self.wind_forcing.write(output_directory / fort22, overwrite)
             if coldstart:
-                super().write(
-                        'coldstart',
-                        output_directory / coldstart,
-                        overwrite
-                        )
+                super().write('coldstart', output_directory / coldstart, overwrite)
             if hotstart:
-                super().write(
-                        'hotstart',
-                        output_directory / hotstart,
-                        overwrite
-                        )
+                super().write('hotstart', output_directory / hotstart, overwrite)
+
+            if slurm_config is not None:
+                slurm_config.write(output_directory / 'slurm.job')
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -384,13 +374,13 @@ class AdcircRun(Fort15):
                     self.add_concentration_output_station(name, vertices)
 
     def run(
-        self,
-        outdir=None,
-        nproc=-1,
-        overwrite=False,
-        coldstart=True,
-        hotstart=True,
-        server_config=None,
+            self,
+            outdir=None,
+            nproc=-1,
+            overwrite=False,
+            coldstart=True,
+            hotstart=True,
+            server_config=None,
     ):
 
         if outdir is None:
@@ -413,7 +403,7 @@ class AdcircRun(Fort15):
                 overwrite=overwrite,
                 coldstart=coldstart,
                 hotstart=hotstart
-                )
+            )
 
         # server adcirc run
         else:
@@ -552,7 +542,7 @@ class AdcircRun(Fort15):
         self._output_collection = OutputCollection(
             maxele=maxele if maxele.is_file() else None,
             crs=self.mesh.crs
-            )
+        )
 
         if len(self._output_collection) == 0:
             raise Exception('No outputs found.')
@@ -674,20 +664,20 @@ class AdcircRun(Fort15):
             s=80,
             facecolors='none',
             edgecolors='r'
-            )
+        )
         ax.axis('scaled')
         plt.show()
 
     def _certify_output_request(
-        self,
-        sampling_frequency,
-        start,
-        end,
-        spinup,
-        spinup_start,
-        spinup_end,
-        netcdf,
-        harmonic_analysis,
+            self,
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis,
     ):
         self._certify_sampling_frequency(sampling_frequency)
         self._certify__OUT__('start', start)
@@ -720,10 +710,10 @@ class AdcircRun(Fort15):
         msg = f"Error: {name} argument must be either {None}, "
         msg += f"{int} or an instance of type {timedelta}."
         assert isinstance(var, (
-                type(None),
-                timedelta,
-                int)
-            ), msg
+            type(None),
+            timedelta,
+            int)
+                          ), msg
 
     @staticmethod
     def _certify_netcdf(netcdf):
@@ -745,7 +735,7 @@ class AdcircRun(Fort15):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=rundir.absolute()
-            )
+        )
         for line in p.stdout:
             if "MPI terminated with Status =" in line:
                 break
@@ -762,11 +752,11 @@ class AdcircRun(Fort15):
         s = "".join(err).split('** WARNING: Elevation.gt.WarnElev **')
         s = [_ for _ in s if 'TIME' in _]
         blowup = {
-            'timestep': list(),
-            'time': list(),
-            'maxele': list(),
+            'timestep'   : list(),
+            'time'       : list(),
+            'maxele'     : list(),
             'maxele_node': list(),
-            'maxvel': list(),
+            'maxvel'     : list(),
             'maxvel_node': list(),
         }
         for output in s:
@@ -826,14 +816,14 @@ class AdcircRun(Fort15):
         # init surface outputs attributes
         schema = {
             'sampling_frequency': None,
-            'start': None,
-            'end': None,
-            'spinup': None,
-            'spinup_start': None,
-            'spinup_end': None,
-            'netcdf': self.netcdf,
-            'harmonic_analysis': False,
-            }
+            'start'             : None,
+            'end'               : None,
+            'spinup'            : None,
+            'spinup_start'      : None,
+            'spinup_end'        : None,
+            'netcdf'            : self.netcdf,
+            'harmonic_analysis' : False,
+        }
         container['surface'] = dict()
         container['surface']['elevation'] = schema.copy()
         container['surface']['velocity'] = schema.copy()

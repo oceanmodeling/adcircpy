@@ -1,15 +1,9 @@
 # import abc
-import pathlib
-from functools import lru_cache
 from datetime import timedelta
-from adcircpy import (
-    AdcircMesh,
-    TidalForcing,
-    # BestTrackForcing,
-    # ServerConfig,
-    # SlurmConfig,
-    AdcircRun,
-    )
+from functools import lru_cache
+import pathlib
+
+from adcircpy import (AdcircMesh, AdcircRun, TidalForcing)  # BestTrackForcing,; ServerConfig,; SlurmConfig,
 
 
 class AdcircCommand:
@@ -21,10 +15,7 @@ class AdcircCommand:
 
         # write and exit if generate only
         if self.args.generate_only:
-            self.driver.write(
-                self.args.output_directory,
-                overwrite=self.args.overwrite
-                )
+            self.driver.write(self.args.output_directory, overwrite=self.args.overwrite)
             return
 
         outputs = self.driver.run(
@@ -124,7 +115,7 @@ class AdcircCommand:
                 raise IOError(msg)
 
             elif ('major' in self.args.constituents
-                    and len(self.args.constituents) > 1):
+                  and len(self.args.constituents) > 1):
                 msg = 'When using major, must only pass one'
                 raise IOError(msg)
             if 'all' in self.args.constituents:
@@ -149,12 +140,12 @@ class AdcircCommand:
                     binaries_prefix=self.args.binaries_prefix,
                     source_script=self.args.source_script,
                     additional_mpi_options=self.args.additional_mpi_options,
-                    )
+                )
 
             elif self.args.use_slurm:
                 raise NotImplementedError
                 server_config = SlurmConfig(
-                    )
+                )
 
             elif self.args.use_torque or self.args.use_pbs:
                 raise NotImplementedError
@@ -186,7 +177,7 @@ class AdcircCommand:
             harmonic_analysis=ha,
             spinup=fss,
             netcdf=self.args.netcdf,
-            )
+        )
 
     def _init_output_stations(self, driver):
         if self.args.stations_file is not None:
@@ -209,13 +200,13 @@ class AdcircCommand:
             mesh = AdcircMesh.open(
                 self.args.mesh,
                 self.args.crs
-                )
+            )
 
             # set nodal attributes
             if self.args.fort13 is not None:
                 mesh.import_nodal_attributes(
                     pathlib.Path(self.args.fort13).resolve()
-                    )
+                )
 
             if 'all' in self.args.coldstart_attributes:
                 for attr in mesh.get_nodal_attribute_names():
