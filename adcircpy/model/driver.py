@@ -373,15 +373,15 @@ class AdcircRun(Fort15):
                     if station_type == 'NOUTC':
                         self.add_concentration_output_station(name, vertices)
 
-        def run(
-                self,
-                outdir=None,
-                nproc=-1,
-                overwrite=False,
-                coldstart=True,
-                hotstart=True,
-                server_config=None,
-        ):
+    def run(
+            self,
+            outdir=None,
+            nproc=-1,
+            overwrite=False,
+            coldstart=True,
+            hotstart=True,
+            server_config=None,
+    ):
 
             if outdir is None:
                 self._outdir_tmpdir = tempfile.TemporaryDirectory()
@@ -395,15 +395,15 @@ class AdcircRun(Fort15):
             # if not outdir.exists():
             #     outdir.mkdir(parents=True)
 
-            # local adcirc run
-            if server_config is None:
-                self._run_local(
-                    nproc=nproc,
-                    outdir=outdir,
-                    overwrite=overwrite,
-                    coldstart=coldstart,
-                    hotstart=hotstart
-                )
+        # local adcirc run
+        if server_config is None:
+            self._run_local(
+                nproc=nproc,
+                outdir=outdir,
+                overwrite=overwrite,
+                coldstart=coldstart,
+                hotstart=hotstart
+            )
 
             # server adcirc run
             else:
@@ -539,10 +539,10 @@ class AdcircRun(Fort15):
             # gather outputs
             maxele = pathlib.Path(outdir / 'hotstart/maxele.63.nc')
 
-            self._output_collection = OutputCollection(
-                maxele=maxele if maxele.is_file() else None,
-                crs=self.mesh.crs
-            )
+        self._output_collection = OutputCollection(
+            maxele=maxele if maxele.is_file() else None,
+            crs=self.mesh.crs
+        )
 
             if len(self._output_collection) == 0:
                 raise Exception('No outputs found.')
@@ -653,40 +653,40 @@ class AdcircRun(Fort15):
             assert station_name not in keys, msg
             return tuple(vertices)
 
-        def _handle_blowup(self, err):
-            data = self._get_blowup_data(err)
-            idx = np.asarray(data['maxele_node']) - 1
-            ax = self.mesh.make_plot()
-            self.mesh.triplot(axes=ax)
-            ax.scatter(
-                self.mesh.x[idx],
-                self.mesh.y[idx],
-                s=80,
-                facecolors='none',
-                edgecolors='r'
-            )
-            ax.axis('scaled')
-            plt.show()
+    def _handle_blowup(self, err):
+        data = self._get_blowup_data(err)
+        idx = np.asarray(data['maxele_node']) - 1
+        ax = self.mesh.make_plot()
+        self.mesh.triplot(axes=ax)
+        ax.scatter(
+            self.mesh.x[idx],
+            self.mesh.y[idx],
+            s=80,
+            facecolors='none',
+            edgecolors='r'
+        )
+        ax.axis('scaled')
+        plt.show()
 
-        def _certify_output_request(
-                self,
-                sampling_frequency,
-                start,
-                end,
-                spinup,
-                spinup_start,
-                spinup_end,
-                netcdf,
-                harmonic_analysis,
-        ):
-            self._certify_sampling_frequency(sampling_frequency)
-            self._certify__OUT__('start', start)
-            self._certify__OUT__('end', end)
-            self._certify_spinup(spinup)
-            self._certify__OUT__('spinup_start', spinup_start)
-            self._certify__OUT__('spinup_end', spinup_end)
-            self._certify_netcdf(netcdf)
-            self._certify_harmonic_analysis(harmonic_analysis)
+    def _certify_output_request(
+            self,
+            sampling_frequency,
+            start,
+            end,
+            spinup,
+            spinup_start,
+            spinup_end,
+            netcdf,
+            harmonic_analysis,
+    ):
+        self._certify_sampling_frequency(sampling_frequency)
+        self._certify__OUT__('start', start)
+        self._certify__OUT__('end', end)
+        self._certify_spinup(spinup)
+        self._certify__OUT__('spinup_start', spinup_start)
+        self._certify__OUT__('spinup_end', spinup_end)
+        self._certify_netcdf(netcdf)
+        self._certify_harmonic_analysis(harmonic_analysis)
 
         @staticmethod
         def _certify_sampling_frequency(sampling_frequency):
@@ -704,16 +704,16 @@ class AdcircRun(Fort15):
                 assert isinstance(spinup, timedelta), msg
             return spinup
 
-        @staticmethod
-        def _certify__OUT__(name, var):
-            # certifies TOUTS* and TOUTF*
-            msg = f"Error: {name} argument must be either {None}, "
-            msg += f"{int} or an instance of type {timedelta}."
-            assert isinstance(var, (
-                type(None),
-                timedelta,
-                int)
-                              ), msg
+    @staticmethod
+    def _certify__OUT__(name, var):
+        # certifies TOUTS* and TOUTF*
+        msg = f"Error: {name} argument must be either {None}, "
+        msg += f"{int} or an instance of type {timedelta}."
+        assert isinstance(var, (
+            type(None),
+            timedelta,
+            int)
+                          ), msg
 
         @staticmethod
         def _certify_netcdf(netcdf):
@@ -727,51 +727,51 @@ class AdcircRun(Fort15):
             msg = f"Error: harmonic_analysis must be of type {bool}."
             assert isinstance(harmonic_analysis, bool), msg
 
-        @staticmethod
-        def _launch_command(cmd, rundir):
-            p = subprocess.Popen(
-                cmd,
-                universal_newlines=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=rundir.absolute()
-            )
-            for line in p.stdout:
-                if "MPI terminated with Status =" in line:
-                    break
-                print(line, end='')
-            p.wait()
-            return p.stderr.readlines()
+    @staticmethod
+    def _launch_command(cmd, rundir):
+        p = subprocess.Popen(
+            cmd,
+            universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=rundir.absolute()
+        )
+        for line in p.stdout:
+            if "MPI terminated with Status =" in line:
+                break
+            print(line, end='')
+        p.wait()
+        return p.stderr.readlines()
 
         @staticmethod
         def _get_nproc(nproc):
             return cpu_count(logical=False) if nproc == -1 else nproc
 
-        @staticmethod
-        def _get_blowup_data(err):
-            s = "".join(err).split('** WARNING: Elevation.gt.WarnElev **')
-            s = [_ for _ in s if 'TIME' in _]
-            blowup = {
-                'timestep'   : list(),
-                'time'       : list(),
-                'maxele'     : list(),
-                'maxele_node': list(),
-                'maxvel'     : list(),
-                'maxvel_node': list(),
-            }
-            for output in s:
-                blowup['timestep'].append(
-                    int(output.split('TIME STEP =')[1].split()[0]))
-                blowup['time'].append(
-                    float(output.split('TIME =')[1].split()[0]))
-                blowup['maxele'].append(
-                    float(output.split('ELMAX =')[1].split()[0]))
-                blowup['maxvel'].append(
-                    float(output.split('SPEEDMAX =')[1].split()[0]))
-                nodes = output.split('AT NODE')
-                blowup['maxele_node'].append(int(nodes[1].split()[0]))
-                blowup['maxvel_node'].append(int(nodes[2].split()[0]))
-            return blowup
+    @staticmethod
+    def _get_blowup_data(err):
+        s = "".join(err).split('** WARNING: Elevation.gt.WarnElev **')
+        s = [_ for _ in s if 'TIME' in _]
+        blowup = {
+            'timestep'   : list(),
+            'time'       : list(),
+            'maxele'     : list(),
+            'maxele_node': list(),
+            'maxvel'     : list(),
+            'maxvel_node': list(),
+        }
+        for output in s:
+            blowup['timestep'].append(
+                int(output.split('TIME STEP =')[1].split()[0]))
+            blowup['time'].append(
+                float(output.split('TIME =')[1].split()[0]))
+            blowup['maxele'].append(
+                float(output.split('ELMAX =')[1].split()[0]))
+            blowup['maxvel'].append(
+                float(output.split('SPEEDMAX =')[1].split()[0]))
+            nodes = output.split('AT NODE')
+            blowup['maxele_node'].append(int(nodes[1].split()[0]))
+            blowup['maxvel_node'].append(int(nodes[2].split()[0]))
+        return blowup
 
         @property
         def _mesh(self):
@@ -805,47 +805,47 @@ class AdcircRun(Fort15):
         def _netcdf(self):
             return self.__netcdf
 
-        @property
-        def _container(self):
-            try:
-                return self.__container
-            except AttributeError:
-                pass
-            # init container
-            container = dict()
-            # init surface outputs attributes
-            schema = {
-                'sampling_frequency': None,
-                'start'             : None,
-                'end'               : None,
-                'spinup'            : None,
-                'spinup_start'      : None,
-                'spinup_end'        : None,
-                'netcdf'            : self.netcdf,
-                'harmonic_analysis' : False,
-            }
-            container['surface'] = dict()
-            container['surface']['elevation'] = schema.copy()
-            container['surface']['velocity'] = schema.copy()
-            container['surface']['meteorological'] = schema.copy()
-            container['surface']['concentration'] = schema.copy()
-            # init stations output attributes
-            container['stations'] = dict()
-            container['stations']['elevation'] = schema.copy()
-            container['stations']['velocity'] = schema.copy()
-            container['stations']['meteorological'] = schema.copy()
-            container['stations']['concentration'] = schema.copy()
-            # add a 'collections' key to hold the stations.
-            container['stations']['elevation'].update(
-                {'collection': dict()})
-            container['stations']['velocity'].update(
-                {'collection': dict()})
-            container['stations']['meteorological'].update(
-                {'collection': dict()})
-            container['stations']['concentration'].update(
-                {'collection': dict()})
-            self.__container = container
+    @property
+    def _container(self):
+        try:
             return self.__container
+        except AttributeError:
+            pass
+        # init container
+        container = dict()
+        # init surface outputs attributes
+        schema = {
+            'sampling_frequency': None,
+            'start'             : None,
+            'end'               : None,
+            'spinup'            : None,
+            'spinup_start'      : None,
+            'spinup_end'        : None,
+            'netcdf'            : self.netcdf,
+            'harmonic_analysis' : False,
+        }
+        container['surface'] = dict()
+        container['surface']['elevation'] = schema.copy()
+        container['surface']['velocity'] = schema.copy()
+        container['surface']['meteorological'] = schema.copy()
+        container['surface']['concentration'] = schema.copy()
+        # init stations output attributes
+        container['stations'] = dict()
+        container['stations']['elevation'] = schema.copy()
+        container['stations']['velocity'] = schema.copy()
+        container['stations']['meteorological'] = schema.copy()
+        container['stations']['concentration'] = schema.copy()
+        # add a 'collections' key to hold the stations.
+        container['stations']['elevation'].update(
+            {'collection': dict()})
+        container['stations']['velocity'].update(
+            {'collection': dict()})
+        container['stations']['meteorological'].update(
+            {'collection': dict()})
+        container['stations']['concentration'].update(
+            {'collection': dict()})
+        self.__container = container
+        return self.__container
 
         @property
         def _stations_output(self):
