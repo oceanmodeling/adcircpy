@@ -115,18 +115,19 @@ class TPXO:
         assert vertices.shape[1] == 2, msg
 
     @staticmethod
-    def _fetch_tpxo_file(prefix, file):
+    def _fetch_tpxo_file(prefix: str, file: str):
         url = "https://www.dropbox.com/s/uc44cbo5s2x4n93/"
         url += "h_tpxo9.v1.tar.gz?dl=1"
 
-        def query_yes_no(question, default="yes"):
-            """Ask a yes/no question via raw_input() and return their answer.
-            "question" is a string that is presented to the user.
-            "default" is the presumed answer if the user just hits <Enter>.
-                It must be "yes" (the default), "no" or None (meaning
-                an answer is required of the user).
-            The "answer" return value is one of "yes" or "no".
+        def query_yes_no(question: str, default: str = "yes") -> bool:
             """
+            Ask a yes/no question via raw_input() and return their answer.
+
+            :param question: string presented to the user
+            :param default: presumed answer if the user just hits <Enter>; must be "yes" (the default), "no", or None (meaning an answer is required of the user)
+            :returns: whether 'yes' or 'no' was selected by the user
+            """
+
             valid = {
                 "yes": True,
                 "y"  : True,
@@ -147,12 +148,11 @@ class TPXO:
                 sys.stdout.write(question + prompt)
                 choice = input().lower()
                 if default is not None and choice == '':
-                    return default
+                    return valid[default]
                 elif choice in valid.keys():
                     return valid[choice]
                 else:
-                    sys.stdout.write("Please respond with 'yes' or 'no' "
-                                     "(or 'y' or 'n').\n")
+                    sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
         q = "******* PLEASE READ *******\n"
         q += "A function that is being invoked requires the TPXO file.\n"
