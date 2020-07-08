@@ -18,6 +18,9 @@ argument_sbatch_translations = {
 
 
 class ServerConfig(ABC):
+    def __init__(self, script: str):
+        self.script = script
+
     def run(self):
         """
         Run the current shell script from a temporary file.
@@ -26,7 +29,7 @@ class ServerConfig(ABC):
         with TemporaryDirectory() as temporary_directory:
             temporary_filename = os.path.join(temporary_directory, 'temp.job')
             with open(temporary_filename, 'w') as temporary_file:
-                temporary_file.write(self.driver_script)
+                temporary_file.write(self.script)
             os.system(temporary_filename)
 
     def write(self, filename: str):
@@ -37,7 +40,7 @@ class ServerConfig(ABC):
         """
 
         with open(filename, 'w') as output_file:
-            output_file.write(self.driver_script)
+            output_file.write(self.script)
 
 
 class SlurmScript(ServerConfig):
@@ -119,4 +122,4 @@ class SlurmScript(ServerConfig):
         with open(driver_script_filename) as driver_script_file:
             driver_script = ''.join([line for line in driver_script_file.readlines()][2:])
 
-        self.driver_script = '\n'.join(script_prefix_lines) + '\n\n' + driver_script
+        super().__init__('\n'.join(script_prefix_lines) + '\n\n' + driver_script)
