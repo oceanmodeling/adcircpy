@@ -1,12 +1,13 @@
-from scipy.interpolate import griddata
-import numpy as np
 import os
-import sys
-from netCDF4 import Dataset
 import pathlib
-import wget
-import tempfile
+import sys
 import tarfile
+import tempfile
+
+from netCDF4 import Dataset
+import numpy as np
+from scipy.interpolate import griddata
+import wget
 
 
 class TPXO:
@@ -22,7 +23,7 @@ class TPXO:
             return
 
         else:
-            prefix = "/".join(sys.executable.split('/')[:-2])
+            prefix = os.path.dirname(os.path.dirname(sys.executable))
             file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
 
         if isinstance(file, pathlib.Path):
@@ -104,8 +105,8 @@ class TPXO:
         dy = np.mean(np.diff(self.y))
         _idx = np.where(
             np.logical_and(  # buffer the bbox by 2 difference units
-                np.logical_and(x >= np.min(_x)-2*dx, x <= np.max(_x)+2*dx),
-                np.logical_and(y >= np.min(_y)-2*dy, y <= np.max(_y)+2*dy)))
+                np.logical_and(x >= np.min(_x) - 2 * dx, x <= np.max(_x) + 2 * dx),
+                np.logical_and(y >= np.min(_y) - 2 * dy, y <= np.max(_y) + 2 * dy)))
         return griddata(
             (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
 
@@ -126,8 +127,13 @@ class TPXO:
                 an answer is required of the user).
             The "answer" return value is one of "yes" or "no".
             """
-            valid = {"yes": True,   "y": True,  "ye": True,
-                     "no": False,     "n": False}
+            valid = {
+                "yes": True,
+                "y"  : True,
+                "ye" : True,
+                "no" : False,
+                "n"  : False
+            }
             if default is None:
                 prompt = " [y/n] "
             elif default == "yes":
@@ -147,6 +153,7 @@ class TPXO:
                 else:
                     sys.stdout.write("Please respond with 'yes' or 'no' "
                                      "(or 'y' or 'n').\n")
+
         q = "******* PLEASE READ *******\n"
         q += "A function that is being invoked requires the TPXO file.\n"
         q += 'This software can automatically fetch the TPXO file for you usin'
@@ -173,7 +180,7 @@ class TPXO:
             _tmpdir = pathlib.Path(tmpdir.name)
             wget.download(url, out=str(_tmpdir / "h_tpxo9.v1.tar.gz"))
             with tarfile.open(_tmpdir / "h_tpxo9.v1.tar.gz") as f:
-                f.extract('h_tpxo9.v1.nc', path=prefix+'/lib')
+                f.extract('h_tpxo9.v1.nc', path=prefix + '/lib')
 
     @property
     def _nc(self):
