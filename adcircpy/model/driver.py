@@ -396,6 +396,7 @@ class AdcircRun(Fort15):
         #     outdir.mkdir(parents=True)
 
         # local adcirc run
+
         if server_config is None:
             self._run_local(
                 nproc=nproc,
@@ -405,7 +406,7 @@ class AdcircRun(Fort15):
                 hotstart=hotstart
             )
 
-        # server adcirc run
+            # server adcirc run
         else:
             server_config.run(
                 driver=self,
