@@ -11,10 +11,10 @@ from psutil import cpu_count
 
 from adcircpy.mesh.adcirc_mesh import AdcircMesh
 from adcircpy.model.fort15 import Fort15
-from adcircpy.model.slurm.server_config import SlurmScript
 from adcircpy.model.tidal_forcing import TidalForcing
 from adcircpy.model.winds.wind_forcing import WindForcing
 from adcircpy.outputs.collection import OutputCollection
+from adcircpy.server.server_config import SlurmScript
 
 
 class AdcircRun(Fort15):
@@ -357,7 +357,7 @@ class AdcircRun(Fort15):
                 super().write('hotstart', output_directory / hotstart, overwrite)
 
             if slurm_config is not None:
-                slurm_config.write(output_directory / 'slurm.job')
+                slurm_config.write(output_directory / 'server.job')
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
