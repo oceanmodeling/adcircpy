@@ -48,8 +48,23 @@ class SlurmScript(ServerConfig):
     Object instance of a Slurm shell script (`*.job`).
     """
 
-    def __init__(self, account: str, slurm_ntasks: int, run_name: str, partition: str, duration: timedelta, driver_script_filename: str = None, run_directory: str = '.', mail_type: str = None,
-                 mail_user: str = None, log_filename: str = None, modules: [str] = None, path_prefix: str = None, extra_commands: [str] = None, **kwargs):
+    def __init__(
+            self,
+            account: str,
+            slurm_ntasks: int,
+            run_name: str,
+            partition: str,
+            duration: timedelta,
+            driver_script_filename: str = None,
+            run_directory: str = '.',
+            mail_type: str = None,
+            mail_user: str = None,
+            log_filename: str = None,
+            modules: [str] = None,
+            path_prefix: str = None,
+            extra_commands: [str] = None,
+            **kwargs
+    ):
         """
         Instantiate a new Slurm shell script (`*.job`).
 
