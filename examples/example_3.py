@@ -76,8 +76,18 @@ def main():
     # override defaults options
     driver.timestep = 4.0
 
-    slurm_config = SlurmScript(account='nosofs', slurm_ntasks=1500, run_name='ADCIRC_GAHM_GENERIC', partition='orion', duration=timedelta(hours=8), mail_type='all', mail_user='jaime.calzada@noaa.gov',
-                               log_filename='sbatch.log', modules=['intel/2020 impi/2020 netcdf/4.7.2-parallel'], path_prefix='$HOME/adcirc-cg-WPringle/build')
+    slurm_config = SlurmScript(
+        account='example_account',
+        slurm_ntasks=1000,
+        run_name='ADCIRC_GAHM_GENERIC',
+        partition='example_partition',
+        duration=timedelta(hours=8),
+        mail_type='all',
+        mail_user='example@noaa.gov',
+        log_filename='example_3.log',
+        modules=['intel/2020 impi/2020 netcdf/4.7.2-parallel'],
+        path_prefix='$HOME/adcirc/build'
+    )
     driver.write(PARENT / "outputs/example_3", overwrite=True, slurm_config=slurm_config)
 
     # run parallel ADCIRC if binary is installed
