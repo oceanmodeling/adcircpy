@@ -1,6 +1,10 @@
-from datetime import timedelta
+# from datetime import timedelta
 import os
 import pathlib
+from typing import Union
+import tempfile
+from adcircpy.model.driver import AdcircRun
+
 # from tempfile import TemporaryDirectory
 
 PADCIRC_DRIVER_SCRIPT_FILENAME = pathlib.Path(os.path.dirname(__file__)).resolve() / 'padcirc_driver.sh'
@@ -41,8 +45,8 @@ class ServerConfig:
 
     def run(
         self,
-        driver,
-        outdir,
+        driver: AdcircRun,
+        outdir: Union(str, pathlib),
         overwrite=False,
         coldstart=True,
         hotstart=True

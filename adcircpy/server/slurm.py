@@ -1,3 +1,6 @@
+from datetime import timedelta
+import pathlib
+from typing import Union
 from adcircpy.server.confing import ServerConfig
 
 
@@ -15,7 +18,7 @@ class SlurmConfig(ServerConfig):
         self._walltime = walltime
         self._modules = modules
 
-    def write(self, path: str):  # How do we do typehinting for multiple types?
+    def write(self, path: Union(str, pathlib.Path)):
         raise NotImplementedError
 
     def _deploy_files_to_server(self):
