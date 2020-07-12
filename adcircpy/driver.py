@@ -11,13 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
 
-from adcircpy.mesh.adcirc_mesh import AdcircMesh
-from adcircpy.model.fort15 import Fort15
-from adcircpy.model.tidal_forcing import TidalForcing
-from adcircpy.model.winds.wind_forcing import WindForcing
+from adcircpy.mesh import AdcircMesh
+from adcircpy.fort15 import Fort15
+from adcircpy.forcing import Tides  # , Winds
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server.config import ServerConfig
-# from adcircpy.server.slurm import SlurmConfig
+from adcircpy.server.slurm import SlurmConfig
 
 
 class AdcircRun(Fort15):
@@ -28,18 +27,18 @@ class AdcircRun(Fort15):
         start_date: datetime,
         end_date: datetime,
         spinup_time: timedelta = None,
-        tidal_forcing: TidalForcing = None,
-        wind_forcing: WindForcing = None,
+        tidal_forcing: Tides = None,
+        # wind_forcing: WindForcing = None,
         waves=None,  # not yet implemented
         netcdf: bool = True,
-        server_config: ServerConfig = None
+        server_config: Union[int, ServerConfig, SlurmConfig] = None
     ):
         self._mesh = mesh
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
         self._tidal_forcing = tidal_forcing
-        self._wind_forcing = wind_forcing
+        # self._wind_forcing = wind_forcing
         self._waves = waves
         self._netcdf = netcdf
         self._server_config = server_config
@@ -347,7 +346,7 @@ class AdcircRun(Fort15):
         fort15: str = 'fort.15',
         coldstart: str = 'fort.15.coldstart',
         hotstart: str = 'fort.15.hotstart',
-        launcher: str = 'launcher.sh'
+        launcher: str = None
     ):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
@@ -377,12 +376,12 @@ class AdcircRun(Fort15):
         # which at the current stage implies tides only.
         # In this case we set IHOT=0 but call the hotstart writer.
         if self.spinup_time.total_seconds() == 0:
-            # easiest way is to override IHOT to 0 and call the hotstart
-            # writer.
-            tmpIHOT = self._IHOT
-            self._IHOT = 0
+            # easiest way is to override IHOT to 0
+            original_IHOT, self._IHOT = self._IHOT, 0
+            # and call the hotstart writer,
             super().write('hotstart', output_directory / fort15, overwrite)
-            self._IHOT = tmpIHOT
+            # Then reset IHOT to original value. This might not be necessary.
+            self._IHOT = original_IHOT
 
         # CASE 2:
         # This is a run that the user specified some ramping time.
@@ -403,12 +402,13 @@ class AdcircRun(Fort15):
                     'hotstart', output_directory / hotstart, overwrite)
 
         # write driver_script
-        if self._server_config is not None:
-            self._server_config.write(
-                output_directory / self._server_config.filename
-                )
+        if not isinstance(self._server_config, int):
+            filename = self._server_config.filename if launcher is None \
+                    else launcher
+            self._server_config.write(output_directory / filename)
         else:
-            launcher.bash(self, )            
+            filename = 'launcher.sh' if filename is None else filename
+            self._write_bash_launcher(output_directory / filename)
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -639,7 +639,8 @@ class AdcircRun(Fort15):
             if hotstart:
                 self._run_hotstart(nproc, outdir)
         else:
-            self._run_single(nproc, outdir)
+            # not separated into coldstart/hotstart
+            self._run_single_phase(nproc, outdir)
 
     def _run_coldstart(self, nproc, wdir):
         self._stage_files('coldstart', nproc, wdir)
@@ -658,7 +659,8 @@ class AdcircRun(Fort15):
         else:
             self._run_padcirc(wdir / 'hotstart', nproc)
 
-    def _run_single(self, nproc, wdir):
+    def _run_single_phase(self, nproc, wdir):
+        # "single phase" means not separated into coldstart/hotstart
         self._run_adcprep('./', nproc, wdir)
         self._run_padcirc(wdir, nproc)
 
@@ -707,6 +709,9 @@ class AdcircRun(Fort15):
 
     def _handle_blowup(self, err):
         data = self._get_blowup_data(err)
+        # TODOL: There's an ambiguety here, we don't know if ADCIRC is
+        # reporting the FORTRAN index or the node hash. We assume the former
+        # case here.
         idx = np.asarray(data['maxele_node']) - 1
         ax = self.mesh.make_plot()
         self.mesh.triplot(axes=ax)
@@ -739,6 +744,9 @@ class AdcircRun(Fort15):
         self._certify__OUT__('spinup_end', spinup_end)
         self._certify_netcdf(netcdf)
         self._certify_harmonic_analysis(harmonic_analysis)
+
+    def _write_bash_launcher(self):
+        pass
 
     @staticmethod
     def _certify_sampling_rate(sampling_rate):
@@ -845,7 +853,7 @@ class AdcircRun(Fort15):
     @_tidal_forcing.setter
     def _tidal_forcing(self, tidal_forcing):
         if tidal_forcing is not None:
-            assert isinstance(tidal_forcing, TidalForcing)
+            assert isinstance(tidal_forcing, Tides)
             tidal_forcing.start_date = self.start_date
             tidal_forcing.end_date = self.end_date
             tidal_forcing.spinup_time = self.spinup_time
@@ -916,8 +924,11 @@ class AdcircRun(Fort15):
 
     @_server_config.setter
     def _server_config(self, server_config):
-        assert isinstance(netcdf, bool)
-        self.__netcdf = netcdf
+        if server_config is None:
+            server_config = self._get_nproc(-1)
+        msg = "server_config must be int, ServerConfig or SlurmConfig"
+        assert isinstance(server_config, (int, ServerConfig, SlurmConfig)), msg
+        self.__server_config = server_config
 
     @property
     @lru_cache(maxsize=None)

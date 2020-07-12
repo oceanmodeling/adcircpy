@@ -1,8 +1,9 @@
 from datetime import timedelta
-import os
+# import os
 import pathlib
-from adcircpy.model.driver import AdcircRun
-from adcircpy.server import driver as adcirc_driver
+from typing import Union
+# from adcircpy.model.driver import AdcircRun
+# from adcircpy.server import driver as adcirc_driver
 # from tempfile import TemporaryDirectory
 
 
@@ -58,18 +59,21 @@ class SlurmConfig:
         self._path_prefix = path_prefix
         self._extra_commands = extra_commands
 
-    def __call__(self, driver: AdcircRun):
-        return f"{self._script_prefix}\n\n{adcirc_driver.bash(driver)}"
+    def __call__(self, driver):
+        return f"{self._script_prefix}\n\n{self._get_bash_launcher(driver)}"
 
-    def write(self, driver: AdcircRun, path: Union[str, pathlib]):
+    def write(self, driver, path: Union[str, pathlib.Path]):
         with open(path, 'w') as output_file:
             output_file.write(self(driver))
 
     def deploy(self):
-        raise NotImplementedError
+        raise NotImplementedError("slurm.deploy()")
 
     def run(self):
-        raise NotImplementedError
+        raise NotImplementedError("slurm.run()")
+
+    def _get_bash_launcher(self, driver):
+        raise NotImplementedError("slurm._get_bash_launcher()")
 
     @property
     def _duration(self):

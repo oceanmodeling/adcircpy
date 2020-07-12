@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
+from functools import lru_cache
 import pathlib
 
 import numpy as np
 
-from adcircpy.model import tpxo
+from adcircpy.forcing.tides.tpxo import TPXO
 
 
 class Fort15:
@@ -47,7 +48,8 @@ class Fort15:
             f'{self.TAU0:<63G} ! TAU0'
         ])
         if self.TAU0 == -5:
-            fort_15_config.append(f'{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}'.ljust(63) + ' ! Tau0FullDomainMin Tau0FullDomainMax')
+            fort_15_config.append(
+                f'{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}'.ljust(63) + ' ! Tau0FullDomainMin Tau0FullDomainMax')
         fort_15_config.extend([
             f'{self.DTDP:<63.6f} ! DTDP',
             f'{self.STATIM:<63G} ! STATIM',
@@ -421,12 +423,9 @@ class Fort15:
             return True
 
     @property
+    @lru_cache(maxsize=None)
     def TPXO(self):
-        try:
-            return self.__TPXO
-        except AttributeError:
-            self.__TPXO = tpxo.TPXO()
-            return self.__TPXO
+        return TPXO()
 
     @property
     def timestep(self):

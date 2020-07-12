@@ -33,7 +33,13 @@ setuptools.setup(
         # 'pygrib', # TODO: make separate install
         'psutil',
         'shapely',
-        # 'paramiko',
+        'paramiko',
+        'fiona',
+        # test and development dependencies
+        'nose',
+        'rednose',
+        'coverage-badge',
+        'colored_traceback',
     ],
     entry_points={
         'console_scripts': [
@@ -56,7 +62,7 @@ setuptools.setup(
             'plot_fort63=adcircpy.cmd.plot_fort63:main',
 
             # tpxo_install
-            'tpxo_install=adcircpy.model.tpxo:install'
+            'tpxo_install=adcircpy.forcing.tides.tpxo:install'
 
         ]
     },

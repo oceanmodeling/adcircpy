@@ -2,10 +2,10 @@ import numpy as np
 import pathlib
 from netCDF4 import Dataset
 import matplotlib.pyplot as plt
-from adcircpy.mesh import UnstructuredMesh
+from adcircpy.mesh import EuclideanMesh2D
 
 
-class Maxele(UnstructuredMesh):
+class Maxele(EuclideanMesh2D):
 
     def __init__(
         self,

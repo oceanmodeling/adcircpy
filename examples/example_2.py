@@ -19,7 +19,7 @@ import warnings
 
 import numpy as np
 
-from adcircpy import AdcircMesh, AdcircRun, TidalForcing
+from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
@@ -47,7 +47,7 @@ def main():
     mesh.mannings_n_at_sea_floor = np.full(mesh.values.shape, 0.025)
 
     # init tidal forcing and setup requests
-    tidal_forcing = TidalForcing()
+    tidal_forcing = Tides()
     tidal_forcing.use_constituent('M2')
     tidal_forcing.use_constituent('N2')
     tidal_forcing.use_constituent('S2')

@@ -10,7 +10,7 @@ import uuid
 
 import paramiko
 
-from adcircpy.model.driver import AdcircRun
+# from adcircpy.model.driver import AdcircRun
 
 # from tempfile import TemporaryDirectory
 
@@ -52,10 +52,13 @@ class ServerConfig:
         self._keep_wdir = keep_wdir
         self._filename = filename
 
+    def __call__(self, driver):
+        pass
+
     def run(
         self,
-        driver: AdcircRun,
-        outdir: Union[str, pathlib],
+        driver,
+        outdir: Union[str, pathlib.Path],
         overwrite: bool = False,
         coldstart: bool = True,
         hotstart: bool = True

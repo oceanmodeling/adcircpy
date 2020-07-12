@@ -152,7 +152,8 @@ class TPXO:
                 elif choice in valid.keys():
                     return valid[choice]
                 else:
-                    sys.stdout.write("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+                    sys.stdout.write(
+                        "Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
         q = "******* PLEASE READ *******\n"
         q += "A function that is being invoked requires the TPXO file.\n"

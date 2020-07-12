@@ -19,7 +19,7 @@ import shutil
 import warnings
 import urllib.request
 from datetime import datetime, timedelta
-from adcircpy import AdcircMesh, TidalForcing, AdcircRun
+from adcircpy import AdcircMesh, Tides, AdcircRun
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
@@ -42,7 +42,7 @@ def main():
     mesh = AdcircMesh.open(FORT14, crs=4326)
 
     # init tidal forcing and setup requests
-    tidal_forcing = TidalForcing()
+    tidal_forcing = Tides()
     tidal_forcing.use_constituent('M2')
     tidal_forcing.use_constituent('N2')
     tidal_forcing.use_constituent('S2')
