@@ -69,8 +69,8 @@ def main():
     )
 
     # request outputs
-    driver.set_elevation_surface_output(sampling_frequency=timedelta(minutes=30))
-    driver.set_velocity_surface_output(sampling_frequency=timedelta(minutes=30))
+    driver.set_elevation_surface_output(sampling_rate=timedelta(minutes=30))
+    driver.set_velocity_surface_output(sampling_rate=timedelta(minutes=30))
 
     # override defaults options
     driver.timestep = 4.0

@@ -1,69 +1,31 @@
-from abc import ABC
 from datetime import timedelta
 import os
 import pathlib
-from tempfile import TemporaryDirectory
-
-PADCIRC_DRIVER_SCRIPT_FILENAME = pathlib.Path(os.path.dirname(__file__)).resolve() / 'padcirc_driver.sh'
-
-argument_sbatch_translations = {
-    'run_directory': 'D',
-    'run_name'     : 'J',
-    'account'      : 'A',
-    'log_filename' : 'output',
-    'slurm_ntasks' : 'n',
-    'duration'     : 'time',
-    'partition'    : 'partition'
-}
+from adcircpy.model.driver import AdcircRun
+from adcircpy.server import driver as adcirc_driver
+# from tempfile import TemporaryDirectory
 
 
-class ServerConfig(ABC):
-    def __init__(self, script: str):
-        self.script = script
-
-    def run(self):
-        """
-        Run the current shell script from a temporary file.
-        """
-
-        with TemporaryDirectory() as temporary_directory:
-            temporary_filename = os.path.join(temporary_directory, 'temp.job')
-            with open(temporary_filename, 'w') as temporary_file:
-                temporary_file.write(self.script)
-            os.system(temporary_filename)
-
-    def write(self, filename: str):
-        """
-        Write shell script to the given filename.
-
-        :param filename: file path to shell script
-        """
-
-        with open(filename, 'w') as output_file:
-            output_file.write(self.script)
-
-
-class SlurmScript(ServerConfig):
+class SlurmConfig:
     """
     Object instance of a Slurm shell script (`*.job`).
     """
 
     def __init__(
-            self,
-            account: str,
-            slurm_ntasks: int,
-            run_name: str,
-            partition: str,
-            duration: timedelta,
-            driver_script_filename: str = None,
-            run_directory: str = '.',
-            mail_type: str = None,
-            mail_user: str = None,
-            log_filename: str = None,
-            modules: [str] = None,
-            path_prefix: str = None,
-            extra_commands: [str] = None,
-            **kwargs
+        self,
+        account: str,
+        slurm_ntasks: int,
+        run_name: str,
+        partition: str,
+        duration: timedelta,
+        filename: str = 'slurm.job',
+        run_directory: str = '.',
+        mail_type: str = None,
+        mail_user: str = None,
+        log_filename: str = 'sbatch.log',
+        modules: [str] = None,
+        path_prefix: str = None,
+        extra_commands: [str] = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
@@ -82,59 +44,75 @@ class SlurmScript(ServerConfig):
         :param path_prefix: file path to prepend to the PATH
         :param extra_commands: list of extra shell commands to insert into script
         """
+        self._account = account
+        self._slurm_ntasks = slurm_ntasks
+        self._run_name = run_name
+        self._partition = partition
+        self._duration = duration
+        self._filename = filename
+        self._run_directory = run_directory
+        self._mail_type = mail_type
+        self._mail_user = mail_user
+        self._log_filename = log_filename
+        self._modules = modules
+        self._path_prefix = path_prefix
+        self._extra_commands = extra_commands
 
-        if driver_script_filename is None:
-            driver_script_filename = PADCIRC_DRIVER_SCRIPT_FILENAME
+    def __call__(self, driver: AdcircRun):
+        return f"{self._script_prefix}\n\n{adcirc_driver.bash(driver)}"
 
-        for sbatch_argument in argument_sbatch_translations.values():
-            if sbatch_argument in kwargs:
-                del kwargs[sbatch_argument]
+    def write(self, driver: AdcircRun, path: Union[str, pathlib]):
+        with open(path, 'w') as output_file:
+            output_file.write(self(driver))
 
-        if log_filename is None:
-            log_filename = 'sbatch.log'
+    def deploy(self):
+        raise NotImplementedError
 
+    def run(self):
+        raise NotImplementedError
+
+    @property
+    def _duration(self):
+        return self.__duration
+
+    @_duration.setter
+    def _duration(self, duration):
         hours, remainder = divmod(duration, timedelta(hours=1))
         minutes, remainder = divmod(remainder, timedelta(minutes=1))
         seconds = round(remainder / timedelta(seconds=1))
-        duration = f'{hours:02}:{minutes:02}:{seconds:02}'
+        self.__duration = f'{hours:02}:{minutes:02}:{seconds:02}'
 
-        script_prefix_lines = [
+    @property
+    def _script_prefix(self):
+        script_prefix = [
             '#!/bin/bash --login',
-            f'#SBATCH -D {run_directory}',
-            f'#SBATCH -J {run_name}',
-            f'#SBATCH -A {account}'
+            f'#SBATCH -D {self._run_directory}',
+            f'#SBATCH -J {self._run_name}',
+            f'#SBATCH -A {self._account}'
         ]
+        if self._mail_type is not None:
+            script_prefix.append(f'#SBATCH --mail-type={self._mail_type}')
+        if self._mail_user is not None:
+            script_prefix.append(f'#SBATCH --mail-user={self._mail_user}')
+        if self._log_filename is not None:
+            script_prefix.append(f'#SBATCH --output={self._log_filename}')
 
-        if mail_type is not None:
-            script_prefix_lines.append(f'#SBATCH --mail-type={mail_type}')
-        if mail_user is not None:
-            script_prefix_lines.append(f'#SBATCH --mail-user={mail_user}')
-        if log_filename is not None:
-            script_prefix_lines.append(f'#SBATCH --output={log_filename}')
-
-        script_prefix_lines.extend([
-            f'#SBATCH -n {slurm_ntasks}',
-            f'#SBATCH --time={duration}',
-            f'#SBATCH --partition={partition}'
+        script_prefix.extend([
+            f'#SBATCH -n {self._slurm_ntasks}',
+            f'#SBATCH --time={self._duration}',
+            f'#SBATCH --partition={self._partition}'
         ])
 
-        # append any additional SBATCH keywords and values passed to the function
-        for keyword, value in kwargs.items():
-            script_prefix_lines.append(f'#SBATCH {"-" if len(keyword) == 1 else "--"}{keyword}={value}')
+        if self._modules is not None:
+            for module in self._modules:
+                script_prefix.append(f'module load {module}')
 
-        if modules is not None:
-            for module in modules:
-                script_prefix_lines.append(f'module load {module}')
+        if self._path_prefix is not None:
+            script_prefix.append(f'PATH={self._path_prefix}:$PATH')
 
-        if path_prefix is not None:
-            script_prefix_lines.append(f'PATH={path_prefix}:$PATH')
+        if self._extra_commands is not None:
+            script_prefix.extend(self._extra_commands)
 
-        if extra_commands is not None:
-            script_prefix_lines.extend(extra_commands)
+        script_prefix.append('set -e')
 
-        script_prefix_lines.append('set -e')
-
-        with open(driver_script_filename) as driver_script_file:
-            driver_script = ''.join([line for line in driver_script_file.readlines()][2:])
-
-        super().__init__('\n'.join(script_prefix_lines) + '\n\n' + driver_script)
+        return '\n'.join(script_prefix)
