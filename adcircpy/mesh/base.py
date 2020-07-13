@@ -3,6 +3,7 @@ import uuid
 import pathlib
 from functools import lru_cache
 from collections.abc import Mapping
+from itertools import permutations
 from collections import defaultdict
 import numpy as np
 from matplotlib.tri import Triangulation
@@ -133,6 +134,62 @@ class EuclideanMesh2D:
         else:
             msg = f"File format {fmt} not recognized."
             raise Exception(msg)
+
+    def add_attribute(self, name, **properties):
+        if self.has_attribute(name):
+            raise AttributeError(
+                'Non-unique attribute name: '
+                + 'Attribute attribute name already exists.')
+        else:
+            self._attributes[name] = dict()
+            self._attributes[name]['values'] = None
+            self._attributes[name].update(properties)
+
+    def has_attribute(self, name):
+        if name in self._attributes.keys():
+            return True
+        else:
+            return False
+
+    def get_attribute(self, name):
+        if not self.has_attribute(name):
+            raise AttributeError(f'Attribute {name} not set.')
+        return self._attributes[name]
+
+    def get_attribute_values(self, name):
+        if not self.has_attribute(name):
+            raise AttributeError(f'Attribute {name} not set.')
+        return self._attributes[name]['values']
+
+    def get_attribute_properties(self, name):
+        if not self.has_attribute(name):
+            raise AttributeError(f'Attribute {name} not set.')
+        return self._attributes[name]['properties']
+
+    def get_attribute_names(self):
+        return list(self._attributes.keys())
+
+    def set_attribute(self, name, values, elements=False, **properties):
+        if name not in self.get_attribute_names():
+            raise AttributeError(
+                f'Cannot set attribute: {name} is not an attribute.')
+        msg = "values cannot be None"
+        assert values is not None, msg
+        values = np.array(values)
+        assert isinstance(elements, bool)
+        if elements:
+            assert values.shape[0] == self.elements.shape[0]
+        else:
+            assert values.shape[0] == self.coords.shape[0]
+        self._attributes[name]['values'] = values
+        self._attributes[name].update(properties)
+
+    def remove_attribute(self, name):
+        if name in self.get_attribute_names():
+            self._attributes.pop(name)
+        else:
+            raise AttributeError(
+                'Cannot remove attribute: attribute does not exist.')
 
     @_fig
     def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
@@ -422,8 +479,19 @@ class EuclideanMesh2D:
         return inner_ring_collection
 
     @property
+    def node_neighbors(self):
+        try:
+            return self.__node_neighbors
+        except AttributeError:
+            self.__node_neighbors = defaultdict(set)
+            for simplex in self.triangulation.triangles:
+                for i, j in permutations(simplex, 2):
+                    self.__node_neighbors[i].add(j)
+            return self.__node_neighbors
+
+    @property
     @lru_cache(maxsize=None)
-    def logger(self):
+    def _logger(self):
         return logging.getLogger(__name__ + '.' + self.__class__.__name__)
 
     @description.setter

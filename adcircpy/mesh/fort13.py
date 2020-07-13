@@ -4,10 +4,6 @@ from adcircpy.mesh.base import EuclideanMesh2D
 
 class NodalAttributes:
 
-    def __init__(self, mesh, fort13=None):
-        self._mesh = mesh
-        self._fort13 = fort13
-
     def _import_fort13(self, fort13):
         fort13 = self.parse_fort13(fort13)
         if fort13.pop('NumOfNodes') != len(self.node_id):

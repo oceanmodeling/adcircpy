@@ -54,6 +54,8 @@ def main():
     tidal_forcing.use_constituent('K1')
     tidal_forcing.use_constituent('O1')
 
+    mesh.add_forcing(tidal_forcing)
+
     # set simulation dates
     spinup_time = timedelta(days=2)
     start_date = datetime(2015, 12, 14) + spinup_time
@@ -65,7 +67,6 @@ def main():
         start_date,
         end_date,
         spinup_time,
-        tidal_forcing,
     )
 
     # request outputs

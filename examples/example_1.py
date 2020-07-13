@@ -49,17 +49,14 @@ def main():
     tidal_forcing.use_constituent('K1')
     tidal_forcing.use_constituent('O1')
 
+    mesh.add_forcing(tidal_forcing)
+
     # set simulation dates
     start_date = datetime(2015, 12, 14)
     end_date = start_date + timedelta(days=5)
 
     # instantiate AdcircRun object.
-    driver = AdcircRun(
-        mesh,
-        start_date,
-        end_date,
-        tidal_forcing=tidal_forcing,
-    )
+    driver = AdcircRun(mesh, start_date, end_date)
 
     # request outputs
     driver.set_elevation_surface_output(sampling_rate=timedelta(minutes=30))

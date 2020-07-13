@@ -78,11 +78,17 @@ class Tides(bctypes.EtaBc):
         return self.orbital_frequencies[constituent]
 
     def get_tidal_constituent(self, constituent):
-        return (self.get_tidal_species_type(constituent),
-                self.get_tidal_potential_amplitude(constituent),  # TPK
-                self.get_orbital_frequency(constituent),  # FF*
-                self.get_nodal_factor(constituent),  # Amig*
-                self.get_greenwich_factor(constituent))  # FACE*
+        return (self.get_tidal_potential_amplitude(constituent),
+                self.get_orbital_frequency(constituent),
+                self.get_earth_tidal_potential(constituent),
+                self.get_nodal_factor(constituent),
+                self.get_greenwich_factor(constituent))
+
+    def get_earth_tidal_potential(self, constituent):
+        try:
+            return self.earth_tidal_potentials[constituent]
+        except KeyError:
+            pass
 
     def get_nodal_factor(self, constituent):
         if constituent == "M2":
@@ -456,6 +462,18 @@ class Tides(bctypes.EtaBc):
             'O1': 1,
             'P1': 1,
             'Q1': 1}
+
+    @property
+    def earth_tidal_potentials(self):
+        return {
+            'M2': 0.693,
+            'S2': 0.693,
+            'N2': 0.693,
+            'K2': 0.693,
+            'K1': 0.736,
+            'O1': 0.695,
+            'P1': 0.706,
+            'Q1': 0.695}
 
     @property
     def hour_middle(self):

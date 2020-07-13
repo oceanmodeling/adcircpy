@@ -1,7 +1,5 @@
 from functools import lru_cache
-import pathlib
 from datetime import datetime, timedelta
-from pyschism.mesh.mesh import Mesh
 
 
 class Bctides:
@@ -12,24 +10,13 @@ class Bctides:
         self._run_time = run_time
         self._spinup_time = spinup_time
 
-    def write(self, path, overwrite=False):
-        path = pathlib.Path(path)
-        if path.is_file() and not overwrite:
-            raise Exception(
-                'File exists, pass overwrite=True to allow overwrite.')
-        else:
-            with open(path, 'w') as f:
-                f.write(self.bctides)
-
     @property
     def mesh(self):
         return self._mesh
 
     @property
     def bctides(self):
-        f = f"{self.forcing_start_date}\n"
-        f += f"{self.ntip} "
-        f += f"{self.cutoff_depth}\n"
+        f = ""
         active = self._get_active_tidal_potential_constituents()
         for constituent in active:
             forcing = self._tidal_forcing(constituent)
@@ -141,6 +128,14 @@ class Bctides:
         return 0
 
     @property
+    def ntif(self):
+        NTIF = 0
+        for constituent in self._tidal_forcing.get_active_constituents():
+            if constituent in self._tidal_forcing.major_constituents:
+                NTIF += 1
+        return NTIF
+
+    @property
     def nbfr(self):
         if self.iettype in [3, 5]:
             return self._tidal_forcing.nbfr
@@ -191,7 +186,8 @@ class Bctides:
 
     @_mesh.setter
     def _mesh(self, mesh):
-        assert isinstance(mesh, Mesh)
+        from adcircpy import AdcircMesh
+        assert isinstance(mesh, AdcircMesh)
         self.__mesh = mesh
 
     @_start_date.setter
