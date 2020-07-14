@@ -136,7 +136,7 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements)
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
-        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm')
+        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', fmt='2dm')
         self.assertIsInstance(h, AdcircMesh)
 
     def test_add_attribute(self):
