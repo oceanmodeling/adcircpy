@@ -28,14 +28,14 @@ class AdcircMesh(EuclideanMesh2D):
         crs=None,
         description=None,
     ):
+        self._nodes = nodes
+        self._elements = elements
         super().__init__(**grd.euclidean_mesh({
-            'nodes'      : nodes,
-            'elements'   : elements,
+            'nodes'      : self._nodes,
+            'elements'   : self._elements,
             'description': description,
             'crs'        : crs
         }))
-        self._nodes = nodes
-        self._elements = elements
         self._boundaries = boundaries
 
     @staticmethod
