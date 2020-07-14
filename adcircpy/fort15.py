@@ -1,11 +1,13 @@
-import numpy as np
-import pathlib
 from datetime import datetime, timedelta
-from adcircpy.model import tpxo
+from functools import lru_cache
+import pathlib
+
+import numpy as np
+
+from adcircpy.forcing.tides.tpxo import TPXO
 
 
 class Fort15:
-
     def fort15(self, runtype):
         self._runtype = runtype
         # ----------------
@@ -71,33 +73,78 @@ class Fort15:
         # tidal forcings
         # ----------------
         f += f'{self.NTIF:d}'.ljust(63) + ' ! NTIF\n'
-        for constituent, forcing in self.tidal_forcing:
-            if constituent in self.tidal_forcing.major_constituents:
-                f += f'{constituent}'.ljust(63)
-                f += ' \n'
-                f += f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} ' + \
-                     f'{forcing[3]:G} {forcing[4]:G}'.ljust(63)
-                f += '\n'
-        f += f'{len(self.tidal_forcing):d}'.ljust(63) + ' ! NBFR\n'
-        for constituent, forcing in self.tidal_forcing:
-            f += f'{constituent}'.ljust(63) + ' \n'
-            f += f'{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}'.ljust(63)
+        active = self._get_active_tidal_potential_constituents()
+        for constituent in active:
+            forcing = self.tidal_forcing(constituent)
+            f += f'{constituent} \n'
+            # f += f'{forcing[0]:G} '
+            f += f"{forcing[0]:G} "
+            f += f'{forcing[1]:G} '
+            f += f'{forcing[2]:G} '
+            f += f'{forcing[3]:G} '
+            f += f'{forcing[4]:G}'
             f += '\n'
-        # NOTE:  This part is written as one-constituent then all boundaries
-        # as opposed to one-boundary then all constituents for that boundary.
-        # Not exactly sure how ADCIRC handles multiple open boundaries.
-        for constituent in self.tidal_forcing.get_active_constituents():
-            f += f'{constituent}'.ljust(63) + ' \n'
-            for boundary in self.mesh.ocean_boundaries:
-                vertices = self.mesh.get_xy(crs='EPSG:4326')[boundary, :]
-                amp, phase = self.TPXO(constituent, vertices)
-                for i in range(len(vertices)):
-                    f += f'{amp[i]:.8e} {phase[i]:.8e}'.ljust(63) + ' \n'
+        f += f'{self.NBFR:d}\n'
+        active = self._get_active_tidal_forcing_constituents()
+        for constituent in active:
+            forcing = self.tidal_forcing(constituent)
+            f += f'{constituent} \n'
+            f += f"{forcing[1]:G} "
+            f += f'{forcing[3]:G} '
+            f += f'{forcing[4]:G} '
+            f += '\n'
+        # f += f"{len(self.mesh.open_boundaries)}\n"
+        for id, bnd in self.mesh.open_boundaries.items():
+            # f += f"{bnd['neta']}\n"
+            # elevation
+            if bnd['iettype'] in [0, 1, 4]:
+                pass
+            elif bnd['iettype'] in [3, 5]:
+                for constituent in self.tidal_forcing.get_active_constituents():
+                    f += f'{constituent}\n'
+                    vertices = self.mesh.get_xy(
+                        crs='EPSG:4326')[bnd['indexes'], :]
+                    amp, phase = self.tidal_forcing.tpxo(
+                        constituent, vertices)
+                    for i in range(len(vertices)):
+                        f += f'{amp[i]:.8e} {phase[i]:.8e}\n'
+            elif bnd['iettype'] in 2:
+                f += bnd['iettype']['obj'].ethconst
         f += f'{self.ANGINN:G}'.ljust(63) + ' ! ANGINN\n'
         # ----------------
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
         # ----------------
+        for id, bnd in self.mesh.open_boundaries.items():
+            # f += f"{bnd['neta']}\n"
+            # velocity
+            if bnd['ifltype'] in [0, 1, 4]:
+                pass
+            else:
+                msg = "bctides generation not implemented for "
+                msg += f"ifltype={bnd['ifltype']}"
+                raise NotImplementedError(msg)
+            # temperature
+            if bnd['itetype'] == 0:
+                pass
+            else:
+                msg = "bctides generation not implemented for "
+                msg += f"itetype={bnd['itetype']}"
+                raise NotImplementedError(msg)
+            # salinity
+            if bnd['isatype'] == 0:
+                pass
+            else:
+                msg = "bctides generation not implemented for "
+                msg += f"isatype={bnd['isatype']}"
+                raise NotImplementedError(msg)
+            # tracers
+            if bnd['itrtype'] == 0:
+                pass
+            else:
+                msg = "bctides generation not implemented for "
+                msg += f"itrtype={bnd['itrtype']}"
+                raise NotImplementedError(msg)
         # ----------------
         # output requests
         # ----------------
@@ -107,7 +154,7 @@ class Fort15:
         f += " ! NOUTE TOUTSE TOUTFE NSPOOLE\n"
         f += f"{self.NSTAE:d}".ljust(63) + ' ! NSTAE\n'
         stations = self.elevation_stations_output
-        if stations['sampling_frequency'] is not None:
+        if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
@@ -123,7 +170,7 @@ class Fort15:
         f += " ! NOUTV TOUTSV TOUTFV NSPOOLV\n"
         f += f"{self.NSTAV:G}".ljust(63) + " ! NSTAV\n"
         stations = self.velocity_stations_output
-        if stations['sampling_frequency'] is not None:
+        if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
@@ -140,7 +187,7 @@ class Fort15:
             f += " ! NOUTC TOUTSC TOUTFC NSPOOLC\n"
             f += f"{self.NSTAC:d}".ljust(63) + " ! NSTAC\n"
             stations = self.concentration_stations_output
-            if stations['sampling_frequency'] is not None:
+            if stations['sampling_rate'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
@@ -159,8 +206,8 @@ class Fort15:
             f += " ! NOUTM TOUTSM TOUTFM NSPOOLM\n"
             f += f"{self.NSTAM:d}".ljust(63) + " ! NSTAM\n"
             stations = self.meteorological_stations_output
-            if stations['sampling_frequency'] is not None:
-                if stations['sampling_frequency'] is not None:
+            if stations['sampling_rate'] is not None:
+                if stations['sampling_rate'] is not None:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             for station_id, (x, y) \
@@ -175,7 +222,7 @@ class Fort15:
         # elevation global outputs
         f += (f"{self.NOUTGE:d} {self.TOUTSGE:f} "
               + f"{self.TOUTFGE:f} {self.NSPOOLGE:d}").ljust(63)
-        f += f" ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n"
+        f += " ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n"
         # velocity global otuputs
         f += (f"{self.NOUTGV:d} {self.TOUTSGV:f} "
               + f"{self.TOUTFGV:f} {self.NSPOOLGV:d}").ljust(63)
@@ -222,7 +269,7 @@ class Fort15:
         f += " ! NHSTAR NHSINC\n"
         f += (f"{self.ITITER:<1d} {self.ISLDIA:<1d} "
               + f"{self.CONVCR:<.15G} {self.ITMAX:<4d}").ljust(63)
-        f += f" ! ITITER ISLDIA CONVCR ITMAX\n"
+        f += " ! ITITER ISLDIA CONVCR ITMAX\n"
         if self.vertical_mode == '3D':
             raise NotImplementedError('3D runs not yet implemented')
         f += f"{self.NCPROJ}".ljust(63) + " ! NCPROJ\n"
@@ -239,6 +286,7 @@ class Fort15:
         del self._outputs
         del self._runtype
         return f
+
 
     def write(self, runtype, path, overwrite=False):
         assert runtype in ['coldstart', 'hotstart']
@@ -449,12 +497,9 @@ class Fort15:
             return True
 
     @property
+    @lru_cache(maxsize=None)
     def TPXO(self):
-        try:
-            return self.__TPXO
-        except AttributeError:
-            self.__TPXO = tpxo.TPXO()
-            return self.__TPXO
+        return TPXO()
 
     @property
     def timestep(self):
@@ -600,7 +645,7 @@ class Fort15:
             def get_digit_3():
                 if self.lateral_stress_in_momentum == 'velocity_based':
                     if self.lateral_stress_in_momentum_method \
-                      == 'integration_by_parts':
+                            == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 3
                         else:
@@ -610,7 +655,7 @@ class Fort15:
                         return 5
                 elif self.lateral_stress_in_momentum == 'flux_based':
                     if self.lateral_stress_in_momentum_method \
-                      == 'integration_by_parts':
+                            == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 4
                         else:
@@ -638,13 +683,13 @@ class Fort15:
                         self.gwce_solution_scheme == 'semi-implicit'):
                     return 1
                 elif (not self.baroclinicity and
-                        self.gwce_solution_scheme == 'explicit'):
+                      self.gwce_solution_scheme == 'explicit'):
                     return 2
                 elif (self.baroclinicity and
-                        self.gwce_solution_scheme == 'semi-implicit'):
+                      self.gwce_solution_scheme == 'semi-implicit'):
                     return 3
                 elif (self.baroclinicity and
-                        self.gwce_solution_scheme == 'explicit'):
+                      self.gwce_solution_scheme == 'explicit'):
                     return 4
 
             IM = '{:d}'.format(get_digit_1())
@@ -666,11 +711,13 @@ class Fort15:
             return self.__NOLIBF
         except AttributeError:
             NOLIBF = 2
+            mesh_attributes = self.mesh.get_nodal_attribute_names()
             for attribute in [
-                    'quadratic_friction_coefficient_at_sea_floor',
-                    'mannings_n_at_sea_floor',
-                    'chezy_friction_coefficient_at_sea_floor']:
-                if self.mesh.has_attribute(attribute):
+                'quadratic_friction_coefficient_at_sea_floor',
+                'mannings_n_at_sea_floor',
+                'chezy_friction_coefficient_at_sea_floor'
+            ]:
+                if attribute in mesh_attributes:
                     attr = self.mesh.get_nodal_attribute(attribute)
                     if self._runtype == 'coldstart':
                         if attr['coldstart'] is True:
@@ -844,10 +891,10 @@ class Fort15:
                 RNDAY = self.start_date - self.forcing_start_date
             else:
                 RNDAY = self.end_date - self.start_date
-            return RNDAY.total_seconds()/(60.*60.*24.)
+            return RNDAY.total_seconds() / (60. * 60. * 24.)
         else:
             RNDAY = self.end_date - self.forcing_start_date
-            return RNDAY.total_seconds()/(60.*60.*24.)
+            return RNDAY.total_seconds() / (60. * 60. * 24.)
 
     @property
     def DRAMP(self):
@@ -858,7 +905,7 @@ class Fort15:
         except AttributeError:
             DRAMP = self.spinup_factor * (
                     (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.*60.*24.))
+                    / (60. * 60. * 24.))
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
@@ -902,8 +949,8 @@ class Fort15:
             return self.__DRAMPElev
         except AttributeError:
             return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60.*60.*24.))
+                    (self.start_date - self.forcing_start_date).total_seconds()
+                    / (60. * 60. * 24.))
 
     @property
     def DRAMPTip(self):
@@ -911,8 +958,8 @@ class Fort15:
             return self.__DRAMPTip
         except AttributeError:
             return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60.*60.*24.))
+                    (self.start_date - self.forcing_start_date).total_seconds()
+                    / (60. * 60. * 24.))
 
     @property
     def DRAMPMete(self):
@@ -934,7 +981,7 @@ class Fort15:
             return self.__DUnRampMete
         except AttributeError:
             dt = self.start_date - self.forcing_start_date
-            return (self.STATIM + dt.total_seconds()) / (24.*60.*60.)
+            return (self.STATIM + dt.total_seconds()) / (24. * 60. * 60.)
 
     @property
     def A00(self):
@@ -1027,7 +1074,7 @@ class Fort15:
         try:
             return self.__FGAMMA
         except AttributeError:
-            return 1./3.
+            return 1. / 3.
 
     @property
     def CORI(self):
@@ -1046,6 +1093,12 @@ class Fort15:
             if constituent in self.tidal_forcing.major_constituents:
                 NTIF += 1
         return NTIF
+
+    @property
+    def NBFR(self):
+        if self.iettype in [3, 5]:
+            return self.tidal_forcing.nbfr
+        return 0
 
     @property
     def ANGINN(self):
@@ -1310,12 +1363,12 @@ class Fort15:
     def NFREQ(self):
         if self._runtype == 'coldstart':
             if np.any([_['spinup'] for _ in self._outputs]):
-                if np.any([_['sampling_frequency'] for _ in self._outputs]):
+                if np.any([_['sampling_rate'] for _ in self._outputs]):
                     if np.any([_['harmonic_analysis'] for _ in self._outputs]):
                         return len(
                             self.tidal_forcing.get_active_constituents())
         else:
-            if np.any([_['sampling_frequency'] for _ in self._outputs]):
+            if np.any([_['sampling_rate'] for _ in self._outputs]):
                 if np.any([_['harmonic_analysis'] for _ in self._outputs]):
                     return len(self.tidal_forcing.get_active_constituents())
         return 0
@@ -1332,7 +1385,7 @@ class Fort15:
                     else:
                         dt = self.start_date - self.forcing_start_date
                         return ((self.STATIM + dt.total_seconds())
-                                / (24.*60.*60.))
+                                / (24. * 60. * 60.))
                 except TypeError:
                     #  if self.DRAMP is not castable to float()
                     raise
@@ -1350,12 +1403,12 @@ class Fort15:
             if self._runtype == 'coldstart':
                 if dt.total_seconds() == 0:
                     dt = self.end_date - self.start_date
-                    return (dt.total_seconds() / (24.*60.*60.))
+                    return (dt.total_seconds() / (24. * 60. * 60.))
                 else:
                     return dt.days
             else:
                 dt = self.start_date - self.forcing_start_date
-                return ((self.STATIM + dt.total_seconds())/(24.*60.*60.))
+                return ((self.STATIM + dt.total_seconds()) / (24. * 60. * 60.))
 
     @property
     def NHAINC(self):
@@ -1367,14 +1420,14 @@ class Fort15:
                 if _output['harmonic_analysis']:
                     if self._runtype == 'coldstart':
                         if _output['spinup']:
-                            fs = _output['sampling_frequency']
+                            fs = _output['sampling_rate']
                             NHAINC = np.min([NHAINC, fs.total_seconds()])
                     else:  # consider a "metonly" run?
-                        fs = _output['sampling_frequency']
+                        fs = _output['sampling_rate']
                         NHAINC = np.min([NHAINC, fs.total_seconds()])
             if NHAINC == float('inf'):
                 NHAINC = 0
-            return int(NHAINC/self.DTDP)
+            return int(NHAINC / self.DTDP)
 
     @property
     def FMV(self):
@@ -1441,9 +1494,9 @@ class Fort15:
                 dt = self.start_date - self.forcing_start_date
                 if dt.total_seconds() == 0:
                     dt = self.end_date - self.forcing_start_date
-                    return int(dt.total_seconds()/np.around(self.DTDP, 6))
+                    return int(dt.total_seconds() / np.around(self.DTDP, 6))
                 else:
-                    return int(dt.total_seconds()/np.around(self.DTDP, 6))
+                    return int(dt.total_seconds() / np.around(self.DTDP, 6))
 
     @property
     def ITITER(self):
@@ -1956,8 +2009,8 @@ class Fort15:
 
     @lateral_stress_in_gwce_is_symmetrical.setter
     def lateral_stress_in_gwce_is_symmetrical(
-        self,
-        lateral_stress_in_gwce_is_symmetrical
+            self,
+            lateral_stress_in_gwce_is_symmetrical
     ):
         self.__lateral_stress_in_gwce_is_symmetrical = bool(
             lateral_stress_in_gwce_is_symmetrical)
@@ -1974,16 +2027,16 @@ class Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-        self,
-        lateral_stress_in_momentum_is_symmetrical
+            self,
+            lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical)
 
     @lateral_stress_in_momentum_method.setter
     def lateral_stress_in_momentum_method(
-        self,
-        lateral_stress_in_momentum_method
+            self,
+            lateral_stress_in_momentum_method
     ):
         assert lateral_stress_in_momentum_method in [
             '2_part', 'integration_by_parts']
@@ -2035,6 +2088,29 @@ class Fort15:
     def CFL(self, CFL):
         self.__CFL = float(CFL)
 
+    def _get_active_tidal_potential_constituents(self):
+        if self.iettype in [3, 5]:
+            return self.tidal_forcing.get_active_potential_constituents()
+        else:
+            return []
+
+    def _get_active_tidal_forcing_constituents(self):
+        if self.iettype in [3, 5]:
+            return self.tidal_forcing.get_active_forcing_constituents()
+        else:
+            return []
+
+    @property
+    def elevbc(self):
+        return self.mesh._boundary_forcing['iettype']["obj"]
+
+    @property
+    def iettype(self):
+        if self.elevbc is not None:
+            return self.elevbc.iettype
+        else:
+            return 0
+
     def _get_NSTA_(self, physical_var):
         stations = self._container['stations'][physical_var]
         if self._runtype == 'coldstart':
@@ -2060,7 +2136,7 @@ class Fort15:
                 return 0
 
         elif self._runtype == "hotstart":
-            if output['sampling_frequency'] is not None:
+            if output['sampling_rate'] is not None:
                 if output['netcdf'] is True:
                     return -5
                 else:
@@ -2079,7 +2155,7 @@ class Fort15:
 
         # hotstart
         else:
-            if output['sampling_frequency'] is not None:
+            if output['sampling_rate'] is not None:
                 start = output['start']
             else:
                 return 0
@@ -2095,11 +2171,11 @@ class Fort15:
         elif isinstance(start, type(None)):
             if self._runtype == 'hotstart':
                 dt = self.start_date - self.forcing_start_date
-                return dt.total_seconds() / (60*60*24)
+                return dt.total_seconds() / (60 * 60 * 24)
             else:
                 return 0
 
-        return start.total_seconds() / (60.*60.*24.)
+        return start.total_seconds() / (60. * 60. * 24.)
 
     def _get_TOUTF__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
@@ -2108,12 +2184,12 @@ class Fort15:
             if output['spinup'] is not None:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds()/(60.*60.*24.)
+                        time = self.spinup_time.total_seconds() / (60. * 60. * 24.)
                         if time > 0:
                             return time
                         else:
                             dt = self.end_date - self.start_date
-                            return dt.total_seconds()/(60.*60.*24.)
+                            return dt.total_seconds() / (60. * 60. * 24.)
                     else:
                         return 0
                 else:
@@ -2123,11 +2199,11 @@ class Fort15:
 
         # hotstart
         elif self._runtype == 'hotstart':
-            if output['sampling_frequency'] is not None:
+            if output['sampling_rate'] is not None:
                 if output['end'] is None:
                     if self._runtype == 'hotstart':
                         dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60*60*24)
+                        return dt.total_seconds() / (60 * 60 * 24)
                     # if self.NOUTGE != 0:
                     #     time = self.spinup_time.total_seconds()/(60.*60.*24.)
                     #     if time > 0:
@@ -2137,7 +2213,7 @@ class Fort15:
                     #         return dt.total_seconds()/(60.*60.*24.)
                     else:
                         dt = self.start_date - self.forcing_start_date
-                        return dt.total_seconds() / (60*60*24)
+                        return dt.total_seconds() / (60 * 60 * 24)
                 else:
                     raise NotImplementedError
             else:
@@ -2151,14 +2227,14 @@ class Fort15:
             else:
                 return 0
         else:
-            if output['sampling_frequency'] is not None:
+            if output['sampling_rate'] is not None:
                 if (output_type == 'surface'
-                        and output['sampling_frequency'].total_seconds() == 0):
+                        and output['sampling_rate'].total_seconds() == 0):
                     return int(
                         (self.end_date - self.start_date).total_seconds()
                         / self.DTDP)
                 return int(round(
-                    (output['sampling_frequency'].total_seconds() / self.DTDP))
+                    (output['sampling_rate'].total_seconds() / self.DTDP))
                 )
             else:
                 return 0

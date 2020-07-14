@@ -1,5 +1,11 @@
-from adcircpy.mesh.unstructured_mesh import UnstructuredMesh
-from adcircpy.mesh.adcirc_mesh import AdcircMesh
-__all__ = ["UnstructuredMesh",
-           "AdcircMesh"
-           ]
+"""
+Namespace definitions for pyschism.mesh module
+"""
+
+from adcircpy.mesh.mesh import AdcircMesh
+from adcircpy.mesh.base import EuclideanMesh2D
+
+__all__ = [
+    "AdcircMesh",
+    "EuclideanMesh2D",
+]

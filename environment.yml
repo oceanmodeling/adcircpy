@@ -1,0 +1,21 @@
+name: adcircpy
+channels:
+  - defaults
+dependencies:
+  - bs4
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pandas
+  - psutil
+  - pyproj>=2.6
+  - requests
+  - scipy
+  - seaborn
+  - shapely
+  - pip:
+      - eventlet
+      - haversine
+      - ordered-set
+      - utm
+      - wget

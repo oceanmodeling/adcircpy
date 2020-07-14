@@ -1,5 +1,5 @@
 # AdcircPy
-
+![coverage](tests/coverage.svg)
 
 ### Installation notes:
 

@@ -1,12 +1,13 @@
-from scipy.interpolate import griddata
-import numpy as np
 import os
-import sys
-from netCDF4 import Dataset
 import pathlib
-import wget
-import tempfile
+import sys
 import tarfile
+import tempfile
+
+from netCDF4 import Dataset
+import numpy as np
+from scipy.interpolate import griddata
+import wget
 
 
 class TPXO:
@@ -22,7 +23,7 @@ class TPXO:
             return
 
         else:
-            prefix = "/".join(sys.executable.split('/')[:-2])
+            prefix = os.path.dirname(os.path.dirname(sys.executable))
             file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
 
         if isinstance(file, pathlib.Path):
@@ -104,8 +105,8 @@ class TPXO:
         dy = np.mean(np.diff(self.y))
         _idx = np.where(
             np.logical_and(  # buffer the bbox by 2 difference units
-                np.logical_and(x >= np.min(_x)-2*dx, x <= np.max(_x)+2*dx),
-                np.logical_and(y >= np.min(_y)-2*dy, y <= np.max(_y)+2*dy)))
+                np.logical_and(x >= np.min(_x) - 2 * dx, x <= np.max(_x) + 2 * dx),
+                np.logical_and(y >= np.min(_y) - 2 * dy, y <= np.max(_y) + 2 * dy)))
         return griddata(
             (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
 
@@ -114,20 +115,26 @@ class TPXO:
         assert vertices.shape[1] == 2, msg
 
     @staticmethod
-    def _fetch_tpxo_file(prefix, file):
+    def _fetch_tpxo_file(prefix: str, file: str):
         url = "https://www.dropbox.com/s/uc44cbo5s2x4n93/"
         url += "h_tpxo9.v1.tar.gz?dl=1"
 
-        def query_yes_no(question, default="yes"):
-            """Ask a yes/no question via raw_input() and return their answer.
-            "question" is a string that is presented to the user.
-            "default" is the presumed answer if the user just hits <Enter>.
-                It must be "yes" (the default), "no" or None (meaning
-                an answer is required of the user).
-            The "answer" return value is one of "yes" or "no".
+        def query_yes_no(question: str, default: str = "yes") -> bool:
             """
-            valid = {"yes": True,   "y": True,  "ye": True,
-                     "no": False,     "n": False}
+            Ask a yes/no question via raw_input() and return their answer.
+
+            :param question: string presented to the user
+            :param default: presumed answer if the user just hits <Enter>; must be "yes" (the default), "no", or None (meaning an answer is required of the user)
+            :returns: whether 'yes' or 'no' was selected by the user
+            """
+
+            valid = {
+                "yes": True,
+                "y"  : True,
+                "ye" : True,
+                "no" : False,
+                "n"  : False
+            }
             if default is None:
                 prompt = " [y/n] "
             elif default == "yes":
@@ -141,12 +148,13 @@ class TPXO:
                 sys.stdout.write(question + prompt)
                 choice = input().lower()
                 if default is not None and choice == '':
-                    return default
+                    return valid[default]
                 elif choice in valid.keys():
                     return valid[choice]
                 else:
-                    sys.stdout.write("Please respond with 'yes' or 'no' "
-                                     "(or 'y' or 'n').\n")
+                    sys.stdout.write(
+                        "Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+
         q = "******* PLEASE READ *******\n"
         q += "A function that is being invoked requires the TPXO file.\n"
         q += 'This software can automatically fetch the TPXO file for you usin'
@@ -173,7 +181,7 @@ class TPXO:
             _tmpdir = pathlib.Path(tmpdir.name)
             wget.download(url, out=str(_tmpdir / "h_tpxo9.v1.tar.gz"))
             with tarfile.open(_tmpdir / "h_tpxo9.v1.tar.gz") as f:
-                f.extract('h_tpxo9.v1.nc', path=prefix+'/lib')
+                f.extract('h_tpxo9.v1.nc', path=prefix + '/lib')
 
     @property
     def _nc(self):

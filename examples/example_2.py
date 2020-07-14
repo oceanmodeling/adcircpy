@@ -9,22 +9,23 @@ by a coldstart and hotstart phase.
 The behaviour of this program is similar to the example_1.
 """
 
+from datetime import datetime, timedelta
 import pathlib
+import shutil
 import tarfile
 import tempfile
-import shutil
 import urllib.request
-import numpy as np
 import warnings
-from datetime import datetime, timedelta
-from adcircpy import AdcircMesh, TidalForcing, AdcircRun
+
+import numpy as np
+
+from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
 
 
 def main():
-
     # fetch shinnecock inlet test data
     if not FORT14.is_file():
         url = "https://www.dropbox.com/s/1wk91r67cacf132/"
@@ -46,12 +47,14 @@ def main():
     mesh.mannings_n_at_sea_floor = np.full(mesh.values.shape, 0.025)
 
     # init tidal forcing and setup requests
-    tidal_forcing = TidalForcing()
+    tidal_forcing = Tides()
     tidal_forcing.use_constituent('M2')
     tidal_forcing.use_constituent('N2')
     tidal_forcing.use_constituent('S2')
     tidal_forcing.use_constituent('K1')
     tidal_forcing.use_constituent('O1')
+
+    mesh.add_forcing(tidal_forcing)
 
     # set simulation dates
     spinup_time = timedelta(days=2)
@@ -64,14 +67,11 @@ def main():
         start_date,
         end_date,
         spinup_time,
-        tidal_forcing,
     )
 
     # request outputs
-    driver.set_elevation_surface_output(
-        sampling_frequency=timedelta(minutes=30))
-    driver.set_velocity_surface_output(
-        sampling_frequency=timedelta(minutes=30))
+    driver.set_elevation_surface_output(sampling_rate=timedelta(minutes=30))
+    driver.set_velocity_surface_output(sampling_rate=timedelta(minutes=30))
 
     # override defaults options
     driver.timestep = 4.0
