@@ -27,9 +27,6 @@ class AdcircRun(Fort15):
         start_date: datetime,
         end_date: datetime,
         spinup_time: timedelta = None,
-        # tidal_forcing: Tides = None,
-        wind_forcing=None,
-        # waves=None,  # not yet implemented
         netcdf: bool = True,
         server_config: Union[int, ServerConfig, SlurmConfig] = None
     ):
@@ -37,9 +34,6 @@ class AdcircRun(Fort15):
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
-        # self._tidal_forcing = tidal_forcing
-        self._wind_forcing = wind_forcing
-        # self._waves = waves
         self._netcdf = netcdf
         self._server_config = server_config
 
@@ -401,13 +395,13 @@ class AdcircRun(Fort15):
                     'hotstart', output_directory / hotstart, overwrite)
 
         # write driver_script
-        # if not isinstance(self._server_config, int):
-        #     filename = self._server_config.filename if launcher is None \
-        #             else launcher
-        #     self._server_config.write(output_directory / filename)
-        # else:
-        #     filename = 'launcher.sh' if launcher is None else launcher
-        #     self._write_bash_launcher(output_directory / filename)
+        if not isinstance(self._server_config, int):
+            filename = self._server_config._filename if launcher is None \
+                    else launcher
+            self._server_config.write(self, output_directory / filename)
+        else:
+            if launcher is not None:
+                self._write_bash_launcher(output_directory / launcher)
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -487,10 +481,6 @@ class AdcircRun(Fort15):
     @property
     def wind_forcing(self):
         return self.mesh._surface_forcing['imetype']
-
-    # @property
-    # def waves(self):
-    #     return self._waves
 
     @property
     def spinup_time(self):
@@ -590,6 +580,10 @@ class AdcircRun(Fort15):
     @property
     def output_collection(self):
         return self._output_collection
+
+    @property
+    def waves(self):
+        return self.mesh._boundary_forcing['iwrtype']["obj"]
 
     def _load_outdir(self, outdir):
 
@@ -750,8 +744,9 @@ class AdcircRun(Fort15):
         self._certify_netcdf(netcdf)
         self._certify_harmonic_analysis(harmonic_analysis)
 
-    def _write_bash_launcher(self):
-        pass
+    def _write_bash_launcher(self, destination):
+        source = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
+        shutil.copyfile(source, destination)
 
     @staticmethod
     def _certify_sampling_rate(sampling_rate):
@@ -1033,7 +1028,7 @@ class AdcircRun(Fort15):
     def _output_collection(self):
         return self.__output_collection
 
-    # @_output_collection.setter
-    # def _output_collection(self, output_collection):
-    #     assert isinstance(output_collection, OutputCollection)
-    #     self.__output_collection = output_collection
+    @_output_collection.setter
+    def _output_collection(self, output_collection):
+        assert isinstance(output_collection, OutputCollection)
+        self.__output_collection = output_collection

@@ -2,6 +2,7 @@ import numpy as np
 import pathlib
 from netCDF4 import Dataset
 import matplotlib.pyplot as plt
+from adcircpy.mesh import grd
 from adcircpy.mesh import EuclideanMesh2D
 
 
@@ -9,14 +10,19 @@ class Maxele(EuclideanMesh2D):
 
     def __init__(
         self,
-        vertices,
+        nodes,
         elements,
-        zeta_max,
-        time_of_zeta_max,
+        time_of_zeta_max=None,
+        description='maxele',
         crs=None,
     ):
-        super().__init__(vertices, elements, crs)
-        self._zeta_max = zeta_max
+        super().__init__(**grd.euclidean_mesh({
+            'nodes': nodes,
+            'elements': elements,
+            'description': description,
+            'crs': crs
+            }))
+        self._zeta_max = np.ma.masked_equal(super().values, 99999.0)
         self._time_of_zeta_max = time_of_zeta_max
 
     def make_plot(
@@ -76,11 +82,17 @@ class Maxele(EuclideanMesh2D):
             nc['zeta_max'][:], nc['zeta_max']._FillValue)
         time_of_zeta_max = np.ma.masked_equal(
             nc['time_of_zeta_max'][:], nc['time_of_zeta_max']._FillValue)
-        return cls(np.vstack([nc['x'][:], nc['y'][:]]).T,
-                   nc['element'][:]-1,
-                   zeta_max,
+        xyz = np.vstack([nc['x'][:], nc['y'][:], zeta_max]).T
+        nodes = {i: ((x, y), z) for i, (x, y, z) in enumerate(xyz)}
+        elements = {
+            i: (e0-1, e1-1, e2-1) for i, (e0, e1, e2) in enumerate(nc['element'][:])
+        }
+        return cls(nodes, elements,
+                   # zeta_max,
                    time_of_zeta_max,
-                   crs)
+                   'maxele',
+                   crs
+                   )
 
     @classmethod
     def from_ascii(cls, path, fort14, crs=None):

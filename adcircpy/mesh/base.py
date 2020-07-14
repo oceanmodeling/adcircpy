@@ -11,6 +11,7 @@ from matplotlib.path import Path
 from matplotlib.collections import PolyCollection
 from matplotlib.transforms import Bbox
 from shapely.geometry import Polygon
+from haversine import haversine, Unit
 from pyproj import Proj, CRS, Transformer
 from adcircpy.mesh import grd, sms2dm
 from adcircpy.mesh.figures import _figure as _fig
@@ -479,15 +480,30 @@ class EuclideanMesh2D:
         return inner_ring_collection
 
     @property
+    @lru_cache(maxsize=None)
     def node_neighbors(self):
-        try:
-            return self.__node_neighbors
-        except AttributeError:
-            self.__node_neighbors = defaultdict(set)
-            for simplex in self.triangulation.triangles:
-                for i, j in permutations(simplex, 2):
-                    self.__node_neighbors[i].add(j)
-            return self.__node_neighbors
+        node_neighbors = defaultdict(set)
+        for simplex in self.triangulation.triangles:
+            for i, j in permutations(simplex, 2):
+                node_neighbors[i].add(j)
+        return node_neighbors
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_distances_meters(self):
+        points = self.get_xy("EPSG:4326")
+        node_distances = {}
+        for k, v in self.node_neighbors.items():
+            x0, y0 = points[k]
+            node_distances[k] = {}
+            for idx in v:
+                x1, y1 = points[idx]
+                node_distances[k][idx] = haversine(
+                    (x0, y0),
+                    (x1, y1),
+                    unit=Unit.METERS
+                    )
+        return node_distances
 
     @property
     @lru_cache(maxsize=None)
@@ -515,6 +531,18 @@ class EuclideanMesh2D:
     @property
     def _coords(self):
         return self.__coords
+
+    @_coords.setter
+    def _coords(self, coords):
+        msg = "coord argument must be a dictionary of the form "
+        msg += "\\{coord_id:  (x, y)\\}"
+        assert isinstance(coords, Mapping), msg
+        for coord in coords.values():
+            assert len(coord) == 2, msg
+            assert isinstance(coord[0], (float, int)), msg
+            assert isinstance(coord[1], (float, int)), msg
+        self.__coords = coords
+        type(self).coords.fget.cache_clear()
 
     @property
     def _triangles(self):
@@ -581,18 +609,6 @@ class EuclideanMesh2D:
             "E4Q": self._quads,
         }
 
-    @_coords.setter
-    def _coords(self, coords):
-        msg = "coord argument must be a dictionary of the form "
-        msg += "\\{coord_id:  (x, y)\\}"
-        assert isinstance(coords, Mapping), msg
-        for coord in coords.values():
-            assert len(coord) == 2, msg
-            assert isinstance(coord[0], (float, int)), msg
-            assert isinstance(coord[1], (float, int)), msg
-        self.__coords = coords
-        type(self).coords.fget.cache_clear()
-
     @_values.setter
     def _values(self, values):
         if values is None:
@@ -610,7 +626,7 @@ class EuclideanMesh2D:
         else:
             values = np.full(self.coords.shape[0], np.nan)
         self.__values = values
-        type(self).values.fget.cache_clear()
+        # type(self).values.fget.cache_clear()
 
     @_triangles.setter
     def _triangles(self, triangles):
@@ -686,3 +702,8 @@ class EuclideanMesh2D:
             area += vertices[i][0] * vertices[j][1]
             area -= vertices[j][0] * vertices[i][1]
         return area / 2.0
+
+    @property
+    @lru_cache(maxsize=None)
+    def _attributes(self):
+        return {}

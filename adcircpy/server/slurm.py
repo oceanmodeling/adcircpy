@@ -60,9 +60,12 @@ class SlurmConfig:
         self._extra_commands = extra_commands
 
     def __call__(self, driver):
-        return f"{self._script_prefix}\n\n{self._get_bash_launcher(driver)}"
+        script = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
+        with open(script) as s:
+            script = ''.join([line for line in s.readlines()][2:])
+        return f"{self._script_prefix}\n{script}"
 
-    def write(self, driver, path: Union[str, pathlib.Path]):
+    def write(self, driver, path):
         with open(path, 'w') as output_file:
             output_file.write(self(driver))
 
@@ -88,35 +91,33 @@ class SlurmConfig:
 
     @property
     def _script_prefix(self):
-        script_prefix = [
-            '#!/bin/bash --login',
-            f'#SBATCH -D {self._run_directory}',
-            f'#SBATCH -J {self._run_name}',
-            f'#SBATCH -A {self._account}'
-        ]
+        f = '#!/bin/bash --login\n'
+        f += f'#SBATCH -D {self._run_directory}\n'
+        f += f'#SBATCH -J {self._run_name}\n'
+        f += f'#SBATCH -A {self._account}\n'
         if self._mail_type is not None:
-            script_prefix.append(f'#SBATCH --mail-type={self._mail_type}')
+            f += f'#SBATCH --mail-type={self._mail_type}\n'
         if self._mail_user is not None:
-            script_prefix.append(f'#SBATCH --mail-user={self._mail_user}')
+            f += f'#SBATCH --mail-user={self._mail_user}\n'
         if self._log_filename is not None:
-            script_prefix.append(f'#SBATCH --output={self._log_filename}')
-
-        script_prefix.extend([
-            f'#SBATCH -n {self._slurm_ntasks}',
-            f'#SBATCH --time={self._duration}',
-            f'#SBATCH --partition={self._partition}'
-        ])
+            f += f'#SBATCH --output={self._log_filename}\n'
+        f += f'#SBATCH -n {self._slurm_ntasks}\n'
+        f += f'#SBATCH --time={self._duration}\n'
+        f += f'#SBATCH --partition={self._partition}\n'
+        f += '\nset -e\n'
 
         if self._modules is not None:
+            f += '\n'
             for module in self._modules:
-                script_prefix.append(f'module load {module}')
+                f += f'module load {module}\n'
 
         if self._path_prefix is not None:
-            script_prefix.append(f'PATH={self._path_prefix}:$PATH')
+            f += '\n'
+            f += f'PATH={self._path_prefix}:$PATH\n'
 
         if self._extra_commands is not None:
-            script_prefix.extend(self._extra_commands)
+            f += '\n'
+            for command in self._extra_commands:
+                f += command + "\n"
 
-        script_prefix.append('set -e')
-
-        return '\n'.join(script_prefix)
+        return f

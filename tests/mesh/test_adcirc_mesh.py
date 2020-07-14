@@ -219,7 +219,7 @@ class AdcircMeshTestCase(unittest.TestCase):
             self.elements,
             crs="EPSG:3395",
             boundaries=self.boundaries)
-        msh.logger.debug('coverage')
+        msh._logger.debug('coverage')
         self.assertRaises(IOError, msh.write_boundaries, shp)
 
     def test_sms2dm(self):

@@ -276,7 +276,6 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
     def test_property_logger(self):
         # TODO: verify result
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=4326)
-        m.logger
 
     def test_property_setter_description(self):
         # TODO: verify result

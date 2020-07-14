@@ -7,7 +7,6 @@ import logging
 from collections import defaultdict
 import fiona
 from functools import lru_cache
-from haversine import haversine, Unit
 from shapely.geometry import LineString, mapping
 from adcircpy.forcing.bctypes import BoundaryCondition
 from adcircpy.mesh import grd, sms2dm
@@ -172,7 +171,7 @@ class AdcircMesh(EuclideanMesh2D):
                 e0 += [e0[0]]
                 _interior_boundaries[_bnd_id] = e0
                 _bnd_id += 1
-        self._add_boundary_type(interior_ibtype)
+        self.add_boundary_type(interior_ibtype)
         for bnd_id, data in _interior_boundaries.items():
             self.set_boundary_data(interior_ibtype, bnd_id, data)
 
@@ -246,7 +245,7 @@ class AdcircMesh(EuclideanMesh2D):
         if name not in self.get_nodal_attribute_names():
             msg = f"Nodal attrbiute with name {name} has not been loaded."
             raise AttributeError(msg)
-        if self.nodal_attribute_collection[name] is None:
+        if self._nodal_attribute_collection[name] is None:
             # TODO: the 'values' array can be generated more succintly.
             def mode_rows(a):
                 a = np.ascontiguousarray(a)
@@ -265,7 +264,7 @@ class AdcircMesh(EuclideanMesh2D):
             _attr['non_default_indexes'] = np.where(
                 (_attr['values'] != _attr['defaults']).all(axis=1))[0]
             self._nodal_attribute_collection[name] = _attr
-        return self.nodal_attribute_collection[name]
+        return self._nodal_attribute_collection[name]
 
     def has_nodal_attribute(self, attribute_name, runtype=None):
         """
@@ -370,22 +369,6 @@ class AdcircMesh(EuclideanMesh2D):
                     f.write(self.fort13)
         else:
             print(self.fort13)
-
-    @property
-    def node_distances(self):
-        points = self.get_xy("EPSG:4326")
-        node_distances = {}
-        for k, v in self.node_neighbors.items():
-            x0, y0 = points[k]
-            node_distances[k] = {}
-            for idx in v:
-                x1, y1 = points[idx]
-                node_distances[k][idx] = haversine(
-                    (x0, y0),
-                    (x1, y1),
-                    unit=Unit.METERS
-                    )
-        return node_distances
 
     def critical_timestep(self, cfl, maxvel=5., g=9.8, method='simple'):
         """
@@ -586,13 +569,6 @@ class AdcircMesh(EuclideanMesh2D):
         return kwargs['axes']
 
     @property
-    def boundaries(self):
-        return self._boundaries
-
-    # @property
-    # def ocean_boundaries(self):
-
-    @property
     def primitive_weighting_in_continuity_equation(self):
         return self.get_attribute(
             "primitive_weighting_in_continuity_equation")
@@ -662,6 +638,10 @@ class AdcircMesh(EuclideanMesh2D):
     @property
     def initial_river_elevation(self):
         return self.get_attribute("initial_river_elevation")
+
+    @property
+    def boundaries(self):
+        return self._boundaries
 
     @property
     def fort14(self):
@@ -939,10 +919,7 @@ class AdcircMesh(EuclideanMesh2D):
     @lru_cache(maxsize=None)
     def _surface_forcing(self):
         return {
-            'imetype': None,  # meteorological
+            'imetype': None,  # meteorological,
+            'iwrtype': None,
+            'isrtype': None,  # rain
         }
-
-    @property
-    @lru_cache(maxsize=None)
-    def _attributes(self):
-        return {}

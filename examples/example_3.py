@@ -15,7 +15,7 @@ import tarfile
 import tempfile
 import urllib.request
 
-from adcircpy import AdcircMesh, AdcircRun, TidalForcing
+from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.server import SlurmConfig
 
 PARENT = pathlib.Path(__file__).parent.absolute()
@@ -38,8 +38,10 @@ def main():
     mesh = AdcircMesh.open(FORT14, crs=4326)
 
     # init tidal forcing and setup requests
-    tidal_forcing = TidalForcing()
+    tidal_forcing = Tides()
     tidal_forcing.use_all()
+
+    mesh.add_forcing(tidal_forcing)
 
     # instantiate AdcircRun object.
     slurm = SlurmConfig(
@@ -57,10 +59,9 @@ def main():
     start_time = datetime.now()
     driver = AdcircRun(
         mesh=mesh,
-        start_time=start_time,
-        end_time=start_time + timedelta(days=7),
+        start_date=start_time,
+        end_date=start_time + timedelta(days=7),
         spinup_time=timedelta(days=5),
-        tidal_forcing=tidal_forcing,
         server_config=slurm
     )
 
