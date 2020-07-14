@@ -901,7 +901,7 @@ class AdcircMesh(EuclideanMesh2D):
 
     @_nodes.setter
     def _nodes(self, nodes):
-        assert type(nodes) is dict
+        assert isinstance(nodes, dict)
         assert all(len(node) == 2 and all(type(value) is float for value in node[0])
                    for node in nodes.values())
         self.__nodes = nodes
