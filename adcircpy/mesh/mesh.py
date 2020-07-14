@@ -1,16 +1,17 @@
-from matplotlib.cm import ScalarMappable
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import matplotlib.pyplot as plt
-import numpy as np
-import pathlib
-import logging
 from collections import defaultdict
-import fiona
 from functools import lru_cache
+import logging
+import pathlib
+
+import fiona
+from matplotlib.cm import ScalarMappable
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
 from shapely.geometry import LineString, mapping
+
 from adcircpy.forcing.bctypes import BoundaryCondition
-from adcircpy.mesh import grd, sms2dm
-from adcircpy.mesh import figures as fig
+from adcircpy.mesh import figures as fig, grd, sms2dm
 from adcircpy.mesh.base import EuclideanMesh2D
 
 
@@ -28,11 +29,13 @@ class AdcircMesh(EuclideanMesh2D):
         description=None,
     ):
         super().__init__(**grd.euclidean_mesh({
-            'nodes': nodes,
-            'elements': elements,
+            'nodes'      : nodes,
+            'elements'   : elements,
             'description': description,
-            'crs': crs
-            }))
+            'crs'        : crs
+        }))
+        self._nodes = nodes
+        self._elements = elements
         self._boundaries = boundaries
 
     @staticmethod
@@ -891,6 +894,30 @@ class AdcircMesh(EuclideanMesh2D):
     def _boundaries(self):
         self.__boundaries = {}
         self.__boundaries[None] = {}
+
+    @property
+    def _nodes(self):
+        return self.__nodes
+
+    @_nodes.setter
+    def _nodes(self, nodes):
+        assert type(nodes) is dict
+        assert all(len(node) == 2 and all(type(value) is float for value in node[0])
+                   for node in nodes.values())
+        self.__nodes = nodes
+
+    @property
+    def _elements(self):
+        return self.__elements
+
+    @_elements.setter
+    def _elements(self, elements):
+        assert type(elements) is dict
+        for element in elements.values():
+            assert len(element) >= 3
+            for value in element:
+                assert value in self._nodes
+        self.__elements = elements
 
     @property
     @lru_cache(maxsize=None)
