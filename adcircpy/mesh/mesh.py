@@ -912,7 +912,7 @@ class AdcircMesh(EuclideanMesh2D):
 
     @_elements.setter
     def _elements(self, elements):
-        assert type(elements) is dict
+        assert isinstance(elements, dict)
         for element in elements.values():
             assert len(element) >= 3
             for value in element:
