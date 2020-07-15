@@ -1,6 +1,6 @@
 # from datetime import timedelta
-import logging
 from functools import lru_cache
+import logging
 import os
 import pathlib
 from stat import S_ISDIR
@@ -9,6 +9,7 @@ from typing import Union
 import uuid
 
 import paramiko
+
 
 # from adcircpy.model.driver import AdcircRun
 
@@ -215,7 +216,7 @@ class ServerConfig:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         kwargs = {
             'hostname': self.hostname,
-            'port': self.port,
+            'port'    : self.port,
             'username': self.username,
             'password': self.password
         }
@@ -366,7 +367,6 @@ class ServerConfig:
         if filename is None:
             filename = 'driver.sh'
         self.__filename = filename
-
 
 # class ServerConfig:
 #     def __init__(self, script: str):

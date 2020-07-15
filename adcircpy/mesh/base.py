@@ -1,18 +1,20 @@
-import logging
-import uuid
-import pathlib
-from functools import lru_cache
-from collections.abc import Mapping
-from itertools import permutations
 from collections import defaultdict
-import numpy as np
-from matplotlib.tri import Triangulation
-from matplotlib.path import Path
+from collections.abc import Mapping
+from functools import lru_cache
+from itertools import permutations
+import logging
+import pathlib
+import uuid
+
+from haversine import Unit, haversine
 from matplotlib.collections import PolyCollection
+from matplotlib.path import Path
 from matplotlib.transforms import Bbox
+from matplotlib.tri import Triangulation
+import numpy as np
+from pyproj import CRS, Proj, Transformer
 from shapely.geometry import Polygon
-from haversine import haversine, Unit
-from pyproj import Proj, CRS, Transformer
+
 from adcircpy.mesh import grd, sms2dm
 from adcircpy.mesh.figures import _figure as _fig
 
@@ -41,7 +43,7 @@ class EuclideanMesh2D:
             'grd', 'gr3', 'adcirc', 'schism',
             # '2dm', 'sms',
             # 'msh'
-            ]
+        ]
 
         if fmt.lower() in ['grd', 'gr3', 'adcirc', 'schism']:
             return cls.open_grd(path, crs)
@@ -76,7 +78,7 @@ class EuclideanMesh2D:
             transformer = Transformer.from_crs(
                 self.crs, dst_crs,
                 always_xy=True
-                )
+            )
             xy = list(zip(*transformer.transform(self.x, self.y)))
             ids = list(self._coords.keys())
             self._coords = {ids[i]: coord for i, coord in enumerate(xy)}
@@ -237,7 +239,7 @@ class EuclideanMesh2D:
                 facecolor=facecolor,
                 edgecolor=edgecolor,
                 linewidth=0.07,
-                )
+            )
             axes.add_collection(pc)
         return axes
 
@@ -253,7 +255,7 @@ class EuclideanMesh2D:
             pc = PolyCollection(
                 self.coords[self.quad4],
                 **kwargs
-                )
+            )
             quad_value = np.mean(self.values[self.quad4], axis=1)
             pc.set_array(quad_value)
             axes.add_collection(pc)
@@ -270,7 +272,7 @@ class EuclideanMesh2D:
     def coords(self):
         return np.array(
             [coord for coord in self._coords.values()]
-            )
+        )
 
     @property
     def xy(self):
@@ -401,7 +403,7 @@ class EuclideanMesh2D:
         for i, j in idxs:
             boundary_edges.append(
                 (int(tri.triangles[i, j]),
-                    int(tri.triangles[i, (j+1) % 3])))
+                 int(tri.triangles[i, (j + 1) % 3])))
         index_ring_collection = self.sort_edges(boundary_edges)
         # sort index_rings into corresponding "polygons"
         areas = list()
@@ -417,9 +419,9 @@ class EuclideanMesh2D:
         _id = 0
         _index_ring_collection = dict()
         _index_ring_collection[_id] = {
-            'exterior': np.asarray(exterior),
+            'exterior' : np.asarray(exterior),
             'interiors': []
-            }
+        }
         e0, e1 = [list(t) for t in zip(*exterior)]
         path = Path(vertices[e0 + [e0[0]], :], closed=True)
         while len(index_ring_collection) > 0:
@@ -456,9 +458,9 @@ class EuclideanMesh2D:
                 areas.pop(idx)
                 _id += 1
                 _index_ring_collection[_id] = {
-                    'exterior': np.asarray(exterior),
+                    'exterior' : np.asarray(exterior),
                     'interiors': []
-                    }
+                }
                 e0, e1 = [list(t) for t in zip(*exterior)]
                 path = Path(vertices[e0 + [e0[0]], :], closed=True)
         return _index_ring_collection
@@ -502,7 +504,7 @@ class EuclideanMesh2D:
                     (x0, y0),
                     (x1, y1),
                     unit=Unit.METERS
-                    )
+                )
         return node_distances
 
     @property
@@ -517,7 +519,7 @@ class EuclideanMesh2D:
     def _certify_input_geom(self, geom_type, geom):
         geom_types = {
             "triangles": 3,
-            "quads": 4,
+            "quads"    : 4,
         }
         _geom = np.asarray(list(geom.values()))
         if len(_geom) > 0:
@@ -576,7 +578,7 @@ class EuclideanMesh2D:
         elements_id = list()
         elements_id.extend(list(self._triangles.keys()))
         elements_id.extend(list(self._quads.keys()))
-        elements_id = range(1, len(elements_id)+1) \
+        elements_id = range(1, len(elements_id) + 1) \
             if len(set(elements_id)) != len(elements_id) else elements_id
         elements = list()
         elements.extend(list(self._triangles.values()))
@@ -592,8 +594,8 @@ class EuclideanMesh2D:
         if self.crs is not None and self.crs.srs not in description:
             description += f"; {self.crs.srs}"
         return {
-            "nodes": self._nodes,
-            "elements": self._elements,
+            "nodes"      : self._nodes,
+            "elements"   : self._elements,
             "description": description,
         }
 
@@ -604,7 +606,7 @@ class EuclideanMesh2D:
         if self.crs is not None:
             description += f"; {self.crs.srs}"
         return {
-            "ND": self._nodes,
+            "ND" : self._nodes,
             "E3T": self._triangles,
             "E4Q": self._quads,
         }

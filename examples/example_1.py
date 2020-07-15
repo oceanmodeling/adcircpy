@@ -12,21 +12,21 @@ If either the padcirc or adcirc binaries are found in PATH, this script will
 execute the run. Otherwise it will write the files and exit.
 """
 
+from datetime import datetime, timedelta
 import pathlib
+import shutil
 import tarfile
 import tempfile
-import shutil
-import warnings
 import urllib.request
-from datetime import datetime, timedelta
-from adcircpy import AdcircMesh, Tides, AdcircRun
+import warnings
+
+from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
 
 
 def main():
-
     # fetch shinnecock inlet test data
     if not FORT14.is_file():
         url = "https://www.dropbox.com/s/1wk91r67cacf132/"

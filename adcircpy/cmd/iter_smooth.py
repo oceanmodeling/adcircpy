@@ -5,11 +5,13 @@ by assigning the minimum topobathy value of the group of nodes where the blowup
 ocurred.
 """
 import argparse
-import pathlib
 from glob import glob
+import pathlib
+
 import matplotlib.pyplot as plt
-from adcircpy.mesh import AdcircMesh
+
 from adcircpy.cmd import diagnose
+from adcircpy.mesh import AdcircMesh
 
 
 def parse_args():

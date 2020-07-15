@@ -1,9 +1,10 @@
-import numpy as np
 import pathlib
-from netCDF4 import Dataset
+
 import matplotlib.pyplot as plt
-from adcircpy.mesh import grd
-from adcircpy.mesh import EuclideanMesh2D
+from netCDF4 import Dataset
+import numpy as np
+
+from adcircpy.mesh import EuclideanMesh2D, grd
 
 
 class Maxele(EuclideanMesh2D):
@@ -17,11 +18,11 @@ class Maxele(EuclideanMesh2D):
         crs=None,
     ):
         super().__init__(**grd.euclidean_mesh({
-            'nodes': nodes,
-            'elements': elements,
+            'nodes'      : nodes,
+            'elements'   : elements,
             'description': description,
-            'crs': crs
-            }))
+            'crs'        : crs
+        }))
         self._zeta_max = np.ma.masked_equal(super().values, 99999.0)
         self._time_of_zeta_max = time_of_zeta_max
 
@@ -57,7 +58,7 @@ class Maxele(EuclideanMesh2D):
             vmin=vmin,
             vmax=vmax,
             **kwargs
-            )
+        )
         plt.colorbar(ax, cmap=cmap)
         axes.axis('scaled')
         if extent is not None:
@@ -85,7 +86,7 @@ class Maxele(EuclideanMesh2D):
         xyz = np.vstack([nc['x'][:], nc['y'][:], zeta_max]).T
         nodes = {i: ((x, y), z) for i, (x, y, z) in enumerate(xyz)}
         elements = {
-            i: (e0-1, e1-1, e2-1) for i, (e0, e1, e2) in enumerate(nc['element'][:])
+            i: (e0 - 1, e1 - 1, e2 - 1) for i, (e0, e1, e2) in enumerate(nc['element'][:])
         }
         return cls(nodes, elements,
                    # zeta_max,
@@ -123,7 +124,7 @@ class Maxele(EuclideanMesh2D):
     @staticmethod
     def _certify_netcdf_maxele_file(nc):
         if ('zeta_max' not in nc.variables.keys()
-                and 'time_of_zeta_max' not in nc.variables.keys()):
+            and 'time_of_zeta_max' not in nc.variables.keys()):
             raise Exception('Not a maxele file!')
 
     @property

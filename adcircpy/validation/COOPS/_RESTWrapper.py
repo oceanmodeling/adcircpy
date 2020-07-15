@@ -1,6 +1,3 @@
-
-
-
 class _RESTWrapper:
 
     def __init__(self, product, start_date, end_date, format='json',
@@ -20,16 +17,16 @@ class _RESTWrapper:
         return len(self._storage.keys())
 
     def _init_params(self):
-        self._params={"format"       : "json",
-                                     "units"       : "metric", 
-                                     "time_zone"   : "gmt",
-                                     "application" : "AdcircPy",
-                                     "datum"       : "msl",
-                                     "product"     : "water_level"}
+        self._params = {"format"     : "json",
+                        "units"      : "metric",
+                        "time_zone"  : "gmt",
+                        "application": "AdcircPy",
+                        "datum"      : "msl",
+                        "product"    : "water_level"}
         self._url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
         self._params['begin_date'] = self.start_date.strftime('%Y%m%d %H:%M')
         self._params['end_date'] = self.end_date.strftime('%Y%m%d %H:%M')
-        
+
     def _call_REST(self):
         for station in self.stations:
             self._params['station'] = station
@@ -38,23 +35,23 @@ class _RESTWrapper:
             data = json.loads(response.text)
             if "data" in data.keys():
                 time = list()
-                values=list()
-                s=list()
-                metadata=data['metadata']
+                values = list()
+                s = list()
+                metadata = data['metadata']
                 for datapoint in data['data']:
                     time.append(datetime.strptime(datapoint['t'], '%Y-%m-%d %H:%M'))
                     try:
-                            val = float(datapoint['v'])
+                        val = float(datapoint['v'])
                     except:
-                            val = np.nan
+                        val = np.nan
                     values.append(val)
                     try:
-                            _s=float(datapoint['s'])
+                        _s = float(datapoint['s'])
                     except:
-                            _s=np.nan
+                        _s = np.nan
                     s.append(_s)
-                self[station] = { "time"     : np.asarray(time),
-                                                    "zeta"     : np.ma.masked_invalid(values),
-                                                    "s"        : np.ma.masked_invalid(s),
-                                                    "metadata" : metadata,
-                                                    "datum"    : self._params["datum"]}
+                self[station] = {"time"    : np.asarray(time),
+                                 "zeta"    : np.ma.masked_invalid(values),
+                                 "s"       : np.ma.masked_invalid(s),
+                                 "metadata": metadata,
+                                 "datum"   : self._params["datum"]}

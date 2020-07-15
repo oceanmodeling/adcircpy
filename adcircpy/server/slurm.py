@@ -1,7 +1,8 @@
 from datetime import timedelta
 # import os
 import pathlib
-from typing import Union
+
+
 # from adcircpy.model.driver import AdcircRun
 # from adcircpy.server import driver as adcirc_driver
 # from tempfile import TemporaryDirectory

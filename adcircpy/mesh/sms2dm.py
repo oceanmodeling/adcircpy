@@ -14,15 +14,15 @@ def reader(path):
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: line[2:]
-                    })
+                })
             if line[0] == 'ND':
                 if line[0] not in sms2dm:
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: (
                         list(map(float, line[2:-1])), float(line[-1])
-                        )
-                    })
+                    )
+                })
     return sms2dm
 
 
@@ -54,7 +54,7 @@ def graph(sms2dm):
 def nodes(sms2dm):
     assert all(int(id) > 0 for id in sms2dm['ND'])
     f = ''
-    for id, (coords, value)in sms2dm['ND'].items():
+    for id, (coords, value) in sms2dm['ND'].items():
         f += f"ND {int(id):d} "
         f += f"{coords[0]:<.16E} "
         f += f"{coords[1]:<.16E} "

@@ -1,5 +1,7 @@
 from datetime import datetime
+
 import numpy as np
+
 from adcircpy.model.winds import WindForcing
 
 
@@ -47,7 +49,7 @@ class OwiForcing(WindForcing):
                             (OWI['iLon'], OWI['iLat'])))
                     values = list()
                 else:
-                    for n in [line[i:i+10] for i in range(0, 80, 10)]:
+                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
                         values.append(float(n))
         return OWI
 
@@ -72,7 +74,7 @@ class OwiForcing(WindForcing):
             values_u = list()
             values_v = list()
             shape = (OWI['iLon'], OWI['iLat'])
-            size = OWI['iLon']*OWI['iLat']
+            size = OWI['iLon'] * OWI['iLat']
             for line in f:
                 if 'iLat' in line:
                     OWI['datetime'].append(
@@ -84,7 +86,7 @@ class OwiForcing(WindForcing):
                     values_u = list()
                     values_v = list()
                 else:
-                    for n in [line[i:i+10] for i in range(0, 80, 10)]:
+                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
                         if len(values_u) != size:
                             values_u.append(float(n))
                         else:

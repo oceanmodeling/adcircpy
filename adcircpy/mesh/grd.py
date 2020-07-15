@@ -1,6 +1,7 @@
-import pathlib
-import numpy as np
 from collections import defaultdict
+import pathlib
+
+import numpy as np
 
 
 def reader(path):
@@ -155,12 +156,12 @@ def euclidean_mesh(grd):
     values = [-value for coord, value in grd['nodes'].values()]
     description = grd['description']  # TODO: get CRS from description
     msh = {
-        "coords": coords,
-        "triangles": triangles,
-        "quads": quads,
-        "values": values,
+        "coords"     : coords,
+        "triangles"  : triangles,
+        "quads"      : quads,
+        "values"     : values,
         "description": description,
-        }
+    }
     if 'crs' in grd:
         msh.update({"crs": grd["crs"]})
     if 'boundaries' in grd.keys():

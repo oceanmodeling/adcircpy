@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta
-import numpy as np
-from functools import lru_cache
 from collections import OrderedDict
+from datetime import datetime, timedelta
+from functools import lru_cache
+
+import numpy as np
+
 from adcircpy.forcing import bctypes
 from adcircpy.forcing.tides.tpxo import TPXO
 
@@ -39,7 +41,7 @@ class Tides(bctypes.EtaBc):
             potential = False
         self._active_constituents[constituent] = {
             "potential": potential,
-            "forcing": forcing,
+            "forcing"  : forcing,
         }
 
     def drop_constituent(self, constituent):
@@ -100,17 +102,17 @@ class Tides(bctypes.EtaBc):
         elif constituent == "K1":
             return self.EQ227
         elif constituent == "M4":
-            return (self.EQ78)**2.
+            return (self.EQ78) ** 2.
         elif constituent == "O1":
             return self.EQ75
         elif constituent == "M6":
-            return (self.EQ78)**3.
+            return (self.EQ78) ** 3.
         elif constituent == "MK3":
-            return self.EQ78*self.EQ227
+            return self.EQ78 * self.EQ227
         elif constituent == "S4":
             return 1.0
         elif constituent == "MN4":
-            return (self.EQ78)**2.
+            return (self.EQ78) ** 2.
         elif constituent == "Nu2":
             return self.EQ78
         elif constituent == "S6":
@@ -158,11 +160,11 @@ class Tides(bctypes.EtaBc):
         elif constituent == "L2":
             return self.EQ215
         elif constituent == "2MK3":
-            return self.EQ227*self.EQ78**2
+            return self.EQ227 * self.EQ78 ** 2
         elif constituent == "K2":
             return self.EQ235
         elif constituent == "M8":
-            return self.EQ78**4
+            return self.EQ78 ** 4
         elif constituent == "MS4":
             return self.EQ78
         else:
@@ -172,93 +174,94 @@ class Tides(bctypes.EtaBc):
     def _normalize_to_360(f):
         def decorator(self, constituent):
             return f(self, constituent) % 360.
+
         return decorator
 
     @_normalize_to_360
     def get_greenwich_factor(self, constituent):
         if constituent == "M2":
-            return 2.*(self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
+            return 2. * (self.DT - self.DS + self.DH) + 2. * (self.DXI - self.DNU)
         elif constituent == "S2":
-            return 2.*self.DT
+            return 2. * self.DT
         elif constituent == "N2":
-            return 2.*(self.DT+self.DH)-3.*self.DS+self.DP+2. \
-                * (self.DXI-self.DNU)
+            return 2. * (self.DT + self.DH) - 3. * self.DS + self.DP + 2. \
+                   * (self.DXI - self.DNU)
         elif constituent == "K1":
-            return self.DT+self.DH-90.-self.DNUP
+            return self.DT + self.DH - 90. - self.DNUP
         elif constituent == "M4":
-            return 4.*(self.DT-self.DS+self.DH)+4.*(self.DXI-self.DNU)
+            return 4. * (self.DT - self.DS + self.DH) + 4. * (self.DXI - self.DNU)
         elif constituent == "O1":
-            return self.DT-2.*self.DS+self.DH+90.+2.*self.DXI-self.DNU
+            return self.DT - 2. * self.DS + self.DH + 90. + 2. * self.DXI - self.DNU
         elif constituent == "M6":
-            return 6.*(self.DT-self.DS+self.DH)+6.*(self.DXI-self.DNU)
+            return 6. * (self.DT - self.DS + self.DH) + 6. * (self.DXI - self.DNU)
         elif constituent == "MK3":
-            return 3.*(self.DT+self.DH)-2.*self.DS-90.+2.*(self.DXI-self.DNU) \
-                - self.DNUP
+            return 3. * (self.DT + self.DH) - 2. * self.DS - 90. + 2. * (self.DXI - self.DNU) \
+                   - self.DNUP
         elif constituent == "S4":
-            return 4.*self.DT
+            return 4. * self.DT
         elif constituent == "MN4":
-            return 4.*(self.DT+self.DH)-5.*self.DS+self.DP+4.\
-                * (self.DXI-self.DNU)
+            return 4. * (self.DT + self.DH) - 5. * self.DS + self.DP + 4. \
+                   * (self.DXI - self.DNU)
         elif constituent == "Nu2":
-            return 2.*self.DT-3.*self.DS+4.*self.DH-self.DP+2. \
-                * (self.DXI-self.DNU)
+            return 2. * self.DT - 3. * self.DS + 4. * self.DH - self.DP + 2. \
+                   * (self.DXI - self.DNU)
         elif constituent == "S6":
-            return 6.*self.DT
+            return 6. * self.DT
         elif constituent == "MU2":
-            return 2.*(self.DT+2.*(self.DH-self.DS))+2.*(self.DXI-self.DNU)
+            return 2. * (self.DT + 2. * (self.DH - self.DS)) + 2. * (self.DXI - self.DNU)
         elif constituent == "2N2":
-            return 2.*(self.DT-2.*self.DS+self.DH+self.DP)+2. \
-                * (self.DXI-self.DNU)
+            return 2. * (self.DT - 2. * self.DS + self.DH + self.DP) + 2. \
+                   * (self.DXI - self.DNU)
         elif constituent == "OO1":
-            return self.DT+2.*self.DS+self.DH-90.-2.*self.DXI-self.DNU
+            return self.DT + 2. * self.DS + self.DH - 90. - 2. * self.DXI - self.DNU
         elif constituent == "lambda2":
-            return 2.*self.DT-self.DS+self.DP+180.+2.*(self.DXI-self.DNU)
+            return 2. * self.DT - self.DS + self.DP + 180. + 2. * (self.DXI - self.DNU)
         elif constituent == "S1":
             return self.DT
         elif constituent == "M1":
-            return self.DT-self.DS+self.DH-90.+self.DXI-self.DNU+self.DQ
+            return self.DT - self.DS + self.DH - 90. + self.DXI - self.DNU + self.DQ
         elif constituent == "J1":
-            return self.DT+self.DS+self.DH-self.DP-90.-self.DNU
+            return self.DT + self.DS + self.DH - self.DP - 90. - self.DNU
         elif constituent == "Mm":
-            return self.DS-self.DP
+            return self.DS - self.DP
         elif constituent == "Ssa":
-            return 2.*self.DH
+            return 2. * self.DH
         elif constituent == "Sa":
             return self.DH
         elif constituent == "Msf":
-            return 2.*(self.DS-self.DH)
+            return 2. * (self.DS - self.DH)
         elif constituent == "Mf":
-            return 2.*self.DS-2.*self.DXI
+            return 2. * self.DS - 2. * self.DXI
         elif constituent == "RHO":
-            return self.DT+3.*(self.DH-self.DS)-self.DP+90.+2.\
-                * self.DXI-self.DNU
+            return self.DT + 3. * (self.DH - self.DS) - self.DP + 90. + 2. \
+                   * self.DXI - self.DNU
         elif constituent == "Q1":
-            return self.DT-3.*self.DS+self.DH+self.DP+90.+2.*self.DXI-self.DNU
+            return self.DT - 3. * self.DS + self.DH + self.DP + 90. + 2. * self.DXI - self.DNU
         elif constituent == "T2":
-            return 2.*self.DT-self.DH+self.DP1
+            return 2. * self.DT - self.DH + self.DP1
         elif constituent == "R2":
-            return 2.*self.DT+self.DH-self.DP1+180.
+            return 2. * self.DT + self.DH - self.DP1 + 180.
         elif constituent == "2Q1":
-            return self.DT-4.*self.DS+self.DH+2.*self.DP+90.+2.*self.DXI \
-                - self.DNU
+            return self.DT - 4. * self.DS + self.DH + 2. * self.DP + 90. + 2. * self.DXI \
+                   - self.DNU
         elif constituent == "P1":
-            return self.DT-self.DH+90.
+            return self.DT - self.DH + 90.
         elif constituent == "2SM2":
-            return 2.*(self.DT+self.DS-self.DH)+2.*(self.DNU-self.DXI)
+            return 2. * (self.DT + self.DS - self.DH) + 2. * (self.DNU - self.DXI)
         elif constituent == "M3":
-            return 3.*(self.DT-self.DS+self.DH)+3.*(self.DXI-self.DNU)
+            return 3. * (self.DT - self.DS + self.DH) + 3. * (self.DXI - self.DNU)
         elif constituent == "L2":
-            return 2.*(self.DT+self.DH)-self.DS-self.DP+180.+2.\
-                * (self.DXI-self.DNU)-self.DR
+            return 2. * (self.DT + self.DH) - self.DS - self.DP + 180. + 2. \
+                   * (self.DXI - self.DNU) - self.DR
         elif constituent == "2MK3":
-            return 3.*(self.DT+self.DH)-4.*self.DS+90.+4.*(self.DXI-self.DNU) \
-                + self.DNUP
+            return 3. * (self.DT + self.DH) - 4. * self.DS + 90. + 4. * (self.DXI - self.DNU) \
+                   + self.DNUP
         elif constituent == "K2":
-            return 2.*(self.DT+self.DH)-2.*self.DNUP2
+            return 2. * (self.DT + self.DH) - 2. * self.DNUP2
         elif constituent == "M8":
-            return 8.*(self.DT-self.DS+self.DH)+8.*(self.DXI-self.DNU)
+            return 8. * (self.DT - self.DS + self.DH) + 8. * (self.DXI - self.DNU)
         elif constituent == "MS4":
-            return 2.*(2.*self.DT-self.DS+self.DH)+2.*(self.DXI-self.DNU)
+            return 2. * (2. * self.DT - self.DS + self.DH) + 2. * (self.DXI - self.DNU)
         else:
             msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
@@ -286,70 +289,70 @@ class Tides(bctypes.EtaBc):
     @property
     def EQ73(self):
         """ """
-        return (2./3.-np.sin(self.I)**2)/.5021
+        return (2. / 3. - np.sin(self.I) ** 2) / .5021
 
     @property
     def EQ74(self):
         """ """
-        return np.sin(self.I)**2/.1578
+        return np.sin(self.I) ** 2 / .1578
 
     @property
     def EQ75(self):
         """ """
-        return np.sin(self.I)*np.cos(self.I/2.)**2/.37988
+        return np.sin(self.I) * np.cos(self.I / 2.) ** 2 / .37988
 
     @property
     def EQ76(self):
         """ """
-        return np.sin(2.*self.I)/.7214
+        return np.sin(2. * self.I) / .7214
 
     @property
     def EQ77(self):
         """ """
-        return np.sin(self.I)*np.sin(self.I/2.)**2/.0164
+        return np.sin(self.I) * np.sin(self.I / 2.) ** 2 / .0164
 
     @property
     def EQ78(self):
         """ """
-        return (np.cos(self.I/2)**4)/.91544
+        return (np.cos(self.I / 2) ** 4) / .91544
 
     @property
     def EQ149(self):
         """ """
-        return np.cos(self.I/2.)**6/.8758
+        return np.cos(self.I / 2.) ** 6 / .8758
 
     @property
     def EQ197(self):
         """ """
-        return np.sqrt(2.310+1.435*np.cos(2.*(self.P - self.XI)))
+        return np.sqrt(2.310 + 1.435 * np.cos(2. * (self.P - self.XI)))
 
     @property
     def EQ207(self):
         """ """
-        return self.EQ75*self.EQ197
+        return self.EQ75 * self.EQ197
 
     @property
     def EQ213(self):
         """ """
-        return np.sqrt(1.-12.*np.tan(self.I/2.)**2*np.cos(2.*self.P)
-                       + 36.*np.tan(self.I/2.)**4)
+        return np.sqrt(1. - 12. * np.tan(self.I / 2.) ** 2 * np.cos(2. * self.P)
+                       + 36. * np.tan(self.I / 2.) ** 4)
 
     @property
     def EQ215(self):
         """ """
-        return self.EQ78*self.EQ213
+        return self.EQ78 * self.EQ213
 
     @property
     def EQ227(self):
         """ """
-        return np.sqrt(.8965*np.sin(2.*self.I)**2+.6001*np.sin(2.*self.I)
-                       * np.cos(self.NU)+.1006)
+        return np.sqrt(.8965 * np.sin(2. * self.I) ** 2 + .6001 * np.sin(2. * self.I)
+                       * np.cos(self.NU) + .1006)
 
     @property
     def EQ235(self):
         """ """
-        return .001+np.sqrt(19.0444*np.sin(self.I)**4+2.7702*np.sin(self.I)**2
-                            * np.cos(2.*self.NU)+.0981)
+        return .001 + np.sqrt(19.0444 * np.sin(self.I) ** 4 + 2.7702 * np.sin(self.I) ** 2
+                              * np.cos(2. * self.NU) + .0981)
 
     @property
     def start_date(self):
@@ -401,43 +404,43 @@ class Tides(bctypes.EtaBc):
     @property
     def orbital_frequencies(self):
         return {
-            'M4':      0.0002810378050173,
-            'M6':      0.0004215567080107,
-            'MK3':     0.0002134400613513,
-            'S4':      0.0002908882086657,
-            'MN4':     0.0002783986019952,
-            'S6':      0.0004363323129986,
-            'M3':      0.0002107783537630,
-            '2MK3':    0.0002081166466594,
-            'M8':      0.0005620756090649,
-            'MS4':     0.0002859630068415,
-            'M2':      0.0001405189025086,
-            'S2':      0.0001454441043329,
-            'N2':      0.0001378796994865,
-            'Nu2':     0.0001382329037065,
-            'MU2':     0.0001355937006844,
-            '2N2':     0.0001352404964644,
+            'M4'     : 0.0002810378050173,
+            'M6'     : 0.0004215567080107,
+            'MK3'    : 0.0002134400613513,
+            'S4'     : 0.0002908882086657,
+            'MN4'    : 0.0002783986019952,
+            'S6'     : 0.0004363323129986,
+            'M3'     : 0.0002107783537630,
+            '2MK3'   : 0.0002081166466594,
+            'M8'     : 0.0005620756090649,
+            'MS4'    : 0.0002859630068415,
+            'M2'     : 0.0001405189025086,
+            'S2'     : 0.0001454441043329,
+            'N2'     : 0.0001378796994865,
+            'Nu2'    : 0.0001382329037065,
+            'MU2'    : 0.0001355937006844,
+            '2N2'    : 0.0001352404964644,
             'lambda2': 0.0001428049013108,
-            'T2':      0.0001452450073529,
-            'R2':      0.0001456432013128,
-            '2SM2':    0.0001503693061571,
-            'L2':      0.0001431581055307,
-            'K2':      0.0001458423172006,
-            'K1':      0.0000729211583579,
-            'O1':      0.0000675977441508,
-            'OO1':     0.0000782445730498,
-            'S1':      0.0000727220521664,
-            'M1':      0.0000702594512543,
-            'J1':      0.0000755603613800,
-            'RHO':     0.0000653117453487,
-            'Q1':      0.0000649585411287,
-            '2Q1':     0.0000623193381066,
-            'P1':      0.0000725229459750,
-            'Mm':      0.0000026392030221,
-            'Ssa':     0.0000003982128677,
-            'Sa':      0.0000001991061914,
-            'Msf':     0.0000049252018242,
-            'Mf':      0.0000053234146919}
+            'T2'     : 0.0001452450073529,
+            'R2'     : 0.0001456432013128,
+            '2SM2'   : 0.0001503693061571,
+            'L2'     : 0.0001431581055307,
+            'K2'     : 0.0001458423172006,
+            'K1'     : 0.0000729211583579,
+            'O1'     : 0.0000675977441508,
+            'OO1'    : 0.0000782445730498,
+            'S1'     : 0.0000727220521664,
+            'M1'     : 0.0000702594512543,
+            'J1'     : 0.0000755603613800,
+            'RHO'    : 0.0000653117453487,
+            'Q1'     : 0.0000649585411287,
+            '2Q1'    : 0.0000623193381066,
+            'P1'     : 0.0000725229459750,
+            'Mm'     : 0.0000026392030221,
+            'Ssa'    : 0.0000003982128677,
+            'Sa'     : 0.0000001991061914,
+            'Msf'    : 0.0000049252018242,
+            'Mf'     : 0.0000053234146919}
 
     @property
     def tidal_potential_amplitudes(self):
@@ -483,7 +486,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def I(self):  # noqa:E743
-        return np.arccos(.9136949-.0356926*np.cos(self.N))
+        return np.arccos(.9136949 - .0356926 * np.cos(self.N))
 
     @property
     def N(self):
@@ -500,15 +503,15 @@ class Tides(bctypes.EtaBc):
     @property
     def DDAY(self):
         return (self.forcing_start_date.timetuple().tm_yday
-                + int((self.forcing_start_date.year-1901.)/4.) - 1)
+                + int((self.forcing_start_date.year - 1901.) / 4.) - 1)
 
     @property
     def NU(self):
-        return np.arcsin(.0897056*np.sin(self.N)/np.sin(self.I))
+        return np.arcsin(.0897056 * np.sin(self.N) / np.sin(self.I))
 
     @property
     def DT(self):
-        return (180.+self.start_date.hour*(360./24))
+        return (180. + self.start_date.hour * (360. / 24))
 
     @property
     def DS(self):
@@ -536,7 +539,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def XI(self):
-        return self.N-2.*np.arctan(.64412*np.tan(self.N/2)) - self.NU
+        return self.N - 2. * np.arctan(.64412 * np.tan(self.N / 2)) - self.NU
 
     @property
     def DXI(self):
@@ -545,7 +548,7 @@ class Tides(bctypes.EtaBc):
     @property
     def NUP(self):
         return np.arctan(np.sin(self.NU) / (
-            np.cos(self.NU)+.334766/np.sin(2.*self.I)))
+            np.cos(self.NU) + .334766 / np.sin(2. * self.I)))
 
     @property
     def DNUP(self):
@@ -561,8 +564,8 @@ class Tides(bctypes.EtaBc):
 
     @property
     def R(self):
-        return (np.arctan(np.sin(2.*self.PC)
-                / ((1./6.)*(1./np.tan(.5*self.I))**2 - np.cos(2.*self.PC))))
+        return (np.arctan(np.sin(2. * self.PC)
+                          / ((1. / 6.) * (1. / np.tan(.5 * self.I)) ** 2 - np.cos(2. * self.PC))))
 
     @property
     def DR(self):
@@ -570,8 +573,8 @@ class Tides(bctypes.EtaBc):
 
     @property
     def NUP2(self):
-        return (np.arctan(np.sin(2.*self.NU)
-                / (np.cos(2.*self.NU)+.0726184 / np.sin(self.I)**2))/2.)
+        return (np.arctan(np.sin(2. * self.NU)
+                          / (np.cos(2. * self.NU) + .0726184 / np.sin(self.I) ** 2)) / 2.)
 
     @property
     def DNUP2(self):
@@ -579,8 +582,8 @@ class Tides(bctypes.EtaBc):
 
     @property
     def Q(self):
-        return np.arctan2((5.*np.cos(self.I)-1.)*np.sin(self.PC),
-                          (7.*np.cos(self.I)+1.)*np.cos(self.PC))
+        return np.arctan2((5. * np.cos(self.I) - 1.) * np.sin(self.PC),
+                          (7. * np.cos(self.I) + 1.) * np.cos(self.PC))
 
     @property
     def DQ(self):
@@ -611,7 +614,7 @@ class Tides(bctypes.EtaBc):
     @start_date.setter
     def start_date(self, start_date):
         if start_date is None:
-            del(self.start_date)
+            del (self.start_date)
             return
         msg = f"start_date must be an instance of type {datetime}."
         assert isinstance(start_date, datetime), msg
@@ -625,7 +628,7 @@ class Tides(bctypes.EtaBc):
     @end_date.setter
     def end_date(self, end_date):
         if end_date is None:
-            del(self.end_date)
+            del (self.end_date)
             return
         msg = f"end_date must be an instance of type {datetime}."
         assert isinstance(end_date, datetime), msg
@@ -640,7 +643,7 @@ class Tides(bctypes.EtaBc):
     @spinup_time.setter
     def spinup_time(self, spinup_time):
         if spinup_time is None:
-            del(self.spinup_time)
+            del (self.spinup_time)
             return
         msg = f"spinup_time must be of and instance of type {timedelta}."
         assert isinstance(spinup_time, timedelta), msg
@@ -654,21 +657,21 @@ class Tides(bctypes.EtaBc):
     @start_date.deleter
     def start_date(self):
         try:
-            del(self.__start_date)
+            del (self.__start_date)
         except AttributeError:
             pass
 
     @end_date.deleter
     def end_date(self):
         try:
-            del(self.__end_date)
+            del (self.__end_date)
         except AttributeError:
             pass
 
     @spinup_time.deleter
     def spinup_time(self):
         try:
-            del(self.__spinup_time)
+            del (self.__spinup_time)
         except AttributeError:
             pass
 

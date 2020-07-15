@@ -1,10 +1,12 @@
-import numpy as np
-import pathlib
-from netCDF4 import Dataset
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 # from matplotlib.widgets import Slider
 from copy import deepcopy
+import pathlib
+
+from matplotlib.animation import FuncAnimation
+import matplotlib.pyplot as plt
+from netCDF4 import Dataset
+import numpy as np
+
 from adcircpy.mesh import UnstructuredMesh
 
 
@@ -27,7 +29,7 @@ class ElevationSurface(UnstructuredMesh):
         for i in range(triangles.shape[0]):
             f += f"E3T {i + 1} "
             for j in range(len(triangles[i, :])):
-                f += f"{triangles[i, j]+1} "
+                f += f"{triangles[i, j] + 1} "
             f += "\n"
         for i in range(self.xy.shape[0]):
             f += f"ND {i + 1} "
@@ -65,7 +67,7 @@ class ElevationSurface(UnstructuredMesh):
             # vmax=0.3,
             # **kwargs
             shading='gouraud'
-            )
+        )
         plt.title(self.nc['time'][0])
         plt.gca().axis('scaled')
         plt.colorbar(ax)
@@ -82,7 +84,7 @@ class ElevationSurface(UnstructuredMesh):
             update,
             frames=np.arange(start_index, end_index),
             interval=200
-            )
+        )
         plt.show()
         # anim.save(
         #     '/home/jreniel/ADCIRC_Maria2017_GAHM_sigma_null.gif',
@@ -122,7 +124,7 @@ class ElevationSurface(UnstructuredMesh):
             vmin=vmin,
             vmax=vmax,
             **kwargs
-            )
+        )
         plt.colorbar(ax, cmap=cmap)
         axes.axis('scaled')
         if extent is not None:
@@ -147,7 +149,7 @@ class ElevationSurface(UnstructuredMesh):
         zeta = np.ma.masked_equal(
             nc['zeta'][:], nc['zeta']._FillValue)
         return cls(np.vstack([nc['x'][:], nc['y'][:]]).T,
-                   nc['element'][:]-1,
+                   nc['element'][:] - 1,
                    zeta,
                    crs)
 
@@ -180,7 +182,7 @@ class ElevationSurface(UnstructuredMesh):
     @staticmethod
     def _certify_netcdf_fort63_file(nc):
         if ('zeta' not in nc.variables.keys()
-                and 'adcirc_mesh' not in nc.variables.keys()):
+            and 'adcirc_mesh' not in nc.variables.keys()):
             raise Exception('Not a fort63 file!')
 
     @property

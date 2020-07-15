@@ -3,7 +3,8 @@ from datetime import timedelta
 from functools import lru_cache
 import pathlib
 
-from adcircpy import AdcircMesh, AdcircRun, TidalForcing  # BestTrackForcing, ServerConfig, SlurmConfig,
+from adcircpy import AdcircMesh, AdcircRun, \
+    TidalForcing  # BestTrackForcing, ServerConfig, SlurmConfig,
 
 
 class AdcircCommand:
@@ -110,7 +111,7 @@ class AdcircCommand:
             _major = ('Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2')
             _all = (*_major, 'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1')
             if ('all' in self.args.constituents
-                    and len(self.args.constituents) > 1):
+                and len(self.args.constituents) > 1):
                 msg = 'When using all, must only pass one'
                 raise IOError(msg)
 
@@ -131,8 +132,8 @@ class AdcircCommand:
     def server_config(self):
         if self.args.hostname:
             if (not self.args.use_slurm or
-                    not self.args.use_torque or
-                    not self.args.use_pbs):
+                not self.args.use_torque or
+                not self.args.use_pbs):
                 server_config = ServerConfig(
                     hostname=self.args.hostname,
                     nprocs=self.args.nproc,

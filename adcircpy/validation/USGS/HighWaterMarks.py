@@ -1,15 +1,16 @@
 from collections import OrderedDict
+import csv
+import json
+
 import matplotlib.pyplot as plt
 import requests
-import json
-import csv
 
 
 class HighWaterMarks(OrderedDict):
     url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
-    params = {'EventType': 2,  # 2 for hurricane
+    params = {'EventType'  : 2,  # 2 for hurricane
               'EventStatus': 0}  # 0 for completed
-    default_filter = {"riverine": True,
+    default_filter = {"riverine"       : True,
                       "non_still_water": True}
 
     def __init__(self, event_name, event_year,
@@ -113,12 +114,12 @@ class HighWaterMarks(OrderedDict):
             events.add((eventName, eventYear, int(item['event_id'])))
         events_dict = dict()
         for name, year, _id in events:
-            events_dict[name.lower()+str(year)] = \
+            events_dict[name.lower() + str(year)] = \
                 {'name': name, 'year': year, 'id': _id}
         if event_name.lower() in events_dict.keys():
             return events_dict[event_name.lower()]['name'], \
-                    events_dict[event_name.lower()]['year'], \
-                    events_dict[event_name.lower()]['id']
+                   events_dict[event_name.lower()]['year'], \
+                   events_dict[event_name.lower()]['id']
         else:
             eventNames = [event.capitalize()
                           for event in list(events_dict.keys())]
@@ -131,17 +132,18 @@ class HighWaterMarks(OrderedDict):
             filter_dict = cls.default_filter
         return filter_dict
 
-    def _filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False, non_still_water=False, keep_undefined=False):
+    def _filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False,
+                non_still_water=False, keep_undefined=False):
         stations_to_delete = set()
         for station in self.keys():
             if 'hwm_quality_id' in self[station].keys():
                 qid = self[station]['hwm_quality_id']
-                if qid not in [1,2,3,4]:
-                    qid=None
+                if qid not in [1, 2, 3, 4]:
+                    qid = None
             else:
-                qid=None
-            if qid is None:         
-                if keep_undefined==False:
+                qid = None
+            if qid is None:
+                if keep_undefined == False:
                     stations_to_delete.add(station)
             if excellent == True and qid == 1:
                 stations_to_delete.add(station)
@@ -157,7 +159,7 @@ class HighWaterMarks(OrderedDict):
                         stations_to_delete.add(station)
             if non_still_water == True:
                 if 'still_water' in self[station].keys():
-                    stations_to_delete.add(station)        
+                    stations_to_delete.add(station)
         for station in stations_to_delete:
             del self[station]
-        self.filtered_count=len(stations_to_delete)
+        self.filtered_count = len(stations_to_delete)
