@@ -1,50 +1,51 @@
 #! /usr/bin/env python
-import tempfile
 import pathlib
-from unittest.mock import patch
-from adcircpy import AdcircMesh
+import tempfile
 import unittest
+from unittest.mock import patch
+
+from adcircpy import AdcircMesh
 
 
 class AdcircMeshTestCase(unittest.TestCase):
 
     def setUp(self):
         self.nodes = {
-            '1': ((0., 0.), -5.),
-            '2': ((.5, 0.), -4.),
-            '3': ((1., 0.), -3.),
-            '4': ((1., 1.), -2.),
-            '5': ((0., 1.), -1.),
-            '6': ((.5, 1.5), 0.),
-            '7': ((.33, .33), 1.),
-            '8': ((.66, .33), 2.),
-            '9': ((.5, .66), 3.),
+            '1' : ((0., 0.), -5.),
+            '2' : ((.5, 0.), -4.),
+            '3' : ((1., 0.), -3.),
+            '4' : ((1., 1.), -2.),
+            '5' : ((0., 1.), -1.),
+            '6' : ((.5, 1.5), 0.),
+            '7' : ((.33, .33), 1.),
+            '8' : ((.66, .33), 2.),
+            '9' : ((.5, .66), 3.),
             '10': ((-1., 1.), 4.),
             '11': ((-1., 0.), 5.),
-            }
+        }
         self.elements = {
-            '1': ['5', '7', '9'],
-            '2': ['1', '2', '7'],
-            '3': ['2', '3', '8'],
-            '4': ['8', '7', '2'],
-            '5': ['3', '4', '8'],
-            '6': ['4', '9', '8'],
-            '7': ['4', '6', '5'],
-            '8': ['5', '10', '11', '1'],
-            '9': ['9', '4', '5'],
+            '1' : ['5', '7', '9'],
+            '2' : ['1', '2', '7'],
+            '3' : ['2', '3', '8'],
+            '4' : ['8', '7', '2'],
+            '5' : ['3', '4', '8'],
+            '6' : ['4', '9', '8'],
+            '7' : ['4', '6', '5'],
+            '8' : ['5', '10', '11', '1'],
+            '9' : ['9', '4', '5'],
             '10': ['5', '1', '7']
-            }
+        }
 
         self.boundaries = dict()
 
         self.boundaries[None] = {  # "open" boundaries
-                0: {'indexes': ['10', '11', '1', '2']},
-                1: {'indexes': ['2', '3', '4']}
+            0: {'indexes': ['10', '11', '1', '2']},
+            1: {'indexes': ['2', '3', '4']}
         }
 
         self.boundaries[0] = {  # "land" boundaries
             0: {'indexes': ['4', '6']},
-            1: {'indexes': ['6',  '5', '10']}
+            1: {'indexes': ['6', '5', '10']}
         }
 
         self.boundaries[1] = {  # "interior" boundary
@@ -52,9 +53,9 @@ class AdcircMeshTestCase(unittest.TestCase):
         }
 
         self.grd = {
-            'nodes': self.nodes,
-            'elements': self.elements,
-            'boundaries': self.boundaries,
+            'nodes'      : self.nodes,
+            'elements'   : self.elements,
+            'boundaries' : self.boundaries,
             'description': 'gr3_unittest'
         }
 
@@ -63,18 +64,18 @@ class AdcircMeshTestCase(unittest.TestCase):
             AdcircMesh(
                 self.nodes,
                 {id: geom for geom in self.elements.values() if len(geom) == 3}
-                ),
+            ),
             AdcircMesh
-            )
+        )
 
     def test_quads_only(self):
         self.assertIsInstance(
             AdcircMesh(
                 self.nodes,
                 {id: geom for geom in self.elements.values() if len(geom) == 4}
-                ),
+            ),
             AdcircMesh
-            )
+        )
 
     def test_hybrid(self):
         self.assertIsInstance(AdcircMesh(self.nodes, self.elements), AdcircMesh)
@@ -107,7 +108,7 @@ class AdcircMeshTestCase(unittest.TestCase):
             title='test',
             cbar_label='elevation [m]',
             vmax=0.
-            )
+        )
         self.assertIsInstance(h, AdcircMesh)
 
     def test_plot_boundary(self):
@@ -135,7 +136,26 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements)
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
-        self.assertIsInstance(h, AdcircMesh)
+        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', fmt='2dm')
+        self.assertRaises(IOError, h.write, pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
+                          fmt='2dm')
+        self.assertRaises(IOError, h.write, pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
+                          fmt='txt')
+
+    def test_add_attribute(self):
+        attributes = {
+            'test_attribute_1': {'test_1': 'a', 'test_2': 2},
+            'test_attribute_2': {'test_1': 'b', 'test_2': 3}
+        }
+        mesh = AdcircMesh(self.nodes, self.elements)
+
+        self.assertRaises(AttributeError, mesh.get_attribute, list(attributes)[0])
+
+        for name, properties in attributes.items():
+            mesh.add_attribute(name, **properties)
+            assert mesh.get_attribute(name) == {'values': None, **properties}
+
+        self.assertRaises(AttributeError, mesh.add_attribute, list(attributes)[0])
 
     def test_add_custom_boundary_custom(self):
         h = AdcircMesh(self.nodes, self.elements)
