@@ -153,7 +153,8 @@ class AdcircMeshTestCase(unittest.TestCase):
 
         for name, properties in attributes.items():
             mesh.add_attribute(name, **properties)
-            self.assertEquals({'values': None, **properties}, mesh.get_attribute(name))
+            self.assertEquals({'values': None, 'properties': None, **properties},
+                              mesh.get_attribute(name))
 
         self.assertRaises(AttributeError, mesh.add_attribute, list(attributes)[0])
 
