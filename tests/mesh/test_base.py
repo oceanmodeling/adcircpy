@@ -3,6 +3,8 @@ import pathlib
 import tempfile
 import unittest
 
+import numpy
+
 from adcircpy.mesh.base import EuclideanMesh2D
 
 
@@ -225,7 +227,20 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
                              m.get_attribute(name))
             self.assertIsNone(m.get_attribute_values(name))
             self.assertIsNone(m.get_attribute_properties(name))
-        self.assertRaises(AttributeError, m.set_attribute, 'test', {'test': 'test'})
+
+        self.assertRaises(AttributeError, m.set_attribute, 'nonexistant_attribute',
+                          {'nonexistant_property': 'test'})
+
+        test_attribute = list(attributes)[0]
+        test_values = numpy.random.rand(*m.coords.shape)
+        test_properties = {'values': test_values, 'properties': None, **attributes[test_attribute]}
+        m.set_attribute(test_attribute, test_values)
+        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value) for name, value in
+                   test_properties.items())
+
+        self.assertRaises(AttributeError, m.remove_attribute, 'nonexistant_attribute')
+        m.remove_attribute(test_attribute)
+        self.assertRaises(AttributeError, m.remove_attribute, test_attribute)
 
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
