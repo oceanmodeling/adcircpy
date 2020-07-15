@@ -228,13 +228,20 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
             self.assertIsNone(m.get_attribute_values(name))
             self.assertIsNone(m.get_attribute_properties(name))
 
-        self.assertRaises(AttributeError, m.set_attribute, 'nonexistant_attribute',
-                          {'nonexistant_property': 'test'})
+        test_node_values = numpy.random.rand(*m.coords.shape)
+        test_element_values = numpy.random.rand(*m.elements.shape)
+
+        nonexistant_attribute = 'nonexistant_attribute'
+        self.assertRaises(AttributeError, m.get_attribute, nonexistant_attribute)
+        self.assertRaises(AttributeError, m.get_attribute_values, nonexistant_attribute)
+        self.assertRaises(AttributeError, m.get_attribute_properties, nonexistant_attribute)
+        self.assertRaises(AttributeError, m.set_attribute, nonexistant_attribute, test_node_values)
 
         test_attribute = list(attributes)[0]
-        test_values = numpy.random.rand(*m.coords.shape)
-        test_properties = {'values': test_values, 'properties': None, **attributes[test_attribute]}
-        m.set_attribute(test_attribute, test_values)
+        test_properties = {'values': test_node_values, 'properties': None,
+                           **attributes[test_attribute]}
+        m.set_attribute(test_attribute, test_node_values)
+        m.set_attribute(test_attribute, test_element_values, elements=True)
         assert all(numpy.all(m.get_attribute(test_attribute)[name] == value) for name, value in
                    test_properties.items())
 
