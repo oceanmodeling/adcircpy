@@ -142,8 +142,7 @@ class EuclideanMesh2D:
                 'Non-unique attribute name: '
                 + 'Attribute attribute name already exists.')
         else:
-            self._attributes[name] = dict()
-            self._attributes[name]['values'] = None
+            self._attributes[name] = {'values': None, 'properties': None}
             self._attributes[name].update(properties)
 
     def has_attribute(self, name):
