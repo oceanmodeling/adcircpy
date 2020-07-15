@@ -145,11 +145,23 @@ class EuclideanMesh2D:
             self._attributes[name] = {'values': None, 'properties': None}
             self._attributes[name].update(properties)
 
-    def has_attribute(self, name):
-        if name in self._attributes.keys():
-            return True
+    def set_attribute(self, name, values, elements=False, **properties):
+        if name not in self.get_attribute_names():
+            raise AttributeError(
+                f'Cannot set attribute: {name} is not an attribute.')
+        msg = "values cannot be None"
+        assert values is not None, msg
+        values = np.array(values)
+        assert isinstance(elements, bool)
+        if elements:
+            assert len(values) == len(self.elements)
         else:
-            return False
+            assert len(values) == len(self.coords)
+        self._attributes[name]['values'] = values
+        self._attributes[name].update(properties)
+
+    def has_attribute(self, name):
+        return name in self._attributes
 
     def get_attribute(self, name):
         if not self.has_attribute(name):
@@ -162,27 +174,13 @@ class EuclideanMesh2D:
         return self._attributes[name]['values']
 
     def get_attribute_properties(self, name):
+        # TODO this is never used; is it meant to return the non-values dictionary?
         if not self.has_attribute(name):
             raise AttributeError(f'Attribute {name} not set.')
         return self._attributes[name]['properties']
 
     def get_attribute_names(self):
         return list(self._attributes.keys())
-
-    def set_attribute(self, name, values, elements=False, **properties):
-        if name not in self.get_attribute_names():
-            raise AttributeError(
-                f'Cannot set attribute: {name} is not an attribute.')
-        msg = "values cannot be None"
-        assert values is not None, msg
-        values = np.array(values)
-        assert isinstance(elements, bool)
-        if elements:
-            assert values.shape[0] == self.elements.shape[0]
-        else:
-            assert values.shape[0] == self.coords.shape[0]
-        self._attributes[name]['values'] = values
-        self._attributes[name].update(properties)
 
     def remove_attribute(self, name):
         if name in self.get_attribute_names():

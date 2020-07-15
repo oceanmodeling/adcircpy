@@ -219,8 +219,10 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
             'test_attribute_1': {'test_property_1': 2}
         }
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
+
         for name, properties in attributes.items():
             m.add_attribute(name, **properties)
+
         self.assertEqual(list(attributes), m.get_attribute_names())
         for name, properties in attributes.items():
             self.assertEqual({'values': None, 'properties': None, **properties},
@@ -228,8 +230,8 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
             self.assertIsNone(m.get_attribute_values(name))
             self.assertIsNone(m.get_attribute_properties(name))
 
-        test_node_values = numpy.random.rand(*m.coords.shape)
-        test_element_values = numpy.random.rand(*m.elements.shape)
+        test_node_values = numpy.random.rand((len(m.coords)))
+        test_element_values = numpy.random.rand((len(m.elements)))
 
         nonexistant_attribute = 'nonexistant_attribute'
         self.assertRaises(AttributeError, m.get_attribute, nonexistant_attribute)
@@ -241,9 +243,13 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         test_properties = {'values': test_node_values, 'properties': None,
                            **attributes[test_attribute]}
         m.set_attribute(test_attribute, test_node_values)
+        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value)
+                   for name, value in test_properties.items())
+        test_properties = {'values': test_element_values, 'properties': None,
+                           **attributes[test_attribute]}
         m.set_attribute(test_attribute, test_element_values, elements=True)
-        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value) for name, value in
-                   test_properties.items())
+        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value)
+                   for name, value in test_properties.items())
 
         self.assertRaises(AttributeError, m.remove_attribute, 'nonexistant_attribute')
         m.remove_attribute(test_attribute)
