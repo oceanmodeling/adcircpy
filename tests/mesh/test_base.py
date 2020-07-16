@@ -274,6 +274,8 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         outer_rings = m.outer_ring_collection
         inner_rings = m.inner_ring_collection
 
+        # TODO validate ring collections
+
         self.assertIsInstance(m, EuclideanMesh2D)
 
     def test_get_node_id(self):
