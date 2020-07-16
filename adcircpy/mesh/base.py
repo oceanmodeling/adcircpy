@@ -105,9 +105,9 @@ class EuclideanMesh2D:
     def get_xy(self, crs=None):
         if crs is not None:
             crs = CRS.from_user_input(crs)
-            if crs.srs != self.srs:
-                transformer = Transformer.from_crs(
-                    self.crs, crs, always_xy=True)
+            if crs != self.crs:
+                transformer = Transformer.from_crs(self.crs, crs,
+                                                   always_xy=True)
                 x, y = transformer.transform(self.x, self.y)
                 return np.vstack([x, y]).T
         return np.vstack([self.x, self.y]).T
@@ -124,7 +124,8 @@ class EuclideanMesh2D:
     def write(self, path, overwrite=False, fmt='gr3'):
         path = pathlib.Path(path)
         if path.is_file() and not overwrite:
-            raise IOError('File exists, use overwrite=True to allow overwrite.')
+            raise IOError(
+                'File exists, use overwrite=True to allow overwrite.')
         with open(path, 'w') as f:
             f.write(self.ascii_string(fmt))
 
@@ -428,10 +429,12 @@ class EuclideanMesh2D:
                     potential_interiors.append(i)
             # filter out nested rings
             real_interiors = list()
-            for i, p_interior in reversed(list(enumerate(potential_interiors))):
+            for i, p_interior in reversed(
+                list(enumerate(potential_interiors))):
                 _p_interior = index_ring_collection[p_interior]
                 check = [index_ring_collection[_]
-                         for j, _ in reversed(list(enumerate(potential_interiors)))
+                         for j, _ in
+                         reversed(list(enumerate(potential_interiors)))
                          if i != j]
                 has_parent = False
                 for _path in check:
