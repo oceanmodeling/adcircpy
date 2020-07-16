@@ -255,6 +255,9 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         m.remove_attribute(test_attribute)
         self.assertRaises(AttributeError, m.remove_attribute, test_attribute)
 
+    def test_quads(self):
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
+
         input_quads = numpy.array([[self.coords[index] for index in element]
                                    for element in numpy.array(list(self.quads.values()))])
 
@@ -263,6 +266,15 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
                                     for element in numpy.array(list(m.quads))])
 
         assert numpy.all(output_quads == input_quads)
+
+    def test_ring_collections(self):
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
+
+        index_rings = m.index_ring_collection
+        outer_rings = m.outer_ring_collection
+        inner_rings = m.inner_ring_collection
+
+        self.assertIsInstance(m, EuclideanMesh2D)
 
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
