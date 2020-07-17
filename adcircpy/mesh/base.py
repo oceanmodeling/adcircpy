@@ -573,6 +573,11 @@ class EuclideanMesh2D:
                 for IDtag in IDtags:
                     assert IDtag in self.coords_id, msg
 
+    @property
+    @lru_cache(maxsize=None)
+    def _logger(self):
+        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
+
     # auxilliary functions
     @staticmethod
     def sort_edges(edges):
@@ -621,6 +626,7 @@ class EuclideanMesh2D:
             area -= vertices[j][0] * vertices[i][1]
         return area / 2.0
 
+    # plotting functions
     @_fig
     def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.tria3) > 0:
@@ -693,8 +699,3 @@ class EuclideanMesh2D:
         axes = self.triplot(axes=axes, **kwargs)
         axes = self.quadplot(axes=axes, **kwargs)
         return axes
-
-    @property
-    @lru_cache(maxsize=None)
-    def _logger(self):
-        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
