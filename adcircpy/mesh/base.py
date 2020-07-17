@@ -101,19 +101,19 @@ class EuclideanMesh2D:
     def xy(self):
         return self.coords
 
-    @property
-    def x(self):
-        return self.coords[:, 0]
-
     def get_x(self, crs=None):
         return self.get_xy(crs)[:, 0]
 
     @property
-    def y(self):
-        return self.coords[:, 1]
+    def x(self):
+        return self.coords[:, 0]
 
     def get_y(self, crs=None):
         return self.get_xy(crs)[:, 1]
+
+    @property
+    def y(self):
+        return self.coords[:, 1]
 
     @property
     @lru_cache(maxsize=None)
@@ -165,10 +165,9 @@ class EuclideanMesh2D:
 
     def set_attribute(self, name, values, elements=False, **properties):
         if name not in self.get_attribute_names():
-            raise AttributeError(
-                f'Cannot set attribute: {name} is not an attribute.')
-        msg = "values cannot be None"
-        assert values is not None, msg
+            raise AttributeError(f'Cannot set attribute: '
+                                 f'{name} is not an attribute.')
+        assert values is not None, "values cannot be None"
         values = np.array(values)
         assert isinstance(elements, bool)
         if elements:
