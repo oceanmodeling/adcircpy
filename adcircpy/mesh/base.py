@@ -7,6 +7,7 @@ import pathlib
 import uuid
 
 from haversine import Unit, haversine
+from matplotlib import pyplot
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
 from matplotlib.transforms import Bbox
@@ -631,12 +632,16 @@ class EuclideanMesh2D:
     def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.tria3) > 0:
             axes.tricontourf(self.triangulation, self.values, **kwargs)
+        if show:
+            pyplot.show()
         return axes
 
     @_fig
     def tripcolor(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.tria3) > 0:
             axes.tripcolor(self.triangulation, self.values, **kwargs)
+        if show:
+            pyplot.show()
         return axes
 
     @_fig
@@ -653,6 +658,8 @@ class EuclideanMesh2D:
             kwargs.update({'linewidth': linewidth})
             kwargs.update({'color': color})
             axes.triplot(self.triangulation, **kwargs)
+        if show:
+            pyplot.show()
         return axes
 
     @_fig
@@ -674,6 +681,8 @@ class EuclideanMesh2D:
                 linewidth=0.07,
             )
             axes.add_collection(pc)
+        if show:
+            pyplot.show()
         return axes
 
     @_fig
@@ -692,10 +701,14 @@ class EuclideanMesh2D:
             quad_value = np.mean(self.values[self.quad4], axis=1)
             pc.set_array(quad_value)
             axes.add_collection(pc)
+        if show:
+            pyplot.show()
         return axes
 
     @_fig
     def plot_wireframe(self, axes=None, show=False, **kwargs):
         axes = self.triplot(axes=axes, **kwargs)
         axes = self.quadplot(axes=axes, **kwargs)
+        if show:
+            pyplot.show()
         return axes
