@@ -4,6 +4,7 @@ import tempfile
 import unittest
 
 import numpy
+from pyproj import CRS, Proj
 
 from adcircpy.mesh.base import EuclideanMesh2D
 
@@ -294,14 +295,25 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
 
         self.assertIsInstance(m, EuclideanMesh2D)
 
-    # def test_node_distances(self):
-    #     m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-    #
-    #     node_distances = m.node_distances_meters
-    #
-    #     # TODO validate node distances
-    #
-    #     self.assertIsInstance(m, EuclideanMesh2D)
+    def test_crs(self):
+        crs = CRS.from_epsg(4326)
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
+
+        self.assertEqual(crs, m.crs)
+        self.assertEqual(Proj(crs), m.proj)
+        self.assertEqual(m.proj.srs, m.srs)
+
+        self.assertIsInstance(m, EuclideanMesh2D)
+
+    def test_node_distances(self):
+        crs = CRS.from_epsg(4326)
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
+
+        node_distances = m.node_distances_meters
+
+        # TODO validate node distances
+
+        self.assertIsInstance(m, EuclideanMesh2D)
 
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
