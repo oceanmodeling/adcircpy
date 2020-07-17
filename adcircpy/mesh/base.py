@@ -245,8 +245,51 @@ class EuclideanMesh2D:
 
     @property
     @lru_cache(maxsize=None)
+    def _nodes(self):
+        return {id: ((x, y), -self.values[i])
+                for i, (id, (x, y)) in enumerate(self._coords.items())}
+
+    def get_node_id(self, index):
+        return self.node_id[index]
+
+    @property
+    @lru_cache(maxsize=None)
     def node_id(self):
         return {index: id for index, id in enumerate(self._coords)}
+
+    def get_node_index(self, id):
+        return self.node_index[id]
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_index(self):
+        return {id: index for index, id in enumerate(self._coords)}
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_neighbors(self):
+        node_neighbors = defaultdict(set)
+        for simplex in self.triangulation.triangles:
+            for i, j in permutations(simplex, 2):
+                node_neighbors[i].add(j)
+        return node_neighbors
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_distances_meters(self):
+        points = self.get_xy("EPSG:4326")
+        node_distances = {}
+        for k, v in self.node_neighbors.items():
+            x0, y0 = points[k]
+            node_distances[k] = {}
+            for idx in v:
+                x1, y1 = points[idx]
+                node_distances[k][idx] = haversine(
+                    (x0, y0),
+                    (x1, y1),
+                    unit=Unit.METERS
+                )
+        return node_distances
 
     def get_element_index(self, id):
         return self.element_index[id]
@@ -516,43 +559,6 @@ class EuclideanMesh2D:
             inner_ring_collection[key] = rings['interiors']
         return inner_ring_collection
 
-    def get_node_index(self, id):
-        return self.node_index[id]
-
-    def get_node_id(self, index):
-        return self.node_id[index]
-
-    @property
-    @lru_cache(maxsize=None)
-    def node_index(self):
-        return {id: index for index, id in enumerate(self._coords)}
-
-    @property
-    @lru_cache(maxsize=None)
-    def node_neighbors(self):
-        node_neighbors = defaultdict(set)
-        for simplex in self.triangulation.triangles:
-            for i, j in permutations(simplex, 2):
-                node_neighbors[i].add(j)
-        return node_neighbors
-
-    @property
-    @lru_cache(maxsize=None)
-    def node_distances_meters(self):
-        points = self.get_xy("EPSG:4326")
-        node_distances = {}
-        for k, v in self.node_neighbors.items():
-            x0, y0 = points[k]
-            node_distances[k] = {}
-            for idx in v:
-                x1, y1 = points[idx]
-                node_distances[k][idx] = haversine(
-                    (x0, y0),
-                    (x1, y1),
-                    unit=Unit.METERS
-                )
-        return node_distances
-
     def _certify_input_geom(self, geom_type, geom):
         geom_types = {
             "triangles": 3,
@@ -566,12 +572,6 @@ class EuclideanMesh2D:
             for IDtags in geom.values():
                 for IDtag in IDtags:
                     assert IDtag in self.coords_id, msg
-
-    @property
-    @lru_cache(maxsize=None)
-    def _nodes(self):
-        return {id: ((x, y), -self.values[i])
-                for i, (id, (x, y)) in enumerate(self._coords.items())}
 
     # auxilliary functions
     @staticmethod

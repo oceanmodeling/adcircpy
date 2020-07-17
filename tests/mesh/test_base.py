@@ -295,16 +295,6 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
 
         self.assertIsInstance(m, EuclideanMesh2D)
 
-    def test_crs(self):
-        crs = CRS.from_epsg(4326)
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
-
-        self.assertEqual(crs, m.crs)
-        self.assertEqual(Proj(crs), m.proj)
-        self.assertEqual(m.proj.srs, m.srs)
-
-        self.assertIsInstance(m, EuclideanMesh2D)
-
     def test_node_distances(self):
         crs = CRS.from_epsg(4326)
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
@@ -312,6 +302,16 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         node_distances = m.node_distances_meters
 
         # TODO validate node distances
+
+        self.assertIsInstance(m, EuclideanMesh2D)
+
+    def test_crs(self):
+        crs = CRS.from_epsg(4326)
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
+
+        self.assertEqual(crs, m.crs)
+        self.assertEqual(Proj(crs), m.proj)
+        self.assertEqual(m.proj.srs, m.srs)
 
         self.assertIsInstance(m, EuclideanMesh2D)
 
