@@ -78,25 +78,17 @@ class AdcircMeshTestCase(unittest.TestCase):
         )
 
     def test_hybrid(self):
-        self.assertIsInstance(AdcircMesh(self.nodes, self.elements), AdcircMesh)
+        self.assertIsInstance(AdcircMesh(self.nodes, self.elements),
+                              AdcircMesh)
 
     def test_open(self):
         tmpfile = tempfile.NamedTemporaryFile()
         with open(tmpfile.name, 'w') as f:
-            f.write('\n')
-            f.write(f'{len(self.elements):d} ')
-            f.write(f'{len(self.nodes):d}\n')
+            f.write(f'\n{len(self.elements):d} {len(self.nodes):d}\n')
             for id, ((x, y), z) in self.nodes.items():
-                f.write(f"{id} ")
-                f.write(f"{x} ")
-                f.write(f"{y} ")
-                f.write(f"{z}\n")
+                f.write(f'{id} {x} {y} {z}\n')
             for id, geom in self.elements.items():
-                f.write(f"{id} ")
-                f.write(f"{len(geom)} ")
-                for idx in geom:
-                    f.write(f"{idx} ")
-                f.write(f"\n")
+                f.write(f'{id} {len(geom)} {" ".join(idx for idx in geom)}\n')
         self.assertIsInstance(AdcircMesh.open(tmpfile.name), AdcircMesh)
 
     @patch('matplotlib.pyplot.show')
@@ -137,9 +129,11 @@ class AdcircMeshTestCase(unittest.TestCase):
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', fmt='2dm')
-        self.assertRaises(IOError, h.write, pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
+        self.assertRaises(IOError, h.write,
+                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
                           fmt='2dm')
-        self.assertRaises(IOError, h.write, pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
+        self.assertRaises(IOError, h.write,
+                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
                           fmt='txt')
 
     def test_add_attribute(self):
@@ -149,14 +143,17 @@ class AdcircMeshTestCase(unittest.TestCase):
         }
         mesh = AdcircMesh(self.nodes, self.elements)
 
-        self.assertRaises(AttributeError, mesh.get_attribute, list(attributes)[0])
+        self.assertRaises(AttributeError, mesh.get_attribute,
+                          list(attributes)[0])
 
         for name, properties in attributes.items():
             mesh.add_attribute(name, **properties)
-            self.assertEquals({'values': None, 'properties': None, **properties},
-                              mesh.get_attribute(name))
+            self.assertEquals(
+                {'values': None, 'properties': None, **properties},
+                mesh.get_attribute(name))
 
-        self.assertRaises(AttributeError, mesh.add_attribute, list(attributes)[0])
+        self.assertRaises(AttributeError, mesh.add_attribute,
+                          list(attributes)[0])
 
     def test_add_custom_boundary_custom(self):
         h = AdcircMesh(self.nodes, self.elements)
