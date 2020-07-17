@@ -20,7 +20,6 @@ from adcircpy.mesh.figures import _figure as _fig
 
 
 class EuclideanMesh2D:
-
     def __init__(
         self,
         coords,
@@ -72,55 +71,6 @@ class EuclideanMesh2D:
         """
         return cls(**grd.euclidean_mesh(grid))
 
-    def transform_to(self, dst_crs):
-        dst_crs = CRS.from_user_input(dst_crs)
-        if self.srs != dst_crs.srs:
-            transformer = Transformer.from_crs(
-                self.crs, dst_crs,
-                always_xy=True
-            )
-            xy = list(zip(*transformer.transform(self.x, self.y)))
-            ids = list(self._coords.keys())
-            self._coords = {ids[i]: coord for i, coord in enumerate(xy)}
-            self._crs = dst_crs
-
-    def get_node_index(self, id):
-        return self.node_index[id]
-
-    def get_node_id(self, index):
-        return self.node_id[index]
-
-    def get_element_index(self, id):
-        return self.element_index[id]
-
-    def get_element_id(self, index):
-        return self.element_id[index]
-
-    def get_x(self, crs=None):
-        return self.get_xy(crs)[:, 0]
-
-    def get_y(self, crs=None):
-        return self.get_xy(crs)[:, 1]
-
-    def get_xy(self, crs=None):
-        if crs is not None:
-            crs = CRS.from_user_input(crs)
-            if crs != self.crs:
-                transformer = Transformer.from_crs(self.crs, crs,
-                                                   always_xy=True)
-                x, y = transformer.transform(self.x, self.y)
-                return np.vstack([x, y]).T
-        return np.vstack([self.x, self.y]).T
-
-    def get_extent(self, crs=None):
-        xy = self.get_xy(crs)
-        return (np.min(xy[:, 0]), np.max(xy[:, 0]),
-                np.min(xy[:, 1]), np.max(xy[:, 1]))
-
-    def get_bbox(self, crs=None):
-        xmin, xmax, ymin, ymax = self.get_extent(crs)
-        return Bbox([[xmin, ymin], [xmax, ymax]])
-
     def write(self, path, overwrite=False, fmt='gr3'):
         path = pathlib.Path(path)
         if path.is_file() and not overwrite:
@@ -136,6 +86,73 @@ class EuclideanMesh2D:
             return self.sms2dm
         else:
             raise IOError(f"File format {fmt} not recognized.")
+
+    def get_xy(self, crs=None):
+        if crs is not None:
+            crs = CRS.from_user_input(crs)
+            if crs != self.crs:
+                transformer = Transformer.from_crs(self.crs, crs,
+                                                   always_xy=True)
+                x, y = transformer.transform(self.x, self.y)
+                return np.vstack([x, y]).T
+        return np.vstack([self.x, self.y]).T
+
+    @property
+    def xy(self):
+        return self.coords
+
+    @property
+    def x(self):
+        return self.coords[:, 0]
+
+    def get_x(self, crs=None):
+        return self.get_xy(crs)[:, 0]
+
+    @property
+    def y(self):
+        return self.coords[:, 1]
+
+    def get_y(self, crs=None):
+        return self.get_xy(crs)[:, 1]
+
+    @property
+    @lru_cache(maxsize=None)
+    def coords(self):
+        return np.array([coord for coord in self._coords.values()])
+
+    @property
+    @lru_cache(maxsize=None)
+    def coords_id(self):
+        return self._coords.keys()
+
+    @property
+    def _coords(self):
+        return self.__coords
+
+    @_coords.setter
+    def _coords(self, coords):
+        msg = "coord argument must be a dictionary of the form "
+        msg += "\\{coord_id:  (x, y)\\}"
+        assert isinstance(coords, Mapping), msg
+        for coord in coords.values():
+            assert len(coord) == 2, msg
+            assert isinstance(coord[0], (float, int)), msg
+            assert isinstance(coord[1], (float, int)), msg
+        self.__coords = coords
+        type(self).coords.fget.cache_clear()
+
+    def get_extent(self, crs=None):
+        xy = self.get_xy(crs)
+        return (np.min(xy[:, 0]), np.max(xy[:, 0]),
+                np.min(xy[:, 1]), np.max(xy[:, 1]))
+
+    def get_bbox(self, crs=None):
+        xmin, xmax, ymin, ymax = self.get_extent(crs)
+        return Bbox([[xmin, ymin], [xmax, ymax]])
+
+    @property
+    def bbox(self):
+        return self.get_bbox()
 
     def add_attribute(self, name, **properties):
         if self.has_attribute(name):
@@ -190,102 +207,177 @@ class EuclideanMesh2D:
             raise AttributeError(
                 'Cannot remove attribute: attribute does not exist.')
 
-    @_fig
-    def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
-        if len(self.tria3) > 0:
-            axes.tricontourf(self.triangulation, self.values, **kwargs)
-        return axes
-
-    @_fig
-    def tripcolor(self, axes=None, show=True, figsize=None, **kwargs):
-        if len(self.tria3) > 0:
-            axes.tripcolor(self.triangulation, self.values, **kwargs)
-        return axes
-
-    @_fig
-    def triplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        linewidth=0.07,
-        color='black',
-        **kwargs
-    ):
-        if len(self.triangles) > 0:
-            kwargs.update({'linewidth': linewidth})
-            kwargs.update({'color': color})
-            axes.triplot(self.triangulation, **kwargs)
-        return axes
-
-    @_fig
-    def quadplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        facecolor='none',
-        edgecolor='k',
-        linewidth=0.07,
-        **kwargs
-    ):
-        if len(self.quads) > 0:
-            pc = PolyCollection(
-                self.coords[self.quads],
-                facecolor=facecolor,
-                edgecolor=edgecolor,
-                linewidth=0.07,
-            )
-            axes.add_collection(pc)
-        return axes
-
-    @_fig
-    def quadface(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        **kwargs
-    ):
-        if len(self.quad4) > 0:
-            pc = PolyCollection(
-                self.coords[self.quad4],
-                **kwargs
-            )
-            quad_value = np.mean(self.values[self.quad4], axis=1)
-            pc.set_array(quad_value)
-            axes.add_collection(pc)
-        return axes
-
-    @_fig
-    def plot_wireframe(self, axes=None, show=False, **kwargs):
-        axes = self.triplot(axes=axes, **kwargs)
-        axes = self.quadplot(axes=axes, **kwargs)
-        return axes
-
     @property
     @lru_cache(maxsize=None)
-    def coords(self):
-        return np.array(
-            [coord for coord in self._coords.values()]
-        )
-
-    @property
-    def xy(self):
-        return self.coords
-
-    @property
-    def x(self):
-        return self.coords[:, 0]
-
-    @property
-    def y(self):
-        return self.coords[:, 1]
+    def _attributes(self):
+        return {}
 
     @property
     @lru_cache(maxsize=None)
     def values(self):
         return self._values
+
+    @property
+    def _values(self):
+        return self.__values
+
+    @_values.setter
+    def _values(self, values):
+        if values is None:
+            values = []
+        values = np.asarray(values)
+        if len(values) > 0:
+            if len(values.shape) in [1, 2]:
+                assert values.shape[0] == self.coords.shape[0]
+            elif len(values.shape) == 3:
+                assert values.shape[1] == self.coords.shape[0]
+            else:
+                msg = f"input values has invalid shape: {values.shape}"
+                raise Exception(msg)
+        else:
+            values = np.full(self.coords.shape[0], np.nan)
+        self.__values = values
+        # type(self).values.fget.cache_clear()
+
+    @property
+    @lru_cache(maxsize=None)
+    def nodes(self):
+        return list(self._nodes.items())
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_id(self):
+        return {index: id for index, id in enumerate(self._coords)}
+
+    def get_element_index(self, id):
+        return self.element_index[id]
+
+    def get_element_id(self, index):
+        return self.element_id[index]
+
+    @property
+    @lru_cache(maxsize=None)
+    def elements(self):
+        return list(self._elements.values())
+
+    @property
+    @lru_cache(maxsize=None)
+    def element_id(self):
+        return {index: id for index, id in enumerate(self._elements)}
+
+    @property
+    @lru_cache(maxsize=None)
+    def element_index(self):
+        return {id: index for index, id in enumerate(self._elements)}
+
+    @property
+    @lru_cache(maxsize=None)
+    def _elements(self):
+        elements_id = list()
+        elements_id.extend(list(self._triangles.keys()))
+        elements_id.extend(list(self._quads.keys()))
+        elements_id = range(1, len(elements_id) + 1) \
+            if len(set(elements_id)) != len(elements_id) else elements_id
+        elements = list()
+        elements.extend(list(self._triangles.values()))
+        elements.extend(list(self._quads.values()))
+        elements = {
+            elements_id[i]: indexes for i, indexes in enumerate(elements)}
+        return elements
+
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        self._description = description
+
+    @property
+    def _description(self):
+        return self.__description
+
+    @_description.setter
+    def _description(self, description):
+        if description is None:
+            description = uuid.uuid4().hex[:8]
+        assert isinstance(description, str)
+        self.__description = description
+
+    @property
+    def crs(self):
+        return self._crs
+
+    @property
+    def _crs(self):
+        return self.__crs
+
+    @_crs.setter
+    def _crs(self, crs):
+        if crs is not None:
+            crs = CRS.from_user_input(crs)
+        self.__crs = crs
+
+    @property
+    def proj(self):
+        return Proj(self.crs)
+
+    @property
+    def srs(self):
+        return self.proj.srs
+
+    def transform_to(self, dst_crs):
+        dst_crs = CRS.from_user_input(dst_crs)
+        if self.crs != dst_crs:
+            transformer = Transformer.from_crs(self.crs, dst_crs,
+                                               always_xy=True)
+            xy = list(zip(*transformer.transform(self.x, self.y)))
+            ids = list(self._coords.keys())
+            self._coords = {ids[i]: coord for i, coord in enumerate(xy)}
+            self._crs = dst_crs
+
+    @property
+    def grd(self):
+        return grd.string(self._grd)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _grd(self):
+        description = self.description
+        if self.crs is not None and self.crs.srs not in description:
+            description += f"; {self.crs.srs}"
+        return {
+            "nodes"      : self._nodes,
+            "elements"   : self._elements,
+            "description": description,
+        }
+
+    @property
+    def sms2dm(self):
+        return sms2dm.string(self._sms2dm)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _sms2dm(self):
+        description = self.description
+        if self.crs is not None:
+            description += f"; {self.crs.srs}"
+        return {
+            "ND" : self._nodes,
+            "E3T": self._triangles,
+            "E4Q": self._quads,
+        }
+
+    @property
+    @lru_cache(maxsize=None)
+    def triangles_id(self):
+        return self._triangles.keys()
+
+    @property
+    @lru_cache(maxsize=None)
+    def tria3(self):
+        return np.array([list(map(self.get_node_index, index))
+                         for index in self._triangles.values()])
 
     @property
     def triangulation(self):
@@ -297,28 +389,15 @@ class EuclideanMesh2D:
         return self.tria3
 
     @property
-    def quads(self):
-        return self.quad4
+    def _triangles(self):
+        return self.__triangles
 
-    @property
-    @lru_cache(maxsize=None)
-    def nodes(self):
-        return list(self._nodes.items())
-
-    @property
-    @lru_cache(maxsize=None)
-    def elements(self):
-        return list(self._elements.values())
-
-    @property
-    @lru_cache(maxsize=None)
-    def coords_id(self):
-        return self._coords.keys()
-
-    @property
-    @lru_cache(maxsize=None)
-    def triangles_id(self):
-        return self._triangles.keys()
+    @_triangles.setter
+    def _triangles(self, triangles):
+        if triangles is None:
+            triangles = {}
+        self._certify_input_geom("triangles", triangles)
+        self.__triangles = triangles
 
     @property
     @lru_cache(maxsize=None)
@@ -327,65 +406,24 @@ class EuclideanMesh2D:
 
     @property
     @lru_cache(maxsize=None)
-    def node_id(self):
-        return {index: id for index, id in enumerate(self._coords)}
-
-    @property
-    @lru_cache(maxsize=None)
-    def element_id(self):
-        return {index: id for index, id in enumerate(self._elements)}
-
-    @property
-    @lru_cache(maxsize=None)
-    def node_index(self):
-        return {id: index for index, id in enumerate(self._coords)}
-
-    @property
-    @lru_cache(maxsize=None)
-    def element_index(self):
-        return {id: index for index, id in enumerate(self._elements)}
-
-    @property
-    def bbox(self):
-        return self.get_bbox()
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def proj(self):
-        return Proj(self.crs)
-
-    @property
-    def srs(self):
-        return self.proj.srs
-
-    @property
-    def crs(self):
-        return self._crs
-
-    @property
-    def grd(self):
-        return grd.string(self._grd)
-
-    @property
-    def sms2dm(self):
-        return sms2dm.string(self._sms2dm)
-
-    @property
-    @lru_cache(maxsize=None)
-    def tria3(self):
-        return np.array(
-            [list(map(self.get_node_index, index))
-             for index in self._triangles.values()])
-
-    @property
-    @lru_cache(maxsize=None)
     def quad4(self):
-        return np.array(
-            [list(map(self.get_node_index, index))
-             for index in self._quads.values()])
+        return np.array([list(map(self.get_node_index, index))
+                         for index in self._quads.values()])
+
+    @property
+    def quads(self):
+        return self.quad4
+
+    @property
+    def _quads(self):
+        return self.__quads
+
+    @_quads.setter
+    def _quads(self, quads):
+        if quads is None:
+            quads = {}
+        self._certify_input_geom("quads", quads)
+        self.__quads = quads
 
     @property
     @lru_cache(maxsize=None)
@@ -479,6 +517,17 @@ class EuclideanMesh2D:
             inner_ring_collection[key] = rings['interiors']
         return inner_ring_collection
 
+    def get_node_index(self, id):
+        return self.node_index[id]
+
+    def get_node_id(self, index):
+        return self.node_id[index]
+
+    @property
+    @lru_cache(maxsize=None)
+    def node_index(self):
+        return {id: index for index, id in enumerate(self._coords)}
+
     @property
     @lru_cache(maxsize=None)
     def node_neighbors(self):
@@ -505,15 +554,6 @@ class EuclideanMesh2D:
                 )
         return node_distances
 
-    @property
-    @lru_cache(maxsize=None)
-    def _logger(self):
-        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
-
-    @description.setter
-    def description(self, description):
-        self._description = description
-
     def _certify_input_geom(self, geom_type, geom):
         geom_types = {
             "triangles": 3,
@@ -529,131 +569,10 @@ class EuclideanMesh2D:
                     assert IDtag in self.coords_id, msg
 
     @property
-    def _coords(self):
-        return self.__coords
-
-    @_coords.setter
-    def _coords(self, coords):
-        msg = "coord argument must be a dictionary of the form "
-        msg += "\\{coord_id:  (x, y)\\}"
-        assert isinstance(coords, Mapping), msg
-        for coord in coords.values():
-            assert len(coord) == 2, msg
-            assert isinstance(coord[0], (float, int)), msg
-            assert isinstance(coord[1], (float, int)), msg
-        self.__coords = coords
-        type(self).coords.fget.cache_clear()
-
-    @property
-    def _triangles(self):
-        return self.__triangles
-
-    @property
-    def _quads(self):
-        return self.__quads
-
-    @property
-    def _values(self):
-        return self.__values
-
-    @property
-    def _crs(self):
-        return self.__crs
-
-    @property
-    def _description(self):
-        return self.__description
-
-    @property
     @lru_cache(maxsize=None)
     def _nodes(self):
-        return {id: ((x, y), -self.values[i]) for i, (id, (x, y))
-                in enumerate(self._coords.items())}
-
-    @property
-    @lru_cache(maxsize=None)
-    def _elements(self):
-        elements_id = list()
-        elements_id.extend(list(self._triangles.keys()))
-        elements_id.extend(list(self._quads.keys()))
-        elements_id = range(1, len(elements_id) + 1) \
-            if len(set(elements_id)) != len(elements_id) else elements_id
-        elements = list()
-        elements.extend(list(self._triangles.values()))
-        elements.extend(list(self._quads.values()))
-        elements = {
-            elements_id[i]: indexes for i, indexes in enumerate(elements)}
-        return elements
-
-    @property
-    @lru_cache(maxsize=None)
-    def _grd(self):
-        description = self.description
-        if self.crs is not None and self.crs.srs not in description:
-            description += f"; {self.crs.srs}"
-        return {
-            "nodes"      : self._nodes,
-            "elements"   : self._elements,
-            "description": description,
-        }
-
-    @property
-    @lru_cache(maxsize=None)
-    def _sms2dm(self):
-        description = self.description
-        if self.crs is not None:
-            description += f"; {self.crs.srs}"
-        return {
-            "ND" : self._nodes,
-            "E3T": self._triangles,
-            "E4Q": self._quads,
-        }
-
-    @_values.setter
-    def _values(self, values):
-        if values is None:
-            values = []
-        values = np.asarray(values)
-        if len(values) > 0:
-            if len(values.shape) in [1, 2]:
-                assert values.shape[0] == self.coords.shape[0]
-            elif len(values.shape) == 3:
-                assert values.shape[1] == self.coords.shape[0]
-            else:
-                msg = f"input values has invalid shape: {values.shape}"
-                raise Exception(msg)
-
-        else:
-            values = np.full(self.coords.shape[0], np.nan)
-        self.__values = values
-        # type(self).values.fget.cache_clear()
-
-    @_triangles.setter
-    def _triangles(self, triangles):
-        if triangles is None:
-            triangles = {}
-        self._certify_input_geom("triangles", triangles)
-        self.__triangles = triangles
-
-    @_quads.setter
-    def _quads(self, quads):
-        if quads is None:
-            quads = {}
-        self._certify_input_geom("quads", quads)
-        self.__quads = quads
-
-    @_crs.setter
-    def _crs(self, crs):
-        if crs is not None:
-            crs = CRS.from_user_input(crs)
-        self.__crs = crs
-
-    @_description.setter
-    def _description(self, description):
-        if description is None:
-            description = uuid.uuid4().hex[:8]
-        assert isinstance(description, str)
-        self.__description = description
+        return {id: ((x, y), -self.values[i])
+                for i, (id, (x, y)) in enumerate(self._coords.items())}
 
     # auxilliary functions
     @staticmethod
@@ -703,7 +622,80 @@ class EuclideanMesh2D:
             area -= vertices[j][0] * vertices[i][1]
         return area / 2.0
 
+    @_fig
+    def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
+        if len(self.tria3) > 0:
+            axes.tricontourf(self.triangulation, self.values, **kwargs)
+        return axes
+
+    @_fig
+    def tripcolor(self, axes=None, show=True, figsize=None, **kwargs):
+        if len(self.tria3) > 0:
+            axes.tripcolor(self.triangulation, self.values, **kwargs)
+        return axes
+
+    @_fig
+    def triplot(
+        self,
+        axes=None,
+        show=False,
+        figsize=None,
+        linewidth=0.07,
+        color='black',
+        **kwargs
+    ):
+        if len(self.triangles) > 0:
+            kwargs.update({'linewidth': linewidth})
+            kwargs.update({'color': color})
+            axes.triplot(self.triangulation, **kwargs)
+        return axes
+
+    @_fig
+    def quadplot(
+        self,
+        axes=None,
+        show=False,
+        figsize=None,
+        facecolor='none',
+        edgecolor='k',
+        linewidth=0.07,
+        **kwargs
+    ):
+        if len(self.quads) > 0:
+            pc = PolyCollection(
+                self.coords[self.quads],
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                linewidth=0.07,
+            )
+            axes.add_collection(pc)
+        return axes
+
+    @_fig
+    def quadface(
+        self,
+        axes=None,
+        show=False,
+        figsize=None,
+        **kwargs
+    ):
+        if len(self.quad4) > 0:
+            pc = PolyCollection(
+                self.coords[self.quad4],
+                **kwargs
+            )
+            quad_value = np.mean(self.values[self.quad4], axis=1)
+            pc.set_array(quad_value)
+            axes.add_collection(pc)
+        return axes
+
+    @_fig
+    def plot_wireframe(self, axes=None, show=False, **kwargs):
+        axes = self.triplot(axes=axes, **kwargs)
+        axes = self.quadplot(axes=axes, **kwargs)
+        return axes
+
     @property
     @lru_cache(maxsize=None)
-    def _attributes(self):
-        return {}
+    def _logger(self):
+        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
