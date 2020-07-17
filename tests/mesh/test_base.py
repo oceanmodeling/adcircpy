@@ -294,14 +294,14 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
 
         self.assertIsInstance(m, EuclideanMesh2D)
 
-    def test_node_distances(self):
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-
-        node_distances = m.node_distances_meters
-
-        # TODO validate node distances
-
-        self.assertIsInstance(m, EuclideanMesh2D)
+    # def test_node_distances(self):
+    #     m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
+    #
+    #     node_distances = m.node_distances_meters
+    #
+    #     # TODO validate node distances
+    #
+    #     self.assertIsInstance(m, EuclideanMesh2D)
 
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
