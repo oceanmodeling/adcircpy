@@ -9,12 +9,13 @@ import uuid
 from haversine import Unit, haversine
 from matplotlib import pyplot
 from matplotlib.collections import PolyCollection
-from matplotlib.path import Path
 from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
+import numpy
 import numpy as np
 from pyproj import CRS, Proj, Transformer
-from shapely.geometry import Polygon
+from shapely.geometry import MultiLineString, MultiPolygon, Polygon
+from shapely.ops import polygonize, unary_union
 
 from adcircpy.mesh import grd, sms2dm
 from adcircpy.mesh.figures import _figure as _fig
@@ -468,81 +469,58 @@ class EuclideanMesh2D:
         self._certify_input_geom("quads", quads)
         self.__quads = quads
 
+    @lru_cache(maxsize=None)
+    def mesh_hull(self, element_lengths=None):
+        if element_lengths is None:
+            elements = list(self.triangles) + list(self.quads)
+        else:
+            elements = []
+            if 3 in element_lengths:
+                elements.extend(self.triangles)
+            elif 4 in element_lengths:
+                elements.extend(self.quads)
+        return polygon_from_vertices(boundary_points(self.coords, elements))
+
     @property
     @lru_cache(maxsize=None)
     def index_ring_collection(self):
         # find boundary edges using triangulation neighbors table,
         # see: https://stackoverflow.com/a/23073229/7432462
-        boundary_edges = list()
-        tri = self.triangulation
-        idxs = np.vstack(
-            list(np.where(tri.neighbors == -1))).T
-        for i, j in idxs:
-            boundary_edges.append(
-                (int(tri.triangles[i, j]),
-                 int(tri.triangles[i, (j + 1) % 3])))
-        index_ring_collection = self.sort_edges(boundary_edges)
-        # sort index_rings into corresponding "polygons"
-        areas = list()
-        vertices = self.coords
-        for index_ring in index_ring_collection:
-            e0, e1 = [list(t) for t in zip(*index_ring)]
-            areas.append(float(Polygon(vertices[e0, :]).area))
 
-        # maximum area must be main mesh
-        idx = areas.index(np.max(areas))
-        exterior = index_ring_collection.pop(idx)
-        areas.pop(idx)
-        _id = 0
-        _index_ring_collection = dict()
-        _index_ring_collection[_id] = {
-            'exterior' : np.asarray(exterior),
-            'interiors': []
+        # TODO add in quads (by setting `element_lengths` to `None`)
+        mesh_hull = self.mesh_hull(element_lengths=(3,))
+
+        index_ring_collection = {
+            index: {
+                'exterior' : polygon.exterior,
+                'interiors': [interior for interior in polygon.interiors]
+            } for index, polygon in enumerate(mesh_hull)
         }
-        e0, e1 = [list(t) for t in zip(*exterior)]
-        path = Path(vertices[e0 + [e0[0]], :], closed=True)
-        while len(index_ring_collection) > 0:
-            # find all internal rings
-            potential_interiors = list()
-            for i, index_ring in enumerate(index_ring_collection):
-                e0, e1 = [list(t) for t in zip(*index_ring)]
-                if path.contains_point(vertices[e0[0], :]):
-                    potential_interiors.append(i)
-            # filter out nested rings
-            real_interiors = list()
-            for i, p_interior in reversed(
-                list(enumerate(potential_interiors))):
-                _p_interior = index_ring_collection[p_interior]
-                check = [index_ring_collection[_]
-                         for j, _ in
-                         reversed(list(enumerate(potential_interiors)))
-                         if i != j]
-                has_parent = False
-                for _path in check:
-                    e0, e1 = [list(t) for t in zip(*_path)]
-                    _path = Path(vertices[e0 + [e0[0]], :], closed=True)
-                    if _path.contains_point(vertices[_p_interior[0][0], :]):
-                        has_parent = True
-                if not has_parent:
-                    real_interiors.append(p_interior)
-            # pop real rings from collection
-            for i in reversed(sorted(real_interiors)):
-                _index_ring_collection[_id]['interiors'].append(
-                    np.asarray(index_ring_collection.pop(i)))
-                areas.pop(i)
-            # if no internal rings found, initialize next polygon
-            if len(index_ring_collection) > 0:
-                idx = areas.index(np.max(areas))
-                exterior = index_ring_collection.pop(idx)
-                areas.pop(idx)
-                _id += 1
-                _index_ring_collection[_id] = {
-                    'exterior' : np.asarray(exterior),
-                    'interiors': []
-                }
-                e0, e1 = [list(t) for t in zip(*exterior)]
-                path = Path(vertices[e0 + [e0[0]], :], closed=True)
-        return _index_ring_collection
+
+        for index, ring in index_ring_collection.items():
+            exterior = index_ring_collection[index]['exterior'].coords
+            interiors = [interior.coords for interior in
+                         index_ring_collection[index]['interiors']]
+
+            exterior = [(exterior[index],
+                         exterior[index - len(exterior) + 1])
+                        for index in range(len(exterior))]
+            interiors = [[(interior[index],
+                           interior[index - len(interior) + 1])
+                          for index in range(len(interior))]
+                         for interior in interiors]
+
+            index_ring_collection[index]['exterior'] = numpy.array([[
+                [tuple(coord) for coord in self.coords].index(vertex)
+                for vertex in edge] for edge in exterior])
+            index_ring_collection[index]['interiors'] = [
+                numpy.array([[
+                    [tuple(coord) for coord in self.coords].index(vertex)
+                    for vertex in edge] for edge in interior])
+                for interior in interiors
+            ]
+
+        return index_ring_collection
 
     @property
     @lru_cache(maxsize=None)
@@ -712,3 +690,73 @@ class EuclideanMesh2D:
         if show:
             pyplot.show()
         return axes
+
+
+def boundary_indices(elements: [[int]]) -> numpy.array:
+    shape_lengths = {len(element) for element in elements}
+
+    elements = [[element for element in elements
+                 if len(element) == shape_length]
+                for shape_length in shape_lengths]
+
+    boundary_edge_indices = []
+    for shape_elements in elements:
+        shape_elements = numpy.stack(shape_elements, axis=0)
+        shape_length = shape_elements.shape[1]
+        indices = numpy.stack([(shape_elements[:, index],
+                                shape_elements[:, index - shape_length + 1])
+                               for index in range(shape_length)], axis=1).T
+
+        indices = numpy.reshape(
+            indices, (indices.shape[0] * indices.shape[1], indices.shape[2])
+        )
+
+        unique_indices, counts = numpy.unique(indices, axis=0,
+                                              return_counts=True)
+        boundary_edge_indices.extend(unique_indices[counts == 1])
+
+    return boundary_edge_indices
+
+
+def boundary_points(points: numpy.array, elements: [[int]]) -> numpy.array:
+    return numpy.stack(points[boundary_indices(elements)], axis=0)
+
+
+def polygon_from_vertices(vertices: numpy.array) -> MultiPolygon:
+    polygons = polygonize(MultiLineString(vertices.tolist()))
+    polygons = remove_interior_duplicates(polygons)
+    return unary_union(polygons)
+
+
+def remove_interior_duplicates(polygons: [Polygon]) -> [Polygon]:
+    """
+    Given a list of polygons, return a list without polygons whose exteriors represent the interior of another polygon.
+
+    Parameters
+    ----------
+    polygons
+        list of polygons
+
+    Returns
+    -------
+    [Polygon]
+        polygons without duplicates of interiors
+    """
+
+    if type(polygons) is not list:
+        polygons = list(polygons)
+
+    for greater_polygon in polygons:
+        for interior in greater_polygon.interiors:
+            interior_polygon = Polygon(interior)
+            duplicate_polygons = []
+
+            for polygon_index in range(len(polygons)):
+                polygon = polygons[polygon_index]
+                if polygon.equals(interior_polygon):
+                    duplicate_polygons.append(polygon)
+
+            for polygon in duplicate_polygons:
+                polygons.remove(polygon)
+
+    return polygons
