@@ -3,6 +3,8 @@ import pathlib
 import tempfile
 import unittest
 
+import numpy
+
 from adcircpy.mesh.base import EuclideanMesh2D
 
 
@@ -64,7 +66,7 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
             179739: (151973.996077372, 4408423.627443385),
             179740: (152023.0280371945, 4408439.80234087),
             179741: (152072.43830807143, 4408455.084446354),
-            }
+        }
 
         self.triangles = {
             323078: [151410, 151411, 140443],
@@ -212,6 +214,21 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         )
         m.transform_to("EPSG:4326")
 
+    def test_index_ring(self):
+        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
+
+        ring_indices = m.index_ring_collection
+        inner_rings = m.inner_ring_collection
+        outer_rings = m.outer_ring_collection
+
+        assert all(isinstance(list(ring_indices.values())[0]['exterior'],
+                              numpy.ndarray) and ring['exterior'].shape[1] == 2
+                   for ring in ring_indices.values())
+        assert all(isinstance(ring, list) and len(ring) == 0
+                   for ring in inner_rings.values())
+        assert all(isinstance(ring, numpy.ndarray) and ring.shape[1] == 2
+                   for ring in outer_rings.values())
+
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
         self.assertEquals(m.get_node_id(0), 123964)
@@ -294,6 +311,7 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         def wrapper():
             import numpy as np
             m._values = np.random.rand(100, 1)
+
         self.assertRaises(AssertionError, wrapper)
 
     def test_property_setter__values_time_varying(self):
@@ -308,6 +326,7 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         def wrapper():
             import numpy as np
             m._values = np.random.rand(3, len(self.coords), 1, 5)
+
         self.assertRaises(Exception, wrapper)
 
     def test_property_setter__triangles_None(self):

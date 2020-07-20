@@ -412,17 +412,18 @@ class EuclideanMesh2D:
         # TODO add in quads (by setting `element_lengths` to `None`)
         mesh_hull = self.mesh_hull(element_lengths=(3,))
 
-        index_ring_collection = {
+        ring_vertices = {
             index: {
                 'exterior' : polygon.exterior,
                 'interiors': [interior for interior in polygon.interiors]
             } for index, polygon in enumerate(mesh_hull)
         }
 
-        for index, ring in index_ring_collection.items():
-            exterior = index_ring_collection[index]['exterior'].coords
+        ring_indices = {index: {} for index in ring_vertices}
+        for index, ring in ring_vertices.items():
+            exterior = ring_vertices[index]['exterior'].coords
             interiors = [interior.coords for interior in
-                         index_ring_collection[index]['interiors']]
+                         ring_vertices[index]['interiors']]
 
             exterior = [(exterior[index],
                          exterior[index - len(exterior) + 1])
@@ -432,17 +433,17 @@ class EuclideanMesh2D:
                           for index in range(len(interior))]
                          for interior in interiors]
 
-            index_ring_collection[index]['exterior'] = numpy.array([[
+            ring_indices[index]['exterior'] = numpy.array([[
                 [tuple(coord) for coord in self.coords].index(vertex)
                 for vertex in edge] for edge in exterior])
-            index_ring_collection[index]['interiors'] = [
+            ring_indices[index]['interiors'] = [
                 numpy.array([[
                     [tuple(coord) for coord in self.coords].index(vertex)
                     for vertex in edge] for edge in interior])
                 for interior in interiors
             ]
 
-        return index_ring_collection
+        return ring_indices
 
     @property
     @lru_cache(maxsize=None)
