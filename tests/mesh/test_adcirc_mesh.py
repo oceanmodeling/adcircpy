@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import numpy
+
 from adcircpy import AdcircMesh
 
 
@@ -251,8 +253,7 @@ class AdcircMeshTestCase(unittest.TestCase):
 
     def test_nan_boundaries_raises(self):
         self.boundaries[None][0].update({'properties': {}})
-        import numpy as np
-        self.nodes['1'] = ((0., 0.), np.nan)
+        self.nodes['1'] = ((0., 0.), numpy.nan)
         msh = AdcircMesh(
             self.nodes,
             self.elements,

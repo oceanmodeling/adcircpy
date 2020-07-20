@@ -138,7 +138,7 @@ class AdcircMesh(EuclideanMesh2D):
                 _bnd_id += 1
             # add land boundaries
             if land_ibtype not in self.boundaries:
-                self._add_boundary_type(land_ibtype)
+                self.add_boundary_type(land_ibtype)
             _bnd_id = len(self._boundaries[land_ibtype])
             for bnd in land_boundaries:
                 e0, e1 = [list(t) for t in zip(*bnd)]
