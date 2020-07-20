@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
 
-from adcircpy.mesh import AdcircMesh
-from adcircpy.fort15 import Fort15
 from adcircpy.forcing import Tides  # , Winds
+from adcircpy.fort15 import Fort15
+from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server.config import ServerConfig
 from adcircpy.server.slurm import SlurmConfig
@@ -905,6 +905,8 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
+        if isinstance(end_date, datetime):
+            end_date = self._start_date + end_date
         assert isinstance(end_date, datetime)
         assert end_date > self.start_date
         self.__end_date = end_date

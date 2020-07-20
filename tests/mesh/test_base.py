@@ -3,9 +3,6 @@ import pathlib
 import tempfile
 import unittest
 
-import numpy
-from pyproj import CRS, Proj
-
 from adcircpy.mesh.base import EuclideanMesh2D
 
 
@@ -67,7 +64,7 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
             179739: (151973.996077372, 4408423.627443385),
             179740: (152023.0280371945, 4408439.80234087),
             179741: (152072.43830807143, 4408455.084446354),
-        }
+            }
 
         self.triangles = {
             323078: [151410, 151411, 140443],
@@ -215,106 +212,6 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         )
         m.transform_to("EPSG:4326")
 
-    def test_attribute(self):
-        attributes = {
-            'test_attribute_1': {'test_property_1': 2}
-        }
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-
-        for name, properties in attributes.items():
-            m.add_attribute(name, **properties)
-
-        self.assertEqual(list(attributes), m.get_attribute_names())
-        for name, properties in attributes.items():
-            self.assertEqual(
-                {'values': None, 'properties': None, **properties},
-                m.get_attribute(name))
-            self.assertIsNone(m.get_attribute_values(name))
-            self.assertIsNone(m.get_attribute_properties(name))
-
-        test_node_values = numpy.random.rand((len(m.coords)))
-        test_element_values = numpy.random.rand((len(m.elements)))
-
-        nonexistant_attribute = 'nonexistant_attribute'
-        self.assertRaises(AttributeError, m.get_attribute,
-                          nonexistant_attribute)
-        self.assertRaises(AttributeError, m.get_attribute_values,
-                          nonexistant_attribute)
-        self.assertRaises(AttributeError, m.get_attribute_properties,
-                          nonexistant_attribute)
-        self.assertRaises(AttributeError, m.set_attribute,
-                          nonexistant_attribute, test_node_values)
-
-        test_attribute = list(attributes)[0]
-        test_properties = {'values': test_node_values, 'properties': None,
-                           **attributes[test_attribute]}
-        m.set_attribute(test_attribute, test_node_values)
-        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value)
-                   for name, value in test_properties.items())
-        test_properties = {'values': test_element_values, 'properties': None,
-                           **attributes[test_attribute]}
-        m.set_attribute(test_attribute, test_element_values, elements=True)
-        assert all(numpy.all(m.get_attribute(test_attribute)[name] == value)
-                   for name, value in test_properties.items())
-
-        self.assertRaises(AttributeError, m.remove_attribute,
-                          'nonexistant_attribute')
-        m.remove_attribute(test_attribute)
-        self.assertRaises(AttributeError, m.remove_attribute, test_attribute)
-
-    def test_quads(self):
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-
-        input_quads = numpy.array([[self.coords[index] for index in element]
-                                   for element in
-                                   numpy.array(list(self.quads.values()))])
-
-        coordinates = numpy.array(list(self.coords.values()))
-        output_quads = numpy.array([[coordinates[index] for index in element]
-                                    for element in numpy.array(list(m.quads))])
-
-        assert numpy.all(output_quads == input_quads)
-
-    def test_ring_collections(self):
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-
-        index_rings = m.index_ring_collection
-        outer_rings = m.outer_ring_collection
-        inner_rings = m.inner_ring_collection
-
-        # TODO validate ring collections
-
-        self.assertIsInstance(m, EuclideanMesh2D)
-
-    def test_node_neighbors(self):
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
-
-        node_neighbors = m.node_neighbors
-
-        # TODO validate node neighbors
-
-        self.assertIsInstance(m, EuclideanMesh2D)
-
-    def test_node_distances(self):
-        crs = CRS.from_epsg(4326)
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
-
-        node_distances = m.node_distances_meters
-
-        # TODO validate node distances
-
-        self.assertIsInstance(m, EuclideanMesh2D)
-
-    def test_crs(self):
-        crs = CRS.from_epsg(4326)
-        m = EuclideanMesh2D(self.coords, self.triangles, self.quads, crs=crs)
-
-        self.assertEqual(crs, m.crs)
-        self.assertEqual(Proj(crs), m.proj)
-        self.assertEqual(m.proj.srs, m.srs)
-
-        self.assertIsInstance(m, EuclideanMesh2D)
-
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
         self.assertEquals(m.get_node_id(0), 123964)
@@ -397,7 +294,6 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         def wrapper():
             import numpy as np
             m._values = np.random.rand(100, 1)
-
         self.assertRaises(AssertionError, wrapper)
 
     def test_property_setter__values_time_varying(self):
@@ -412,7 +308,6 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         def wrapper():
             import numpy as np
             m._values = np.random.rand(3, len(self.coords), 1, 5)
-
         self.assertRaises(Exception, wrapper)
 
     def test_property_setter__triangles_None(self):
