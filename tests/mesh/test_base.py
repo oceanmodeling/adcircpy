@@ -221,13 +221,16 @@ class EuclideanMesh2DTestCase(unittest.TestCase):
         inner_rings = m.inner_ring_collection
         outer_rings = m.outer_ring_collection
 
-        assert all(isinstance(list(ring_indices.values())[0]['exterior'],
-                              numpy.ndarray) and ring['exterior'].shape[1] == 2
-                   for ring in ring_indices.values())
-        assert all(isinstance(ring, list) and len(ring) == 0
-                   for ring in inner_rings.values())
-        assert all(isinstance(ring, numpy.ndarray) and ring.shape[1] == 2
-                   for ring in outer_rings.values())
+        for ring in ring_indices.values():
+            self.assertIsInstance(list(ring_indices.values())[0]['exterior'],
+                                  numpy.ndarray)
+            self.assertEqual(2, ring['exterior'].shape[1])
+        for ring in inner_rings.values():
+            self.assertIsInstance(ring, list)
+            self.assertEqual(0, len(ring))
+        for ring in outer_rings.values():
+            self.assertIsInstance(ring, numpy.ndarray)
+            self.assertEqual(2, ring.shape[1])
 
     def test_get_node_id(self):
         m = EuclideanMesh2D(self.coords, self.triangles, self.quads)
