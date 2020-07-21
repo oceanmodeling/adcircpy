@@ -1,6 +1,6 @@
 # import argparse
 import logging
-from adcircpy.model.winds import BestTrackForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 from adcircpy.cmd.basecmd import AdcircCommand
 from adcircpy.cmd import argument_parser
 

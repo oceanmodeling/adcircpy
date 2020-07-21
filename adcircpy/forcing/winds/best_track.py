@@ -6,12 +6,12 @@ from datetime import datetime
 from pandas import DataFrame
 import pathlib
 from shapely.geometry import Point, Polygon
-import utm
+# import utm
 from haversine import haversine
 from pyproj import Proj
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
-from adcircpy.model.winds.wind_forcing import WindForcing
+from adcircpy.forcing.winds.base import WindForcing
 
 # import os
 # from pathlib import Path
