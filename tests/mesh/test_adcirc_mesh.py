@@ -110,7 +110,8 @@ class AdcircMeshTestCase(unittest.TestCase):
         h.plot_boundary(None, 0)
         self.assertIsInstance(h, AdcircMesh)
 
-    def test_make_plot_wet_only(self):
+    @patch('matplotlib.pyplot.show')
+    def test_make_plot_wet_only(self, mock):
         nodes = {
             0: ((0., 0.), 0.),
             1: ((1., 0.), -1.),
@@ -216,7 +217,8 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements, self.boundaries)
         h.triplot()
 
-    def test_make_plot_flat_domain(self):
+    @patch('matplotlib.pyplot.show')
+    def test_make_plot_flat_domain(self, mock):
         nodes = {id: (coord, 0.) for id, (coord, _) in self.nodes.items()}
         h = AdcircMesh(nodes, self.elements, self.boundaries)
         h.make_plot()
