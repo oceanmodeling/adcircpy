@@ -56,11 +56,10 @@ def main():
         modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
         path_prefix='$HOME/adcirc/build'
     )
-    start_time = datetime.now()
     driver = AdcircRun(
         mesh=mesh,
-        start_date=start_time,
-        end_date=start_time + timedelta(days=7),
+        start_date=datetime.now(),
+        end_date=timedelta(days=7),
         spinup_time=timedelta(days=5),
         server_config=slurm
     )
