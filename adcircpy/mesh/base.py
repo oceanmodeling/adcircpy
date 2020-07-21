@@ -742,7 +742,7 @@ def remove_interior_duplicates(polygons: [Polygon]) -> [Polygon]:
         polygons without duplicates of interiors
     """
 
-    if type(polygons) is not list:
+    if not isinstance(polygons, list):
         polygons = list(polygons)
 
     for greater_polygon in polygons:
