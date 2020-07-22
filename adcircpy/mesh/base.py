@@ -8,6 +8,7 @@ import uuid
 
 from haversine import Unit, haversine
 from matplotlib.collections import PolyCollection
+from matplotlib.path import Path
 from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy
@@ -22,13 +23,13 @@ from adcircpy.mesh.figures import _figure as _fig
 
 class EuclideanMesh2D:
     def __init__(
-        self,
-        coords,
-        triangles=None,
-        quads=None,
-        values=None,
-        crs=None,
-        description=None,
+            self,
+            coords,
+            triangles=None,
+            quads=None,
+            values=None,
+            crs=None,
+            description=None,
     ):
         self._coords = coords
         self._triangles = triangles
@@ -208,13 +209,13 @@ class EuclideanMesh2D:
 
     @_fig
     def triplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        linewidth=0.07,
-        color='black',
-        **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            linewidth=0.07,
+            color='black',
+            **kwargs
     ):
         if len(self.triangles) > 0:
             kwargs.update({'linewidth': linewidth})
@@ -224,14 +225,14 @@ class EuclideanMesh2D:
 
     @_fig
     def quadplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        facecolor='none',
-        edgecolor='k',
-        linewidth=0.07,
-        **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            facecolor='none',
+            edgecolor='k',
+            linewidth=0.07,
+            **kwargs
     ):
         if len(self.quads) > 0:
             pc = PolyCollection(
@@ -245,11 +246,11 @@ class EuclideanMesh2D:
 
     @_fig
     def quadface(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            **kwargs
     ):
         if len(self.quad4) > 0:
             pc = PolyCollection(
@@ -405,45 +406,80 @@ class EuclideanMesh2D:
 
     @property
     @lru_cache(maxsize=None)
+    def triangulation_hull(self):
+        triangulation = self.triangulation
+        indices = np.stack(np.where(triangulation.neighbors == -1), axis=1)
+        boundary_indices = [(triangulation.triangles[row, col],
+                             triangulation.triangles[row, (col + 1) % 3])
+                            for row, col in indices]
+
+        vertices = self.coords
+        return unary_union(list(polygonize(vertices[boundary_indices])))
+
+    @property
+    @lru_cache(maxsize=None)
     def index_ring_collection(self):
         # find boundary edges using triangulation neighbors table,
         # see: https://stackoverflow.com/a/23073229/7432462
+        triangulation = self.triangulation
+        indices = np.stack(np.where(triangulation.neighbors == -1), axis=1)
+        boundary_indices = [(triangulation.triangles[row, col],
+                             triangulation.triangles[row, (col + 1) % 3])
+                            for row, col in indices]
 
-        # TODO add in quads (by setting `element_lengths` to `None`)
-        mesh_hull = self.mesh_hull(element_lengths=(3,))
+        rings_indices = self.sort_edges(boundary_indices)
 
-        ring_vertices = {
-            index: {
-                'exterior' : polygon.exterior,
-                'interiors': [interior for interior in polygon.interiors]
-            } for index, polygon in enumerate(mesh_hull)
-        }
+        vertices = self.coords
+        # sort index_rings into corresponding "polygons"
+        ring_areas = []
+        for ring_indices in rings_indices:
+            e0, e1 = [list(t) for t in zip(*ring_indices)]
+            ring_areas.append(Polygon(vertices[e0, :]).area)
 
-        ring_indices = {index: {} for index in ring_vertices}
-        for index, ring in ring_vertices.items():
-            exterior = ring_vertices[index]['exterior'].coords
-            interiors = [interior.coords for interior in
-                         ring_vertices[index]['interiors']]
+        ring_indices_collection = {}
+        while len(rings_indices) > 0:
+            # maximum area must be remaining mesh
+            maximum_area_index = ring_areas.index(np.max(ring_areas))
+            maximum_area_ring = rings_indices.pop(maximum_area_index)
+            ring_index = 0
+            ring_indices_collection[ring_index] = {
+                'exterior' : np.asarray(maximum_area_ring),
+                'interiors': []
+            }
+            e0, e1 = [list(t) for t in zip(*maximum_area_ring)]
+            polygon = Path(vertices[e0 + [e0[0]], :], closed=True)
 
-            exterior = [(exterior[index],
-                         exterior[index - len(exterior) + 1])
-                        for index in range(len(exterior))]
-            interiors = [[(interior[index],
-                           interior[index - len(interior) + 1])
-                          for index in range(len(interior))]
-                         for interior in interiors]
-
-            ring_indices[index]['exterior'] = numpy.array([[
-                [tuple(coord) for coord in self.coords].index(vertex)
-                for vertex in edge] for edge in exterior])
-            ring_indices[index]['interiors'] = [
-                numpy.array([[
-                    [tuple(coord) for coord in self.coords].index(vertex)
-                    for vertex in edge] for edge in interior])
-                for interior in interiors
-            ]
-
-        return ring_indices
+            # find all internal rings
+            potential_interiors = list()
+            for index_ring_index, index_ring in enumerate(rings_indices):
+                e0, e1 = [list(t) for t in zip(*index_ring)]
+                if polygon.contains_point(vertices[e0[0], :]):
+                    potential_interiors.append(index_ring_index)
+            # filter out nested rings
+            real_interiors = []
+            for _index, potential_interior_index in \
+                    reversed(list(enumerate(potential_interiors))):
+                potential_interior_ring = rings_indices[
+                    potential_interior_index]
+                check = [rings_indices[__potential_interior_index]
+                         for __index, __potential_interior_index in
+                         reversed(list(enumerate(potential_interiors)))
+                         if _index != __index]
+                has_parent = False
+                for _polygon in check:
+                    e0, e1 = [list(t) for t in zip(*_polygon)]
+                    _polygon = Path(vertices[e0 + [e0[0]], :], closed=True)
+                    if _polygon.contains_point(
+                            vertices[potential_interior_ring[0][0], :]):
+                        has_parent = True
+                if not has_parent:
+                    real_interiors.append(potential_interior_index)
+            # pop real rings from collection
+            for row in reversed(sorted(real_interiors)):
+                ring_indices_collection[ring_index]['interiors'].append(
+                    np.asarray(rings_indices.pop(row)))
+                ring_areas.pop(row)
+        return ring_indices_collection
 
     @property
     @lru_cache(maxsize=None)
@@ -643,35 +679,30 @@ class EuclideanMesh2D:
         if len(edges) == 0:
             return edges
         # start ordering the edges into linestrings
-        edge_collection = list()
+        edge_collection = []
         ordered_edges = [edges.pop(-1)]
         e0, e1 = [list(t) for t in zip(*edges)]
         while len(edges) > 0:
             if ordered_edges[-1][1] in e0:
-                idx = e0.index(ordered_edges[-1][1])
-                ordered_edges.append(edges.pop(idx))
+                index = e0.index(ordered_edges[-1][1])
+                ordered_edges.append(edges.pop(index))
             elif ordered_edges[0][0] in e1:
-                idx = e1.index(ordered_edges[0][0])
-                ordered_edges.insert(0, edges.pop(idx))
+                index = e1.index(ordered_edges[0][0])
+                ordered_edges.insert(0, edges.pop(index))
             elif ordered_edges[-1][1] in e1:
-                idx = e1.index(ordered_edges[-1][1])
-                ordered_edges.append(
-                    list(reversed(edges.pop(idx))))
+                index = e1.index(ordered_edges[-1][1])
+                ordered_edges.append(list(reversed(edges.pop(index))))
             elif ordered_edges[0][0] in e0:
-                idx = e0.index(ordered_edges[0][0])
-                ordered_edges.insert(
-                    0, list(reversed(edges.pop(idx))))
+                index = e0.index(ordered_edges[0][0])
+                ordered_edges.insert(0, list(reversed(edges.pop(index))))
             else:
                 edge_collection.append(tuple(ordered_edges))
-                idx = -1
-                ordered_edges = [edges.pop(idx)]
-            e0.pop(idx)
-            e1.pop(idx)
+                index = -1
+                ordered_edges = [edges.pop(index)]
+            e0.pop(index)
+            e1.pop(index)
         # finalize
-        if len(edge_collection) == 0 and len(edges) == 0:
-            edge_collection.append(tuple(ordered_edges))
-        else:
-            edge_collection.append(tuple(ordered_edges))
+        edge_collection.append(tuple(ordered_edges))
         return edge_collection
 
     @staticmethod
