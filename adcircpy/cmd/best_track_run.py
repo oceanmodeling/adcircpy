@@ -46,9 +46,7 @@ def main():
     logging.getLogger("fiona").setLevel(logging.WARNING)
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     logging.getLogger("paramiko").setLevel(logging.WARNING)
-    drv = BestTrackRunCommand(args)
-    retv = drv.run()
-    exit(retv)
+    exit(BestTrackRunCommand(args).run())
 
     # args = parse_args()
     # drv = BestTrackRunCommand(args)
