@@ -905,7 +905,7 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
-        if isinstance(end_date, datetime):
+        if isinstance(end_date, timedelta):
             end_date = self._start_date + end_date
         assert isinstance(end_date, datetime)
         assert end_date > self.start_date
