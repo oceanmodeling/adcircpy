@@ -4,6 +4,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import numpy
+
 from adcircpy import AdcircMesh
 
 
@@ -78,25 +80,17 @@ class AdcircMeshTestCase(unittest.TestCase):
         )
 
     def test_hybrid(self):
-        self.assertIsInstance(AdcircMesh(self.nodes, self.elements), AdcircMesh)
+        self.assertIsInstance(AdcircMesh(self.nodes, self.elements),
+                              AdcircMesh)
 
     def test_open(self):
         tmpfile = tempfile.NamedTemporaryFile()
         with open(tmpfile.name, 'w') as f:
-            f.write('\n')
-            f.write(f'{len(self.elements):d} ')
-            f.write(f'{len(self.nodes):d}\n')
+            f.write(f'\n{len(self.elements):d} {len(self.nodes):d}\n')
             for id, ((x, y), z) in self.nodes.items():
-                f.write(f"{id} ")
-                f.write(f"{x} ")
-                f.write(f"{y} ")
-                f.write(f"{z}\n")
+                f.write(f'{id} {x} {y} {z}\n')
             for id, geom in self.elements.items():
-                f.write(f"{id} ")
-                f.write(f"{len(geom)} ")
-                for idx in geom:
-                    f.write(f"{idx} ")
-                f.write(f"\n")
+                f.write(f'{id} {len(geom)} {" ".join(idx for idx in geom)}\n')
         self.assertIsInstance(AdcircMesh.open(tmpfile.name), AdcircMesh)
 
     @patch('matplotlib.pyplot.show')
@@ -116,7 +110,8 @@ class AdcircMeshTestCase(unittest.TestCase):
         h.plot_boundary(None, 0)
         self.assertIsInstance(h, AdcircMesh)
 
-    def test_make_plot_wet_only(self):
+    @patch('matplotlib.pyplot.show')
+    def test_make_plot_wet_only(self, mock):
         nodes = {
             0: ((0., 0.), 0.),
             1: ((1., 0.), -1.),
@@ -136,7 +131,32 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements)
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
-        self.assertIsInstance(h, AdcircMesh)
+        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', fmt='2dm')
+        self.assertRaises(IOError, h.write,
+                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
+                          fmt='2dm')
+        self.assertRaises(IOError, h.write,
+                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
+                          fmt='txt')
+
+    def test_add_attribute(self):
+        attributes = {
+            'test_attribute_1': {'test_1': 'a', 'test_2': 2},
+            'test_attribute_2': {'test_1': 'b', 'test_2': 3}
+        }
+        mesh = AdcircMesh(self.nodes, self.elements)
+
+        self.assertRaises(AttributeError, mesh.get_attribute,
+                          list(attributes)[0])
+
+        for name, properties in attributes.items():
+            mesh.add_attribute(name, **properties)
+            self.assertEquals(
+                {'values': None, 'properties': None, **properties},
+                mesh.get_attribute(name))
+
+        self.assertRaises(AttributeError, mesh.add_attribute,
+                          list(attributes)[0])
 
     def test_add_custom_boundary_custom(self):
         h = AdcircMesh(self.nodes, self.elements)
@@ -197,7 +217,8 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements, self.boundaries)
         h.triplot()
 
-    def test_make_plot_flat_domain(self):
+    @patch('matplotlib.pyplot.show')
+    def test_make_plot_flat_domain(self, mock):
         nodes = {id: (coord, 0.) for id, (coord, _) in self.nodes.items()}
         h = AdcircMesh(nodes, self.elements, self.boundaries)
         h.make_plot()
@@ -234,8 +255,7 @@ class AdcircMeshTestCase(unittest.TestCase):
 
     def test_nan_boundaries_raises(self):
         self.boundaries[None][0].update({'properties': {}})
-        import numpy as np
-        self.nodes['1'] = ((0., 0.), np.nan)
+        self.nodes['1'] = ((0., 0.), numpy.nan)
         msh = AdcircMesh(
             self.nodes,
             self.elements,

@@ -27,8 +27,7 @@ class TidalStations(Mapping):
 
     def __fetch_station_data(self, station_id, start_date, end_date):
         responses = list()
-        for _start_date, _end_date in self.__get_datetime_segments(
-            start_date, end_date):
+        for _start_date, _end_date in self.__get_datetime_segments(start_date, end_date):
             params = self.__get_params(station_id, _start_date, _end_date)
             try:
                 r = requests.get(self.url, params=params, timeout=10.)

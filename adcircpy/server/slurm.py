@@ -14,20 +14,20 @@ class SlurmConfig:
     """
 
     def __init__(
-        self,
-        account: str,
-        slurm_ntasks: int,
-        run_name: str,
-        partition: str,
-        duration: timedelta,
-        filename: str = 'slurm.job',
-        run_directory: str = '.',
-        mail_type: str = None,
-        mail_user: str = None,
-        log_filename: str = 'sbatch.log',
-        modules: [str] = None,
-        path_prefix: str = None,
-        extra_commands: [str] = None,
+            self,
+            account: str,
+            slurm_ntasks: int,
+            run_name: str,
+            partition: str,
+            duration: timedelta,
+            filename: str = 'slurm.job',
+            run_directory: str = '.',
+            mail_type: str = None,
+            mail_user: str = None,
+            log_filename: str = 'sbatch.log',
+            modules: [str] = None,
+            path_prefix: str = None,
+            extra_commands: [str] = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).

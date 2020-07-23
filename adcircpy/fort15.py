@@ -190,13 +190,11 @@ class Fort15:
             if stations['sampling_rate'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
-                        for station_id, (x, y) \
-                            in stations['collection'].items():
+                        for station_id, (x, y) in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
-                    for station_id, (x, y) \
-                        in stations['collection'].items():
+                    for station_id, (x, y) in stations['collection'].items():
                         f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
         if self.NWS > 0:
@@ -210,13 +208,11 @@ class Fort15:
                 if stations['sampling_rate'] is not None:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
-                            for station_id, (x, y) \
-                                in stations['collection'].items():
+                            for station_id, (x, y) in stations['collection'].items():
                                 f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
-                        for station_id, (x, y) \
-                            in stations['collection'].items():
+                        for station_id, (x, y) in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
         # elevation global outputs
@@ -643,8 +639,7 @@ class Fort15:
 
             def get_digit_3():
                 if self.lateral_stress_in_momentum == 'velocity_based':
-                    if self.lateral_stress_in_momentum_method \
-                        == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 3
                         else:
@@ -653,8 +648,7 @@ class Fort15:
                         raise NotImplementedError('not implemented in adcirc')
                         return 5
                 elif self.lateral_stress_in_momentum == 'flux_based':
-                    if self.lateral_stress_in_momentum_method \
-                        == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 4
                         else:
@@ -678,8 +672,7 @@ class Fort15:
                     return 2
 
             def get_digit_6():
-                if (not self.baroclinicity and
-                    self.gwce_solution_scheme == 'semi-implicit'):
+                if not self.baroclinicity and self.gwce_solution_scheme == 'semi-implicit':
                     return 1
                 elif (not self.baroclinicity and
                       self.gwce_solution_scheme == 'explicit'):
@@ -813,9 +806,8 @@ class Fort15:
         try:
             return self.__TAU0
         except AttributeError:
-            if self.mesh.has_nodal_attribute(
-                "primitive_weighting_in_continuity_equation",
-                self._runtype):
+            if self.mesh.has_nodal_attribute("primitive_weighting_in_continuity_equation",
+                                             self._runtype):
                 return -3
             if self.NOLIBF != 2:
                 return self.CF
@@ -902,9 +894,8 @@ class Fort15:
             DRAMP += 10 * ' '
             return DRAMP
         except AttributeError:
-            DRAMP = self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60. * 60. * 24.))
+            DRAMP = self.spinup_factor * ((self.start_date - self.forcing_start_date) /
+                                          timedelta(days=1)).total_seconds()
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
@@ -947,18 +938,16 @@ class Fort15:
         try:
             return self.__DRAMPElev
         except AttributeError:
-            return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60. * 60. * 24.))
+            return self.spinup_factor * ((self.start_date - self.forcing_start_date) /
+                                         timedelta(days=1)).total_seconds()
 
     @property
     def DRAMPTip(self):
         try:
             return self.__DRAMPTip
         except AttributeError:
-            return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60. * 60. * 24.))
+            return self.spinup_factor * ((self.start_date - self.forcing_start_date) /
+                                         timedelta(days=1)).total_seconds()
 
     @property
     def DRAMPMete(self):
@@ -2008,11 +1997,10 @@ class Fort15:
 
     @lateral_stress_in_gwce_is_symmetrical.setter
     def lateral_stress_in_gwce_is_symmetrical(
-        self,
-        lateral_stress_in_gwce_is_symmetrical
+            self,
+            lateral_stress_in_gwce_is_symmetrical
     ):
-        self.__lateral_stress_in_gwce_is_symmetrical = bool(
-            lateral_stress_in_gwce_is_symmetrical)
+        self.__lateral_stress_in_gwce_is_symmetrical = bool(lateral_stress_in_gwce_is_symmetrical)
 
     @advection_in_gwce.setter
     def advection_in_gwce(self, advection_in_gwce):
@@ -2026,16 +2014,16 @@ class Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-        self,
-        lateral_stress_in_momentum_is_symmetrical
+            self,
+            lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical)
 
     @lateral_stress_in_momentum_method.setter
     def lateral_stress_in_momentum_method(
-        self,
-        lateral_stress_in_momentum_method
+            self,
+            lateral_stress_in_momentum_method
     ):
         assert lateral_stress_in_momentum_method in [
             '2_part', 'integration_by_parts']
@@ -2227,14 +2215,9 @@ class Fort15:
                 return 0
         else:
             if output['sampling_rate'] is not None:
-                if (output_type == 'surface'
-                    and output['sampling_rate'].total_seconds() == 0):
-                    return int(
-                        (self.end_date - self.start_date).total_seconds()
-                        / self.DTDP)
-                return int(round(
-                    (output['sampling_rate'].total_seconds() / self.DTDP))
-                )
+                if (output_type == 'surface' and output['sampling_rate'].total_seconds() == 0):
+                    return int((self.end_date - self.start_date).total_seconds() / self.DTDP)
+                return int(round((output['sampling_rate'].total_seconds() / self.DTDP)))
             else:
                 return 0
 

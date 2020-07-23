@@ -3,7 +3,7 @@ import logging
 
 from adcircpy.cmd import argument_parser
 from adcircpy.cmd.basecmd import AdcircCommand
-from adcircpy.model.winds import BestTrackForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 class BestTrackRunCommand(AdcircCommand):

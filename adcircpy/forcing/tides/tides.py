@@ -480,9 +480,8 @@ class Tides(bctypes.EtaBc):
 
     @property
     def hour_middle(self):
-        return self.forcing_start_date.hour + (
-            (self.end_date - self.forcing_start_date).total_seconds()
-            / 3600 / 2)
+        return self.forcing_start_date.hour + ((self.end_date - self.forcing_start_date) /
+                                               timedelta(hours=0.5)).total_seconds()
 
     @property
     def I(self):  # noqa:E743
@@ -547,8 +546,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def NUP(self):
-        return np.arctan(np.sin(self.NU) / (
-            np.cos(self.NU) + .334766 / np.sin(2. * self.I)))
+        return np.arctan(np.sin(self.NU) / (np.cos(self.NU) + .334766 / np.sin(2. * self.I)))
 
     @property
     def DNUP(self):

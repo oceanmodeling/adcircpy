@@ -10,12 +10,12 @@ from adcircpy.mesh import EuclideanMesh2D, grd
 class Maxele(EuclideanMesh2D):
 
     def __init__(
-        self,
-        nodes,
-        elements,
-        time_of_zeta_max=None,
-        description='maxele',
-        crs=None,
+            self,
+            nodes,
+            elements,
+            time_of_zeta_max=None,
+            description='maxele',
+            crs=None,
     ):
         super().__init__(**grd.euclidean_mesh({
             'nodes'      : nodes,
@@ -27,18 +27,18 @@ class Maxele(EuclideanMesh2D):
         self._time_of_zeta_max = time_of_zeta_max
 
     def make_plot(
-        self,
-        axes=None,
-        vmin=None,
-        vmax=None,
-        cmap='jet',
-        levels=256,
-        show=False,
-        title=None,
-        figsize=None,
-        extent=None,
-        cbar_label=None,
-        **kwargs
+            self,
+            axes=None,
+            vmin=None,
+            vmax=None,
+            cmap='jet',
+            levels=256,
+            show=False,
+            title=None,
+            figsize=None,
+            extent=None,
+            cbar_label=None,
+            **kwargs
     ):
         if axes is None:
             axes = plt.figure(figsize=figsize).add_subplot(111)
@@ -123,8 +123,7 @@ class Maxele(EuclideanMesh2D):
 
     @staticmethod
     def _certify_netcdf_maxele_file(nc):
-        if ('zeta_max' not in nc.variables.keys()
-            and 'time_of_zeta_max' not in nc.variables.keys()):
+        if 'zeta_max' not in nc.variables.keys() and 'time_of_zeta_max' not in nc.variables.keys():
             raise Exception('Not a maxele file!')
 
     @property
