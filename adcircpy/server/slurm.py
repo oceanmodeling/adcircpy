@@ -1,7 +1,8 @@
 from datetime import timedelta
 # import os
 import pathlib
-from typing import Union
+
+
 # from adcircpy.model.driver import AdcircRun
 # from adcircpy.server import driver as adcirc_driver
 # from tempfile import TemporaryDirectory
@@ -108,8 +109,7 @@ class SlurmConfig:
 
         if self._modules is not None:
             f += '\n'
-            for module in self._modules:
-                f += f'module load {module}\n'
+            f += f'module load {" ".join(module for module in self._modules)}\n'
 
         if self._path_prefix is not None:
             f += '\n'
@@ -118,6 +118,6 @@ class SlurmConfig:
         if self._extra_commands is not None:
             f += '\n'
             for command in self._extra_commands:
-                f += command + "\n"
+                f += f'{command}\n'
 
         return f
