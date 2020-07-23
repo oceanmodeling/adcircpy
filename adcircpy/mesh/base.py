@@ -479,6 +479,8 @@ class EuclideanMesh2D:
                 ring_indices_collection[ring_index]['interiors'].append(
                     np.asarray(rings_indices.pop(row)))
                 ring_areas.pop(row)
+            if len(rings_indices) > 0:
+                ring_index += 1
         return ring_indices_collection
 
     @property
