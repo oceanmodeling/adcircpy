@@ -340,7 +340,7 @@ class AdcircRun(Fort15):
         fort15: str = 'fort.15',
         coldstart: str = 'fort.15.coldstart',
         hotstart: str = 'fort.15.hotstart',
-        launcher: str = None
+        driver: str = 'driver.sh'
     ):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
@@ -382,7 +382,6 @@ class AdcircRun(Fort15):
         # In other words, one can do a tidal only run as coldstart/hotstart
         # as well as a tidal-only spinup + meteorological hotstart.
         else:
-
             if self.wind_forcing is not None:
                 if fort22:
                     self.wind_forcing.write(
@@ -396,12 +395,12 @@ class AdcircRun(Fort15):
 
         # write driver_script
         if not isinstance(self._server_config, int):
-            filename = self._server_config._filename if launcher is None \
-                    else launcher
+            filename = self._server_config._filename if driver is None \
+                    else driver
             self._server_config.write(self, output_directory / filename)
         else:
-            if launcher is not None:
-                self._write_bash_launcher(output_directory / launcher)
+            if driver is not None:
+                self._write_bash_driver(output_directory / driver)
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -471,7 +470,7 @@ class AdcircRun(Fort15):
     @property
     @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        elevbc = self.mesh._boundary_forcing['iettype']["obj"]
+        elevbc = self.mesh._boundary_forcing['iettype'].get("obj")
         if isinstance(elevbc, Tides):
             elevbc.start_date = self.start_date
             elevbc.end_date = self.end_date
@@ -481,6 +480,7 @@ class AdcircRun(Fort15):
     @property
     def wind_forcing(self):
         return self.mesh._surface_forcing['imetype']
+        # if isinstance(elevbc, WindForcing):
 
     @property
     def spinup_time(self):
@@ -744,7 +744,7 @@ class AdcircRun(Fort15):
         self._certify_netcdf(netcdf)
         self._certify_harmonic_analysis(harmonic_analysis)
 
-    def _write_bash_launcher(self, destination):
+    def _write_bash_driver(self, destination):
         source = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
         shutil.copyfile(source, destination)
 

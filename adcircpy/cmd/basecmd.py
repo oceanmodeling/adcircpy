@@ -15,19 +15,19 @@ class AdcircCommand:
 
         # write and exit if generate only
         if self.args.generate_only:
-            self.driver.write(self.args.output_directory, overwrite=self.args.overwrite)
+            self.driver.write(
+                self.args.output_directory,
+                overwrite=self.args.overwrite
+                )
             return
 
         outputs = self.driver.run(
             outdir=self.output_directory,
             nproc=self.args.nproc,
             overwrite=self.args.overwrite,
-            # coldstart=self.coldstart,
-            # hotstart=self.hotstart,
             server_config=self.server_config,
         )
         self._output_collection = outputs
-        # outputs.maxele.make_plot(show=True)
 
     @property
     @lru_cache(maxsize=None)
@@ -37,9 +37,6 @@ class AdcircCommand:
             self.start_date,
             self.end_date,
             self.spinup_time,
-            self.tidal_forcing,
-            self.wind_forcing,
-            self.wave_forcing,
         )
         self._enable_outputs(driver)
         if self.args.timestep:
@@ -72,15 +69,12 @@ class AdcircCommand:
         return self._mesh
 
     @property
+    @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        try:
-            return self.__tidal_forcing
-        except AttributeError:
-            tidal_forcing = Tides()
-            for constituent in self.constituents:
-                tidal_forcing.use_constituent(constituent)
-            self.__tidal_forcing = tidal_forcing
-            return self.__tidal_forcing
+        tidal_forcing = Tides()
+        for constituent in self.constituents:
+            tidal_forcing.use_constituent(constituent)
+        return tidal_forcing
 
     @property
     def wind_forcing(self):
@@ -164,16 +158,16 @@ class AdcircCommand:
         self._init_output_stations(driver)
 
     def _enable_output(self, driver, name, _type):
-        fs = getattr(self.args, f"{name}_{_type}_sampling_frequency")
+        fs = getattr(self.args, f"{name}_{_type}_sampling_rate")
         if fs is not None:
             fs = timedelta(minutes=fs)
-        fss = getattr(self.args, f"{name}_{_type}_sampling_frequency_spinup")
+        fss = getattr(self.args, f"{name}_{_type}_sampling_rate_spinup")
         if fss is not None:
             fss = timedelta(minutes=fss)
         ha = getattr(self.args, f"{name}_{_type}_harmonic_analysis")
         # has = getattr(self.args, f"{name}_{_type}_harmonic_analysis_spinup")
         getattr(driver, f"set_{name}_{_type}_output")(
-            sampling_frequency=fs,
+            sampling_rate=fs,
             harmonic_analysis=ha,
             spinup=fss,
             netcdf=self.args.netcdf,
@@ -193,40 +187,52 @@ class AdcircCommand:
         return self.__args
 
     @property
+    @lru_cache(maxsize=None)
     def _mesh(self):
-        try:
-            return self.__mesh
-        except AttributeError:
-            mesh = AdcircMesh.open(
-                self.args.mesh,
-                self.args.crs
-            )
+        mesh = AdcircMesh.open(
+            self.args.mesh,
+            self.args.crs
+        )
 
-            # set nodal attributes
-            if self.args.fort13 is not None:
-                mesh.import_nodal_attributes(
-                    pathlib.Path(self.args.fort13).resolve()
+        if self.args.generate_boundaries:
+            mesh.generate_boundaries(
+                threshold=self.args.boundaries_threshold,
+                land_ibtype=self.args.land_ibtype,
+                interior_ibtype=self.args.island_ibtype,
                 )
 
-            if 'all' in self.args.coldstart_attributes:
-                for attr in mesh.get_nodal_attribute_names():
-                    mesh.set_nodal_attribute_coldstart_state(attr, True)
-            else:
-                for attr in self.args.coldstart_attributes:
-                    mesh.set_nodal_attribute_coldstart_state(attr, True)
+        # set nodal attributes
+        if self.args.fort13 is not None:
+            mesh.import_nodal_attributes(
+                pathlib.Path(self.args.fort13).resolve()
+            )
 
-            if 'all' in self.args.hotstart_attributes:
-                for attr in mesh.get_nodal_attribute_names():
-                    mesh.set_nodal_attribute_hotstart_state(attr, True)
-            else:
-                for attr in self.args.hotstart_attributes:
-                    mesh.set_nodal_attribute_hotstart_state(attr, True)
+        if 'all' in self.args.coldstart_attributes:
+            for attr in mesh.get_nodal_attribute_names():
+                mesh.set_nodal_attribute_coldstart_state(attr, True)
+        else:
+            for attr in self.args.coldstart_attributes:
+                mesh.set_nodal_attribute_coldstart_state(attr, True)
 
-            if self.args.generate_tau0:
-                mesh.generate_tau0()
+        if 'all' in self.args.hotstart_attributes:
+            for attr in mesh.get_nodal_attribute_names():
+                mesh.set_nodal_attribute_hotstart_state(attr, True)
+        else:
+            for attr in self.args.hotstart_attributes:
+                mesh.set_nodal_attribute_hotstart_state(attr, True)
 
-            self.__mesh = mesh
-            return self.__mesh
+        if self.args.generate_tau0:
+            mesh.generate_tau0()
+
+        if self.tidal_forcing is not None:
+            mesh.add_forcing(self.tidal_forcing)
+
+        if self.wave_forcing is not None:
+            mesh.add_forcing(self.wave_forcing)
+
+        if self.wind_forcing is not None:
+            mesh.add_forcing(self.wind_forcing)
+        return mesh
 
     @_args.setter
     def _args(self, args):

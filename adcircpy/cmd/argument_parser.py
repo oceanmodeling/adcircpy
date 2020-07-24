@@ -131,6 +131,23 @@ def gwce_solution_scheme(parser):
         )
 
 
+def boundaries_generation(parser):
+    parser.add_argument("--generate-boundaries", action="store_true")
+    parser.add_argument("--boundaries-threshold", default=0., type=float)
+    parser.add_argument(
+        "--land-ibtype",
+        default=20,
+        type=int,
+        choices=[0, 10, 20]
+        )
+    parser.add_argument(
+        "--island-ibtype",
+        default=21,
+        type=int,
+        choices=[1, 11, 21]
+        )
+
+
 def best_track(parser):
     # storm_id
     msg = "National Hurricane Center (NHC) storm id. "
@@ -211,7 +228,7 @@ def nodal_attributes(parser):
 
 def surface_output(physical_var, parser, spinup=False):
     # surface output requests
-    long_name = f"--{physical_var}-surface-sampling-frequency"
+    long_name = f"--{physical_var}-surface-sampling-rate"
     short_name = f"--{physical_var[:4]}"
     if spinup:
         long_name += "-spinup"
@@ -262,7 +279,7 @@ def surface_output(physical_var, parser, spinup=False):
 
 
 def stations_output(physical_var, parser, spinup=False):
-    long_name = f"--{physical_var}-stations-sampling-frequency"
+    long_name = f"--{physical_var}-stations-sampling-rate"
     short_name = f"--{physical_var[:4]}-stat"
     if spinup:
         long_name += "-spinup"
@@ -366,6 +383,7 @@ def get_parser(runtype=None, description=None):
     tidal_constituents(parser)
     timestep(parser)
     gwce_solution_scheme(parser)
+    boundaries_generation(parser)
     output_directory(parser)
     allow_overwrite(parser)
     generate_only(parser)
