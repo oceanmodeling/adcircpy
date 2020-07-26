@@ -645,8 +645,8 @@ class AdcircRun(Fort15):
     def _run_hotstart(self, nproc, wdir):
         self._stage_files('hotstart', nproc, wdir)
         self._run_adcprep('hotstart', nproc, wdir)
-        if self.waves:
-            if self.waves.model.lower() == 'swan':
+        if self.wave_forcing is not None:
+            if self.waves_focing.model.lower() == 'swan':
                 self._run_padcswan(wdir / 'hotstart', nproc)
             else:
                 msg = "Unknown wave coupling type."

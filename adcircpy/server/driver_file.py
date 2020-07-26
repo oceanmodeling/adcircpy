@@ -49,7 +49,9 @@ class DriverFile:
 
     @property
     def _single_phase_run(self):
-        f = """
+        f = r"""
+main()
+{
   rm -rf work
   mkdir work
   cd work
@@ -68,6 +70,7 @@ class DriverFile:
   rm -rf fort.68.nc
   clean_directory
   cd ..
+}
 """
         return f
 
