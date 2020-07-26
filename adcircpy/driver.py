@@ -15,6 +15,7 @@ from adcircpy.mesh import AdcircMesh
 from adcircpy.fort15 import Fort15
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.outputs.collection import OutputCollection
+from adcircpy.server.driver_file import DriverFile
 from adcircpy.server.config import ServerConfig
 from adcircpy.server.slurm import SlurmConfig
 
@@ -393,14 +394,9 @@ class AdcircRun(Fort15):
                 super().write(
                     'hotstart', output_directory / hotstart, overwrite)
 
-        # write driver_script
-        if not isinstance(self._server_config, int):
-            filename = self._server_config._filename if driver is None \
-                    else driver
-            self._server_config.write(self, output_directory / filename)
-        else:
-            if driver is not None:
-                self._write_bash_driver(output_directory / driver)
+        DriverFile(self).write(
+            output_directory / driver
+            )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -582,7 +578,7 @@ class AdcircRun(Fort15):
         return self._output_collection
 
     @property
-    def waves(self):
+    def wave_forcing(self):
         return self.mesh._boundary_forcing['iwrtype']["obj"]
 
     def _load_outdir(self, outdir):
@@ -846,39 +842,6 @@ class AdcircRun(Fort15):
             raise RuntimeError(msg)
         self.__mesh = mesh
 
-    # @property
-    # def _tidal_forcing(self):
-    #     return self.__tidal_forcing
-
-    # @_tidal_forcing.setter
-    # def _tidal_forcing(self, tidal_forcing):
-    #     if tidal_forcing is not None:
-    #         assert isinstance(tidal_forcing, Tides)
-    #         tidal_forcing.start_date = self.start_date
-    #         tidal_forcing.end_date = self.end_date
-    #         tidal_forcing.spinup_time = self.spinup_time
-    #     self.__tidal_forcing = tidal_forcing
-
-    # @property
-    # def _wind_forcing(self):
-    #     return self.__wind_forcing
-
-    # @_wind_forcing.setter
-    # def _wind_forcing(self, wind_forcing):
-    #     if wind_forcing is not None:
-    #         assert isinstance(wind_forcing, WindForcing)
-    #     self.__wind_forcing = wind_forcing
-
-    # @property
-    # def _waves(self):
-    #     return self.__waves
-
-    # @_waves.setter
-    # def _waves(self, waves):
-    #     # if waves is not None:
-    #     #     assert isinstance(waves, WindForcing)
-    #     self.__waves = waves
-
     @property
     def _spinup_time(self):
         return self.__spinup_time
@@ -948,26 +911,17 @@ class AdcircRun(Fort15):
             'netcdf': self.netcdf,
             'harmonic_analysis': False,
         }
-        container['surface'] = dict()
-        container['surface']['elevation'] = schema.copy()
-        container['surface']['velocity'] = schema.copy()
-        container['surface']['meteorological'] = schema.copy()
-        container['surface']['concentration'] = schema.copy()
-        # init stations output attributes
-        container['stations'] = dict()
-        container['stations']['elevation'] = schema.copy()
-        container['stations']['velocity'] = schema.copy()
-        container['stations']['meteorological'] = schema.copy()
-        container['stations']['concentration'] = schema.copy()
-        # add a 'collections' key to hold the stations.
-        container['stations']['elevation'].update(
-            {'collection': dict()})
-        container['stations']['velocity'].update(
-            {'collection': dict()})
-        container['stations']['meteorological'].update(
-            {'collection': dict()})
-        container['stations']['concentration'].update(
-            {'collection': dict()})
+
+        for otype in ['surface', 'stations']:
+            container[otype] = dict()
+            for ovar in [
+                    'elevation',
+                    'velocity',
+                    'meteorological',
+                    'concentration']:
+                container[otype][ovar] = schema.copy()
+                if otype == 'stations':
+                    container[otype][ovar].update({'collection': dict()})
         return container
 
     @property
