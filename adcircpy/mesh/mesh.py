@@ -12,6 +12,7 @@ import numpy as np
 from shapely.geometry import LineString, mapping
 
 from adcircpy.forcing.bctypes import BoundaryCondition
+from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.mesh import figures as fig, grd, sms2dm
 from adcircpy.mesh.base import EuclideanMesh2D
 
@@ -22,20 +23,20 @@ class AdcircMesh(EuclideanMesh2D):
     """
 
     def __init__(
-            self,
-            nodes,
-            elements,
-            boundaries=None,
-            crs=None,
-            description=None,
+        self,
+        nodes,
+        elements,
+        boundaries=None,
+        crs=None,
+        description=None,
     ):
         self._nodes = nodes
         self._elements = elements
         super().__init__(**grd.euclidean_mesh({
-            'nodes'      : self._nodes,
-            'elements'   : self._elements,
+            'nodes': self._nodes,
+            'elements': self._elements,
             'description': description,
-            'crs'        : crs
+            'crs': crs
         }))
         self._boundaries = boundaries
 
@@ -73,27 +74,26 @@ class AdcircMesh(EuclideanMesh2D):
             msg = "Destination path exists and overwrite=False"
             raise IOError(msg)
         with fiona.open(
-                path.absolute(),
-                'w',
-                driver='ESRI Shapefile',
-                crs=self.crs.srs,
-                schema={
-                    'geometry'  : 'LineString',
-                    'properties': {
-                        'id'    : 'int',
-                        'ibtype': 'str',
-                        'bnd_id': 'str'
-                    }
-                }) as dst:
+            path.absolute(),
+            'w',
+            driver='ESRI Shapefile',
+            crs=self.crs.srs,
+            schema={
+                'geometry': 'LineString',
+                'properties': {
+                    'id': 'int',
+                    'ibtype': 'str',
+                    'bnd_id': 'str'
+                }}) as dst:
             _cnt = 0
             for ibtype, bnds in self.boundaries.items():
                 for id, bnd in bnds.items():
                     idxs = list(map(self.get_node_index, bnd['indexes']))
                     linear_ring = LineString(self.xy[idxs].tolist())
                     dst.write({
-                        "geometry"  : mapping(linear_ring),
+                        "geometry": mapping(linear_ring),
                         "properties": {
-                            "id"    : _cnt,
+                            "id": _cnt,
                             "ibtype": ibtype,
                             "bnd_id": f"{ibtype}:{id}"
                         }
@@ -101,10 +101,10 @@ class AdcircMesh(EuclideanMesh2D):
                     _cnt += 1
 
     def generate_boundaries(
-            self,
-            threshold=0.,
-            land_ibtype=0,
-            interior_ibtype=1,
+        self,
+        threshold=0.,
+        land_ibtype=0,
+        interior_ibtype=1,
     ):
         if np.any(np.isnan(self.values)):
             raise Exception("Mesh contains invalid values. Raster values must "
@@ -163,23 +163,25 @@ class AdcircMesh(EuclideanMesh2D):
         for bnd_id, data in _interior_boundaries.items():
             self.set_boundary_data(interior_ibtype, bnd_id, data)
 
-    @property
-    def boundaries(self):
-        return self._boundaries
-
     def add_forcing(self, forcing, id=None):
-        if id is None:
-            for i in range(len(self.open_boundaries)):
-                self.add_forcing(forcing, i)
+        if isinstance(forcing, BoundaryCondition):
+            if id is None:
+                for i in range(len(self.open_boundaries)):
+                    self.add_forcing(forcing, i)
+            else:
+                self._boundary_forcing[forcing.btype]["bnd_ids"].add(id)
+                self._boundary_forcing[forcing.btype].update({"obj": forcing})
+        elif isinstance(forcing, WindForcing):
+            self._surface_forcing.update({'imetype': forcing})
         else:
-            assert isinstance(forcing, BoundaryCondition)
-            self._boundary_forcing[forcing.btype]["bnd_ids"].add(id)
-            self._boundary_forcing[forcing.btype].update({"obj": forcing})
+            msg = f"Unrecognized forcing type {forcing}."
+            raise Exception(msg)
 
-    def get_forcing(self, btype):
-        msg = f"btype must be one of " \
-              f"{' '.join(list(self._boundary_forcing.keys()))}"
-        return self._boundary_forcing[btype]
+    # def get_forcing(self, btype):
+    #     msg = f"btype must be one of " \
+    #           f"{' '.join(list(self._boundary_forcing.keys()))}"
+    #     assert btype in
+    #     return self._boundary_forcing[btype]
 
     def add_nodal_attribute(self, name, units):
         if name in self.get_nodal_attribute_names():
@@ -191,11 +193,11 @@ class AdcircMesh(EuclideanMesh2D):
             self._nodal_attribute_collection[name] = None
 
     def set_nodal_attribute(
-            self,
-            attribute_name,
-            values,
-            coldstart=False,
-            hotstart=False
+        self,
+        attribute_name,
+        values,
+        coldstart=False,
+        hotstart=False
     ):
         if attribute_name not in self.get_nodal_attribute_names():
             raise AttributeError(f'Cannot set nodal attribute with name '
@@ -204,9 +206,9 @@ class AdcircMesh(EuclideanMesh2D):
         assert isinstance(coldstart, bool)
         assert isinstance(hotstart, bool)
         properties = {
-            'units'    : self._attributes[attribute_name]['units'],
+            'units': self._attributes[attribute_name]['units'],
             'coldstart': coldstart,
-            'hotstart' : hotstart
+            'hotstart': hotstart
         }
         self.set_attribute(attribute_name, values, **properties)
 
@@ -235,10 +237,10 @@ class AdcircMesh(EuclideanMesh2D):
         self.get_attribute(attribute)['hotstart'] = state
 
     def set_nodal_attribute_state(
-            self,
-            attribute,
-            coldstart,
-            hotstart
+        self,
+        attribute,
+        coldstart,
+        hotstart
     ):
         self.set_nodal_attribute_coldstart_state(attribute, coldstart)
         self.set_nodal_attribute_hotstart_state(attribute, hotstart)
@@ -317,14 +319,14 @@ class AdcircMesh(EuclideanMesh2D):
             self.set_nodal_attribute(attribute, full_values)
 
     def generate_tau0(
-            self,
-            default_value=0.03,
-            threshold_distance=1750.,
-            shallow_tau0=0.02,
-            deep_tau0=0.005,
-            threshold_depth=-10.,
-            coldstart=True,
-            hotstart=True
+        self,
+        default_value=0.03,
+        threshold_distance=1750.,
+        shallow_tau0=0.02,
+        deep_tau0=0.005,
+        threshold_depth=-10.,
+        coldstart=True,
+        hotstart=True
     ):
         """
         Reimplementation of tau0_gen.f by Robert Weaver (2008)
@@ -365,103 +367,6 @@ class AdcircMesh(EuclideanMesh2D):
     def write_fort14(self, path, overwrite=False):
         super().write(path, overwrite, 'gr3')
 
-    @property
-    def fort14(self):
-        f = f'{self.description}\n'
-        f += f'{self.NE} {self.NP}\n'
-        for i in range(self.NP):
-            f += f'{i + 1:d} ' \
-                 f'{self.x[i]:<.16E} ' \
-                 f'{self.y[i]:<.16E} ' \
-                 f'{-self.values[i]:<.16E}\n'
-        for i in range(self.NE):
-            f += f'{i + 1:d} {len(self.elements[i])} ' \
-                 f'{self.elements[i, 0] + 1:d} ' \
-                 f'{self.elements[i, 1] + 1:d} ' \
-                 f'{self.elements[i, 2] + 1:d}\n'
-        # ocean boundaries
-        f += f'{len(self.ocean_boundaries):d} ! total number of ocean boundaries\n'
-        # count total number of ocean boundaries
-        _sum = np.sum([len(boundary) for boundary in self.ocean_boundaries])
-        f += f'{int(_sum):d} ! total number of ocean boundary nodes\n'
-        # write ocean boundary indexes
-        for i, boundary in enumerate(self.ocean_boundaries):
-            f += f'{len(boundary):d} ! number of nodes for ocean_boundary_{i}\n'
-            for idx in boundary:
-                f += f'{idx + 1:d}\n'
-        # count remaining boundaries
-        num_remaining_boundaries = sum(len(self.land_boundaries),
-                                       len(self.inner_boundaries),
-                                       len(self.inflow_boundaries),
-                                       len(self.outflow_boundaries),
-                                       len(self.weir_boundaries),
-                                       len(self.culvert_boundaries))
-        f += f'{num_remaining_boundaries:d} ! total number of non-ocean boundaries\n'
-        # count total remaining boundary simplices
-        num_remaining_boundary_simplices = int(sum(
-            np.sum([len(x) for x in self.land_boundaries]),
-            np.sum([len(x) for x in self.inner_boundaries]),
-            np.sum([len(x) for x in self.inflow_boundaries]),
-            np.sum([len(x) for x in self.outflow_boundaries]),
-            np.sum([2 * len(x) for x in self.weir_boundaries]),
-            np.sum([2 * len(x) for x in self.culvert_boundaries])
-        ))
-
-        f += f'{num_remaining_boundary_simplices:d} ! Total number of non-ocean boundaries nodes\n'
-        # write land boundaries
-        for i, boundary in enumerate(self.land_boundaries):
-            ibtype = self.get_attribute('land_boundaries')['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for land_boundary_{i}\n'
-            for idx in boundary:
-                f += f'{idx + 1:d}\n'
-        # write inner boundaries
-        for i, boundary in enumerate(self.inner_boundaries):
-            ibtype = self.get_attribute('inner_boundaries')['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for inner_boundary_{i}\n'
-            for idx in boundary:
-                f += f'{idx + 1:d}\n'
-        # inflow boundaries
-        for i, boundary in enumerate(self.inflow_boundaries):
-            ibtype = self.get_attribute('inflow_boundaries')['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for inflow_boundary_{i}\n'
-            for idx in boundary:
-                f += f'{idx + 1:d}\n'
-        # outflow boundaries
-        for i, boundary in enumerate(self.outflow_boundaries):
-            bdata = self.get_attribute('outflow_boundaries')
-            ibtype = bdata['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for outflow_boundary_{i}\n'
-            for j, idx in enumerate(boundary):
-                f += f'{idx + 1:d} ' \
-                     f'{bdata["barrier_height"][i][j]:G} ' \
-                     f'{bdata["supercritical_flow_coefficient"][i][j]:G}\n'
-        # weir boundaries
-        for i, boundary in enumerate(self.weir_boundaries):
-            bdata = self.get_attribute('weir_boundaries')
-            ibtype = bdata['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for weir_boundary_{i}\n'
-            for j, idx in enumerate(boundary):
-                f += f'{idx[0] + 1:d} {idx[1] + 1:d} ' \
-                     f'{bdata["barrier_height"][i][j]:G} ' \
-                     f'{bdata["subcritical_flow_coefficient"][i][j]:G} ' \
-                     f'{bdata["supercritical_flow_coefficient"][i][j]:G}\n'
-        # culvert boundaries
-        for i, boundary in enumerate(self.culvert_boundaries):
-            bdata = self.get_attribute('culvert_boundaries')
-            ibtype = bdata['ibtype'][i]
-            f += f'{len(boundary):d} {ibtype:d} ! number of nodes and ibtype for culvert_boundary_{i}\n'
-            for j, idx in enumerate(boundary):
-                f += f'{idx[0] + 1:d} ' \
-                     f'{idx[1] + 1:d} ' \
-                     f'{bdata["barrier_height"][i][j]:G} ' \
-                     f'{bdata["subcritical_flow_coefficient"][i][j]:G} ' \
-                     f'{bdata["supercritical_flow_coefficient"][i][j]:G} ' \
-                     f'{bdata["cross_barrier_pipe_height"][i][j]:G} ' \
-                     f'{bdata["friction_factor"][i][j]:G} ' \
-                     f'{bdata["pipe_diameter"][i][j]:G}\n'
-        # f += f"{}\n".format(self.SpatialReference.ExportToWkt())
-        return f
-
     def write_fort13(self, path, overwrite=False):
         if path is not None:
             path = pathlib.Path(path)
@@ -473,27 +378,6 @@ class AdcircMesh(EuclideanMesh2D):
                     f.write(self.fort13)
         else:
             print(self.fort13)
-
-    @property
-    def fort13(self):
-        f = f'{self.description}\n' \
-            f'{len(self.node_id)}\n' \
-            f'{len(self.get_nodal_attribute_names())}\n'
-        for name in self.get_nodal_attribute_names():
-            attribute = self.get_nodal_attribute(name)
-            f += f'{name}\n' \
-                 f'{attribute["units"]}\n' \
-                 f'{len(attribute["defaults"])}\n'
-            f += ' '.join(f'{n:<.16E}' for n in attribute['defaults']) + '\n'
-        for name in self.get_nodal_attribute_names():
-            attribute = self.get_nodal_attribute(name)
-            f += f'{name}\n' \
-                 f'{len(attribute["non_default_indexes"])}\n'
-            for idx in attribute['non_default_indexes']:
-                f += f'{idx + 1:d} '
-                f += ' '.join(f'{val:<.16E}'
-                              for val in attribute['values'][idx, :]) + '\n'
-        return f
 
     def critical_timestep(self, cfl, maxvel=5., g=9.8, method='simple'):
         """
@@ -599,6 +483,236 @@ class AdcircMesh(EuclideanMesh2D):
         if 'original_crs' in locals():
             self.transform_to(original_crs)
         self._values = ffun
+
+    # plotting functions
+    @fig._figure
+    def make_plot(
+        self,
+        axes=None,
+        vmin=None,
+        vmax=None,
+        show=False,
+        title=None,
+        # figsize=rcParams["figure.figsize"],
+        extent=None,
+        cbar_label=None,
+        **kwargs
+    ):
+        if vmin is None:
+            vmin = np.min(self.values)
+        if vmax is None:
+            vmax = np.max(self.values)
+        kwargs.update(**fig.get_topobathy_kwargs(self.values, vmin, vmax))
+        kwargs.pop('col_val')
+        levels = kwargs.pop('levels')
+        if vmin != vmax:
+            self.tricontourf(
+                axes=axes,
+                levels=levels,
+                vmin=vmin,
+                vmax=vmax,
+                **kwargs
+            )
+        else:
+            self.tripcolor(axes=axes, **kwargs)
+        self.quadface(axes=axes, **kwargs)
+        axes.axis('scaled')
+        if extent is not None:
+            axes.axis(extent)
+        if title is not None:
+            axes.set_title(title)
+        mappable = ScalarMappable(cmap=kwargs['cmap'])
+        mappable.set_array([])
+        mappable.set_clim(vmin, vmax)
+        divider = make_axes_locatable(axes)
+        cax = divider.append_axes("bottom", size="2%", pad=0.5)
+        cbar = plt.colorbar(
+            mappable,
+            cax=cax,
+            orientation='horizontal'
+        )
+        cbar.set_ticks([vmin, vmax])
+        cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
+        if cbar_label is not None:
+            cbar.set_label(cbar_label)
+        if show:
+            pyplot.show()
+        return axes
+
+    @fig._figure
+    def plot_boundary(
+        self,
+        ibtype,
+        id,
+        tags=True,
+        axes=None,
+        show=False,
+        figsize=None,
+        **kwargs
+    ):
+
+        boundary = list(map(
+            self.get_node_index, self.boundaries[ibtype][id]['indexes']))
+        p = axes.plot(self.x[boundary], self.y[boundary], **kwargs)
+        if tags:
+            axes.text(
+                self.x[boundary[len(boundary) // 2]],
+                self.y[boundary[len(boundary) // 2]],
+                f"ibtype={ibtype}\nid={id}",
+                color=p[-1].get_color()
+            )
+        if show:
+            pyplot.show()
+        return axes
+
+    @fig._figure
+    def plot_boundaries(
+        self,
+        axes=None,
+        show=False,
+        figsize=None,
+        **kwargs
+    ):
+        kwargs.update({'axes': axes})
+        for ibtype, bnds in self.boundaries.items():
+            for id in bnds:
+                axes = self.plot_boundary(ibtype, id, **kwargs)
+                kwargs.update({'axes': axes})
+        if show:
+            pyplot.show()
+        return kwargs['axes']
+
+    @property
+    def fort14(self):
+        f = f'{self.description}\n'
+        f += f'{self.NE} {self.NP}\n'
+        for i in range(self.NP):
+            f += f'{i + 1:d} ' \
+                 f'{self.x[i]:<.16E} ' \
+                 f'{self.y[i]:<.16E} ' \
+                 f'{-self.values[i]:<.16E}\n'
+        for i in range(self.NE):
+            f += f'{i + 1:d} {len(self.elements[i])} ' \
+                 f'{self.elements[i, 0] + 1:d} ' \
+                 f'{self.elements[i, 1] + 1:d} ' \
+                 f'{self.elements[i, 2] + 1:d}\n'
+        # ocean boundaries
+        f += f'{len(self.ocean_boundaries):d} '
+        f += '! total number of ocean boundaries\n'
+        # count total number of ocean boundaries
+        _sum = np.sum([len(boundary) for boundary in self.ocean_boundaries])
+        f += f'{int(_sum):d} ! total number of ocean boundary nodes\n'
+        # write ocean boundary indexes
+        for i, boundary in enumerate(self.ocean_boundaries):
+            f += f'{len(boundary):d} '
+            f += '! number of nodes for ocean_boundary_{i}\n'
+            for idx in boundary:
+                f += f'{idx + 1:d}\n'
+        # count remaining boundaries
+        num_remaining_boundaries = sum(len(self.land_boundaries),
+                                       len(self.inner_boundaries),
+                                       len(self.inflow_boundaries),
+                                       len(self.outflow_boundaries),
+                                       len(self.weir_boundaries),
+                                       len(self.culvert_boundaries))
+        f += f'{num_remaining_boundaries:d} '
+        f += '! total number of non-ocean boundaries\n'
+        # count total remaining boundary simplices
+        num_remaining_boundary_simplices = int(sum(
+            np.sum([len(x) for x in self.land_boundaries]),
+            np.sum([len(x) for x in self.inner_boundaries]),
+            np.sum([len(x) for x in self.inflow_boundaries]),
+            np.sum([len(x) for x in self.outflow_boundaries]),
+            np.sum([2 * len(x) for x in self.weir_boundaries]),
+            np.sum([2 * len(x) for x in self.culvert_boundaries])
+        ))
+
+        f += f'{num_remaining_boundary_simplices:d} '
+        f += '! Total number of non-ocean boundaries nodes\n'
+        # write land boundaries
+        for i, boundary in enumerate(self.land_boundaries):
+            ibtype = self.get_attribute('land_boundaries')['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for land_boundary_{i}\n'
+            for idx in boundary:
+                f += f'{idx + 1:d}\n'
+        # write inner boundaries
+        for i, boundary in enumerate(self.inner_boundaries):
+            ibtype = self.get_attribute('inner_boundaries')['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for inner_boundary_{i}\n'
+            for idx in boundary:
+                f += f'{idx + 1:d}\n'
+        # inflow boundaries
+        for i, boundary in enumerate(self.inflow_boundaries):
+            ibtype = self.get_attribute('inflow_boundaries')['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for inflow_boundary_{i}\n'
+            for idx in boundary:
+                f += f'{idx + 1:d}\n'
+        # outflow boundaries
+        for i, boundary in enumerate(self.outflow_boundaries):
+            bdata = self.get_attribute('outflow_boundaries')
+            ibtype = bdata['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for outflow_boundary_{i}\n'
+            for j, idx in enumerate(boundary):
+                f += f'{idx + 1:d} ' \
+                     f'{bdata["barrier_height"][i][j]:G} ' \
+                     f'{bdata["supercritical_flow_coefficient"][i][j]:G}\n'
+        # weir boundaries
+        for i, boundary in enumerate(self.weir_boundaries):
+            bdata = self.get_attribute('weir_boundaries')
+            ibtype = bdata['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for weir_boundary_{i}\n'
+            for j, idx in enumerate(boundary):
+                f += f'{idx[0] + 1:d} {idx[1] + 1:d} ' \
+                     f'{bdata["barrier_height"][i][j]:G} ' \
+                     f'{bdata["subcritical_flow_coefficient"][i][j]:G} ' \
+                     f'{bdata["supercritical_flow_coefficient"][i][j]:G}\n'
+        # culvert boundaries
+        for i, boundary in enumerate(self.culvert_boundaries):
+            bdata = self.get_attribute('culvert_boundaries')
+            ibtype = bdata['ibtype'][i]
+            f += f'{len(boundary):d} {ibtype:d} '
+            f += '! number of nodes and ibtype for culvert_boundary_{i}\n'
+            for j, idx in enumerate(boundary):
+                f += f'{idx[0] + 1:d} ' \
+                     f'{idx[1] + 1:d} ' \
+                     f'{bdata["barrier_height"][i][j]:G} ' \
+                     f'{bdata["subcritical_flow_coefficient"][i][j]:G} ' \
+                     f'{bdata["supercritical_flow_coefficient"][i][j]:G} ' \
+                     f'{bdata["cross_barrier_pipe_height"][i][j]:G} ' \
+                     f'{bdata["friction_factor"][i][j]:G} ' \
+                     f'{bdata["pipe_diameter"][i][j]:G}\n'
+        # f += f"{}\n".format(self.SpatialReference.ExportToWkt())
+        return f
+
+    @property
+    def fort13(self):
+        f = f'{self.description}\n' \
+            f'{len(self.node_id)}\n' \
+            f'{len(self.get_nodal_attribute_names())}\n'
+        for name in self.get_nodal_attribute_names():
+            attribute = self.get_nodal_attribute(name)
+            f += f'{name}\n' \
+                 f'{attribute["units"]}\n' \
+                 f'{len(attribute["defaults"])}\n'
+            f += ' '.join(f'{n:<.16E}' for n in attribute['defaults']) + '\n'
+        for name in self.get_nodal_attribute_names():
+            attribute = self.get_nodal_attribute(name)
+            f += f'{name}\n' \
+                 f'{len(attribute["non_default_indexes"])}\n'
+            for idx in attribute['non_default_indexes']:
+                f += f'{idx + 1:d} '
+                f += ' '.join(f'{val:<.16E}'
+                              for val in attribute['values'][idx, :]) + '\n'
+        return f
+
+    @property
+    def boundaries(self):
+        return self._boundaries
 
     @property
     def primitive_weighting_in_continuity_equation(self):
@@ -830,101 +944,3 @@ class AdcircMesh(EuclideanMesh2D):
             'iwrtype': None,
             'isrtype': None,  # rain
         }
-
-    # plotting functions
-    @fig._figure
-    def make_plot(
-            self,
-            axes=None,
-            vmin=None,
-            vmax=None,
-            show=False,
-            title=None,
-            # figsize=rcParams["figure.figsize"],
-            extent=None,
-            cbar_label=None,
-            **kwargs
-    ):
-        if vmin is None:
-            vmin = np.min(self.values)
-        if vmax is None:
-            vmax = np.max(self.values)
-        kwargs.update(**fig.get_topobathy_kwargs(self.values, vmin, vmax))
-        kwargs.pop('col_val')
-        levels = kwargs.pop('levels')
-        if vmin != vmax:
-            self.tricontourf(
-                axes=axes,
-                levels=levels,
-                vmin=vmin,
-                vmax=vmax,
-                **kwargs
-            )
-        else:
-            self.tripcolor(axes=axes, **kwargs)
-        self.quadface(axes=axes, **kwargs)
-        axes.axis('scaled')
-        if extent is not None:
-            axes.axis(extent)
-        if title is not None:
-            axes.set_title(title)
-        mappable = ScalarMappable(cmap=kwargs['cmap'])
-        mappable.set_array([])
-        mappable.set_clim(vmin, vmax)
-        divider = make_axes_locatable(axes)
-        cax = divider.append_axes("bottom", size="2%", pad=0.5)
-        cbar = plt.colorbar(
-            mappable,
-            cax=cax,
-            orientation='horizontal'
-        )
-        cbar.set_ticks([vmin, vmax])
-        cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
-        if cbar_label is not None:
-            cbar.set_label(cbar_label)
-        if show:
-            pyplot.show()
-        return axes
-
-    @fig._figure
-    def plot_boundary(
-            self,
-            ibtype,
-            id,
-            tags=True,
-            axes=None,
-            show=False,
-            figsize=None,
-            **kwargs
-    ):
-
-        boundary = list(map(
-            self.get_node_index, self.boundaries[ibtype][id]['indexes']))
-        p = axes.plot(self.x[boundary], self.y[boundary], **kwargs)
-        if tags:
-            axes.text(
-                self.x[boundary[len(boundary) // 2]],
-                self.y[boundary[len(boundary) // 2]],
-                f"ibtype={ibtype}\nid={id}",
-                color=p[-1].get_color()
-            )
-        if show:
-            pyplot.show()
-        return axes
-
-    @fig._figure
-    def plot_boundaries(
-            self,
-            axes=None,
-            show=False,
-            figsize=None,
-            **kwargs
-    ):
-        kwargs.update({'axes': axes})
-        for ibtype, bnds in self.boundaries.items():
-            for id in bnds:
-                axes = self.plot_boundary(ibtype, id, **kwargs)
-                kwargs.update({'axes': axes})
-        if show:
-            pyplot.show()
-        return kwargs['axes']

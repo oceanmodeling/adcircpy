@@ -1077,9 +1077,10 @@ class Fort15:
     @property
     def NTIF(self):
         NTIF = 0
-        for constituent in self.tidal_forcing.get_active_constituents():
-            if constituent in self.tidal_forcing.major_constituents:
-                NTIF += 1
+        if self.tidal_forcing is not None:
+            for constituent in self.tidal_forcing.get_active_constituents():
+                if constituent in self.tidal_forcing.major_constituents:
+                    NTIF += 1
         return NTIF
 
     @property

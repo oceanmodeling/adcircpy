@@ -63,7 +63,6 @@ def main():
         spinup_time=timedelta(days=5),
         server_config=slurm
     )
-
     driver.write(PARENT / "outputs/example_3", overwrite=True)
 
 

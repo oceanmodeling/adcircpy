@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import argparse
-
-from adcircpy.model.winds import BestTrackForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 def parse_args():
@@ -25,7 +24,7 @@ def parse_args():
     parser.add_argument(
         '--show-HU-only', '-hu', action='store_true', default=False,
         help='Removes both tropical storm (TS) and extratropical (EX) entries.'
-    )
+        )
     parser.add_argument(
         '--remove-TS', action='store_true', default=False,
         help='Removes tropical storm (TS) entries.')

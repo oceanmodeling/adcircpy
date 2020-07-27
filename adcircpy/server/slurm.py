@@ -1,33 +1,28 @@
 from datetime import timedelta
-# import os
-import pathlib
+
+from adcircpy.server.base_config import BaseServerConfig
 
 
-# from adcircpy.model.driver import AdcircRun
-# from adcircpy.server import driver as adcirc_driver
-# from tempfile import TemporaryDirectory
-
-
-class SlurmConfig:
+class SlurmConfig(BaseServerConfig):
     """
     Object instance of a Slurm shell script (`*.job`).
     """
 
     def __init__(
-            self,
-            account: str,
-            slurm_ntasks: int,
-            run_name: str,
-            partition: str,
-            duration: timedelta,
-            filename: str = 'slurm.job',
-            run_directory: str = '.',
-            mail_type: str = None,
-            mail_user: str = None,
-            log_filename: str = 'sbatch.log',
-            modules: [str] = None,
-            path_prefix: str = None,
-            extra_commands: [str] = None,
+        self,
+        account: str,
+        slurm_ntasks: int,
+        run_name: str,
+        partition: str,
+        duration: timedelta,
+        filename: str = 'slurm.job',
+        run_directory: str = '.',
+        mail_type: str = None,
+        mail_user: str = None,
+        log_filename: str = None,
+        modules: [str] = None,
+        path_prefix: str = None,
+        extra_commands: [str] = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
@@ -60,24 +55,9 @@ class SlurmConfig:
         self._path_prefix = path_prefix
         self._extra_commands = extra_commands
 
-    def __call__(self, driver):
-        script = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
-        with open(script) as s:
-            script = ''.join([line for line in s.readlines()][2:])
-        return f"{self._script_prefix}\n{script}"
-
-    def write(self, driver, path):
-        with open(path, 'w') as output_file:
-            output_file.write(self(driver))
-
-    def deploy(self):
-        raise NotImplementedError("slurm.deploy()")
-
-    def run(self):
-        raise NotImplementedError("slurm.run()")
-
-    def _get_bash_launcher(self, driver):
-        raise NotImplementedError("slurm._get_bash_launcher()")
+    @property
+    def nprocs(self):
+        return self._slurm_ntasks
 
     @property
     def _duration(self):
@@ -91,8 +71,8 @@ class SlurmConfig:
         self.__duration = f'{hours:02}:{minutes:02}:{seconds:02}'
 
     @property
-    def _script_prefix(self):
-        f = '#!/bin/bash --login\n'
+    def _prefix(self):
+        f = ''
         f += f'#SBATCH -D {self._run_directory}\n'
         f += f'#SBATCH -J {self._run_name}\n'
         f += f'#SBATCH -A {self._account}\n'
@@ -109,8 +89,7 @@ class SlurmConfig:
 
         if self._modules is not None:
             f += '\n'
-            for module in self._modules:
-                f += f'module load {module}\n'
+            f += f'module load {" ".join(module for module in self._modules)}\n'
 
         if self._path_prefix is not None:
             f += '\n'
@@ -119,6 +98,6 @@ class SlurmConfig:
         if self._extra_commands is not None:
             f += '\n'
             for command in self._extra_commands:
-                f += command + "\n"
+                f += f'{command}\n'
 
         return f

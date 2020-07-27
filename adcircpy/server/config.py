@@ -1,6 +1,5 @@
-# from datetime import timedelta
-from functools import lru_cache
 import logging
+from functools import lru_cache
 import os
 import pathlib
 from stat import S_ISDIR
@@ -10,34 +9,29 @@ import uuid
 
 import paramiko
 
-
-# from adcircpy.model.driver import AdcircRun
-
-# from tempfile import TemporaryDirectory
-
-# PADCIRC_DRIVER_SCRIPT_FILENAME = pathlib.Path(os.path.dirname(__file__)).resolve() / 'padcirc_driver.sh'
+from adcircpy.server.base_config import BaseServerConfig
 
 
-class ServerConfig:
+class ServerConfig(BaseServerConfig):
     """
     This class is used for configuring the server
     """
 
     def __init__(
-            self,
-            hostname: str = None,
-            nprocs: int = None,
-            wdir: str = None,
-            binaries_prefix: str = None,
-            port: int = 22,
-            username: str = None,
-            password: str = None,
-            pkey: str = None,
-            writer_procs: int = None,
-            source_script: str = None,
-            additional_mpi_options: str = None,
-            keep_wdir: bool = False,
-            filename: str = None
+        self,
+        hostname: str = None,
+        nprocs: int = None,
+        wdir: str = None,
+        binaries_prefix: str = None,
+        port: int = 22,
+        username: str = None,
+        password: str = None,
+        pkey: str = None,
+        writer_procs: int = None,
+        source_script: str = None,
+        additional_mpi_options: str = None,
+        keep_wdir: bool = False,
+        filename: str = None
     ):
         self._hostname = hostname
         self._nprocs = nprocs
@@ -57,12 +51,12 @@ class ServerConfig:
         pass
 
     def run(
-            self,
-            driver,
-            outdir: Union[str, pathlib.Path],
-            overwrite: bool = False,
-            coldstart: bool = True,
-            hotstart: bool = True
+        self,
+        driver,
+        outdir: Union[str, pathlib.Path],
+        overwrite: bool = False,
+        coldstart: bool = True,
+        hotstart: bool = True
     ) -> None:
         """
         puts driver outputs on outdir using a remote server for compute
@@ -80,6 +74,10 @@ class ServerConfig:
         self._retrieve_files(outdir)
         if not self.keep_wdir:
             self.ssh.exec_command(f'rm -rf {self._wdir}')
+
+    @property
+    def nprocs(self):
+        return self._nprocs
 
     def _deploy_files_to_server(self, driver):
         outdir = tempfile.TemporaryDirectory()
@@ -216,7 +214,7 @@ class ServerConfig:
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         kwargs = {
             'hostname': self.hostname,
-            'port'    : self.port,
+            'port': self.port,
             'username': self.username,
             'password': self.password
         }
@@ -367,6 +365,7 @@ class ServerConfig:
         if filename is None:
             filename = 'driver.sh'
         self.__filename = filename
+
 
 # class ServerConfig:
 #     def __init__(self, script: str):
