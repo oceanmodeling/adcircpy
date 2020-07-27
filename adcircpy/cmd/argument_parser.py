@@ -137,13 +137,13 @@ def boundaries_generation(parser):
         default=20,
         type=int,
         choices=[0, 10, 20]
-        )
+    )
     parser.add_argument(
         "--island-ibtype",
         default=21,
         type=int,
         choices=[1, 11, 21]
-        )
+    )
 
 
 def best_track(parser):

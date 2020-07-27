@@ -1,8 +1,9 @@
 # import argparse
 import logging
-from adcircpy.forcing.winds.best_track import BestTrackForcing
-from adcircpy.cmd.basecmd import AdcircCommand
+
 from adcircpy.cmd import argument_parser
+from adcircpy.cmd.basecmd import AdcircCommand
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 class BestTrackRunCommand(AdcircCommand):
@@ -19,7 +20,6 @@ class BestTrackRunCommand(AdcircCommand):
 
 
 def main():
-
     args = argument_parser.get_parser('best_track').parse_args()
     # if len(args.constituents) == 0:
     #     args.constituents = ['all']

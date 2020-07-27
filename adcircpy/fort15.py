@@ -1998,8 +1998,8 @@ class Fort15:
 
     @lateral_stress_in_gwce_is_symmetrical.setter
     def lateral_stress_in_gwce_is_symmetrical(
-            self,
-            lateral_stress_in_gwce_is_symmetrical
+          self,
+          lateral_stress_in_gwce_is_symmetrical
     ):
         self.__lateral_stress_in_gwce_is_symmetrical = bool(lateral_stress_in_gwce_is_symmetrical)
 
@@ -2015,16 +2015,16 @@ class Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-            self,
-            lateral_stress_in_momentum_is_symmetrical
+          self,
+          lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical)
 
     @lateral_stress_in_momentum_method.setter
     def lateral_stress_in_momentum_method(
-            self,
-            lateral_stress_in_momentum_method
+          self,
+          lateral_stress_in_momentum_method
     ):
         assert lateral_stress_in_momentum_method in [
             '2_part', 'integration_by_parts']

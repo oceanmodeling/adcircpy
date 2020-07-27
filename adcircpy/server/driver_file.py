@@ -1,6 +1,5 @@
 import pathlib
 
-
 from adcircpy.server.slurm import SlurmConfig
 
 

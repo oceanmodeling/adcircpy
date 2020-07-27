@@ -13,11 +13,11 @@ from adcircpy.mesh import UnstructuredMesh
 class ElevationSurface(UnstructuredMesh):
 
     def __init__(
-            self,
-            vertices,
-            elements,
-            zeta,
-            crs=None,
+          self,
+          vertices,
+          elements,
+          zeta,
+          crs=None,
     ):
         super().__init__(vertices, elements, crs)
         self._zeta = zeta
@@ -92,19 +92,19 @@ class ElevationSurface(UnstructuredMesh):
         return anim
 
     def make_plot(
-            self,
-            index,
-            axes=None,
-            vmin=None,
-            vmax=None,
-            cmap='jet',
-            levels=256,
-            show=False,
-            title=None,
-            figsize=None,
-            extent=None,
-            cbar_label=None,
-            **kwargs
+          self,
+          index,
+          axes=None,
+          vmin=None,
+          vmax=None,
+          cmap='jet',
+          levels=256,
+          show=False,
+          title=None,
+          figsize=None,
+          extent=None,
+          cbar_label=None,
+          **kwargs
     ):
         values = self.values[index, :]
         if axes is None:
