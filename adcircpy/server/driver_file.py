@@ -1,6 +1,4 @@
-import os
 import pathlib
-import stat
 
 
 from adcircpy.server.slurm import SlurmConfig

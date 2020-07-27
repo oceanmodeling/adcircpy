@@ -393,10 +393,12 @@ class AdcircRun(Fort15):
             if hotstart:
                 super().write(
                     'hotstart', output_directory / hotstart, overwrite)
-
-        DriverFile(self).write(
-            output_directory / driver
-            )
+        if isinstance(self._server_config, SlurmConfig):
+            driver = self._server_config._filename
+        if driver is not None:
+            DriverFile(self).write(
+                output_directory / driver
+                )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
@@ -627,7 +629,7 @@ class AdcircRun(Fort15):
         return err
 
     def _run_local(self, nproc, outdir, overwrite, coldstart, hotstart):
-        self.write(outdir, overwrite)
+        self.write(outdir, overwrite, driver=None)
         if self.spinup_time.total_seconds() != 0:
             if coldstart:
                 self._run_coldstart(nproc, outdir)

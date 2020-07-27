@@ -15,7 +15,7 @@ class SlurmConfig(BaseServerConfig):
         run_name: str,
         partition: str,
         duration: timedelta,
-        filename: str = None,
+        filename: str = 'slurm.job',
         run_directory: str = '.',
         mail_type: str = None,
         mail_user: str = None,
