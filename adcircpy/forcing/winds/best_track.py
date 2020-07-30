@@ -34,7 +34,7 @@ class BestTrackForcing(WindForcing):
         """
         Important: bbox must be expressed in Mercator projection (EPSG:3395)
         """
-        assert isinstance(bbox, Bbox), f"bbox must be a {Bbox} instance."
+        assert isinstance(bbox, Bbox), f'bbox must be a {Bbox} instance.'
         bbox_pol = Polygon([
             [bbox.xmin, bbox.ymin],
             [bbox.xmax, bbox.ymin],
@@ -48,7 +48,7 @@ class BestTrackForcing(WindForcing):
             records = self._df[self._df['datetime'] == _datetime]
             radii = records['radius_of_last_closed_isobar'].iloc[0]
             radii = 1852. * radii  # convert to meters
-            merc = Proj("EPSG:3395")
+            merc = Proj('EPSG:3395')
             x, y = merc(
                 records['longitude'].iloc[0],
                 records['latitude'].iloc[0])
@@ -193,9 +193,8 @@ class BestTrackForcing(WindForcing):
 
     @property
     def df(self):
-        start_date_mask = self._df["datetime"] >= self.start_date
-        end_date_mask = self._df["datetime"] <= self._file_end_date
-        return self._df[start_date_mask & end_date_mask]
+        return self._df[(self._df['datetime'] >= self.start_date) &
+                        (self._df['datetime'] <= self._file_end_date)]
 
     @property
     def _df(self):
@@ -204,27 +203,27 @@ class BestTrackForcing(WindForcing):
             return self.__df
         except AttributeError:
             data = {
-                "basin"                       : [],
-                "storm_number"                : [],
-                "datetime"                    : [],
-                "record_type"                 : [],
-                "latitude"                    : [],
-                "longitude"                   : [],
-                "max_sustained_wind_speed"    : [],
-                "central_pressure"            : [],
-                "development_level"           : [],
-                "isotach"                     : [],
-                "quadrant"                    : [],
-                "radius_for_NEQ"              : [],
-                "radius_for_SEQ"              : [],
-                "radius_for_SWQ"              : [],
-                "radius_for_NWQ"              : [],
-                "background_pressure"         : [],
-                "radius_of_last_closed_isobar": [],
-                "radius_of_maximum_winds"     : [],
-                "name"                        : [],
-                "direction"                   : [],
-                "speed"                       : []
+                'basin'                       : [],
+                'storm_number'                : [],
+                'datetime'                    : [],
+                'record_type'                 : [],
+                'latitude'                    : [],
+                'longitude'                   : [],
+                'max_sustained_wind_speed'    : [],
+                'central_pressure'            : [],
+                'development_level'           : [],
+                'isotach'                     : [],
+                'quadrant'                    : [],
+                'radius_for_NEQ'              : [],
+                'radius_for_SEQ'              : [],
+                'radius_for_SWQ'              : [],
+                'radius_for_NWQ'              : [],
+                'background_pressure'         : [],
+                'radius_of_last_closed_isobar': [],
+                'radius_of_maximum_winds'     : [],
+                'name'                        : [],
+                'direction'                   : [],
+                'speed'                       : []
             }
             for i, line in enumerate(gzip.GzipFile(fileobj=self.__atcf)):
                 line = line.decode('UTF-8').split(',')
@@ -373,11 +372,8 @@ class BestTrackForcing(WindForcing):
 
     @property
     def WTIMINC(self):
-        WTIMINC = self.start_date.strftime('%Y %m %d %H ')
-        WTIMINC += f'{self.df["storm_number"].iloc[0]} '
-        WTIMINC += f'{self.BLADj} '
-        WTIMINC += f'{self.geofactor}'
-        return WTIMINC
+        return f'{self.start_date:%Y %m %d %H} {self.df["storm_number"].iloc[0]} ' \
+               f'{self.BLADj} {self.geofactor}'
 
     @property
     def BLADj(self):
@@ -416,18 +412,15 @@ class BestTrackForcing(WindForcing):
 
     @property
     def _file_end_date(self):
-        unique_dates = numpy.unique(self._df['datetime'])
-        for date in unique_dates:
+        for date in numpy.unique(self._df['datetime']):
             if date >= self.end_date:
                 return date
 
     @staticmethod
-    def _compute_velocity(data: {}):
-        """
-        Output has units of meters per second.
-        """
+    def _compute_velocity(data: {}) -> {}:
+        """ Output has units of meters per second. """
 
-        merc = Proj("EPSG:3395")
+        merc = Proj('EPSG:3395')
         x, y = merc(data['longitude'], data['latitude'])
         t = data['datetime']
         unique_datetimes = numpy.unique(t)
