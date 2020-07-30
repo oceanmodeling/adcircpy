@@ -6,12 +6,11 @@ import urllib.error
 import urllib.request
 
 # import utm
-from haversine import haversine
 from matplotlib import pyplot
 from matplotlib.transforms import Bbox
 import numpy
 from pandas import DataFrame
-from pyproj import CRS, Geod, Proj, Transformer
+from pyproj import CRS, Proj
 from shapely.geometry import Point, Polygon
 
 from adcircpy.forcing.winds import atcf_id
@@ -156,47 +155,6 @@ class BestTrackForcing(WindForcing):
         self.__end_date = end_date
 
     @property
-    def name(self):
-        return self.df['name'].value_counts()[:].index.tolist()[0]
-
-    @property
-    def basin(self):
-        return self.df['basin'].iloc[0]
-
-    @property
-    def storm_number(self):
-        return self.df['storm_number'].iloc[0]
-
-    @property
-    def year(self):
-        return self.df['datetime'].iloc[0].year
-
-    @property
-    def datetime(self):
-        return self.df['datetime']
-
-    @property
-    def speed(self):
-        return self.df['speed']
-
-    @property
-    def direction(self):
-        return self.df['direction']
-
-    @property
-    def longitude(self):
-        return self.df['longitude']
-
-    @property
-    def latitude(self):
-        return self.df['latitude']
-
-    @property
-    def df(self):
-        return self._df[(self._df['datetime'] >= self.start_date) &
-                        (self._df['datetime'] <= self._file_end_date)]
-
-    @property
     def _df(self):
         # https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt
         try:
@@ -306,7 +264,7 @@ class BestTrackForcing(WindForcing):
                 background_pressure = ''
             row['background_pressure'] = background_pressure
 
-            row.extend([
+            output_row = [
                 # BASIN - basin, e.g. WP, IO, SH, CP, EP, AL, SL
                 f'{row["basin"]:<2}',
                 # CY - annual cyclone number: 1 through 99
@@ -365,9 +323,8 @@ class BestTrackForcing(WindForcing):
                 f'{row["name"]:^12}',
                 # from this point forwards it's all aswip
                 f'{record_number[i]:>4}'
-            ])
-            row = ','.join(row)
-            fort22 += f'{row}\n'
+            ]
+            fort22 += f'{",".join(output_row)}\n'
         return fort22
 
     @property
@@ -409,53 +366,3 @@ class BestTrackForcing(WindForcing):
             else:
                 record_number.append(record_number[-1] + 1)
         return record_number
-
-    @property
-    def _file_end_date(self):
-        for date in numpy.unique(self._df['datetime']):
-            if date >= self.end_date:
-                return date
-
-    @staticmethod
-    def _compute_velocity(data: {}) -> {}:
-        """ Output has units of meters per second. """
-
-        merc = Proj('EPSG:3395')
-        x, y = merc(data['longitude'], data['latitude'])
-        t = data['datetime']
-        unique_datetimes = numpy.unique(t)
-        for i, _datetime in enumerate(unique_datetimes):
-            indexes, = numpy.where(numpy.asarray(t) == _datetime)
-            for idx in indexes:
-                if indexes[-1] + 1 < len(t):
-                    dx = haversine((y[idx], x[indexes[-1] + 1]), (y[idx], x[idx]), unit='nmi')
-                    dy = haversine((y[indexes[-1] + 1], x[idx]), (y[idx], x[idx]), unit='nmi')
-                    dt = ((t[indexes[-1] + 1] - t[idx]) / timedelta(hours=1))
-                    vx = numpy.copysign(dx / dt, x[indexes[-1] + 1] - x[idx])
-                    vy = numpy.copysign(dy / dt, y[indexes[-1] + 1] - y[idx])
-                else:
-                    dx = haversine((y[idx], x[indexes[0] - 1]), (y[idx], x[idx]), unit='nmi')
-                    dy = haversine((y[indexes[0] - 1], x[idx]), (y[idx], x[idx]), unit='nmi')
-                    dt = ((t[idx] - t[indexes[0] - 1]) / timedelta(hours=1))
-                    vx = numpy.copysign(dx / dt, x[idx] - x[indexes[0] - 1])
-                    vy = numpy.copysign(dy / dt, y[idx] - y[indexes[0] - 1])
-                speed = numpy.sqrt(dx ** 2 + dy ** 2) / dt
-                bearing = (360. + numpy.rad2deg(numpy.arctan2(vx, vy))) % 360
-                data['speed'].append(int(numpy.around(speed, 0)))
-                data['direction'].append(int(numpy.around(bearing, 0)))
-        return data
-
-
-def ellipsoidal_distance(point_a: (float, float), point_b: (float, float), crs_a: CRS,
-                         crs_b: CRS = None) -> float:
-    if isinstance(point_a, Point):
-        point_a = [*point_a.coords]
-    if isinstance(point_b, Point):
-        point_b = [*point_b.coords]
-    if crs_b is not None:
-        transformer = Transformer.from_crs(crs_b, crs_a)
-        point_b = transformer.transform(*point_b)
-    datum_json = crs_a.datum.to_json_dict()
-    ellipsoid = Geod(a=datum_json['ellipsoid']['semi_major_axis'],
-                     rf=datum_json['ellipsoid']['inverse_flattening'])
-    return ellipsoid.inv(point_a[0], point_a[1], point_b[0], point_b[1])[2]
