@@ -280,50 +280,95 @@ class BestTrackForcing(WindForcing):
         record_number = self._generate_record_numbers()
         fort22 = ''
         for i, (_, row) in enumerate(self.df.iterrows()):
-            fort22 += f'{row["basin"]:<2},'
-            fort22 += f'{row["storm_number"]:>3},'
-            fort22 += f'{format(row["datetime"], "%Y%m%d%H"):>11},'
-            fort22 += f'{"":3},'
-            fort22 += f'{row["record_type"]:>5},'
-            fort22 += f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4},'
-            if row["latitude"] >= 0:
-                fort22 += f'{int(row["latitude"] / 0.1):>4}N,'
+            longitude = row['longitude']
+            latitude = row['latitude']
+            if longitude >= 0:
+                longitude = f'{int(longitude / 0.1):>5}E'
             else:
-                fort22 += f'{int(row["latitude"] / -0.1):>4}S,'
-            if row["longitude"] >= 0:
-                fort22 += f'{int(row["longitude"] / 0.1):>5}E,'
+                longitude = f'{int(longitude / -0.1):>5}W'
+            if latitude >= 0:
+                latitude = f'{int(latitude / 0.1):>4}N'
             else:
-                fort22 += f'{int(row["longitude"] / -0.1):>5}W,'
-            fort22 += f'{int(row["max_sustained_wind_speed"]):>4},'
-            fort22 += f'{int(row["central_pressure"]):>5},'
-            fort22 += f'{row["development_level"]:>3},'
-            fort22 += f'{int(row["isotach"]):>4},'
-            fort22 += f'{row["quadrant"]:>4},'
-            fort22 += f'{int(row["radius_for_NEQ"]):>5},'
-            fort22 += f'{int(row["radius_for_SEQ"]):>5},'
-            fort22 += f'{int(row["radius_for_SWQ"]):>5},'
-            fort22 += f'{int(row["radius_for_NWQ"]):>5},'
-            if row["background_pressure"] is None:
-                row["background_pressure"] = self.df["background_pressure"].iloc[i - 1]
-            if row["background_pressure"] <= row["central_pressure"] < 1013:
-                fort22 += f'{1013:>5},'
-            elif row["background_pressure"] <= row["central_pressure"] >= 1013:
-                fort22 += f'{int(row["central_pressure"] + 1):>5},'
+                latitude = f'{int(latitude / -0.1):>4}S'
+            row['longitude'] = longitude
+            row['latitude'] = latitude
+
+            background_pressure = row['background_pressure']
+            if background_pressure is None:
+                background_pressure = self.df['background_pressure'].iloc[i - 1]
+            if background_pressure is not None:
+                if background_pressure <= row['central_pressure'] < 1013:
+                    background_pressure = 1013
+                elif background_pressure <= row['central_pressure'] >= 1013:
+                    background_pressure = int(row['central_pressure'] + 1)
+                else:
+                    background_pressure = int(row['background_pressure'])
             else:
-                fort22 += f'{int(row["background_pressure"]):>5},'
-            fort22 += f'{int(row["radius_of_last_closed_isobar"]):>5},'
-            fort22 += f'{int(row["radius_of_maximum_winds"]):>4},'
-            fort22 += f'{"":>5},'  # gust
-            fort22 += f'{"":>4},'  # eye
-            fort22 += f'{"":>4},'  # subregion
-            fort22 += f'{"":>4},'  # maxseas
-            fort22 += f'{"":>4},'  # initials
-            fort22 += f'{row["direction"]:>3},'
-            fort22 += f'{row["speed"]:>4},'
-            fort22 += f'{row["name"]:^12},'
-            # from this point forwards it's all aswip
-            fort22 += f'{record_number[i]:>4},'
-            fort22 += '\n'
+                background_pressure = ''
+            row['background_pressure'] = background_pressure
+
+            row.extend([
+                # BASIN - basin, e.g. WP, IO, SH, CP, EP, AL, SL
+                f'{row["basin"]:<2}',
+                # CY - annual cyclone number: 1 through 99
+                f'{row["storm_number"]:>3}',
+                # YYYYMMDDHH - Warning Date-Time-Group: 0000010100 through 9999123123. (note, 4 digit year)
+                f'{format(row["datetime"], "%Y%m%d%H"):>11}',
+                # TECHNUM/MIN - objective technique sorting number, minutes for best track: 00 - 99
+                f'{"":3}',
+                # TECH - acronym for each objective technique or CARQ or WRNG, BEST for best track.
+                f'{row["record_type"]:>5}',
+                # TAU - forecast period: -24 through 240 hours, 0 for best-track, negative taus used for CARQ and WRNG records.
+                f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4}',
+                # LatN/S - Latitude (tenths of degrees) for the DTG: 0 through 900, N/S is the hemispheric index.
+                f'{latitude:>5}',
+                # LonE/W - Longitude (tenths of degrees) for the DTG: 0 through 1800, E/W is the hemispheric index.
+                f'{longitude:>5}',
+                # VMAX - Maximum sustained wind speed in knots: 0 through 300.
+                f'{int(row["max_sustained_wind_speed"]):>4}',
+                # MSLP - Minimum sea level pressure, 1 through 1100 MB.
+                f'{int(row["central_pressure"]):>5}',
+                # TY - Level of tc development:
+                f'{row["development_level"] if row["development_level"] is not None else "":>3}',
+                # RAD - Wind intensity (kts) for the radii defined in this record: 34, 50, 64.
+                f'{int(row["isotach"]) if row["isotach"] is not None else "":>4}',
+                # WINDCODE - Radius code: AAA - full circle, QQQ - quadrant (NNQ, NEQ, EEQ, SEQ, SSQ, SWQ, WWQ, NWQ)
+                f'{row["quadrant"] if row["quadrant"] is not None else "":>4}',
+                # RAD1 - If full circle, radius of specified wind intensity, If semicircle or quadrant, radius of specified wind intensity of circle portion specified in radius code. 0 - 1200 nm.
+                f'{int(row["radius_for_NEQ"]) if row["radius_for_NEQ"] is not None else "":>5}',
+                # RAD2 - If full circle this field not used, If semicicle, radius (nm) of specified wind intensity for semicircle not specified in radius code, If quadrant, radius (nm) of specified wind intensity for 2nd quadrant (counting clockwise from quadrant specified in radius code). 0 through 1200 nm.
+                f'{int(row["radius_for_SEQ"]) if row["radius_for_SEQ"] is not None else "":>5}',
+                # RAD3 - If full circle or semicircle this field not used, If quadrant, radius (nm) of specified wind intensity for 3rd quadrant (counting clockwise from quadrant specified in radius code). 0 through 1200 nm.
+                f'{int(row["radius_for_SWQ"]) if row["radius_for_SWQ"] is not None else "":>5}',
+                # RAD4 - If full circle or semicircle this field not used, If quadrant, radius (nm) of specified wind intensity for 4th quadrant (counting clockwise from quadrant specified in radius code). 0 through 1200 nm.
+                f'{int(row["radius_for_NWQ"]) if row["radius_for_NWQ"] is not None else "":>5}',
+                # RADP - pressure in millibars of the last closed isobar, 900 - 1050 mb.
+                f'{row["background_pressure"]:>5}',
+                # RRP - radius of the last closed isobar in nm, 0 - 9999 nm.
+                f'{int(row["radius_of_last_closed_isobar"]) if row["radius_of_last_closed_isobar"] is not None else "":>5}',
+                # MRD - radius of max winds, 0 - 999 nm.
+                f'{int(row["radius_of_maximum_winds"]) if row["radius_of_maximum_winds"] is not None else "":>4}'
+                # GUSTS - gusts, 0 through 995 kts.
+                f'{"":>5}',
+                # EYE - eye diameter, 0 through 999 nm.
+                f'{"":>4}',
+                # SUBREGION - subregion code: W, A, B, S, P, C, E, L, Q.
+                f'{"":>4}',
+                # MAXSEAS - max seas: 0 through 999 ft.
+                f'{"":>4}',
+                # INITIALS - Forecaster's initials, used for tau 0 WRNG, up to 3 chars.
+                f'{"":>4}',
+                # DIR - storm direction in compass coordinates, 0 - 359 degrees.
+                f'{row["direction"] if row["direction"] is not None else "":>3}',
+                # SPEED - storm speed, 0 - 999 kts.
+                f'{row["speed"]:>4}',
+                # STORMNAME - literal storm name, NONAME or INVEST. TCcyx used pre-1999, where:
+                f'{row["name"]:^12}',
+                # from this point forwards it's all aswip
+                f'{record_number[i]:>4}'
+            ])
+            row = ','.join(row)
+            fort22 += f'{row}\n'
         return fort22
 
     @property
