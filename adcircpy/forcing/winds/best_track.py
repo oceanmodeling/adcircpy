@@ -95,6 +95,18 @@ class BestTrackForcing(WindForcing):
             f.write(self.fort22)
 
     @property
+    def NWS(self):
+        try:
+            return self.__nws
+        except AttributeError:
+            return 20
+
+    @NWS.setter
+    def NWS(self, nws: int):
+        assert nws in [19, 20]
+        self.__nws = int(nws)
+
+    @property
     def storm_id(self):
         return self._storm_id
 

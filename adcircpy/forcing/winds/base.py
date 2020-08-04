@@ -11,7 +11,10 @@ class WindForcing:
         self.start_date = start_date
         self.end_date = end_date
         self.NWS = nws
-        self.crs = crs
+
+        if not isinstance(crs, CRS):
+            crs = CRS.from_user_input(crs)
+        self.__crs = crs
 
     @property
     def name(self):
@@ -48,6 +51,10 @@ class WindForcing:
     @property
     def latitude(self):
         return self.df['latitude']
+
+    @property
+    def crs(self):
+        return self.__crs
 
     @property
     def df(self):
@@ -110,7 +117,6 @@ class WindForcing:
 
     @NWS.setter
     def NWS(self, nws: int):
-        assert nws in [19, 20]
         self.__nws = int(nws)
 
     @property
