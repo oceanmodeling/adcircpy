@@ -32,11 +32,11 @@ This program exposes a few commands available from the command line interface. Y
 
 #### Command line examples:
 ##### Hurricane Sandy (AL182012)
-To create the ADCIRC input files includes both tides and storm data for Hurricane Sandy (AL182012):
+To create the ADCIRC input files includes both tides and storm data for Hurricane Sandy:
 ```bash
 best_track_run \
     /path/to/your/fort.14 \
-    AL182012 \
+    Sandy2012 \
     --fort13=/path/to/your/fort.13 \
     --crs=EPSG:4326 \
     --output-directory=/path/where/you/want/the/files \
