@@ -22,13 +22,13 @@ from adcircpy.mesh.figures import _figure as _fig
 
 class EuclideanMesh2D:
     def __init__(
-        self,
-        coords,
-        triangles=None,
-        quads=None,
-        values=None,
-        crs=None,
-        description=None,
+          self,
+          coords,
+          triangles=None,
+          quads=None,
+          values=None,
+          crs=None,
+          description=None,
     ):
         self._coords = coords
         self._triangles = triangles
@@ -58,7 +58,7 @@ class EuclideanMesh2D:
     @classmethod
     def open_grd(cls, path, crs=None):
         grid = grd.reader(path)
-        grid.update({"crs": crs})
+        grid.update({'crs': crs})
         return cls.from_grd(grid)
 
     @classmethod
@@ -75,8 +75,8 @@ class EuclideanMesh2D:
     def write(self, path, overwrite=False, fmt='gr3'):
         path = pathlib.Path(path)
         if path.is_file() and not overwrite:
-            raise IOError(
-                'File exists, use overwrite=True to allow overwrite.')
+            raise IOError('File exists, '
+                          'use overwrite=True to allow overwrite.')
         with open(path, 'w') as f:
             f.write(self.ascii_string(fmt))
 
@@ -86,7 +86,7 @@ class EuclideanMesh2D:
         elif fmt.lower() in ['sms', '2dm']:
             return self.sms2dm
         else:
-            raise IOError(f"File format {fmt} not recognized.")
+            raise IOError(f'File format {fmt} not recognized.')
 
     def get_xy(self, crs=None):
         if crs is not None:
@@ -132,8 +132,8 @@ class EuclideanMesh2D:
 
     @_coords.setter
     def _coords(self, coords):
-        msg = "coord argument must be a dictionary of the form "
-        msg += "\\{coord_id:  (x, y)\\}"
+        msg = 'coord argument must be a dictionary of the form ' \
+              '\\{coord_id:  (x, y)\\}'
         assert isinstance(coords, Mapping), msg
         for coord in coords.values():
             assert len(coord) == 2, msg
@@ -157,9 +157,8 @@ class EuclideanMesh2D:
 
     def add_attribute(self, name, **properties):
         if self.has_attribute(name):
-            raise AttributeError(
-                'Non-unique attribute name: '
-                + 'Attribute attribute name already exists.')
+            raise AttributeError('Non-unique attribute name: '
+                                 'Attribute attribute name already exists.')
         else:
             self._attributes[name] = {'values': None, 'properties': None}
             self._attributes[name].update(properties)
@@ -168,7 +167,7 @@ class EuclideanMesh2D:
         if name not in self.get_attribute_names():
             raise AttributeError(f'Cannot set attribute: '
                                  f'{name} is not an attribute.')
-        assert values is not None, "values cannot be None"
+        assert values is not None, 'values cannot be None'
         values = np.array(values)
         assert isinstance(elements, bool)
         if elements:
@@ -204,8 +203,8 @@ class EuclideanMesh2D:
         if name in self.get_attribute_names():
             self._attributes.pop(name)
         else:
-            raise AttributeError(
-                'Cannot remove attribute: attribute does not exist.')
+            raise AttributeError('Cannot remove attribute: '
+                                 'attribute does not exist.')
 
     @property
     @lru_cache(maxsize=None)
@@ -232,8 +231,8 @@ class EuclideanMesh2D:
             elif len(values.shape) == 3:
                 assert values.shape[1] == self.coords.shape[0]
             else:
-                msg = f"input values has invalid shape: {values.shape}"
-                raise Exception(msg)
+                raise Exception(f'input values has invalid shape: '
+                                f'{values.shape}')
         else:
             values = np.full(self.coords.shape[0], np.nan)
         self.__values = values
@@ -278,7 +277,7 @@ class EuclideanMesh2D:
     @property
     @lru_cache(maxsize=None)
     def node_distances_meters(self):
-        points = self.get_xy("EPSG:4326")
+        points = self.get_xy('EPSG:4326')
         node_distances = {}
         for k, v in self.node_neighbors.items():
             x0, y0 = points[k]
@@ -388,11 +387,11 @@ class EuclideanMesh2D:
     def _grd(self):
         description = self.description
         if self.crs is not None and self.crs.srs not in description:
-            description += f"; {self.crs.srs}"
+            description += f'; {self.crs.srs}'
         return {
-            "nodes"      : self._nodes,
-            "elements"   : self._elements,
-            "description": description,
+            'nodes'      : self._nodes,
+            'elements'   : self._elements,
+            'description': description,
         }
 
     @property
@@ -404,11 +403,11 @@ class EuclideanMesh2D:
     def _sms2dm(self):
         description = self.description
         if self.crs is not None:
-            description += f"; {self.crs.srs}"
+            description += f'; {self.crs.srs}'
         return {
-            "ND" : self._nodes,
-            "E3T": self._triangles,
-            "E4Q": self._quads,
+            'ND' : self._nodes,
+            'E3T': self._triangles,
+            'E4Q': self._quads,
         }
 
     @property
@@ -439,7 +438,7 @@ class EuclideanMesh2D:
     def _triangles(self, triangles):
         if triangles is None:
             triangles = {}
-        self._certify_input_geom("triangles", triangles)
+        self._certify_input_geom('triangles', triangles)
         self.__triangles = triangles
 
     @property
@@ -465,7 +464,7 @@ class EuclideanMesh2D:
     def _quads(self, quads):
         if quads is None:
             quads = {}
-        self._certify_input_geom("quads", quads)
+        self._certify_input_geom('quads', quads)
         self.__quads = quads
 
     @property
@@ -510,8 +509,7 @@ class EuclideanMesh2D:
                     potential_interiors.append(i)
             # filter out nested rings
             real_interiors = list()
-            for i, p_interior in reversed(
-                list(enumerate(potential_interiors))):
+            for i, p_interior in reversed(list(enumerate(potential_interiors))):
                 _p_interior = index_ring_collection[p_interior]
                 check = [index_ring_collection[_]
                          for j, _ in
@@ -562,17 +560,17 @@ class EuclideanMesh2D:
 
     def _certify_input_geom(self, geom_type, geom):
         geom_types = {
-            "triangles": 3,
-            "quads"    : 4,
+            'triangles': 3,
+            'quads'    : 4,
         }
         _geom = np.asarray(list(geom.values()))
         if len(_geom) > 0:
-            msg = f'Invalid shape for geom {_geom.shape}.'
-            assert _geom.shape[1] == geom_types[geom_type], msg
-            msg = f"{geom_type} members must be a subset of coords keys"
+            assert _geom.shape[1] == geom_types[geom_type], \
+                f'Invalid shape for geom {_geom.shape}.'
             for IDtags in geom.values():
                 for IDtag in IDtags:
-                    assert IDtag in self.coords_id, msg
+                    assert IDtag in self.coords_id, \
+                        f'{geom_type} members must be a subset of coords keys'
 
     @property
     @lru_cache(maxsize=None)
@@ -646,13 +644,13 @@ class EuclideanMesh2D:
 
     @_fig
     def triplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        linewidth=0.07,
-        color='black',
-        **kwargs
+          self,
+          axes=None,
+          show=False,
+          figsize=None,
+          linewidth=0.07,
+          color='black',
+          **kwargs
     ):
         if len(self.triangles) > 0:
             kwargs.update({'linewidth': linewidth})
@@ -664,14 +662,14 @@ class EuclideanMesh2D:
 
     @_fig
     def quadplot(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        facecolor='none',
-        edgecolor='k',
-        linewidth=0.07,
-        **kwargs
+          self,
+          axes=None,
+          show=False,
+          figsize=None,
+          facecolor='none',
+          edgecolor='k',
+          linewidth=0.07,
+          **kwargs
     ):
         if len(self.quads) > 0:
             pc = PolyCollection(
@@ -687,11 +685,11 @@ class EuclideanMesh2D:
 
     @_fig
     def quadface(
-        self,
-        axes=None,
-        show=False,
-        figsize=None,
-        **kwargs
+          self,
+          axes=None,
+          show=False,
+          figsize=None,
+          **kwargs
     ):
         if len(self.quad4) > 0:
             pc = PolyCollection(

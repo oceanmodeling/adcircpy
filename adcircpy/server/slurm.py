@@ -9,20 +9,20 @@ class SlurmConfig(BaseServerConfig):
     """
 
     def __init__(
-        self,
-        account: str,
-        slurm_ntasks: int,
-        run_name: str,
-        partition: str,
-        duration: timedelta,
-        filename: str = 'slurm.job',
-        run_directory: str = '.',
-        mail_type: str = None,
-        mail_user: str = None,
-        log_filename: str = None,
-        modules: [str] = None,
-        path_prefix: str = None,
-        extra_commands: [str] = None,
+          self,
+          account: str,
+          slurm_ntasks: int,
+          run_name: str,
+          partition: str,
+          duration: timedelta,
+          filename: str = 'slurm.job',
+          run_directory: str = '.',
+          mail_type: str = None,
+          mail_user: str = None,
+          log_filename: str = None,
+          modules: [str] = None,
+          path_prefix: str = None,
+          extra_commands: [str] = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
@@ -72,31 +72,31 @@ class SlurmConfig(BaseServerConfig):
 
     @property
     def _prefix(self):
-        f = ''
-        f += f'#SBATCH -D {self._run_directory}\n'
-        f += f'#SBATCH -J {self._run_name}\n'
-        f += f'#SBATCH -A {self._account}\n'
+        f = f'#SBATCH -D {self._run_directory}\n' \
+            f'#SBATCH -J {self._run_name}\n' \
+            f'#SBATCH -A {self._account}\n'
         if self._mail_type is not None:
             f += f'#SBATCH --mail-type={self._mail_type}\n'
         if self._mail_user is not None:
             f += f'#SBATCH --mail-user={self._mail_user}\n'
         if self._log_filename is not None:
             f += f'#SBATCH --output={self._log_filename}\n'
-        f += f'#SBATCH -n {self._slurm_ntasks}\n'
-        f += f'#SBATCH --time={self._duration}\n'
-        f += f'#SBATCH --partition={self._partition}\n'
-        f += '\nset -e\n'
+        f += f'#SBATCH -n {self._slurm_ntasks}\n' \
+             f'#SBATCH --time={self._duration}\n' \
+             f'#SBATCH --partition={self._partition}\n' \
+             f'\n' \
+             f'set -e\n'
 
         if self._modules is not None:
-            f += '\n'
-            f += f'module load {" ".join(module for module in self._modules)}\n'
+            f += f'\n' \
+                 f'module load {" ".join(module for module in self._modules)}\n'
 
         if self._path_prefix is not None:
-            f += '\n'
-            f += f'PATH={self._path_prefix}:$PATH\n'
+            f += f'\n' \
+                 f'PATH={self._path_prefix}:$PATH\n'
 
         if self._extra_commands is not None:
-            f += '\n'
+            f += f'\n'
             for command in self._extra_commands:
                 f += f'{command}\n'
 
