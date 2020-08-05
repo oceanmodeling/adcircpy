@@ -26,7 +26,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ matrix.os }}-python-${{ matrix.python-version }}-conda-${{ hashFiles('environment.yml') }}
+          key: ${{ runner.os }}-python-${{ runner.python-version }}-conda-${{ hashFiles('environment.yml') }}
 
       - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
