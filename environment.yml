@@ -1,6 +1,7 @@
 name: adcircpy
 dependencies:
   - bs4
+  - fiona
   - matplotlib
   - netcdf4
   - numpy

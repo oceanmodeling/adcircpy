@@ -26,12 +26,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: conda-${{ matrix.os }}-python-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
+          key: ${{ matrix.os }}-python-${{ matrix.python-version }}-conda-${{ hashFiles('environment.yml') }}
 
       - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
         with:
-          auto-update-conda: true
           auto-activate-base: false
           activate-environment: adcircpy
           python-version: ${{ matrix.python-version }}
