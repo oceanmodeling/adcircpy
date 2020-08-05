@@ -18,6 +18,7 @@ dependencies:
       - coverage
       - coverage-badge
       - eventlet
+      - flake8
       - haversine
       - nose
       - ordered-set
