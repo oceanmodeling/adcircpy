@@ -24,10 +24,9 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
 
-      - name: Conda info / list
+      - name: conda list
         shell: bash -l {0}
-        run: |
-          conda info
-          conda list
+        run: conda list
 
