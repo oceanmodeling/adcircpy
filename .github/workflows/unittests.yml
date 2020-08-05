@@ -36,5 +36,5 @@ jobs:
           activate-environment: adcircpy
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
-        args:
-          - pytest
+          args:
+            - pytest
