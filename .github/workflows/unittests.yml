@@ -18,18 +18,18 @@ jobs:
     # steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # checkout repository to $GITHUB_WORKSPACE
-      - name: checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       # cache conda packages in local directory
-      - name: cache conda packages
+      - name: Cache conda packages
         uses: actions/cache@v1
         with:
           path: ~/conda_pkgs_dir
           key: conda-${{ matrix.os }}-python-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
 
       # create conda environment
-      - name: setup miniconda
+      - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
@@ -39,6 +39,6 @@ jobs:
           environment-file: environment.yml
 
       # run coverage on nosetests
-      - name: coverage
+      - name: Run coverage on nosetests
         shell: bash
         run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m
