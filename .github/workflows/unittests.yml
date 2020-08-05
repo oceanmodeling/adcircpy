@@ -31,12 +31,12 @@ jobs:
       # create conda environment
       - name: setup miniconda
         uses: goanpeca/setup-miniconda@v1
-          with:
-            auto-update-conda: true
-            auto-activate-base: false
-            activate-environment: adcircpy
-            python-version: ${{ matrix.python-version }}
-            environment-file: environment.yml
+        with:
+          auto-update-conda: true
+          auto-activate-base: false
+          activate-environment: adcircpy
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
 
       # run coverage on nosetests
       - name: coverage
