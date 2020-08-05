@@ -5,9 +5,8 @@ on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   test:
-    # run matrix
+    # run python versions on operating systems
     name: unittest (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -16,18 +15,28 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.8", "3.7"]
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # checkout repository to $GITHUB_WORKSPACE
-      - uses: actions/checkout@v2
+      - name: checkout
+        uses: actions/checkout@v2
+
+      # cache conda packages in local directory
+      - name: cache conda packages
+        uses: actions/cache@v1
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ matrix.os }}-python-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
 
       # create conda environment
-      - uses: goanpeca/setup-miniconda@v1
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          environment-file: environment.yml
-          activate-environment: adcircpy
+      - name: setup miniconda
+        uses: goanpeca/setup-miniconda@v1
+          with:
+            auto-update-conda: true
+            auto-activate-base: false
+            activate-environment: adcircpy
+            python-version: ${{ matrix.python-version }}
+            environment-file: environment.yml
 
       # run coverage on nosetests
       - name: coverage
