@@ -23,13 +23,10 @@ jobs:
 
         # cache conda packages in local directory
       - name: Cache conda packages
-        uses: actions/cache@v1
-        env:
-          # Increase this value to reset cache if environment.yml has not changed
-          CACHE_NUMBER: 0
+        uses: actions/cache@v2
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ matrix.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
+          key: conda-${{ matrix.os }}-python-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
 
       - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
