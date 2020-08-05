@@ -41,4 +41,7 @@ jobs:
       # run coverage on nosetests
       - name: Run coverage on nosetests
         shell: bash
-        run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m
+        run: |
+          pip install coverage
+          coverage run --source adcircpy -m nose --nologcapture --verbose
+          coverage report -m
