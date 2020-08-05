@@ -21,14 +21,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # cache conda packages in local directory
+        # cache conda packages in local directory
       - name: Cache conda packages
         uses: actions/cache@v1
         with:
           path: ~/conda_pkgs_dir
           key: conda-${{ matrix.os }}-python-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
 
-      # create conda environment
       - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
         with:
@@ -38,10 +37,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
 
-      # run coverage on nosetests
-      - name: Run coverage on nosetests
-        shell: bash
+      - name: Install development dependencies
+        run: pip install flake8 pytest pytest-cov
+
+      - name: Lint with flake8
         run: |
-          pip install coverage
-          coverage run --source adcircpy -m nose --nologcapture --verbose
-          coverage report -m
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Test with pytest
+        run: pytest --cov=adcircpy tests/
