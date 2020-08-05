@@ -29,8 +29,9 @@ jobs:
           environment-file: environment.yml
           activate-environment: adcircpy
 
-      # list packages in environment
-      - name: conda list
-        shell: bash -l {0}
-        run: conda list
+      # run coverage on nosetests
+      - name: coverage
+        shell: bash
+        run: coverage run --source adcircpy -m nose --rednose --nologcapture --verbose && coverage report -m && coverage-badge -f -o tests/coverage.svg && rm -rf .coverage
+
 
