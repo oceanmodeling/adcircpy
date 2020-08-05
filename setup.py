@@ -15,7 +15,6 @@ setuptools.setup(
     url=meta['url'],
     packages=setuptools.find_packages(),
     python_requires='>=3.6',
-    setup_requires='setuptools>=41.2',
     install_requires=[
         'matplotlib',
         'netCDF4',
@@ -36,7 +35,6 @@ setuptools.setup(
         'shapely',
         'paramiko',
         'fiona',
-        'cartopy',
         'wget',
         'tropycal',
         # test and development dependencies
