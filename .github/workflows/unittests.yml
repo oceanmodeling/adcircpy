@@ -29,14 +29,7 @@ jobs:
           environment-file: environment.yml
           activate-environment: adcircpy
 
-      #      # run coverage on nosetests
-      #      - name: coverage
-      #        shell: bash
-      #        run: coverage run --source adcircpy -m nose --rednose --nologcapture --verbose && coverage report -m && coverage-badge -f -o tests/coverage.svg && rm -rf .coverage
-
-      # nosetests
-      - name: nosetests
+      # run coverage on nosetests
+      - name: coverage
         shell: bash
-        run: nose --rednose --nologcapture --verbose
-
-
+        run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m
