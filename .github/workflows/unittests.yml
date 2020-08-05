@@ -7,7 +7,7 @@ on: [push, pull_request]
 jobs:
   # This workflow contains a single job called "build"
   test:
-    # The type of runner that the job will run on
+    # run matrix
     name: unittest (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -18,14 +18,18 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # checkout repository to $GITHUB_WORKSPACE
       - uses: actions/checkout@v2
+
+      # create conda environment
       - uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
+          auto-activate-base: false
 
+      # list packages in environment
       - name: conda list
         shell: bash -l {0}
         run: conda list
