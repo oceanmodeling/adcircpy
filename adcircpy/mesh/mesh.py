@@ -33,10 +33,10 @@ class AdcircMesh(EuclideanMesh2D):
         self._nodes = nodes
         self._elements = elements
         super().__init__(**grd.euclidean_mesh({
-            'nodes'      : self._nodes,
-            'elements'   : self._elements,
+            'nodes': self._nodes,
+            'elements': self._elements,
             'description': description,
-            'crs'        : crs
+            'crs': crs
         }))
         self._boundaries = boundaries
 
@@ -79,9 +79,9 @@ class AdcircMesh(EuclideanMesh2D):
               driver='ESRI Shapefile',
               crs=self.crs.srs,
               schema={
-                  'geometry'  : 'LineString',
+                  'geometry': 'LineString',
                   'properties': {
-                      'id'    : 'int',
+                      'id': 'int',
                       'ibtype': 'str',
                       'bnd_id': 'str'
                   }}) as dst:
