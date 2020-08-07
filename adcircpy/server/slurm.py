@@ -17,6 +17,7 @@ class SlurmConfig(BaseServerConfig):
           duration: timedelta,
           filename: str = 'slurm.job',
           run_directory: str = '.',
+          tasks_per_node: int = None,
           mail_type: str = None,
           mail_user: str = None,
           log_filename: str = None,
@@ -48,6 +49,7 @@ class SlurmConfig(BaseServerConfig):
         self._duration = duration
         self._filename = filename
         self._run_directory = run_directory
+        self._tasks_per_node = tasks_per_node
         self._mail_type = mail_type
         self._mail_user = mail_user
         self._log_filename = log_filename
@@ -84,8 +86,11 @@ class SlurmConfig(BaseServerConfig):
         if self._log_filename is not None:
             f += f'#SBATCH --output={self._log_filename}\n'
 
-        f += f'#SBATCH -n {self._slurm_ntasks}\n' \
-             f'#SBATCH --time={self._duration}\n' \
+        f += f'#SBATCH -n {self._slurm_ntasks}\n'
+        if self._tasks_per_node is not None:
+            f += f'#SBATCH -N {self._tasks_per_node}\n'
+
+        f += f'#SBATCH --time={self._duration}\n' \
              f'#SBATCH --partition={self._partition}\n' \
              f'\n' \
              f'set -e\n'
