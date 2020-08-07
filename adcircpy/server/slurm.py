@@ -73,14 +73,17 @@ class SlurmConfig(BaseServerConfig):
     @property
     def _prefix(self):
         f = f'#SBATCH -D {self._run_directory}\n' \
-            f'#SBATCH -J {self._run_name}\n' \
-            f'#SBATCH -A {self._account}\n'
+            f'#SBATCH -J {self._run_name}\n'
+
+        if self._account is not None:
+            f += f'#SBATCH -A {self._account}\n'
         if self._mail_type is not None:
             f += f'#SBATCH --mail-type={self._mail_type}\n'
         if self._mail_user is not None:
             f += f'#SBATCH --mail-user={self._mail_user}\n'
         if self._log_filename is not None:
             f += f'#SBATCH --output={self._log_filename}\n'
+
         f += f'#SBATCH -n {self._slurm_ntasks}\n' \
              f'#SBATCH --time={self._duration}\n' \
              f'#SBATCH --partition={self._partition}\n' \
@@ -90,11 +93,9 @@ class SlurmConfig(BaseServerConfig):
         if self._modules is not None:
             f += f'\n' \
                  f'module load {" ".join(module for module in self._modules)}\n'
-
         if self._path_prefix is not None:
             f += f'\n' \
                  f'PATH={self._path_prefix}:$PATH\n'
-
         if self._extra_commands is not None:
             f += f'\n'
             for command in self._extra_commands:
