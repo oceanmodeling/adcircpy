@@ -9,10 +9,10 @@ import uuid
 
 import paramiko
 
-from adcircpy.server.base_config import BaseServerConfig
+from adcircpy.server._base_config import _BaseServerConfig
 
 
-class ServerConfig(BaseServerConfig):
+class SSHConfig(_BaseServerConfig):
     """
     This class is used for configuring the server
     """

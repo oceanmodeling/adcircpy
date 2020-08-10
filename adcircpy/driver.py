@@ -12,15 +12,14 @@ import numpy as np
 from psutil import cpu_count
 
 from adcircpy.mesh import AdcircMesh
-from adcircpy.fort15 import Fort15
+from adcircpy._fort15 import _Fort15
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.outputs.collection import OutputCollection
-from adcircpy.server.driver_file import DriverFile
-from adcircpy.server.config import ServerConfig
-from adcircpy.server.slurm import SlurmConfig
+from adcircpy.server._driver_file import _DriverFile
+from adcircpy.server import SSHConfig, SlurmConfig
 
 
-class AdcircRun(Fort15):
+class AdcircRun(_Fort15):
 
     def __init__(
         self,
@@ -29,7 +28,7 @@ class AdcircRun(Fort15):
         end_date: datetime,
         spinup_time: timedelta = None,
         netcdf: bool = True,
-        server_config: Union[int, ServerConfig, SlurmConfig] = None
+        server_config: Union[int, SSHConfig, SlurmConfig] = None
     ):
         self._mesh = mesh
         self._start_date = start_date
@@ -396,14 +395,14 @@ class AdcircRun(Fort15):
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
         if driver is not None:
-            DriverFile(self).write(
+            _DriverFile(self).write(
                 output_directory / driver
                 )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
         for station_type in station_types:
-            stations = Fort15.parse_stations(fort15, station_type)
+            stations = _Fort15.parse_stations(fort15, station_type)
             for name, vertices in stations.items():
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
@@ -893,8 +892,8 @@ class AdcircRun(Fort15):
     def _server_config(self, server_config):
         if server_config is None:
             server_config = self._get_nproc(-1)
-        msg = "server_config must be int, ServerConfig or SlurmConfig"
-        assert isinstance(server_config, (int, ServerConfig, SlurmConfig)), msg
+        msg = "server_config must be int, SSHConfig or SlurmConfig"
+        assert isinstance(server_config, (int, SSHConfig, SlurmConfig)), msg
         self.__server_config = server_config
 
     @property

@@ -11,12 +11,12 @@ from haversine import haversine
 from pyproj import Proj
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
-from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.forcing.winds.base import _WindForcing
 import time
 from functools import wraps
 
 
-class BestTrackForcing(WindForcing):
+class BestTrackForcing(_WindForcing):
 
     def __init__(self, storm_id, start_date=None, end_date=None, dst_crs=None):
         self._storm_id = storm_id
@@ -553,14 +553,17 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
     return deco_retry
 
 
-@retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
 def atcf_id(storm_id):
     url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
-    res = urllib.request.urlopen(url)
+
+    @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
+    def request_url():
+        return urllib.request.urlopen(url)
+
+    res = request_url()
     df = read_csv(
         StringIO("".join([_.decode('utf-8') for _ in res])),
         header=None,
-        # usecols=[]
         )
     name = f"{storm_id[:-4].upper():>10}"
     year = f"{storm_id[-4:]:>5}"

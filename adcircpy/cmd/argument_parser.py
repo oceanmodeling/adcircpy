@@ -57,15 +57,11 @@ def log_level(parser):
 
 def server(parser):
 
-    # flag some options as required when a resource manager is enabled
-    _required = "--use-torque" in sys.argv
-    _required = _required | ("--use-pbs" in sys.argv)
-    _required = _required | ("--use-slurm" in sys.argv)
-
     # add server options
     parser.add_argument('--hostname')
     parser.add_argument('--port', type=int)
-    parser.add_argument("--wdir", required=_required)
+    parser.add_argument(
+        "--wdir", required=True if '--hostname' in sys.argv else False)
     parser.add_argument("--keep-wdir", action="store_true")
     parser.add_argument(
         "--binaries-path", "--binaries-prefix",
@@ -86,9 +82,26 @@ def server(parser):
     manager.add_argument('--use-pbs', action="store_true")
     manager.add_argument('--use-slurm', action="store_true")
 
+    # flag some options as required when a resource manager is enabled
+    _required = "--use-torque" in sys.argv
+    _required = _required | ("--use-pbs" in sys.argv)
+    _required = _required | ("--use-slurm" in sys.argv)
+
     # resource manager specific options
     parser.add_argument('--account', required=_required)
-    parser.add_argument('--walltime', required=_required)
+    parser.add_argument('--slurm-ntasks', required=_required, type=int)
+    parser.add_argument('--partition', required=_required)
+    parser.add_argument('--walltime', required=_required, type=float)
+    parser.add_argument('--slurm-filename')
+    parser.add_argument('--slurm-rundir')
+    parser.add_argument('--run-name')
+    parser.add_argument('--mail-type')
+    parser.add_argument('--mail-user')
+    parser.add_argument('--log-filename')
+    parser.add_argument('--path-prefix')
+    parser.add_argument('--slurm-nodes')
+    parser.add_argument('--slurm-launcher', default='srun')
+    parser.add_argument('--extra-commands', action='append')
     parser.add_argument(
         '--module',
         default=list(),
