@@ -23,6 +23,7 @@ dependencies:
       - haversine
       - nose
       - ordered-set
+      - paramiko
       - rednose
       - utm
       - wget
