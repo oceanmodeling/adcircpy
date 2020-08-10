@@ -17,7 +17,7 @@ class SlurmConfig(BaseServerConfig):
           duration: timedelta,
           filename: str = 'slurm.job',
           run_directory: str = '.',
-          tasks_per_node: int = None,
+          slurm_nodes: int = None,
           mail_type: str = None,
           mail_user: str = None,
           log_filename: str = None,
@@ -29,12 +29,13 @@ class SlurmConfig(BaseServerConfig):
         Instantiate a new Slurm shell script (`*.job`).
 
         :param account: Slurm account name
-        :param slurm_ntasks: number of Slurm tasks
+        :param slurm_ntasks: number of total tasks
         :param run_name: Slurm run name
         :param partition: partition to run on
         :param duration: time delta
         :param driver_script_filename: file path to the driver shell script
         :param run_directory: directory to run in
+        :param slurm_nodes: number of total nodes
         :param mail_type: email type
         :param mail_user: email address
         :param log_filename: file path to output log file
@@ -49,7 +50,7 @@ class SlurmConfig(BaseServerConfig):
         self._duration = duration
         self._filename = filename
         self._run_directory = run_directory
-        self._tasks_per_node = tasks_per_node
+        self._slurm_nodes = slurm_nodes
         self._mail_type = mail_type
         self._mail_user = mail_user
         self._log_filename = log_filename
@@ -87,8 +88,8 @@ class SlurmConfig(BaseServerConfig):
             f += f'#SBATCH --output={self._log_filename}\n'
 
         f += f'#SBATCH -n {self._slurm_ntasks}\n'
-        if self._tasks_per_node is not None:
-            f += f'#SBATCH -N {self._tasks_per_node}\n'
+        if self._slurm_nodes is not None:
+            f += f'#SBATCH -N {self._slurm_nodes}\n'
 
         f += f'#SBATCH --time={self._duration}\n' \
              f'#SBATCH --partition={self._partition}\n' \
