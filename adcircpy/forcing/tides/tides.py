@@ -2,11 +2,11 @@ from datetime import datetime, timedelta
 import numpy as np
 from functools import lru_cache
 from collections import OrderedDict
-from adcircpy.forcing import bctypes
+from adcircpy.forcing import _bctypes
 from adcircpy.forcing.tides.tpxo import TPXO
 
 
-class Tides(bctypes.EtaBc):
+class Tides(_bctypes._EtaBc):
 
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)

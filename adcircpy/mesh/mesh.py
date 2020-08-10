@@ -11,13 +11,13 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from shapely.geometry import LineString, mapping
 
-from adcircpy.forcing.bctypes import BoundaryCondition
-from adcircpy.forcing.winds.base import WindForcing
-from adcircpy.mesh import figures as fig, grd, sms2dm
-from adcircpy.mesh.base import EuclideanMesh2D
+from adcircpy.forcing._bctypes import _BoundaryCondition
+from adcircpy.forcing.winds._base import _WindForcing
+from adcircpy.mesh import _figures as fig, grd, sms2dm
+from adcircpy.mesh._base import _EuclideanMesh2D
 
 
-class AdcircMesh(EuclideanMesh2D):
+class AdcircMesh(_EuclideanMesh2D):
     """
     Class that represents the unstructured planar mesh used by ADCIRC.
     """
@@ -33,10 +33,10 @@ class AdcircMesh(EuclideanMesh2D):
         self._nodes = nodes
         self._elements = elements
         super().__init__(**grd.euclidean_mesh({
-            'nodes'      : self._nodes,
-            'elements'   : self._elements,
+            'nodes': self._nodes,
+            'elements': self._elements,
             'description': description,
-            'crs'        : crs
+            'crs': crs
         }))
         self._boundaries = boundaries
 
@@ -79,9 +79,9 @@ class AdcircMesh(EuclideanMesh2D):
               driver='ESRI Shapefile',
               crs=self.crs.srs,
               schema={
-                  'geometry'  : 'LineString',
+                  'geometry': 'LineString',
                   'properties': {
-                      'id'    : 'int',
+                      'id': 'int',
                       'ibtype': 'str',
                       'bnd_id': 'str'
                   }}) as dst:
@@ -91,9 +91,9 @@ class AdcircMesh(EuclideanMesh2D):
                     idxs = list(map(self.get_node_index, bnd['indexes']))
                     linear_ring = LineString(self.xy[idxs].tolist())
                     dst.write({
-                        "geometry"  : mapping(linear_ring),
+                        "geometry": mapping(linear_ring),
                         "properties": {
-                            "id"    : _cnt,
+                            "id": _cnt,
                             "ibtype": ibtype,
                             "bnd_id": f"{ibtype}:{id}"
                         }
@@ -107,9 +107,10 @@ class AdcircMesh(EuclideanMesh2D):
           interior_ibtype=1,
     ):
         if np.any(np.isnan(self.values)):
-            raise Exception("Mesh contains invalid values. Raster values must "
-                            "be interpolated to the mesh before generating "
-                            "boundaries.")
+            msg = "Mesh contains invalid values. Raster values must "
+            msg += "be interpolated to the mesh before generating "
+            msg += "boundaries."
+            raise Exception(msg)
 
         # generate exterior boundaries
         for ring in self.outer_ring_collection.values():
@@ -164,14 +165,14 @@ class AdcircMesh(EuclideanMesh2D):
             self.set_boundary_data(interior_ibtype, bnd_id, data)
 
     def add_forcing(self, forcing, id=None):
-        if isinstance(forcing, BoundaryCondition):
+        if isinstance(forcing, _BoundaryCondition):
             if id is None:
                 for i in range(len(self.open_boundaries)):
                     self.add_forcing(forcing, i)
             else:
                 self._boundary_forcing[forcing.btype]["bnd_ids"].add(id)
                 self._boundary_forcing[forcing.btype].update({"obj": forcing})
-        elif isinstance(forcing, WindForcing):
+        elif isinstance(forcing, _WindForcing):
             self._surface_forcing.update({'imetype': forcing})
         else:
             msg = f"Unrecognized forcing type {forcing}."

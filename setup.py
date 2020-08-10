@@ -15,6 +15,7 @@ setuptools.setup(
     url=meta['url'],
     packages=setuptools.find_packages(),
     python_requires='>=3.6',
+    setup_requires=["setuptools>=41.2"],
     install_requires=[
         'matplotlib',
         'netCDF4',
@@ -54,14 +55,14 @@ setuptools.setup(
             "iter_smooth=adcircpy.cmd.iter_smooth:main",
 
             # Generators
-            # 'generate_hindcast=adcircpy.cmd.generate_hindcast:main',
+            # 'generate_hindcast=adcircpy._cmd.generate_hindcast:main',
             'best_track_file=adcircpy.cmd.best_track_file:main',
 
             # Plotters
             'plot_mesh=adcircpy.cmd.plot_mesh:main',
             'plot_maxele=adcircpy.cmd.plot_maxele:main',
             'plot_fort61=adcircpy.cmd.plot_fort61:main',
-            'plot_fort63=adcircpy.cmd.plot_fort63:main',
+            'fort63=adcircpy.cmd.fort63:main',
 
             # tpxo_install
             'tpxo_install=adcircpy.forcing.tides.tpxo:install'
