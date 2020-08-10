@@ -1,4 +1,6 @@
 name: adcircpy
+channels:
+  - defaults
 dependencies:
   - bs4
   - fiona
