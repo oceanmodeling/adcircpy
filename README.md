@@ -1,5 +1,5 @@
 # AdcircPy
-[![unittests](https://github.com/jreniel/adcircpy/workflows/unittests/badge.svg) ![coverage](tests/coverage.svg)](https://github.com/jreniel/adcircpy/actions)
+[![tests](https://github.com/jreniel/adcircpy/workflows/tests/badge.svg) ![coverage](tests/coverage.svg)](https://github.com/jreniel/adcircpy/actions)
 
 ### Installation notes:
 
