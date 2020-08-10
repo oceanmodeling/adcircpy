@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Cache conda packages
+      - name: Retrieve packages from cache
         uses: actions/cache@v1
         env:
           # increase this value to reset cache if `environment.yml` has not changed
@@ -23,7 +23,7 @@ jobs:
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
-      - name: Setup Miniconda
+      - name: Create and activate conda environment
         uses: goanpeca/setup-miniconda@v1
         with:
           activate-environment: adcircpy
