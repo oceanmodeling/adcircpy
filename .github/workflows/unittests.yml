@@ -1,12 +1,9 @@
 name: unittests
 
-# triggers the workflow on push or pull request
 on: [push, pull_request]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:
-    # run python versions on operating systems
     name: unittest (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -15,19 +12,23 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [3.8]
 
-    # steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # checkout repository to $GITHUB_WORKSPACE
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v2
+      - name: Cache conda packages
+        uses: actions/cache@v1
+        env:
+          # increase this value to reset cache if `environment.yml` has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('environment.yml') }}
       - name: Setup Miniconda
         uses: goanpeca/setup-miniconda@v1
         with:
           activate-environment: adcircpy
           python-version: ${{ matrix.python-version }}
           environment-file: environment.yml
-
+          use-only-tar-bz2: true
       #- name: Lint with flake8
       #  run: |
       #    # stop the build if there are Python syntax errors or undefined names
@@ -35,7 +36,6 @@ jobs:
       #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       #  shell: bash -l {0}
-
       - name: Test with coverage
         run: |
           coverage run --source adcircpy -m nose --rednose --nologcapture --verbose
