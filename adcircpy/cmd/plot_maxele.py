@@ -20,13 +20,6 @@ def parse_args():
 
 def main():
     args = parse_args()
-    try:
-        maxele = Maxele.from_netcdf(args.maxele)
-    except OSError:
-        if args.fort14 is None:
-            raise IOError('Must pass --fort14 when plotting ascii files.')
-        maxele = Maxele.from_ascii(args.maxele, args.fort14)
-    maxele.make_plot(title=args.title,
-                     vmin=args.vmin,
-                     vmax=args.vmax)
+    maxele = Maxele(args.maxele)
+    maxele.tricontourf()
     plt.show()

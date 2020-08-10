@@ -1,9 +1,10 @@
 import pathlib
 
-from adcircpy.server.slurm import SlurmConfig
+
+from adcircpy.server.slurm_config import SlurmConfig
 
 
-class DriverFile:
+class _DriverFile:
 
     def __init__(self, driver):
         self._driver = driver
@@ -21,7 +22,8 @@ class DriverFile:
         else:
             f += '\nset -e\n'
 
-        if self._executable.startswith('p') and isinstance(self._server_config, int):
+        if self._executable.startswith('p') \
+                and isinstance(self._server_config, int):
             if self._server_config > 1:
                 f += f"\nNPROCS={self._nprocs}\n"
 
@@ -64,7 +66,6 @@ main()
         else:
             f += f"  {self._executable}"
         f += """
-  rm -rf fort.68.nc
   clean_directory
   cd ..
 }
@@ -133,7 +134,6 @@ run_coldstart_phase() {
         if not isinstance(self._server_config, SlurmConfig):
             f += f"2>&1 | tee ../{self._logfile}"
         f += """
-  rm -rf fort.68.nc
   clean_directory
   cd ..
 }
@@ -151,12 +151,19 @@ run_hotstart_phase() {
   ln -sf ../fort.13
   ln -sf ../fort.15.hotstart ./fort.15
 """
+        if self._driver.netcdf is True:
+            f += "  ln -sf ../coldstart/fort.67.nc\n"
+        else:
+            f += "  ln -sf ../coldstart/fort.67\n"
         if self._driver.wind_forcing is not None:
             if self._driver.wind_forcing.NWS in [19, 20]:
-                f += "  ln -sf ../fort.15.best_track ./fort.22\n"
+                f += "  ln -sf ../fort.22.best_track ./fort.22\n"
                 f += "  aswip\n"
                 f += f"  mv NWS_{self._driver.wind_forcing.NWS}_fort.22 "
                 f += "fort.22\n"
+            else:
+                msg = f"NWS={self._driver.wind_forcing.NWS}"
+                raise NotImplementedError(msg)
 
         if self._executable.startswith('p'):
             if isinstance(self._server_config, SlurmConfig):
@@ -173,7 +180,6 @@ run_hotstart_phase() {
             f += f"2>&1 | tee -a ../{self._logfile}"
 
         f += """
-  rm -rf fort.68.nc
   clean_directory
   cd ..
 }
@@ -192,6 +198,7 @@ clean_directory() {
   rm -rf fort.15
   rm -rf fort.16
   rm -rf fort.80
+  rm -rf fort.68.nc
 }
 """
 
@@ -226,7 +233,7 @@ clean_directory() {
     @property
     def _mpi(self):
         if isinstance(self._server_config, SlurmConfig):
-            return "srun"
+            return self._server_config._launcher
         else:
             return f"mpiexec -n {self._nprocs}"
 
