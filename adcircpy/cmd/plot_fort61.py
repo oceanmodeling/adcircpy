@@ -51,7 +51,8 @@ def main():
     end_date = fort61.datetime[-1]
     for station_id, data in fort61:
         if args.save is not None:
-            fname = str(Path(str(Path(args.save)) + '/{}.png'.format(station_id)))
+            fname = str(
+                Path(str(Path(args.save)) + '/{}.png'.format(station_id)))
             if args.resume_save and os.path.isfile(fname):
                 continue
         coops.add_station(station_id, start_date, end_date)

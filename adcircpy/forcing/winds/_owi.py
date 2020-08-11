@@ -1,8 +1,7 @@
 from datetime import datetime
 
-import numpy as np
-
 from adcircpy.forcing.winds.base import _WindForcing
+import numpy as np
 
 
 class OwiForcing(_WindForcing):

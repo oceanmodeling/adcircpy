@@ -18,20 +18,20 @@ class SSHConfig(_BaseServerConfig):
     """
 
     def __init__(
-          self,
-          hostname: str = None,
-          nprocs: int = None,
-          wdir: str = None,
-          binaries_prefix: str = None,
-          port: int = 22,
-          username: str = None,
-          password: str = None,
-          pkey: str = None,
-          writer_procs: int = None,
-          source_script: str = None,
-          additional_mpi_options: str = None,
-          keep_wdir: bool = False,
-          filename: str = None
+            self,
+            hostname: str = None,
+            nprocs: int = None,
+            wdir: str = None,
+            binaries_prefix: str = None,
+            port: int = 22,
+            username: str = None,
+            password: str = None,
+            pkey: str = None,
+            writer_procs: int = None,
+            source_script: str = None,
+            additional_mpi_options: str = None,
+            keep_wdir: bool = False,
+            filename: str = None
     ):
         self._hostname = hostname
         self._nprocs = nprocs
@@ -51,12 +51,12 @@ class SSHConfig(_BaseServerConfig):
         pass
 
     def run(
-          self,
-          driver,
-          outdir: Union[str, pathlib.Path],
-          overwrite: bool = False,
-          coldstart: bool = True,
-          hotstart: bool = True
+            self,
+            driver,
+            outdir: Union[str, pathlib.Path],
+            overwrite: bool = False,
+            coldstart: bool = True,
+            hotstart: bool = True
     ) -> None:
         """
         puts driver outputs on outdir using a remote server for compute
@@ -214,7 +214,7 @@ class SSHConfig(_BaseServerConfig):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         kwargs = {
             'hostname': self.hostname,
-            'port'    : self.port,
+            'port': self.port,
             'username': self.username,
             'password': self.password
         }

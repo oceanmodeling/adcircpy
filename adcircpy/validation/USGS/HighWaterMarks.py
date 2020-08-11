@@ -8,9 +8,9 @@ import requests
 
 class HighWaterMarks(OrderedDict):
     url = 'https://stn.wim.usgs.gov/STNServices/HWMs/FilteredHWMs.json'
-    params = {'EventType'  : 2,  # 2 for hurricane
+    params = {'EventType': 2,  # 2 for hurricane
               'EventStatus': 0}  # 0 for completed
-    default_filter = {"riverine"       : True,
+    default_filter = {"riverine": True,
                       "non_still_water": True}
 
     def __init__(self, event_name, event_year,
@@ -22,7 +22,8 @@ class HighWaterMarks(OrderedDict):
 
     @classmethod
     def from_event_name(cls, event_name, filter_dict=None):
-        event_name, event_year, cls.params['Event'] = cls._get_event_id_from_name(event_name)
+        event_name, event_year, cls.params[
+            'Event'] = cls._get_event_id_from_name(event_name)
         response = requests.get(cls.url, params=cls.params)
         response.raise_for_status()
         json_data = json.loads(response.text)
@@ -132,7 +133,8 @@ class HighWaterMarks(OrderedDict):
             filter_dict = cls.default_filter
         return filter_dict
 
-    def _filter(self, excellent=False, good=False, fair=False, poor=False, riverine=False,
+    def _filter(self, excellent=False, good=False, fair=False, poor=False,
+                riverine=False,
                 non_still_water=False, keep_undefined=False):
         stations_to_delete = set()
         for station in self.keys():

@@ -32,9 +32,9 @@ def get_topobathy_kwargs(values, vmin, vmax, colors=256):
         )
     else:
         norm = None
-    return {'cmap'   : cmap,
-            'norm'   : norm,
-            'levels' : levels,
+    return {'cmap': cmap,
+            'norm': norm,
+            'levels': levels,
             'col_val': col_val,
             # 'extend': 'both'
             }

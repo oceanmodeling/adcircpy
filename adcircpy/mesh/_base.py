@@ -22,13 +22,13 @@ from adcircpy.mesh._figures import _figure as _fig
 
 class _EuclideanMesh2D:
     def __init__(
-          self,
-          coords,
-          triangles=None,
-          quads=None,
-          values=None,
-          crs=None,
-          description=None,
+            self,
+            coords,
+            triangles=None,
+            quads=None,
+            values=None,
+            crs=None,
+            description=None,
     ):
         self._coords = coords
         self._triangles = triangles
@@ -249,13 +249,13 @@ class _EuclideanMesh2D:
 
     @_fig
     def triplot(
-          self,
-          axes=None,
-          show=False,
-          figsize=None,
-          linewidth=0.07,
-          color='black',
-          **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            linewidth=0.07,
+            color='black',
+            **kwargs
     ):
         if len(self.triangles) > 0:
             kwargs.update({'linewidth': linewidth})
@@ -267,14 +267,14 @@ class _EuclideanMesh2D:
 
     @_fig
     def quadplot(
-          self,
-          axes=None,
-          show=False,
-          figsize=None,
-          facecolor='none',
-          edgecolor='k',
-          linewidth=0.07,
-          **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            facecolor='none',
+            edgecolor='k',
+            linewidth=0.07,
+            **kwargs
     ):
         if len(self.quads) > 0:
             pc = PolyCollection(
@@ -290,11 +290,11 @@ class _EuclideanMesh2D:
 
     @_fig
     def quadface(
-          self,
-          axes=None,
-          show=False,
-          figsize=None,
-          **kwargs
+            self,
+            axes=None,
+            show=False,
+            figsize=None,
+            **kwargs
     ):
         if len(self.quad4) > 0:
             pc = PolyCollection(
@@ -429,7 +429,8 @@ class _EuclideanMesh2D:
                     potential_interiors.append(i)
             # filter out nested rings
             real_interiors = list()
-            for i, p_interior in reversed(list(enumerate(potential_interiors))):
+            for i, p_interior in reversed(
+                    list(enumerate(potential_interiors))):
                 _p_interior = index_ring_collection[p_interior]
                 check = [index_ring_collection[_]
                          for j, _ in
@@ -677,7 +678,7 @@ class _EuclideanMesh2D:
         if isinstance(triangles, np.ndarray):
             triangles = {
                 id: tuple(e) for id, e in enumerate(triangles)
-                }
+            }
         self._certify_input_geom('triangles', triangles)
         self.__triangles = triangles
 

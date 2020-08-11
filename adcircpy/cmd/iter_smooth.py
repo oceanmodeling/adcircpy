@@ -50,7 +50,8 @@ def main():
     # mesh.values[indexes] = np.min(mesh.values[indexes])
     ax = mesh.make_plot()
     ax.triplot(mesh.triangulation, color='k', linewidth=0.05)
-    ax.scatter(mesh.x[indexes], mesh.y[indexes], edgecolor='r', facecolor='none')
+    ax.scatter(mesh.x[indexes], mesh.y[indexes], edgecolor='r',
+               facecolor='none')
     plt.show()
     return 0
 

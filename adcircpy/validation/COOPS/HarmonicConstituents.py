@@ -49,11 +49,11 @@ class HarmonicConstituents(dict):
                     self._cache[station] = dict()
                 if float(dataset['Amplitude']) != 0.:
                     self._cache[station][dataset['Name']] = {
-                        'amplitude'  : float(dataset['Amplitude']) / 3.28084,
-                        'phase'      : float(dataset['Phase']),
-                        'speed'      : float(dataset['Speed']),
+                        'amplitude': float(dataset['Amplitude']) / 3.28084,
+                        'phase': float(dataset['Phase']),
+                        'speed': float(dataset['Speed']),
                         'description': dataset['Description'],
-                        'units'      : 'meters'}
+                        'units': 'meters'}
         else:
             self._cache[station] is None
         self._rebuild = True

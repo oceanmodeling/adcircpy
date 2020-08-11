@@ -25,12 +25,12 @@ class _RESTWrapper:
 
     def _init_params(self):
         self._params = {
-            "format"     : "json",
-            "units"      : "metric",
-            "time_zone"  : "gmt",
+            "format": "json",
+            "units": "metric",
+            "time_zone": "gmt",
             "application": "AdcircPy",
-            "datum"      : "msl",
-            "product"    : "water_level"
+            "datum": "msl",
+            "product": "water_level"
         }
         self._url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
         self._params['begin_date'] = self.start_date.strftime('%Y%m%d %H:%M')
@@ -48,7 +48,8 @@ class _RESTWrapper:
                 s = list()
                 metadata = data['metadata']
                 for datapoint in data['data']:
-                    time.append(datetime.strptime(datapoint['t'], '%Y-%m-%d %H:%M'))
+                    time.append(
+                        datetime.strptime(datapoint['t'], '%Y-%m-%d %H:%M'))
                     try:
                         val = float(datapoint['v'])
                     except:
@@ -60,9 +61,9 @@ class _RESTWrapper:
                         _s = numpy.nan
                     s.append(_s)
                 self[station] = {
-                    "time"    : numpy.asarray(time),
-                    "zeta"    : numpy.ma.masked_invalid(values),
-                    "s"       : numpy.ma.masked_invalid(s),
+                    "time": numpy.asarray(time),
+                    "zeta": numpy.ma.masked_invalid(values),
+                    "s": numpy.ma.masked_invalid(s),
                     "metadata": metadata,
-                    "datum"   : self._params["datum"]
+                    "datum": self._params["datum"]
                 }

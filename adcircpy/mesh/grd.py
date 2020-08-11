@@ -156,10 +156,10 @@ def euclidean_mesh(grd):
     values = [-value for coord, value in grd['nodes'].values()]
     description = grd['description']  # TODO: get CRS from description
     msh = {
-        "coords"     : coords,
-        "triangles"  : triangles,
-        "quads"      : quads,
-        "values"     : values,
+        "coords": coords,
+        "triangles": triangles,
+        "quads": quads,
+        "values": values,
         "description": description,
     }
     if 'crs' in grd:

@@ -45,8 +45,9 @@ class TaylorDiagram:
         self.smax = 1.5 * self.refstd
 
         ghelper = FA.GridHelperCurveLinear(tr,
-                                           extremes=(0, np.pi / 2,  # 1stquadrant
-                                                     self.smin, self.smax),
+                                           extremes=(
+                                               0, np.pi / 2,  # 1stquadrant
+                                               self.smin, self.smax),
                                            grid_locator1=gl1,
                                            tick_formatter1=tf1,
                                            )
