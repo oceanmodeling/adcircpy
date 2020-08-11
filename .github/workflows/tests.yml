@@ -48,11 +48,12 @@ jobs:
       - name: Create and commit coverage badge
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == 3.8
         run: |
-          coverage-badge -f -o tests/coverage.svg
+          coverage-badge -f -o $GITHUB_WORKSPACE/tests/coverage.svg
           rm -rf .coverage
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git commit -a -m "coverage badge"
+          git add $GITHUB_WORKSPACE/tests/coverage.svg
+          git commit -m "coverage badge"
         shell: bash -l {0}
       - name: Push commit
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == 3.8
