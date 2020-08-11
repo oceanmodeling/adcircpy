@@ -19,10 +19,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
         "maxele": "zeta_max"
     }
 
-    def __init__(
-            self,
-            path, crs=None
-    ):
+    def __init__(self, path, crs=None):
         self._path = path
         self._crs = crs
 
@@ -240,7 +237,15 @@ class _SurfaceOutputTimeseries(_SurfaceOutput):
 
 class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
 
-    def animation(self, save=False, fps=3, start_frame=0, end_frame=-1, **kwargs):
+    def animation(
+            self,
+            save=False,
+            fps=3,
+            start_frame=0,
+            end_frame=-1,
+            **kwargs
+            ):
+
         fig = plt.figure(
             figsize=kwargs.get("figsize")
             )
