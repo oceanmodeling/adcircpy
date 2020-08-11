@@ -1,0 +1,2 @@
+class _WindForcing:
+    pass

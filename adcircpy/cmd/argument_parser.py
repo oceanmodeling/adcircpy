@@ -4,6 +4,7 @@ import sys
 
 
 def mesh(parser):
+
     # mesh
     parser.add_argument('mesh')
 
@@ -32,7 +33,7 @@ def generate_only(parser):
         '--generate-only', "--no-run", "--skip-run",
         action="store_true",
         help=msg
-    )
+        )
 
 
 def log_level(parser):
@@ -55,15 +56,12 @@ def log_level(parser):
 
 
 def server(parser):
-    # flag some options as required when a resource manager is enabled
-    _required = "--use-torque" in sys.argv
-    _required = _required | ("--use-pbs" in sys.argv)
-    _required = _required | ("--use-slurm" in sys.argv)
 
     # add server options
     parser.add_argument('--hostname')
     parser.add_argument('--port', type=int)
-    parser.add_argument("--wdir", required=_required)
+    parser.add_argument(
+        "--wdir", required=True if '--hostname' in sys.argv else False)
     parser.add_argument("--keep-wdir", action="store_true")
     parser.add_argument(
         "--binaries-path", "--binaries-prefix",
@@ -84,15 +82,32 @@ def server(parser):
     manager.add_argument('--use-pbs', action="store_true")
     manager.add_argument('--use-slurm', action="store_true")
 
+    # flag some options as required when a resource manager is enabled
+    _required = "--use-torque" in sys.argv
+    _required = _required | ("--use-pbs" in sys.argv)
+    _required = _required | ("--use-slurm" in sys.argv)
+
     # resource manager specific options
     parser.add_argument('--account', required=_required)
-    parser.add_argument('--walltime', required=_required)
+    parser.add_argument('--slurm-ntasks', required=_required, type=int)
+    parser.add_argument('--partition', required=_required)
+    parser.add_argument('--walltime', required=_required, type=float)
+    parser.add_argument('--slurm-filename')
+    parser.add_argument('--slurm-rundir')
+    parser.add_argument('--run-name')
+    parser.add_argument('--mail-type')
+    parser.add_argument('--mail-user')
+    parser.add_argument('--log-filename')
+    parser.add_argument('--path-prefix')
+    parser.add_argument('--slurm-nodes')
+    parser.add_argument('--slurm-launcher', default='srun')
+    parser.add_argument('--extra-commands', action='append')
     parser.add_argument(
         '--module',
         default=list(),
         action='append',
         dest='modules'
-    )
+        )
 
 
 def tidal_constituents(parser):
@@ -113,7 +128,7 @@ def tidal_constituents(parser):
         dest='constituents',
         default=[],
         help=msg
-    )
+        )
 
 
 def timestep(parser):
@@ -126,7 +141,7 @@ def gwce_solution_scheme(parser):
         choices=['semi-implicit', 'explicit'],
         # default='explicit'
         default='semi-implicit'
-    )
+        )
 
 
 def boundaries_generation(parser):
@@ -137,13 +152,13 @@ def boundaries_generation(parser):
         default=20,
         type=int,
         choices=[0, 10, 20]
-    )
+        )
     parser.add_argument(
         "--island-ibtype",
         default=21,
         type=int,
         choices=[1, 11, 21]
-    )
+        )
 
 
 def best_track(parser):
@@ -211,7 +226,7 @@ def nodal_attributes(parser):
         action='append',
         dest='coldstart_attributes',
         help=msg
-    )
+        )
 
     # hotstart attributes
     msg = "Use nodal attribute that exists in fort.13 during hotstart "
@@ -239,7 +254,7 @@ def surface_output(physical_var, parser, spinup=False):
         short_name,
         type=float,
         help=msg
-    )
+        )
 
     # # surface output start
     # msg = f"Set {physical_var} surface output starting time in days (after "
@@ -273,7 +288,7 @@ def surface_output(physical_var, parser, spinup=False):
             action='store_true',
             default=False,
             help=msg
-        )
+            )
 
 
 def stations_output(physical_var, parser, spinup=False):
@@ -326,7 +341,7 @@ def stations_output(physical_var, parser, spinup=False):
             action='store_true',
             default=False,
             help=msg
-        )
+            )
 
 
 def spinup_outputs(parser):
@@ -341,6 +356,7 @@ def spinup_outputs(parser):
 
 
 def outputs(parser):
+
     # add surface output requests
     surface_output('elevation', parser)
     surface_output('velocity', parser)
@@ -354,7 +370,7 @@ def outputs(parser):
     parser.add_argument(
         "--stations-file",
         help=msg
-    )
+        )
 
     # stations output requests
     stations_output('elevation', parser)

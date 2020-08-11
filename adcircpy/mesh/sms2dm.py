@@ -45,8 +45,10 @@ def string(sms2dm):
 def graph(sms2dm):
     f = "MESH2D\n"
     # TODO: Make faster using np.array2string
-    f += triangular_elements(sms2dm)
-    f += quadrilateral_elements(sms2dm)
+    if 'E3T' in sms2dm:
+        f += triangular_elements(sms2dm)
+    if 'E4Q' in sms2dm:
+        f += quadrilateral_elements(sms2dm)
     f += nodes(sms2dm)
     return f
 

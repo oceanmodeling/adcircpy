@@ -1,18 +1,17 @@
 # import argparse
 import logging
-
-from adcircpy.cmd import argument_parser
-from adcircpy.cmd.basecmd import AdcircCommand
 from adcircpy.forcing.winds.best_track import BestTrackForcing
+from adcircpy.cmd.basecmd import _AdcircCommand
+from adcircpy.cmd import argument_parser
 
 
-class BestTrackRunCommand(AdcircCommand):
+class _BestTrackRunCommand(_AdcircCommand):
 
     def __init__(self, args):
         super().__init__(args)
-        bt = BestTrackForcing(self.args.storm_id)
+        bt = BestTrackForcing(self._args.storm_id)
         self.mesh.add_forcing(bt)
-        if self.args.start_date is None:
+        if self._args.start_date is None:
             self._start_date = bt.start_date
             self._end_date = bt.end_date
         else:
@@ -20,6 +19,7 @@ class BestTrackRunCommand(AdcircCommand):
 
 
 def main():
+
     args = argument_parser.get_parser('best_track').parse_args()
     # if len(args.constituents) == 0:
     #     args.constituents = ['all']
@@ -28,4 +28,4 @@ def main():
     logging.getLogger("fiona").setLevel(logging.WARNING)
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     logging.getLogger("paramiko").setLevel(logging.WARNING)
-    exit(BestTrackRunCommand(args).run())
+    exit(_BestTrackRunCommand(args).run())
