@@ -14,15 +14,15 @@ def reader(path):
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: line[2:]
-                    })
+                })
             if line[0] == 'ND':
                 if line[0] not in sms2dm:
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: (
                         list(map(float, line[2:-1])), float(line[-1])
-                        )
-                    })
+                    )
+                })
     return sms2dm
 
 

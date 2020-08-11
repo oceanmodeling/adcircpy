@@ -4,7 +4,6 @@ import sys
 
 
 def mesh(parser):
-
     # mesh
     parser.add_argument('mesh')
 
@@ -33,7 +32,7 @@ def generate_only(parser):
         '--generate-only', "--no-run", "--skip-run",
         action="store_true",
         help=msg
-        )
+    )
 
 
 def log_level(parser):
@@ -56,7 +55,6 @@ def log_level(parser):
 
 
 def server(parser):
-
     # add server options
     parser.add_argument('--hostname')
     parser.add_argument('--port', type=int)
@@ -107,7 +105,7 @@ def server(parser):
         default=list(),
         action='append',
         dest='modules'
-        )
+    )
 
 
 def tidal_constituents(parser):
@@ -128,7 +126,7 @@ def tidal_constituents(parser):
         dest='constituents',
         default=[],
         help=msg
-        )
+    )
 
 
 def timestep(parser):
@@ -141,7 +139,7 @@ def gwce_solution_scheme(parser):
         choices=['semi-implicit', 'explicit'],
         # default='explicit'
         default='semi-implicit'
-        )
+    )
 
 
 def boundaries_generation(parser):
@@ -152,13 +150,13 @@ def boundaries_generation(parser):
         default=20,
         type=int,
         choices=[0, 10, 20]
-        )
+    )
     parser.add_argument(
         "--island-ibtype",
         default=21,
         type=int,
         choices=[1, 11, 21]
-        )
+    )
 
 
 def best_track(parser):
@@ -226,7 +224,7 @@ def nodal_attributes(parser):
         action='append',
         dest='coldstart_attributes',
         help=msg
-        )
+    )
 
     # hotstart attributes
     msg = "Use nodal attribute that exists in fort.13 during hotstart "
@@ -254,7 +252,7 @@ def surface_output(physical_var, parser, spinup=False):
         short_name,
         type=float,
         help=msg
-        )
+    )
 
     # # surface output start
     # msg = f"Set {physical_var} surface output starting time in days (after "
@@ -288,7 +286,7 @@ def surface_output(physical_var, parser, spinup=False):
             action='store_true',
             default=False,
             help=msg
-            )
+        )
 
 
 def stations_output(physical_var, parser, spinup=False):
@@ -341,7 +339,7 @@ def stations_output(physical_var, parser, spinup=False):
             action='store_true',
             default=False,
             help=msg
-            )
+        )
 
 
 def spinup_outputs(parser):
@@ -356,7 +354,6 @@ def spinup_outputs(parser):
 
 
 def outputs(parser):
-
     # add surface output requests
     surface_output('elevation', parser)
     surface_output('velocity', parser)
@@ -370,7 +367,7 @@ def outputs(parser):
     parser.add_argument(
         "--stations-file",
         help=msg
-        )
+    )
 
     # stations output requests
     stations_output('elevation', parser)

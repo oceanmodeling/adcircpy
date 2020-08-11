@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import setuptools
 import pathlib
+
+import setuptools
+
 PARENT = pathlib.Path(__file__).parent.absolute()
 conf = setuptools.config.read_configuration(PARENT / 'setup.cfg')
 meta = conf['metadata']

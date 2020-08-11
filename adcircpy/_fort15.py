@@ -179,13 +179,15 @@ class _Fort15:
             if stations['sampling_rate'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
-                        for station_id, (x, y) \
-                                in stations['collection'].items():
-                            f += f"{x:G} {y:G}".ljust(63) + \
-                                 f" ! {station_id}\n"
+                        for station_id, (x, y) in stations[
+                            'collection'].items():
+                            f += f"{x:G} {y:G}".ljust(63)
+                            f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(63) + f" ! {station_id}\n"
+                        f += f"{x:G} {y:G}".ljust(63)
+                        f += f" ! {station_id}\n"
+
         if self.NWS > 0:
             # meteorological out stations
             f += (f"{self.NOUTM:G} {self.TOUTSM:G} " +
@@ -197,15 +199,16 @@ class _Fort15:
                 if stations['sampling_rate'] is not None:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
-                            for station_id, (x, y) \
-                                    in stations['collection'].items():
-                                f += f"{x:G} {y:G}".ljust(63) + \
-                                     f" ! {station_id}\n"
+                            for station_id, (x, y) in stations[
+                                'collection'].items():
+                                f += f"{x:G} {y:G}".ljust(63)
+                                f += f" ! {station_id}\n"
                     else:
-                        for station_id, (x, y) \
-                                in stations['collection'].items():
-                            f += f"{x:G} {y:G}".ljust(63) + \
-                                 f" ! {station_id}\n"
+                        for station_id, (x, y) in stations[
+                            'collection'].items():
+                            f += f"{x:G} {y:G}".ljust(63)
+                            f += f" ! {station_id}\n"
+
         # elevation global outputs
         f += (f"{self.NOUTGE:d} {self.TOUTSGE:f} "
               + f"{self.TOUTFGE:f} {self.NSPOOLGE:d}").ljust(63) + \
@@ -629,8 +632,7 @@ class _Fort15:
 
             def get_digit_3():
                 if self.lateral_stress_in_momentum == 'velocity_based':
-                    if self.lateral_stress_in_momentum_method \
-                            == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 3
                         else:
@@ -639,8 +641,7 @@ class _Fort15:
                         raise NotImplementedError('not implemented in adcirc')
                         return 5
                 elif self.lateral_stress_in_momentum == 'flux_based':
-                    if self.lateral_stress_in_momentum_method \
-                            == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 4
                         else:
@@ -664,8 +665,7 @@ class _Fort15:
                     return 2
 
             def get_digit_6():
-                if (not self.baroclinicity and
-                        self.gwce_solution_scheme == 'semi-implicit'):
+                if not self.baroclinicity and self.gwce_solution_scheme == 'semi-implicit':
                     return 1
                 elif (not self.baroclinicity and
                       self.gwce_solution_scheme == 'explicit'):
@@ -889,8 +889,8 @@ class _Fort15:
             return DRAMP
         except AttributeError:
             DRAMP = self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60. * 60. * 24.))
+                    (self.start_date - self.forcing_start_date) /
+                    timedelta(days=1)).total_seconds()
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
@@ -934,8 +934,8 @@ class _Fort15:
             return self.__DRAMPElev
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60. * 60. * 24.))
+                    (self.start_date - self.forcing_start_date) /
+                    timedelta(days=1)).total_seconds()
 
     @property
     def DRAMPTip(self):
@@ -943,8 +943,8 @@ class _Fort15:
             return self.__DRAMPTip
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60. * 60. * 24.))
+                    (self.start_date - self.forcing_start_date) /
+                    timedelta(days=1)).total_seconds()
 
     @property
     def DRAMPMete(self):
@@ -2215,14 +2215,12 @@ class _Fort15:
                 return 0
         else:
             if output['sampling_rate'] is not None:
-                if (output_type == 'surface'
-                        and output['sampling_rate'].total_seconds() == 0):
-                    return int(
-                        (self.end_date - self.start_date).total_seconds()
-                        / self.DTDP)
+                if (output_type == 'surface' and output[
+                    'sampling_rate'].total_seconds() == 0):
+                    return int((
+                                       self.end_date - self.start_date).total_seconds() / self.DTDP)
                 return int(round(
-                    (output['sampling_rate'].total_seconds() / self.DTDP))
-                )
+                    (output['sampling_rate'].total_seconds() / self.DTDP)))
             else:
                 return 0
 

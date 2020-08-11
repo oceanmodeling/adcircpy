@@ -1,11 +1,13 @@
-import logging
 from datetime import datetime
 from functools import lru_cache
+import logging
+
 from adcircpy.cmd import argument_parser
 from adcircpy.cmd.basecmd import AdcircCommand
 
 try:
     import colored_traceback
+
     colored_traceback.add_hook(always=True)
 except ModuleNotFoundError:
     pass

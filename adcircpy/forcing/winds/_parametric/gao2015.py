@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-from pyschism.forcing.winds.data.hurdat2 import Hurdat2
 
 
 def main():

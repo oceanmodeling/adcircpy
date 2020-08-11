@@ -1,5 +1,7 @@
 import argparse
+
 import matplotlib.pyplot as plt
+
 from adcircpy.cmd import diagnose
 from adcircpy.outputs.fort63 import Fort63
 
@@ -10,7 +12,7 @@ def plot(fort63, args):
         vmin=args.vmin,
         vmax=args.vmax,
         cbar=True,
-        )
+    )
     if args.plot_elements:
         ax.triplot(fort63.triangulation, color='k', linewidth=0.1)
     if args.diagnose is not None:
@@ -40,7 +42,7 @@ def main():
     fort63 = Fort63(
         args.fort63,
         # fort14=args.fort14
-        )
+    )
     {
         'plot': plot,
         'animation': animation,
@@ -51,7 +53,7 @@ def main():
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Program to see a quick plot of an ADCIRC fort63 file."
-        )
+    )
     parser.add_argument('fort63', help="Path to fort.63 file.")
 
     subparsers = parser.add_subparsers(dest='mode')
