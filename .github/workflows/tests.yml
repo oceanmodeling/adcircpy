@@ -53,6 +53,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git commit -a -m "coverage badge"
+        shell: bash -l {0}
       - name: Push commit
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == 3.8
         uses: ad-m/github-push-action@master
