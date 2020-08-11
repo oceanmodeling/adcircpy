@@ -19,7 +19,10 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
         "maxele": "zeta_max"
     }
 
-    def __init__(self, path, crs=None):
+    def __init__(
+            self,
+            path, crs=None
+    ):
         self._path = path
         self._crs = crs
 
