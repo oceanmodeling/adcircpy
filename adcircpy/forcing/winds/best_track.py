@@ -11,7 +11,7 @@ from haversine import haversine
 from pyproj import Proj
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
-from adcircpy.forcing.winds.base import _WindForcing
+from adcircpy.forcing.winds._base import _WindForcing
 import time
 from functools import wraps
 
