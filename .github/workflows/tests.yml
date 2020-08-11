@@ -45,18 +45,3 @@ jobs:
       - name: Generate coverage report
         run: coverage report -m
         shell: bash -l {0}
-      - name: Create and commit coverage badge
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == 3.8
-        run: |
-          coverage-badge -f -o $GITHUB_WORKSPACE/tests/coverage.svg
-          rm -rf .coverage
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add $GITHUB_WORKSPACE/tests/coverage.svg
-          git commit -m "coverage badge"
-        shell: bash -l {0}
-      - name: Push commit
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == 3.8
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
