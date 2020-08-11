@@ -14,7 +14,8 @@ from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy as np
 from pyproj import CRS, Proj, Transformer
-from shapely.geometry import Polygon
+from shapely.geometry import MultiLineString, MultiPolygon, Polygon
+from shapely.ops import polygonize, unary_union
 
 from adcircpy.mesh import grd, sms2dm
 from adcircpy.mesh._figures import _figure as _fig
@@ -75,9 +76,8 @@ class _EuclideanMesh2D:
     def write(self, path, overwrite=False, fmt='gr3'):
         path = pathlib.Path(path)
         if path.is_file() and not overwrite:
-            raise IOError('File exists, '
-                          'use overwrite=True
-            to allow overwrite.')
+            raise IOError('File exists, `use overwrite=True` '
+                          'to allow overwrite.')
         with open(path, 'w') as f:
             f.write(self.ascii_string(fmt))
 
@@ -414,9 +414,9 @@ class _EuclideanMesh2D:
             maximum_area_ring = rings_indices.pop(maximum_area_index)
             ring_index = 0
             ring_indices_collection[ring_index] = {
-                'exterior' : np.asarray(maximum_area_ring),
+                'exterior': np.asarray(maximum_area_ring),
                 'interiors': []
-        }
+            }
             e0, e1 = [list(t) for t in zip(*maximum_area_ring)]
             polygon = Path(vertices[e0 + [e0[0]], :], closed=True)
             # find all internal rings
@@ -551,7 +551,7 @@ class _EuclideanMesh2D:
     def _certify_input_geom(self, geom_type, geom):
         geom_types = {
             'triangles': 3,
-            'quads'    : 4,
+            'quads': 4,
         }
         _geom = np.asarray(list(geom.values()))
         if len(_geom) > 0:
@@ -668,7 +668,7 @@ class _EuclideanMesh2D:
         if isinstance(triangles, np.ndarray):
             triangles = {
                 id: tuple(e) for id, e in enumerate(triangles)
-                }
+            }
         self._certify_input_geom('triangles', triangles)
         self.__triangles = triangles
 
@@ -704,7 +704,7 @@ class _EuclideanMesh2D:
         return logging.getLogger(__name__ + '.' + self.__class__.__name__)
 
 
-def boundary_indices(elements: [[int]]) -> numpy.array:
+def boundary_indices(elements: [[int]]) -> np.array:
     shape_lengths = {len(element) for element in elements}
 
     elements = [[element for element in elements
@@ -713,28 +713,28 @@ def boundary_indices(elements: [[int]]) -> numpy.array:
 
     boundary_edge_indices = []
     for shape_elements in elements:
-        shape_elements = numpy.stack(shape_elements, axis=0)
+        shape_elements = np.stack(shape_elements, axis=0)
         shape_length = shape_elements.shape[1]
-        indices = numpy.stack([(shape_elements[:, index],
-                                shape_elements[:, index - shape_length + 1])
-                               for index in range(shape_length)], axis=1).T
+        indices = np.stack([(shape_elements[:, index],
+                             shape_elements[:, index - shape_length + 1])
+                            for index in range(shape_length)], axis=1).T
 
-        indices = numpy.reshape(
+        indices = np.reshape(
             indices, (indices.shape[0] * indices.shape[1], indices.shape[2])
         )
 
-        unique_indices, counts = numpy.unique(indices, axis=0,
-                                              return_counts=True)
+        unique_indices, counts = np.unique(indices, axis=0,
+                                           return_counts=True)
         boundary_edge_indices.extend(unique_indices[counts == 1])
 
     return boundary_edge_indices
 
 
-def boundary_points(points: numpy.array, elements: [[int]]) -> numpy.array:
-    return numpy.stack(points[boundary_indices(elements)], axis=0)
+def boundary_points(points: np.array, elements: [[int]]) -> np.array:
+    return np.stack(points[boundary_indices(elements)], axis=0)
 
 
-def polygon_from_vertices(vertices: numpy.array) -> MultiPolygon:
+def polygon_from_vertices(vertices: np.array) -> MultiPolygon:
     polygons = polygonize(MultiLineString(vertices.tolist()))
     polygons = remove_interior_duplicates(polygons)
     return unary_union(polygons)
