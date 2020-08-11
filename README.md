@@ -1,5 +1,6 @@
 # AdcircPy
-![coverage](tests/coverage.svg)
+## Python library for automating ADCIRC model runs.
+[![tests](https://github.com/jreniel/adcircpy/workflows/tests/badge.svg) ![coverage](tests/coverage.svg)](https://github.com/jreniel/adcircpy/actions)
 
 ### Installation notes:
 
@@ -9,7 +10,6 @@ You may install the application though pip. This will install the latest tagged 
 ```bash
 pip install adcircpy
 ```
-
 
 Alternatively, you many manually install the repo by cloning it and then running
 ```bash
