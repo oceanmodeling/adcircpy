@@ -11,15 +11,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
 
+from adcircpy.mesh import AdcircMesh
+from adcircpy._fort15 import _Fort15
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
-from adcircpy.server.config import ServerConfig
-from adcircpy.server.slurm import SlurmConfig
+from adcircpy.server._driver_file import _DriverFile
+from adcircpy.server import SSHConfig, SlurmConfig
 
 
-class AdcircRun(Fort15):
+class AdcircRun(_Fort15):
 
     def __init__(
         self,
@@ -28,7 +30,7 @@ class AdcircRun(Fort15):
         end_date: datetime,
         spinup_time: timedelta = None,
         netcdf: bool = True,
-        server_config: Union[int, ServerConfig, SlurmConfig] = None
+        server_config: Union[int, SSHConfig, SlurmConfig] = None
     ):
         self._mesh = mesh
         self._start_date = start_date
@@ -340,7 +342,7 @@ class AdcircRun(Fort15):
         fort15: str = 'fort.15',
         coldstart: str = 'fort.15.coldstart',
         hotstart: str = 'fort.15.hotstart',
-        launcher: str = None
+        driver: str = 'driver.sh'
     ):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
@@ -382,7 +384,6 @@ class AdcircRun(Fort15):
         # In other words, one can do a tidal only run as coldstart/hotstart
         # as well as a tidal-only spinup + meteorological hotstart.
         else:
-
             if self.wind_forcing is not None:
                 if fort22:
                     self.wind_forcing.write(
@@ -393,20 +394,17 @@ class AdcircRun(Fort15):
             if hotstart:
                 super().write(
                     'hotstart', output_directory / hotstart, overwrite)
-
-        # write driver_script
-        if not isinstance(self._server_config, int):
-            filename = self._server_config._filename if launcher is None \
-                    else launcher
-            self._server_config.write(self, output_directory / filename)
-        else:
-            if launcher is not None:
-                self._write_bash_launcher(output_directory / launcher)
+        if isinstance(self._server_config, SlurmConfig):
+            driver = self._server_config._filename
+        if driver is not None:
+            _DriverFile(self).write(
+                output_directory / driver
+                )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
         for station_type in station_types:
-            stations = Fort15.parse_stations(fort15, station_type)
+            stations = _Fort15.parse_stations(fort15, station_type)
             for name, vertices in stations.items():
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
@@ -471,7 +469,7 @@ class AdcircRun(Fort15):
     @property
     @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        elevbc = self.mesh._boundary_forcing['iettype']["obj"]
+        elevbc = self.mesh._boundary_forcing['iettype'].get("obj")
         if isinstance(elevbc, Tides):
             elevbc.start_date = self.start_date
             elevbc.end_date = self.end_date
@@ -481,6 +479,7 @@ class AdcircRun(Fort15):
     @property
     def wind_forcing(self):
         return self.mesh._surface_forcing['imetype']
+        # if isinstance(elevbc, WindForcing):
 
     @property
     def spinup_time(self):
@@ -582,7 +581,7 @@ class AdcircRun(Fort15):
         return self._output_collection
 
     @property
-    def waves(self):
+    def wave_forcing(self):
         return self.mesh._boundary_forcing['iwrtype']["obj"]
 
     def _load_outdir(self, outdir):
@@ -631,7 +630,7 @@ class AdcircRun(Fort15):
         return err
 
     def _run_local(self, nproc, outdir, overwrite, coldstart, hotstart):
-        self.write(outdir, overwrite)
+        self.write(outdir, overwrite, driver=None)
         if self.spinup_time.total_seconds() != 0:
             if coldstart:
                 self._run_coldstart(nproc, outdir)
@@ -649,8 +648,8 @@ class AdcircRun(Fort15):
     def _run_hotstart(self, nproc, wdir):
         self._stage_files('hotstart', nproc, wdir)
         self._run_adcprep('hotstart', nproc, wdir)
-        if self.waves:
-            if self.waves.model.lower() == 'swan':
+        if self.wave_forcing is not None:
+            if self.waves_focing.model.lower() == 'swan':
                 self._run_padcswan(wdir / 'hotstart', nproc)
             else:
                 msg = "Unknown wave coupling type."
@@ -744,7 +743,7 @@ class AdcircRun(Fort15):
         self._certify_netcdf(netcdf)
         self._certify_harmonic_analysis(harmonic_analysis)
 
-    def _write_bash_launcher(self, destination):
+    def _write_bash_driver(self, destination):
         source = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
         shutil.copyfile(source, destination)
 
@@ -846,39 +845,6 @@ class AdcircRun(Fort15):
             raise RuntimeError(msg)
         self.__mesh = mesh
 
-    # @property
-    # def _tidal_forcing(self):
-    #     return self.__tidal_forcing
-
-    # @_tidal_forcing.setter
-    # def _tidal_forcing(self, tidal_forcing):
-    #     if tidal_forcing is not None:
-    #         assert isinstance(tidal_forcing, Tides)
-    #         tidal_forcing.start_date = self.start_date
-    #         tidal_forcing.end_date = self.end_date
-    #         tidal_forcing.spinup_time = self.spinup_time
-    #     self.__tidal_forcing = tidal_forcing
-
-    # @property
-    # def _wind_forcing(self):
-    #     return self.__wind_forcing
-
-    # @_wind_forcing.setter
-    # def _wind_forcing(self, wind_forcing):
-    #     if wind_forcing is not None:
-    #         assert isinstance(wind_forcing, WindForcing)
-    #     self.__wind_forcing = wind_forcing
-
-    # @property
-    # def _waves(self):
-    #     return self.__waves
-
-    # @_waves.setter
-    # def _waves(self, waves):
-    #     # if waves is not None:
-    #     #     assert isinstance(waves, WindForcing)
-    #     self.__waves = waves
-
     @property
     def _spinup_time(self):
         return self.__spinup_time
@@ -905,7 +871,7 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
-        if isinstance(end_date, datetime):
+        if isinstance(end_date, timedelta):
             end_date = self._start_date + end_date
         assert isinstance(end_date, datetime)
         assert end_date > self.start_date
@@ -928,8 +894,8 @@ class AdcircRun(Fort15):
     def _server_config(self, server_config):
         if server_config is None:
             server_config = self._get_nproc(-1)
-        msg = "server_config must be int, ServerConfig or SlurmConfig"
-        assert isinstance(server_config, (int, ServerConfig, SlurmConfig)), msg
+        msg = "server_config must be int, SSHConfig or SlurmConfig"
+        assert isinstance(server_config, (int, SSHConfig, SlurmConfig)), msg
         self.__server_config = server_config
 
     @property
@@ -948,26 +914,17 @@ class AdcircRun(Fort15):
             'netcdf': self.netcdf,
             'harmonic_analysis': False,
         }
-        container['surface'] = dict()
-        container['surface']['elevation'] = schema.copy()
-        container['surface']['velocity'] = schema.copy()
-        container['surface']['meteorological'] = schema.copy()
-        container['surface']['concentration'] = schema.copy()
-        # init stations output attributes
-        container['stations'] = dict()
-        container['stations']['elevation'] = schema.copy()
-        container['stations']['velocity'] = schema.copy()
-        container['stations']['meteorological'] = schema.copy()
-        container['stations']['concentration'] = schema.copy()
-        # add a 'collections' key to hold the stations.
-        container['stations']['elevation'].update(
-            {'collection': dict()})
-        container['stations']['velocity'].update(
-            {'collection': dict()})
-        container['stations']['meteorological'].update(
-            {'collection': dict()})
-        container['stations']['concentration'].update(
-            {'collection': dict()})
+
+        for otype in ['surface', 'stations']:
+            container[otype] = dict()
+            for ovar in [
+                    'elevation',
+                    'velocity',
+                    'meteorological',
+                    'concentration']:
+                container[otype][ovar] = schema.copy()
+                if otype == 'stations':
+                    container[otype][ovar].update({'collection': dict()})
         return container
 
     @property

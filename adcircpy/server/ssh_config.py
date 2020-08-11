@@ -1,4 +1,3 @@
-# from datetime import timedelta
 import logging
 from functools import lru_cache
 import os
@@ -10,14 +9,10 @@ import uuid
 
 import paramiko
 
-# from adcircpy.model.driver import AdcircRun
-
-# from tempfile import TemporaryDirectory
-
-# PADCIRC_DRIVER_SCRIPT_FILENAME = pathlib.Path(os.path.dirname(__file__)).resolve() / 'padcirc_driver.sh'
+from adcircpy.server._base_config import _BaseServerConfig
 
 
-class ServerConfig:
+class SSHConfig(_BaseServerConfig):
     """
     This class is used for configuring the server
     """
@@ -79,6 +74,10 @@ class ServerConfig:
         self._retrieve_files(outdir)
         if not self.keep_wdir:
             self.ssh.exec_command(f'rm -rf {self._wdir}')
+
+    @property
+    def nprocs(self):
+        return self._nprocs
 
     def _deploy_files_to_server(self, driver):
         outdir = tempfile.TemporaryDirectory()

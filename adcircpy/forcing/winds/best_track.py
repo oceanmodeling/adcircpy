@@ -3,16 +3,20 @@ import urllib.request
 import io
 import gzip
 from datetime import datetime
-from pandas import DataFrame
+from pandas import DataFrame, read_csv
 import pathlib
+from io import StringIO
 from shapely.geometry import Point, Polygon
 from haversine import haversine
 from pyproj import Proj
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
+from adcircpy.forcing.winds.base import _WindForcing
+import time
+from functools import wraps
 
 
-class Bdeck:
+class BestTrackForcing(_WindForcing):
 
     def __init__(self, storm_id, start_date=None, end_date=None, dst_crs=None):
         self._storm_id = storm_id
@@ -138,46 +142,64 @@ class Bdeck:
     @property
     def df(self):
         start_date_mask = self._df["datetime"] >= self.start_date
-        end_date_mask = self._df["datetime"] <= self.end_date
+        end_date_mask = self._df["datetime"] <= self._file_end_date
         return self._df[start_date_mask & end_date_mask]
 
     @property
-    def data(self):
-        data = {}
-        for _datetime in np.unique(self.datetime):
-            _df = self.df[self.df['datetime'] == _datetime]
-            for _, row in _df.iterrows():
-                if row['isotach'] == 0:
-                    continue
-                if row['datetime'] not in data:
-                    data[row['datetime']] = {
-                        "isotachs": {},
-                        "eye": {
-                            "lon": row['longitude'],
-                            "lat": row['latitude']
-                            },
-                        "max_sustained_wind_speed":
-                            0.514444*row['max_sustained_wind_speed'],  # m/s
-                        "radius_of_maximum_winds":
-                            1000.*row['radius_of_maximum_winds'],  # m
-                        "central_pressure": row['central_pressure'],
-                        "background_pressure": row['background_pressure'],
-                        "radius_of_last_closed_isobar":
-                            1000.*row['radius_of_last_closed_isobar'],  # m
-                        "direction": row['direction'],
-                        "speed": row['speed'],
-                    }
-                for quad, key in {
-                        "NE": 'radius_for_NEQ',
-                        "NW": 'radius_for_NWQ',
-                        "SW": 'radius_for_SWQ',
-                        "SE": 'radius_for_SEQ'}.items():
-                    if row[key] != 0:
-                        data[row['datetime']]['isotachs'].update({quad: {}})
-                        data[row['datetime']]['isotachs'][quad].update({
-                            0.514444*row['isotach']: 1000.*row[key]  # m/s @ m
-                            })
-        return data
+    def fort22(self):
+        record_number = self._generate_record_numbers()
+        fort22 = ''
+        for i, (_, row) in enumerate(self.df.iterrows()):
+            fort22 += "{:<2},".format(row["basin"])
+            fort22 += "{:>3},".format(row["storm_number"])
+            fort22 += "{:>11},".format(row["datetime"].strftime('%Y%m%d%H'))
+            fort22 += "{:3},".format("")
+            fort22 += "{:>5},".format(row["record_type"])
+            fort22 += "{:>4},".format(int((row["datetime"]-self.start_date)
+                                          .total_seconds()/3600))
+            if row["latitude"] >= 0:
+                fort22 += "{:>4}N,".format(int(row["latitude"]/.1))
+            else:
+                fort22 += "{:>4}S,".format(int(row["latitude"]/-.1))
+            if row["longitude"] >= 0:
+                fort22 += "{:>5}E,".format(int(row["longitude"]/.1))
+            else:
+                fort22 += "{:>5}W,".format(int(row["longitude"]/-.1))
+            fort22 += "{:>4},".format(int(row["max_sustained_wind_speed"]))
+            fort22 += "{:>5},".format(int(row["central_pressure"]))
+            fort22 += "{:>3},".format(row["development_level"])
+            fort22 += "{:>4},".format(int(row["isotach"]))
+            fort22 += "{:>4},".format(row["quadrant"])
+            fort22 += "{:>5},".format(int(row["radius_for_NEQ"]))
+            fort22 += "{:>5},".format(int(row["radius_for_SEQ"]))
+            fort22 += "{:>5},".format(int(row["radius_for_SWQ"]))
+            fort22 += "{:>5},".format(int(row["radius_for_NWQ"]))
+            if row["background_pressure"] is None:
+                row["background_pressure"] = \
+                    self.df["background_pressure"].iloc[i-1]
+            if (row["background_pressure"] <= row["central_pressure"]
+                    and 1013 > row["central_pressure"]):
+                fort22 += "{:>5},".format(1013)
+            elif (row["background_pressure"] <= row["central_pressure"]
+                  and 1013 <= row["central_pressure"]):
+                fort22 += "{:>5},".format(int(row["central_pressure"]+1))
+            else:
+                fort22 += "{:>5},".format(int(row["background_pressure"]))
+            fort22 += "{:>5},".format(int(
+                                        row["radius_of_last_closed_isobar"]))
+            fort22 += "{:>4},".format(int(row["radius_of_maximum_winds"]))
+            fort22 += "{:>5},".format('')  # gust
+            fort22 += "{:>4},".format('')  # eye
+            fort22 += "{:>4},".format('')  # subregion
+            fort22 += "{:>4},".format('')  # maxseas
+            fort22 += "{:>4},".format('')  # initials
+            fort22 += "{:>3},".format(row["direction"])
+            fort22 += "{:>4},".format(row["speed"])
+            fort22 += "{:^12},".format(row["name"])
+            # from this point forwards it's all aswip
+            fort22 += "{:>4},".format(record_number[i])
+            fort22 += "\n"
+        return fort22
 
     @property
     def _storm_id(self):
@@ -423,18 +445,40 @@ class Bdeck:
 
     @_storm_id.setter
     def _storm_id(self, storm_id):
+
+        chars = 0
+        for char in storm_id:
+            if char.isdigit():
+                chars += 1
+
+        if chars == 4:
+
+            _atcf_id = atcf_id(storm_id)
+            if _atcf_id is None:
+                msg = f'No storm with id: {storm_id}'
+                raise Exception(msg)
+            storm_id = _atcf_id
+
         url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/'
         url += storm_id[4:]
         url += '/b'
         url += storm_id[0:2].lower()
         url += storm_id[2:]
         url += '.dat.gz'
+
         try:
             response = urllib.request.urlopen(url)
-        except urllib.error.URLError:
-            raise NameError(
-                f'Did not find storm with id {storm_id}.'
-                + f'Submitted URL was {url}.')
+        except urllib.error.URLError as e:
+            if '550' in e.reason:
+                raise NameError(
+                    f'Did not find storm with id {storm_id}. '
+                    + f'Submitted URL was {url}.')
+            else:
+                @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
+                def make_request():
+                    return urllib.request.urlopen(url)
+                response = make_request()
+
         self.__atcf = io.BytesIO(response.read())
 
     @_start_date.setter
@@ -464,3 +508,67 @@ class Bdeck:
         msg += f"start_date is {self.start_date} and end_date is {end_date}."
         assert end_date > self.start_date, msg
         self.__end_date = end_date
+
+
+def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
+    """Retry calling the decorated function using an exponential backoff.
+
+    http://www.saltycrane.com/blog/2009/11/trying-out-retry-decorator-python/
+    original from: http://wiki.python.org/moin/PythonDecoratorLibrary#Retry
+
+    :param ExceptionToCheck: the exception to check. may be a tuple of
+        exceptions to check
+    :type ExceptionToCheck: Exception or tuple
+    :param tries: number of times to try (not retry) before giving up
+    :type tries: int
+    :param delay: initial delay between retries in seconds
+    :type delay: int
+    :param backoff: backoff multiplier e.g. value of 2 will double the delay
+        each retry
+    :type backoff: int
+    :param logger: logger to use. If None, print
+    :type logger: logging.Logger instance
+    """
+    def deco_retry(f):
+
+        @wraps(f)
+        def f_retry(*args, **kwargs):
+            mtries, mdelay = tries, delay
+            while mtries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except ExceptionToCheck as e:
+                    msg = "%s, Retrying in %d seconds..." % (str(e), mdelay)
+                    if logger:
+                        logger.warning(msg)
+                    # else:
+                    #     print(msg)
+                    time.sleep(mdelay)
+                    mtries -= 1
+                    mdelay *= backoff
+            return f(*args, **kwargs)
+
+        return f_retry  # true decorator
+
+    return deco_retry
+
+
+def atcf_id(storm_id):
+    url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
+
+    @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
+    def request_url():
+        return urllib.request.urlopen(url)
+
+    res = request_url()
+    df = read_csv(
+        StringIO("".join([_.decode('utf-8') for _ in res])),
+        header=None,
+        )
+    name = f"{storm_id[:-4].upper():>10}"
+    year = f"{storm_id[-4:]:>5}"
+    entry = df[(df[0].isin([name]) & df[8].isin([year]))]
+    if len(entry) == 0:
+        return None
+    else:
+        return entry[20].tolist()[0].strip()

@@ -49,7 +49,7 @@ def main():
         slurm_ntasks=1000,
         run_name='AdcircPy/examples/example_3.py',
         partition='partition',
-        duration=timedelta(hours=8),
+        walltime=timedelta(hours=8),
         mail_type='all',
         mail_user='example@email.gov',
         log_filename='example_3.log',
@@ -63,7 +63,6 @@ def main():
         spinup_time=timedelta(days=5),
         server_config=slurm
     )
-
     driver.write(PARENT / "outputs/example_3", overwrite=True)
 
 

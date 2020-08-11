@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 import argparse
-from adcircpy.model.winds import BestTrackForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 def parse_args():

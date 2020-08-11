@@ -57,15 +57,11 @@ def log_level(parser):
 
 def server(parser):
 
-    # flag some options as required when a resource manager is enabled
-    _required = "--use-torque" in sys.argv
-    _required = _required | ("--use-pbs" in sys.argv)
-    _required = _required | ("--use-slurm" in sys.argv)
-
     # add server options
     parser.add_argument('--hostname')
     parser.add_argument('--port', type=int)
-    parser.add_argument("--wdir", required=_required)
+    parser.add_argument(
+        "--wdir", required=True if '--hostname' in sys.argv else False)
     parser.add_argument("--keep-wdir", action="store_true")
     parser.add_argument(
         "--binaries-path", "--binaries-prefix",
@@ -86,9 +82,26 @@ def server(parser):
     manager.add_argument('--use-pbs', action="store_true")
     manager.add_argument('--use-slurm', action="store_true")
 
+    # flag some options as required when a resource manager is enabled
+    _required = "--use-torque" in sys.argv
+    _required = _required | ("--use-pbs" in sys.argv)
+    _required = _required | ("--use-slurm" in sys.argv)
+
     # resource manager specific options
     parser.add_argument('--account', required=_required)
-    parser.add_argument('--walltime', required=_required)
+    parser.add_argument('--slurm-ntasks', required=_required, type=int)
+    parser.add_argument('--partition', required=_required)
+    parser.add_argument('--walltime', required=_required, type=float)
+    parser.add_argument('--slurm-filename')
+    parser.add_argument('--slurm-rundir')
+    parser.add_argument('--run-name')
+    parser.add_argument('--mail-type')
+    parser.add_argument('--mail-user')
+    parser.add_argument('--log-filename')
+    parser.add_argument('--path-prefix')
+    parser.add_argument('--slurm-nodes')
+    parser.add_argument('--slurm-launcher', default='srun')
+    parser.add_argument('--extra-commands', action='append')
     parser.add_argument(
         '--module',
         default=list(),
@@ -128,6 +141,23 @@ def gwce_solution_scheme(parser):
         choices=['semi-implicit', 'explicit'],
         # default='explicit'
         default='semi-implicit'
+        )
+
+
+def boundaries_generation(parser):
+    parser.add_argument("--generate-boundaries", action="store_true")
+    parser.add_argument("--boundaries-threshold", default=0., type=float)
+    parser.add_argument(
+        "--land-ibtype",
+        default=20,
+        type=int,
+        choices=[0, 10, 20]
+        )
+    parser.add_argument(
+        "--island-ibtype",
+        default=21,
+        type=int,
+        choices=[1, 11, 21]
         )
 
 
@@ -211,7 +241,7 @@ def nodal_attributes(parser):
 
 def surface_output(physical_var, parser, spinup=False):
     # surface output requests
-    long_name = f"--{physical_var}-surface-sampling-frequency"
+    long_name = f"--{physical_var}-surface-sampling-rate"
     short_name = f"--{physical_var[:4]}"
     if spinup:
         long_name += "-spinup"
@@ -262,7 +292,7 @@ def surface_output(physical_var, parser, spinup=False):
 
 
 def stations_output(physical_var, parser, spinup=False):
-    long_name = f"--{physical_var}-stations-sampling-frequency"
+    long_name = f"--{physical_var}-stations-sampling-rate"
     short_name = f"--{physical_var[:4]}-stat"
     if spinup:
         long_name += "-spinup"
@@ -366,6 +396,7 @@ def get_parser(runtype=None, description=None):
     tidal_constituents(parser)
     timestep(parser)
     gwce_solution_scheme(parser)
+    boundaries_generation(parser)
     output_directory(parser)
     allow_overwrite(parser)
     generate_only(parser)

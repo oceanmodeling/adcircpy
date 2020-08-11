@@ -1,12 +1,14 @@
 name: adcircpy
 channels:
-  - defaults
+  - conda-forge
 dependencies:
   - bs4
+  - fiona
   - matplotlib
   - netcdf4
   - numpy
   - pandas
+  - pip
   - psutil
   - pyproj>=2.6
   - requests
@@ -14,8 +16,14 @@ dependencies:
   - seaborn
   - shapely
   - pip:
+      - coverage
+      - coverage-badge
       - eventlet
+      - flake8
       - haversine
+      - nose
       - ordered-set
+      - paramiko
+      - rednose
       - utm
       - wget
