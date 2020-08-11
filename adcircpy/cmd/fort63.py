@@ -1,4 +1,5 @@
 import argparse
+from ast import literal_eval
 
 import matplotlib.pyplot as plt
 
@@ -25,11 +26,25 @@ def plot(fort63, args):
             edgecolor='r',
             facecolor='none'
         )
-        plt.show()
+    ax.set_ylim(ymin=args.ymin, ymax=args.ymax, auto=True)
+    ax.set_xlim(xmin=args.xmin, xmax=args.xmax, auto=True)
+    plt.show()
 
 
 def animation(fort63, args):
-    fort63.animation(save=args.save_path, show=args.show)
+    fort63.animation(
+        save=args.save_path,
+        show=not args.no_show,
+        xmin=args.xmin,
+        xmax=args.xmax,
+        ymin=args.ymin,
+        ymax=args.ymax,
+        start_frame=args.start_index,
+        end_frame=args.end_index,
+        fps=args.fps,
+        figsize=args.figsize,
+        elements=args.plot_elements,
+        )
 
 
 def export(fort63, args):
@@ -45,7 +60,7 @@ def main():
     )
     {
         'plot': plot,
-        'animation': animation,
+        'animate': animation,
         'export': export
     }[args.mode](fort63, args)
 
@@ -63,8 +78,6 @@ def parse_args():
     plot = subparsers.add_parser('plot')
     plot.add_argument('index', type=int, default=-1)
     plot.add_argument('--no-show', action='store_true')
-    plot.add_argument('--save')
-    plot.add_argument('--fps', type=int, default=2)
     _help = "Path to fort.14 file (required if fort63 files is not netcdf)."
     plot.add_argument('--fort14', help=_help)
     plot.add_argument('--title', help="Plot title override.")
@@ -75,6 +88,24 @@ def parse_args():
     plot.add_argument("--plot-elements", action="store_true")
     plot.add_argument("--diagnose")
     plot.add_argument('--save-path')
+    plot.add_argument('--xmin', type=float)
+    plot.add_argument('--xmax', type=float)
+    plot.add_argument('--ymin', type=float)
+    plot.add_argument('--ymax', type=float)
+
+    # animation
+    anim = subparsers.add_parser('animate')
+    anim.add_argument('--fps', type=int, default=5)
+    anim.add_argument('--figsize', type=literal_eval)
+    anim.add_argument('--start-index', type=int, default=0)
+    anim.add_argument('--end-index', type=int, default=-1)
+    anim.add_argument('--no-show', action="store_true")
+    anim.add_argument('--save-path')
+    anim.add_argument("--plot-elements", action="store_true")
+    anim.add_argument('--xmin', type=float)
+    anim.add_argument('--xmax', type=float)
+    anim.add_argument('--ymin', type=float)
+    anim.add_argument('--ymax', type=float)
 
     # export
     export = subparsers.add_parser('export')

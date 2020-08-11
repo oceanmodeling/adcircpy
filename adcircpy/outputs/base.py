@@ -237,10 +237,20 @@ class _SurfaceOutputTimeseries(_SurfaceOutput):
 
 class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
 
-    def animation(self, save=False, fps=3, start_frame=0, end_frame=-1,
-                  **kwargs):
-        fig = plt.figure()
+    def animation(
+            self,
+            save=False,
+            fps=3,
+            start_frame=0,
+            end_frame=-1,
+            **kwargs
+            ):
+
+        fig = plt.figure(
+            figsize=kwargs.get("figsize")
+            )
         ax = fig.add_subplot(111)
+        plt.tight_layout(pad=2)
         _oi = self.index
 
         def animate(i):
@@ -255,16 +265,29 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             if np.any(self.values.mask):
                 self.triangulation.set_mask(np.any(
                     self.values.mask[self.triangulation.triangles], axis=1))
+
+            if kwargs.get('elements', False):
+                ax.triplot(self.triangulation, color='k', linewidth=0.7)
+
             _ax = ax.tricontourf(
                 self.triangulation,
                 self.values,
                 cmap=kwargs.get("cmap", self._cmap),
                 levels=kwargs.get("levels", self._levels),
-            )
+                )
+            ax.set_ylim(
+                ymin=kwargs.get("ymin"),
+                ymax=kwargs.get("ymax"),
+                auto=True
+                )
+            ax.set_xlim(
+                xmin=kwargs.get("xmin"),
+                xmax=kwargs.get("xmax"),
+                auto=True
+                )
             # ax.set_title(dates[i].strftime('%b %d, %Y %H:%M'))
-            # ax.set_xlabel('Longitude (°E)')
-            # ax.set_ylabel('Latitude (°N)')
-            ax.axis('scaled')
+            ax.set_xlabel('Longitude (°E)')
+            ax.set_ylabel('Latitude (°N)')
             # cbar = fig.colorbar(_ax, cax=cax, format='%.1f')
             # cbar.ax.set_ylabel('UNITS', rotation=90)
 
@@ -277,16 +300,18 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             animate,
             frames,
             blit=False
-        )
-        if save is not False:
+            )
+
+        if save:
             anim.save(
                 pathlib.Path(save),
                 writer='imagemagick',
                 fps=fps
             )
 
-        # if not args.no_show:
-        # plt.show()
         self.index = _oi
+
+        if kwargs.get("show", False):
+            plt.show()
 
         return anim
