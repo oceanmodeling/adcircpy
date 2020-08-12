@@ -179,12 +179,12 @@ class _Fort15:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
-                              in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) \
-                          in stations['collection'].items():
+                            in stations['collection'].items():
                         f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
 
@@ -200,12 +200,12 @@ class _Fort15:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             for station_id, (x, y) \
-                                  in stations['collection'].items():
+                                    in stations['collection'].items():
                                 f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
-                              in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
 
@@ -800,8 +800,8 @@ class _Fort15:
             return self.__TAU0
         except AttributeError:
             if self.mesh.has_nodal_attribute(
-                  "primitive_weighting_in_continuity_equation",
-                  self._runtype):
+                    "primitive_weighting_in_continuity_equation",
+                    self._runtype):
                 return -3
             if self.NOLIBF != 2:
                 return self.CF
@@ -888,9 +888,9 @@ class _Fort15:
             DRAMP += 10 * ' '
             return DRAMP
         except AttributeError:
-            DRAMP = self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date) /
-                    timedelta(days=1)).total_seconds()
+            DRAMP = self.spinup_factor * ((self.start_date -
+                                           self.forcing_start_date) /
+                                          timedelta(days=1))
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
@@ -933,18 +933,18 @@ class _Fort15:
         try:
             return self.__DRAMPElev
         except AttributeError:
-            return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date) /
-                    timedelta(days=1)).total_seconds()
+            return self.spinup_factor * ((self.start_date -
+                                          self.forcing_start_date) /
+                                         timedelta(days=1))
 
     @property
     def DRAMPTip(self):
         try:
             return self.__DRAMPTip
         except AttributeError:
-            return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date) /
-                    timedelta(days=1)).total_seconds()
+            return self.spinup_factor * ((self.start_date -
+                                          self.forcing_start_date) /
+                                         timedelta(days=1))
 
     @property
     def DRAMPMete(self):
@@ -1995,8 +1995,8 @@ class _Fort15:
 
     @lateral_stress_in_gwce_is_symmetrical.setter
     def lateral_stress_in_gwce_is_symmetrical(
-          self,
-          lateral_stress_in_gwce_is_symmetrical
+            self,
+            lateral_stress_in_gwce_is_symmetrical
     ):
         self.__lateral_stress_in_gwce_is_symmetrical = bool(
             lateral_stress_in_gwce_is_symmetrical)
@@ -2013,16 +2013,16 @@ class _Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-          self,
-          lateral_stress_in_momentum_is_symmetrical
+            self,
+            lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical)
 
     @lateral_stress_in_momentum_method.setter
     def lateral_stress_in_momentum_method(
-          self,
-          lateral_stress_in_momentum_method
+            self,
+            lateral_stress_in_momentum_method
     ):
         assert lateral_stress_in_momentum_method in [
             '2_part', 'integration_by_parts']
@@ -2217,8 +2217,10 @@ class _Fort15:
             if output['sampling_rate'] is not None:
                 if (output_type == 'surface' and
                         output['sampling_rate'].total_seconds() == 0):
-                    return int((self.end_date - self.start_date).total_seconds() / self.DTDP)
-                return int(round((output['sampling_rate'].total_seconds() / self.DTDP)))
+                    return int((
+                                       self.end_date - self.start_date).total_seconds() / self.DTDP)
+                return int(round(
+                    (output['sampling_rate'].total_seconds() / self.DTDP)))
             else:
                 return 0
 
