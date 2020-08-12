@@ -21,6 +21,6 @@ if util.find_spec("colored_traceback") is not None:
 
     colored_traceback.add_hook(always=True)
 
-from ._version import get_versions
+from ._version import get_versions  # noqa: E402
 __version__ = get_versions()['version']
 del get_versions
