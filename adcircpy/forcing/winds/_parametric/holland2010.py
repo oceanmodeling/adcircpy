@@ -1,21 +1,22 @@
-import numpy as np
-from scipy import optimize
 import warnings
+
 import matplotlib.pyplot as plt
+import numpy as np
 from pyschism.forcing.winds.atcf import Bdeck
+from scipy import optimize
 
 
 def holland_B(hurdat, coriolis=True):
-
     # air_density = 1.225
     air_density = 1.15
 
     def with_coriolis(Vmax, Rmax, Pn, Pc, eye_lat):
-        f = 2.*7.2921e-5*np.sin(np.radians(np.abs(eye_lat)))
-        return (Vmax**2 + Vmax*Rmax*f*air_density*np.exp(1)) / (Pn - Pc)
+        f = 2. * 7.2921e-5 * np.sin(np.radians(np.abs(eye_lat)))
+        return (Vmax ** 2 + Vmax * Rmax * f * air_density * np.exp(1)) / (
+                Pn - Pc)
 
     def no_coriolis(Vmax, Pn, Pc):
-        return (Vmax**2 * air_density * np.exp(1)) / (Pn - Pc)
+        return (Vmax ** 2 * air_density * np.exp(1)) / (Pn - Pc)
 
     for data in hurdat.values():
 
@@ -26,11 +27,11 @@ def holland_B(hurdat, coriolis=True):
             Pn = Pc + 1.0
         if coriolis:
             return with_coriolis(
-                    data['max_sustained_wind_speed'],
-                    data['radius_of_maximum_winds'],
-                    Pn,
-                    Pc,
-                    data['eye']['lat'])
+                data['max_sustained_wind_speed'],
+                data['radius_of_maximum_winds'],
+                Pn,
+                Pc,
+                data['eye']['lat'])
         else:
             return no_coriolis(
                 data['max_sustained_wind_speed'],
@@ -54,11 +55,13 @@ def main():
         B = 1.0
 
         def holland2010(r, B, x):
-            return Vmax*(((Rmax/r)**B)*np.exp(1-(Rmax/r)**B))**x
+            return Vmax * (
+                    ((Rmax / r) ** B) * np.exp(1 - (Rmax / r) ** B)) ** x
 
         def V(B, x):
             def v(r):
                 return holland2010(r, B, x)
+
             return v
 
         # B = holland_B(hurdat)
@@ -85,7 +88,7 @@ def main():
                     p0=p0,
                     # bounds=bounds,
                     method='dogbox'
-                    )
+                )
                 print(popt)
             v = V(*popt)
             radii = np.linspace(bi, bf, num=500)

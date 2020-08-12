@@ -1,8 +1,9 @@
 #! /usr/bin/env python
-import unittest
 import pathlib
 import tempfile
-from adcircpy.mesh.grd import reader, writer, euclidean_mesh
+import unittest
+
+from adcircpy.mesh.grd import euclidean_mesh, reader, writer
 
 
 class GrdTestCase(unittest.TestCase):
@@ -20,7 +21,7 @@ class GrdTestCase(unittest.TestCase):
             '9': ((.5, .66), -99999.),
             '10': ((-1., 1.), -99999.),
             '11': ((-1., 0.), -99999.),
-            }
+        }
         self.elements = {
             '1': ['5', '7', '9'],
             '2': ['1', '2', '7'],
@@ -32,18 +33,18 @@ class GrdTestCase(unittest.TestCase):
             '8': ['5', '10', '11', '1'],
             '9': ['9', '4', '5'],
             '10': ['5', '1', '7']
-            }
+        }
 
         self.boundaries = dict()
 
         self.boundaries[None] = {  # "open" boundaries
-                0: {'indexes': ['10', '11', '1', '2']},
-                1: {'indexes': ['2', '3', '4']}
+            0: {'indexes': ['10', '11', '1', '2']},
+            1: {'indexes': ['2', '3', '4']}
         }
 
         self.boundaries[0] = {  # "land" boundaries
             0: {'indexes': ['4', '6']},
-            1: {'indexes': ['6',  '5', '10']}
+            1: {'indexes': ['6', '5', '10']}
         }
 
         self.boundaries[1] = {  # "interior" boundary
@@ -71,7 +72,7 @@ class GrdTestCase(unittest.TestCase):
             writer,
             self.grd,
             pathlib.Path(tmpdir.name) / 'hgrid.grd'
-            )
+        )
 
     def test_no_ocean_bnd(self):
         tmpdir = tempfile.TemporaryDirectory()

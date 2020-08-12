@@ -105,8 +105,10 @@ class TPXO:
         dy = np.mean(np.diff(self.y))
         _idx = np.where(
             np.logical_and(  # buffer the bbox by 2 difference units
-                np.logical_and(x >= np.min(_x) - 2 * dx, x <= np.max(_x) + 2 * dx),
-                np.logical_and(y >= np.min(_y) - 2 * dy, y <= np.max(_y) + 2 * dy)))
+                np.logical_and(x >= np.min(_x) - 2 * dx,
+                               x <= np.max(_x) + 2 * dx),
+                np.logical_and(y >= np.min(_y) - 2 * dy,
+                               y <= np.max(_y) + 2 * dy)))
         return griddata(
             (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
 
@@ -130,10 +132,10 @@ class TPXO:
 
             valid = {
                 "yes": True,
-                "y"  : True,
-                "ye" : True,
-                "no" : False,
-                "n"  : False
+                "y": True,
+                "ye": True,
+                "no": False,
+                "n": False
             }
             if default is None:
                 prompt = " [y/n] "

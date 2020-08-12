@@ -1,11 +1,13 @@
 #! /usr/bin/env python
-import os
 import argparse
+import os
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
+
 from adcircpy.outputs import Fort61
 from adcircpy.validation import COOPS
-import matplotlib.pyplot as plt
 
 
 def parse_args():
@@ -24,19 +26,19 @@ def parse_args():
     show.add_argument(
         '--no-show', dest='show', action='store_false',
         help='Prevents the plots from showing to screen. '
-        + 'Useful for only saving the plots without showing them.')
+             + 'Useful for only saving the plots without showing them.')
     parser.add_argument(
         '--coops-only', action='store_true',
         help='coops plots to screen.')
     parser.add_argument(
         '--save',
         help="Directory where to save plots. "
-        + "Will be created if it doesn't exist. "
-        + "It will also overwrite files unles --resume-save is used.")
+             + "Will be created if it doesn't exist. "
+             + "It will also overwrite files unles --resume-save is used.")
     parser.add_argument(
         '--resume-save', action='store_true',
         help="Directory where to save plots. "
-        + "Will be created if it doesn't exist.")
+             + "Will be created if it doesn't exist.")
     return parser.parse_args()
 
 
@@ -49,7 +51,8 @@ def main():
     end_date = fort61.datetime[-1]
     for station_id, data in fort61:
         if args.save is not None:
-            fname = str(Path(str(Path(args.save)) + '/{}.png'.format(station_id)))
+            fname = str(
+                Path(str(Path(args.save)) + '/{}.png'.format(station_id)))
             if args.resume_save and os.path.isfile(fname):
                 continue
         coops.add_station(station_id, start_date, end_date)

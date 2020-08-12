@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-import unittest
 import pathlib
 import tempfile
+import unittest
+
 from adcircpy.mesh.sms2dm import reader, writer
 
 
@@ -20,7 +21,7 @@ class Sms2dmTestCase(unittest.TestCase):
             '9': ([.5, .66], -99999.),
             '10': ([-1., 1.], -99999.),
             '11': ([-1., 0.], -99999.),
-            }
+        }
         self.elements = {
             '1': ['5', '7', '9'],
             '2': ['1', '2', '7'],
@@ -32,34 +33,33 @@ class Sms2dmTestCase(unittest.TestCase):
             '8': ['5', '10', '11', '1'],
             '9': ['9', '4', '5'],
             '10': ['5', '1', '7']
-            }
+        }
 
         self.boundaries = dict()
 
         self.boundaries[None] = {  # "open" boundaries
-                0: {'indexes': ['10', '11', '1', '2']},
-                1: {'indexes': ['2', '3', '4']}
+            0: {'indexes': ['10', '11', '1', '2']},
+            1: {'indexes': ['2', '3', '4']}
         }
 
         self.boundaries[0] = {  # "land" boundaries
             0: {'indexes': ['4', '6']},
-            1: {'indexes': ['6',  '5', '10']}
+            1: {'indexes': ['6', '5', '10']}
         }
 
-        self.boundaries[1] = { # "interior" boundary
+        self.boundaries[1] = {  # "interior" boundary
             0: {'indexes': ['7', '8', '9', '7']}
-        }  
-
+        }
 
     def test_write_read(self):
         grd = {
             'ND': self.nodes,
             'E3T': {
-                id: indexes 
+                id: indexes
                 for id, indexes in self.elements.items() if len(indexes) == 3
             },
             'E4Q': {
-                id: indexes 
+                id: indexes
                 for id, indexes in self.elements.items() if len(indexes) == 4
             },
             'boundaries': self.boundaries,
@@ -74,11 +74,11 @@ class Sms2dmTestCase(unittest.TestCase):
         grd = {
             'ND': self.nodes,
             'E3T': {
-                id: indexes 
+                id: indexes
                 for id, indexes in self.elements.items() if len(indexes) == 3
             },
             'E4Q': {
-                id: indexes 
+                id: indexes
                 for id, indexes in self.elements.items() if len(indexes) == 4
             }
         }

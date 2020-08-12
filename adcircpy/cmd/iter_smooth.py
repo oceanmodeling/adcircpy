@@ -5,11 +5,13 @@ by assigning the minimum topobathy value of the group of nodes where the blowup
 ocurred.
 """
 import argparse
-import pathlib
 from glob import glob
+import pathlib
+
 import matplotlib.pyplot as plt
-from adcircpy.mesh import AdcircMesh
+
 from adcircpy.cmd import diagnose
+from adcircpy.mesh import AdcircMesh
 
 
 def parse_args():
@@ -48,7 +50,8 @@ def main():
     # mesh.values[indexes] = np.min(mesh.values[indexes])
     ax = mesh.make_plot()
     ax.triplot(mesh.triangulation, color='k', linewidth=0.05)
-    ax.scatter(mesh.x[indexes], mesh.y[indexes], edgecolor='r', facecolor='none')
+    ax.scatter(mesh.x[indexes], mesh.y[indexes], edgecolor='r',
+               facecolor='none')
     plt.show()
     return 0
 

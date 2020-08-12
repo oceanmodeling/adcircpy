@@ -1,4 +1,5 @@
 import pathlib
+
 import numpy as np
 
 
@@ -20,5 +21,5 @@ def parse(logfile):
             index.append(
                 np.abs(int(
                     line.split("AT NODE")[-1].split("ON MYPROC")[0].strip())
-                )-1)
+                ) - 1)
     return elmax, speedmax, index

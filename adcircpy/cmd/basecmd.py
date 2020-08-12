@@ -18,7 +18,7 @@ class _AdcircCommand:
             self.driver.write(
                 self._args.output_directory,
                 overwrite=self._args.overwrite
-                )
+            )
             return
 
         outputs = self.driver.run(
@@ -142,13 +142,13 @@ class _AdcircCommand:
                 "walltime": timedelta(hours=self._args.walltime),
                 "mail_type": self._args.mail_type,
                 "mail_user": self._args.mail_user,
-                "log_filename":  self._args.log_filename,
+                "log_filename": self._args.log_filename,
                 "modules": self._args.modules,
                 "path_prefix": self._args.path_prefix,
                 "extra_commands": self._args.extra_commands,
                 "launcher": self._args.slurm_launcher,
                 "nodes": self._args.slurm_nodes
-                }
+            }
             if self._args.slurm_filename is not None:
                 kwargs.update({"filename": self._args.slurm_ntasks})
             if self._args.slurm_rundir is not None:
@@ -206,7 +206,7 @@ class _AdcircCommand:
                 threshold=self._args.boundaries_threshold,
                 land_ibtype=self._args.land_ibtype,
                 interior_ibtype=self._args.island_ibtype,
-                )
+            )
 
         # set nodal attributes
         if self._args.fort13 is not None:
