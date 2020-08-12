@@ -3,12 +3,14 @@ import pathlib
 
 import setuptools
 
+import versioneer
+
 PARENT = pathlib.Path(__file__).parent.absolute()
 conf = setuptools.config.read_configuration(PARENT / 'setup.cfg')
 meta = conf['metadata']
 setuptools.setup(
     name=meta['name'],
-    version=meta['version'],
+    version=versioneer.get_version(),
     author=meta['author'],
     author_email=meta['author_email'],
     description=meta['description'],
@@ -17,6 +19,7 @@ setuptools.setup(
     url=meta['url'],
     packages=setuptools.find_packages(),
     python_requires='>=3.6',
+    cmdclass=versioneer.get_cmdclass(),
     setup_requires=["setuptools>=41.2"],
     install_requires=[
         'matplotlib',
