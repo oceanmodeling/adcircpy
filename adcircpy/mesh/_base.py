@@ -150,7 +150,6 @@ class _EuclideanMesh2D:
         return self._attributes[name]['values']
 
     def get_attribute_properties(self, name):
-        # TODO this is never used; is it meant to return the non-values dictionary?
         if not self.has_attribute(name):
             raise AttributeError(f'Attribute {name} not set.')
         return self._attributes[name]['properties']
