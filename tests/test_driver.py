@@ -1,7 +1,5 @@
 import unittest
 
-from adcircpy import AdcircRun
-
 
 class AdcircRunTestCase(unittest.TestCase):
     pass

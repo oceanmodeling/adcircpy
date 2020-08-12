@@ -1,13 +1,13 @@
-from bs4 import BeautifulSoup
-import json
 import codecs
-import requests
+import json
 import os
+
 from AdcircPy import utils
+from bs4 import BeautifulSoup
+import requests
 
 
 class HarmonicConstituents(dict):
-
     _rebuild = False
 
     def __init__(self, stations):
@@ -34,12 +34,12 @@ class HarmonicConstituents(dict):
 
     def _add_station_to_cache(self, station):
         # Parse from html, not available through rest.
-        url = self._url+station
+        url = self._url + station
         soup = BeautifulSoup(requests.get(url).text, 'html.parser')
         table = soup.find("table")
         if table is not None:
             headings = [th.get_text().strip() for th in table.find("tr")
-                        .find_all("th")]
+                .find_all("th")]
             datasets = list()
             for row in table.find_all("tr")[1:]:
                 datasets.append(dict(zip(headings, (td.get_text() for td in
@@ -49,11 +49,11 @@ class HarmonicConstituents(dict):
                     self._cache[station] = dict()
                 if float(dataset['Amplitude']) != 0.:
                     self._cache[station][dataset['Name']] = {
-                            'amplitude': float(dataset['Amplitude'])/3.28084,
-                            'phase': float(dataset['Phase']),
-                            'speed': float(dataset['Speed']),
-                            'description': dataset['Description'],
-                            'units': 'meters'}
+                        'amplitude': float(dataset['Amplitude']) / 3.28084,
+                        'phase': float(dataset['Phase']),
+                        'speed': float(dataset['Speed']),
+                        'description': dataset['Description'],
+                        'units': 'meters'}
         else:
             self._cache[station] is None
         self._rebuild = True

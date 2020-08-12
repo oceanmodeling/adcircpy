@@ -1,10 +1,11 @@
 from importlib import util
-from pandas.plotting import register_matplotlib_converters
+
 import matplotlib as mpl
-from adcircpy.mesh import AdcircMesh
+from pandas.plotting import register_matplotlib_converters
+
 from adcircpy.driver import AdcircRun
 from adcircpy.forcing import Tides
-
+from adcircpy.mesh import AdcircMesh
 
 __all__ = [
     "AdcircMesh",
@@ -15,7 +16,7 @@ __all__ = [
 mpl.rcParams['agg.path.chunksize'] = 10000
 register_matplotlib_converters()
 
-
 if util.find_spec("colored_traceback") is not None:
     import colored_traceback
+
     colored_traceback.add_hook(always=True)

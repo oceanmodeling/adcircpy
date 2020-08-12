@@ -1,22 +1,19 @@
 import abc
-import pathlib
 from functools import lru_cache
+import pathlib
 
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
-
 from netCDF4 import Dataset
 import numpy as np
 from pyproj import CRS
 
-
-from adcircpy.mesh._figures import _figure
 from adcircpy.mesh import sms2dm
+from adcircpy.mesh._figures import _figure
 
 
 class _SurfaceOutput(metaclass=abc.ABCMeta):
-
     _physical_variables = {
         "fort.63": "zeta",
         "maxele": "zeta_max"
@@ -27,19 +24,20 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
         self._crs = crs
 
     def export(self, path, overwrite=False):
-        coords = {i+1: (self.x[i], self.y[i]) for i in range(len(self.values))}
+        coords = {i + 1: (self.x[i], self.y[i]) for i in
+                  range(len(self.values))}
         values = self.values.filled(99999.)
         nodes = {
             id: ((x, y), values[i])
             for i, (id, (x, y)) in enumerate(coords.items())
-            }
+        }
         triangles = {
-                id+1: tuple(e) for id, e in enumerate(self.triangles+1)
-                }
+            id + 1: tuple(e) for id, e in enumerate(self.triangles + 1)
+        }
         sms2dm.writer({
             'ND': nodes,
             'E3T': triangles
-            },
+        },
             path, overwrite)
 
     @_figure
@@ -50,7 +48,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
             self.triangles,
             color=color,
             linewidth=linewidth
-            )
+        )
         return axes
 
     @_figure
@@ -65,7 +63,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
             levels=kwargs.get('levels', self._levels),
             vmin=kwargs.get('vmin', np.min(self.values)),
             vmax=kwargs.get('vmax', np.max(self.values)),
-            )
+        )
         self.triangulation.set_mask(None)
         if kwargs.get('cbar') is not None:
             plt.colorbar(_ax)
@@ -239,9 +237,20 @@ class _SurfaceOutputTimeseries(_SurfaceOutput):
 
 class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
 
-    def animation(self, save=False, fps=3, start_frame=0, end_frame=-1, **kwargs):
-        fig = plt.figure()
+    def animation(
+            self,
+            save=False,
+            fps=3,
+            start_frame=0,
+            end_frame=-1,
+            **kwargs
+            ):
+
+        fig = plt.figure(
+            figsize=kwargs.get("figsize")
+            )
         ax = fig.add_subplot(111)
+        plt.tight_layout(pad=2)
         _oi = self.index
 
         def animate(i):
@@ -256,20 +265,35 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             if np.any(self.values.mask):
                 self.triangulation.set_mask(np.any(
                     self.values.mask[self.triangulation.triangles], axis=1))
+
+            if kwargs.get('elements', False):
+                ax.triplot(self.triangulation, color='k', linewidth=0.7)
+
             _ax = ax.tricontourf(
                 self.triangulation,
                 self.values,
                 cmap=kwargs.get("cmap", self._cmap),
                 levels=kwargs.get("levels", self._levels),
                 )
+            ax.set_ylim(
+                ymin=kwargs.get("ymin"),
+                ymax=kwargs.get("ymax"),
+                auto=True
+                )
+            ax.set_xlim(
+                xmin=kwargs.get("xmin"),
+                xmax=kwargs.get("xmax"),
+                auto=True
+                )
             # ax.set_title(dates[i].strftime('%b %d, %Y %H:%M'))
-            # ax.set_xlabel('Longitude (°E)')
-            # ax.set_ylabel('Latitude (°N)')
-            ax.axis('scaled')
+            ax.set_xlabel('Longitude (°E)')
+            ax.set_ylabel('Latitude (°N)')
             # cbar = fig.colorbar(_ax, cax=cax, format='%.1f')
             # cbar.ax.set_ylabel('UNITS', rotation=90)
+
         end_frame = end_frame % len(self) if end_frame < 0 else end_frame
-        start_frame = start_frame % len(self) if start_frame < 0 else start_frame
+        start_frame = start_frame % len(
+            self) if start_frame < 0 else start_frame
         frames = range(start_frame, end_frame)
         anim = FuncAnimation(
             fig,
@@ -277,15 +301,17 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             frames,
             blit=False
             )
-        if save is not False:
+
+        if save:
             anim.save(
                 pathlib.Path(save),
                 writer='imagemagick',
                 fps=fps
-                )
+            )
 
-        # if not args.no_show:
-        # plt.show()
         self.index = _oi
+
+        if kwargs.get("show", False):
+            plt.show()
 
         return anim

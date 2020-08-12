@@ -1,8 +1,9 @@
-from collections.abc import Mapping
-import numpy as np
-from datetime import datetime, timedelta
 import calendar
+from collections.abc import Mapping
+from datetime import datetime, timedelta
 import json
+
+import numpy as np
 import requests
 
 
@@ -26,8 +27,8 @@ class TidalStations(Mapping):
 
     def __fetch_station_data(self, station_id, start_date, end_date):
         responses = list()
-        for _start_date, _end_date in self.__get_datetime_segments(
-                start_date, end_date):
+        for _start_date, _end_date in self.__get_datetime_segments(start_date,
+                                                                   end_date):
             params = self.__get_params(station_id, _start_date, _end_date)
             try:
                 r = requests.get(self.url, params=params, timeout=10.)
@@ -91,7 +92,7 @@ class TidalStations(Mapping):
 
         segments = [(start_date, end_date)]
         interval = 2
-        while np.any([(_end_date-_start_date).total_seconds()
+        while np.any([(_end_date - _start_date).total_seconds()
                       > timedelta(days=31).total_seconds()
                       for _start_date, _end_date in segments]):
             segments = [(from_datetime, to_datetime)
@@ -186,7 +187,8 @@ class TidalStations(Mapping):
     @datum.setter
     def datum(self, datum):
         assert datum \
-            in ['MHHW', 'MHW', 'MTL', 'MSL', 'MLW', 'MLLW', 'NAVD88', 'STND']
+               in ['MHHW', 'MHW', 'MTL', 'MSL', 'MLW', 'MLLW', 'NAVD88',
+                   'STND']
         if datum == 'NAVD88':
             datum = 'NAVD'
         self.__datum = datum

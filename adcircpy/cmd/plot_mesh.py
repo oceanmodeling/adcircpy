@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 import argparse
 import pathlib
+
 import matplotlib.pyplot as plt
+
 from adcircpy import AdcircMesh
 
 
@@ -25,7 +27,7 @@ class PlotMeshCommand:
                 vmin=self.args.vmin,
                 vmax=self.args.vmax,
                 # levels=self.args.levels
-                )
+            )
         if self.args.diagnose is not None:
             elmax, speedmax, index = diagnose(self.args.diagnose)
             self.ax.scatter(
@@ -96,14 +98,16 @@ def diagnose(logfile):
     for line in line0:
         if "** WARNING: Elevation.gt.WarnElev **" in line:
             elmax.append(float(line.split("AT NODE")[0].split("=")[-1]))
-            speedmax.append(float(line.split("SPEEDMAX =")[0].split("AT NODE")[-1]))
-            index.append(np.abs(int(line.split("AT NODE")[-1].split("ON MYPROC")[0].strip()))-1)
+            speedmax.append(
+                float(line.split("SPEEDMAX =")[0].split("AT NODE")[-1]))
+            index.append(np.abs(int(
+                line.split("AT NODE")[-1].split("ON MYPROC")[0].strip())) - 1)
     return elmax, speedmax, index
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-            description="Program to see a quick plot of an ADCIRC mesh.")
+        description="Program to see a quick plot of an ADCIRC mesh.")
     parser.add_argument("mesh", help="ADCIRC mesh file path.")
     parser.add_argument("--show-elements", action="store_true",
                         default=False)
