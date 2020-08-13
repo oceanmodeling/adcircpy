@@ -22,22 +22,13 @@ class _Fort15:
         f += f'{self.ICS:d}'.ljust(63) + ' ! ICS\n'
         f += f'{self.IM:d}'.ljust(63) + ' ! IM\n'
         if self.IM in [21, 611113]:
-<<<<<<< HEAD
             f += f'{self.IDEN:<63d} ! IDEN\n'
         f += f'{self.NOLIBF:<63G} ! NOLIBF\n'
         f += f'{self.NOLIFA:<63d} ! NOLIFA\n'
         f += f'{self.NOLICA:<63d} ! NOLICA\n'
         f += f'{self.NOLICAT:<63d} ! NOLICAT\n'
         f += f'{self.NWP:<63d} ! NWP\n'
-=======
-            f += f'{self.IDEN:d}\n'.ljust(63)
-            f += ' ! IDEN'
-        f += f'{self.NOLIBF:G}'.ljust(63) + ' ! NOLIBF\n'
-        f += f'{self.NOLIFA:d}'.ljust(63) + ' ! NOLIFA\n'
-        f += f'{self.NOLICA:d}'.ljust(63) + ' ! NOLICA\n'
-        f += f'{self.NOLICAT:d}'.ljust(63) + ' ! NOLICAT\n'
-        f += f'{self.NWP:d}'.ljust(63) + ' ! NWP\n'
->>>>>>> 286b023... revert from commit b21d81149e5f933c47772f57b728844f1d558aad
+
         if self._runtype == 'coldstart':
             attributes = self.mesh.get_coldstart_attributes()
         elif self._runtype == 'hotstart':
@@ -295,7 +286,6 @@ class _Fort15:
         del self._outputs
         del self._runtype
         return f
-
 
     def write(self, runtype, path, overwrite=False):
         assert runtype in ['coldstart', 'hotstart']
