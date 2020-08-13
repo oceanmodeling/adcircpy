@@ -21,8 +21,7 @@ class _Fort15:
         f += f'{self.ICS:<63d} ! ICS\n'
         f += f'{self.IM:<63d} ! IM\n'
         if self.IM in [21, 611113]:
-            f += f'{self.IDEN:d}\n'.ljust(63)
-            f += ' ! IDEN'
+            f += f'{self.IDEN:<63d} ! IDEN\n'
         f += f'{self.NOLIBF:<63G} ! NOLIBF\n'
         f += f'{self.NOLIFA:<63d} ! NOLIFA\n'
         f += f'{self.NOLICA:<63d} ! NOLICA\n'
