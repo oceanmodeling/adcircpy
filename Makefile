@@ -12,7 +12,7 @@ ifndef tag
 	$(error tag is undefined)
 endif
 
-pre-release: check-tag coverage
+pre-release: check-tag badge
 	@git tag $(tag); rm -rf ./dist; ./setup.py sdist;
 	
 release: pre-release
