@@ -1,4 +1,4 @@
-# AdcircPy
+# ADCIRCPy
 ## Python library for automating ADCIRC model runs.
 [![tests](https://github.com/jreniel/adcircpy/workflows/tests/badge.svg) ![coverage](tests/coverage.svg)](https://github.com/jreniel/adcircpy/actions)
 
