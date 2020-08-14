@@ -9,7 +9,7 @@ class _DriverFile:
         self._driver = driver
 
     def write(self, path, overwrite=False):
-        with open(pathlib.Path(path), 'w') as f:
+        with open(pathlib.Path(path), 'w', newline='\n') as f:
             f.write(self._script)
         # os.chmod(path, 744)
 

@@ -46,7 +46,7 @@ def main():
     # instantiate AdcircRun object.
     slurm = SlurmConfig(
         account='account',
-        slurm_ntasks=1000,
+        ntasks=1000,
         run_name='AdcircPy/examples/example_3.py',
         partition='partition',
         walltime=timedelta(hours=8),

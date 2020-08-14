@@ -12,7 +12,7 @@ class SlurmConfig(_BaseServerConfig):
     def __init__(
             self,
             account: str,
-            slurm_ntasks: int,
+            ntasks: int,
             partition: str,
             walltime: timedelta,
             filename: str = 'slurm.job',
@@ -31,7 +31,7 @@ class SlurmConfig(_BaseServerConfig):
         Instantiate a new Slurm shell script (`*.job`).
 
         :param account: Slurm account name
-        :param slurm_ntasks: number of Slurm tasks
+        :param ntasks: number of total tasks for Slurm to run
         :param run_name: Slurm run name
         :param partition: partition to run on
         :param walltime: time delta
@@ -43,9 +43,11 @@ class SlurmConfig(_BaseServerConfig):
         :param modules: list of file paths to modules to load
         :param path_prefix: file path to prepend to the PATH
         :param extra_commands: list of extra shell commands to insert into script
+        :param launcher: command to start processes on target system (`srun`, `ibrun`, etc.)
+        :param nodes: number of total nodes
         """
         self._account = account
-        self._slurm_ntasks = slurm_ntasks
+        self._slurm_ntasks = ntasks
         self._run_name = run_name
         self._partition = partition
         self._walltime = walltime
@@ -118,20 +120,25 @@ class SlurmConfig(_BaseServerConfig):
     @property
     def _prefix(self):
         f = f'#SBATCH -D {self._run_directory}\n' \
-            f'#SBATCH -J {self._run_name}\n' \
-            f'#SBATCH -A {self._account}\n'
+            f'#SBATCH -J {self._run_name}\n'
+
+        if self._account is not None:
+            f += f'#SBATCH -A {self._account}\n'
         if self._mail_type is not None:
             f += f'#SBATCH --mail-type={self._mail_type}\n'
         if self._mail_user is not None:
             f += f'#SBATCH --mail-user={self._mail_user}\n'
         if self._log_filename is not None:
             f += f'#SBATCH --output={self._log_filename}\n'
+
         f += f'#SBATCH -n {self._slurm_ntasks}\n'
         if self._nodes is not None:
             f += f'#SBATCH -N {self._nodes}\n'
-        f += f'#SBATCH --time={self._walltime}\n'
-        f += f'#SBATCH --partition={self._partition}\n'
-        f += '\nset -e\n'
+
+        f += f'#SBATCH --time={self._walltime}\n' \
+             f'#SBATCH --partition={self._partition}\n' \
+             f'\n' \
+             f'set -e\n'
 
         if self._modules is not None:
             f += f'\n' \

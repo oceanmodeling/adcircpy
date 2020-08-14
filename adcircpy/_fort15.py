@@ -191,12 +191,12 @@ class _Fort15:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
-                          in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) \
-                      in stations['collection'].items():
+                            in stations['collection'].items():
                         f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
         if self.NWS > 0:
@@ -211,12 +211,12 @@ class _Fort15:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             for station_id, (x, y) \
-                              in stations['collection'].items():
+                                    in stations['collection'].items():
                                 f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
-                          in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
         # elevation global outputs
@@ -293,7 +293,7 @@ class _Fort15:
         if fort15.exists() and not overwrite:
             msg = f"{fort15} exists. Pass overwrite=True to overwrite."
             raise Exception(msg)
-        with open(fort15, 'w') as f:
+        with open(fort15, 'w', newline='\n') as f:
             f.write(self.fort15(runtype))
 
     def set_time_weighting_factors_in_gcwe(self, A00, B00, C00):
@@ -2184,7 +2184,8 @@ class _Fort15:
             if output['spinup'] is not None:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds() / (60. * 60. * 24.)
+                        time = self.spinup_time.total_seconds() / (
+                                60. * 60. * 24.)
                         if time > 0:
                             return time
                         else:
