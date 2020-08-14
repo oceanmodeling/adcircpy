@@ -12,7 +12,7 @@ class SlurmConfig(_BaseServerConfig):
     def __init__(
             self,
             account: str,
-            slurm_ntasks: int,
+            ntasks: int,
             partition: str,
             walltime: timedelta,
             filename: str = 'slurm.job',
@@ -31,7 +31,7 @@ class SlurmConfig(_BaseServerConfig):
         Instantiate a new Slurm shell script (`*.job`).
 
         :param account: Slurm account name
-        :param slurm_ntasks: number of total tasks
+        :param ntasks: number of total tasks for Slurm to run
         :param run_name: Slurm run name
         :param partition: partition to run on
         :param walltime: time delta
@@ -47,7 +47,7 @@ class SlurmConfig(_BaseServerConfig):
         :param nodes: number of total nodes
         """
         self._account = account
-        self._slurm_ntasks = slurm_ntasks
+        self._slurm_ntasks = ntasks
         self._run_name = run_name
         self._partition = partition
         self._walltime = walltime
