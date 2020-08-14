@@ -12,14 +12,14 @@ class _Fort15:
         # ----------------
         # model options
         # ----------------
-        f = f'{self.RUNDES:<63} ! RUNDES\n'
-        f += f'{self.RUNID:<63} ! RUNID\n'
-        f += f'{self.NFOVER:<63d} ! NFOVER\n'
-        f += f'{self.NABOUT:<63d} ! NABOUT\n'
-        f += f'{self.NSCREEN:<63d} ! NSCREEN\n'
-        f += f'{self.IHOT:<63d} ! IHOT\n'
-        f += f'{self.ICS:<63d} ! ICS\n'
-        f += f'{self.IM:<63d} ! IM\n'
+        f = f'{self.RUNDES}'.ljust(63) + ' ! RUNDES\n'
+        f += f'{self.RUNID}'.ljust(63) + ' ! RUNID\n'
+        f += f'{self.NFOVER:d}'.ljust(63) + ' ! NFOVER\n'
+        f += f'{self.NABOUT:d}'.ljust(63) + ' ! NABOUT\n'
+        f += f'{self.NSCREEN:d}'.ljust(63) + ' ! NSCREEN\n'
+        f += f'{self.IHOT:d}'.ljust(63) + ' ! IHOT\n'
+        f += f'{self.ICS:d}'.ljust(63) + ' ! ICS\n'
+        f += f'{self.IM:d}'.ljust(63) + ' ! IM\n'
         if self.IM in [21, 611113]:
             f += f'{self.IDEN:<63d} ! IDEN\n'
         f += f'{self.NOLIBF:<63G} ! NOLIBF\n'
@@ -27,64 +27,71 @@ class _Fort15:
         f += f'{self.NOLICA:<63d} ! NOLICA\n'
         f += f'{self.NOLICAT:<63d} ! NOLICAT\n'
         f += f'{self.NWP:<63d} ! NWP\n'
+
         if self._runtype == 'coldstart':
             attributes = self.mesh.get_coldstart_attributes()
         elif self._runtype == 'hotstart':
             attributes = self.mesh.get_hotstart_attributes()
         for attribute in attributes.keys():
-            f += f'{attribute:<63} \n'
-        f += f'{self.NCOR:<63d} ! NCOR\n'
-        f += f'{self.NTIP:<63d} ! NTIP\n'
-        f += f'{self.NWS:<63d} ! NWS\n'
-        f += f'{self.NRAMP:<63d} ! NRAMP\n'
-        f += f'{self.G:<63G} ! gravitational acceleration\n'
-        f += f'{self.TAU0:<63G} ! TAU0\n'
+            f += f'{attribute}'.ljust(63) + ' \n'
+        f += f'{self.NCOR:d}'.ljust(63) + ' ! NCOR\n'
+        f += f'{self.NTIP:d}'.ljust(63) + ' ! NTIP\n'
+        f += f'{self.NWS:d}'.ljust(63) + ' ! NWS\n'
+        f += f'{self.NRAMP:d}'.ljust(63) + ' ! NRAMP\n'
+        f += f'{self.G:G}'.ljust(63) + ' ! gravitational acceleration\n'
+        f += f'{self.TAU0:G}'.ljust(63) + ' ! TAU0\n'
         if self.TAU0 == -5:
             f += (f'{self.Tau0FullDomainMin:G} '
-                  f'{self.Tau0FullDomainMax:G}').ljust(63) + \
-                 ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
-        f += f'{self.DTDP:<63.6f} ! DTDP\n'
-        f += f'{self.STATIM:<63G} ! STATIM\n'
-        f += f'{self.REFTIM:<63G} ! REFTIM\n'
+                  + f'{self.Tau0FullDomainMax:G}').ljust(63)
+            f += ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
+        f += f'{self.DTDP:.6f}'.ljust(63) + ' ! DTDP\n'
+        f += f'{self.STATIM:G}'.ljust(63) + ' ! STATIM\n'
+        f += f'{self.REFTIM:G}'.ljust(63) + ' ! REFTIM\n'
         if self.NWS not in [0, 1, 9, 11]:
-            f += f'{self.WTIMINC:<63} ! WTIMINC\n'
-        f += f'{self.RNDAY:<63G} ! RNDAY\n'
-        f += f'{self.DRAMP:<63} ! DRAMP\n'
-        f += f'{self.A00:G} {self.B00:G} {self.C00:G}'.ljust(63) + \
-             ' ! A00 B00 C00\n'
-        f += f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(63) + \
-             ' ! H0 ? ? VELMIN\n'
-        f += f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(63) + \
-             ' ! SLAM0 SFEA0\n'
-        f += f'{self.FFACTOR:<63}'.ljust(63) + \
-             f' ! {"CF HBREAK FTHETA FGAMMA" if self.NOLIBF == 2 else "FFACTOR"}\n'
-        f += f'{self.ESLM:<63G}'.ljust(63) + \
-             f' ! {"ESL - LATERAL EDDY VISCOSITY COEFFICIENT" if not self.smagorinsky else "smagorinsky coefficient"}\n'
-        f += f'{self.CORI:<63G} ! CORI\n'
+            f += f'{self.WTIMINC}'.ljust(63) + '! WTIMINC\n'
+        f += f'{self.RNDAY:G}'.ljust(63) + ' ! RNDAY\n'
+        f += f'{self.DRAMP}'.ljust(63) + ' ! DRAMP\n'
+        f += f'{self.A00:G} {self.B00:G} {self.C00:G}'.ljust(63)
+        f += ' ! A00 B00 C00\n'
+        f += f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(63)
+        f += ' ! H0 ? ? VELMIN\n'
+        f += f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(63)
+        f += ' ! SLAM0 SFEA0\n'
+        f += f'{self.FFACTOR}'.ljust(63)
+        if self.NOLIBF == 2:
+            f += ' ! CF HBREAK FTHETA FGAMMA\n'
+        else:
+            f += ' ! FFACTOR\n'
+        f += f'{self.ESLM:G}'.ljust(63)
+        if not self.smagorinsky:
+            f += ' ! ESL - LATERAL EDDY VISCOSITY COEFFICIENT\n'
+        else:
+            f += ' ! smagorinsky coefficient\n'
+        f += f'{self.CORI:G}'.ljust(63) + ' ! CORI\n'
         # ----------------
         # tidal forcings
         # ----------------
-        f += f'{self.NTIF:<63d} ! NTIF\n'
+        f += f'{self.NTIF:d}'.ljust(63) + ' ! NTIF\n'
         active = self._get_active_tidal_potential_constituents()
         for constituent in active:
             forcing = self.tidal_forcing(constituent)
             f += f'{constituent} \n'
             # f += f'{forcing[0]:G} '
-            f += f'{forcing[0]:G} ' \
-                 f'{forcing[1]:G} ' \
-                 f'{forcing[2]:G} ' \
-                 f'{forcing[3]:G} ' \
-                 f'{forcing[4]:G}' \
-                 f'\n'
+            f += f"{forcing[0]:G} "
+            f += f'{forcing[1]:G} '
+            f += f'{forcing[2]:G} '
+            f += f'{forcing[3]:G} '
+            f += f'{forcing[4]:G}'
+            f += '\n'
         f += f'{self.NBFR:d}\n'
         active = self._get_active_tidal_forcing_constituents()
         for constituent in active:
             forcing = self.tidal_forcing(constituent)
-            f += f'{constituent} \n' \
-                 f"{forcing[1]:G} " \
-                 f'{forcing[3]:G} ' \
-                 f'{forcing[4]:G}' \
-                 f'\n'
+            f += f'{constituent} \n'
+            f += f"{forcing[1]:G} "
+            f += f'{forcing[3]:G} '
+            f += f'{forcing[4]:G} '
+            f += '\n'
         # f += f"{len(self.mesh.open_boundaries)}\n"
         for id, bnd in self.mesh.open_boundaries.items():
             # f += f"{bnd['neta']}\n"
@@ -96,12 +103,13 @@ class _Fort15:
                     f += f'{constituent}\n'
                     vertices = self.mesh.get_xy(
                         crs='EPSG:4326')[bnd['indexes'], :]
-                    amp, phase = self.tidal_forcing.tpxo(constituent, vertices)
+                    amp, phase = self.tidal_forcing.tpxo(
+                        constituent, vertices)
                     for i in range(len(vertices)):
                         f += f'{amp[i]:.8e} {phase[i]:.8e}\n'
             elif bnd['iettype'] in 2:
                 f += bnd['iettype']['obj'].ethconst
-        f += f'{self.ANGINN:<63G} ! ANGINN\n'
+        f += f'{self.ANGINN:G}'.ljust(63) + ' ! ANGINN\n'
         # ----------------
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
@@ -112,118 +120,120 @@ class _Fort15:
             if bnd['ifltype'] in [0, 1, 4]:
                 pass
             else:
-                msg = "bctides generation not implemented for " \
-                      f"ifltype={bnd['ifltype']}"
+                msg = "bctides generation not implemented for "
+                msg += f"ifltype={bnd['ifltype']}"
                 raise NotImplementedError(msg)
             # temperature
             if bnd['itetype'] == 0:
                 pass
             else:
-                msg = "bctides generation not implemented for " \
-                      f"itetype={bnd['itetype']}"
+                msg = "bctides generation not implemented for "
+                msg += f"itetype={bnd['itetype']}"
                 raise NotImplementedError(msg)
             # salinity
             if bnd['isatype'] == 0:
                 pass
             else:
-                msg = "bctides generation not implemented for " \
-                      f"isatype={bnd['isatype']}"
+                msg = "bctides generation not implemented for "
+                msg += f"isatype={bnd['isatype']}"
                 raise NotImplementedError(msg)
             # tracers
             if bnd['itrtype'] == 0:
                 pass
             else:
-                msg = "bctides generation not implemented for " \
-                      f"itrtype={bnd['itrtype']}"
+                msg = "bctides generation not implemented for "
+                msg += f"itrtype={bnd['itrtype']}"
                 raise NotImplementedError(msg)
         # ----------------
         # output requests
         # ----------------
         # elevation out stations
         f += (f"{self.NOUTE:G} {self.TOUTSE:G} " +
-              f"{self.TOUTFE:G} {self.NSPOOLE:G}").ljust(63) + \
-             " ! NOUTE TOUTSE TOUTFE NSPOOLE\n"
-        f += f"{self.NSTAE:<63d}".ljust(63) + ' ! NSTAE\n'
+              f"{self.TOUTFE:G} {self.NSPOOLE:G}").ljust(63)
+        f += " ! NOUTE TOUTSE TOUTFE NSPOOLE\n"
+        f += f"{self.NSTAE:d}".ljust(63) + ' ! NSTAE\n'
         stations = self.elevation_stations_output
         if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(63) + f" ! {station_id}\n"
+                        f += f"{x:G} {y:G}".ljust(63)
+                        f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
-                    f += f"{x:G} {y:G}".ljust(63) + f" ! {station_id}\n"
+                    f += f"{x:G} {y:G}".ljust(63)
+                    f += f" ! {station_id}\n"
         # velocity out stations
         f += (f"{self.NOUTV:G} {self.TOUTSV:G} " +
-              f"{self.TOUTFV:G} {self.NSPOOLV:G}").ljust(63) + \
-             " ! NOUTV TOUTSV TOUTFV NSPOOLV\n"
-        f += f"{self.NSTAV:<63G} ! NSTAV\n"
+              f"{self.TOUTFV:G} {self.NSPOOLV:G}").ljust(63)
+        f += " ! NOUTV TOUTSV TOUTFV NSPOOLV\n"
+        f += f"{self.NSTAV:G}".ljust(63) + " ! NSTAV\n"
         stations = self.velocity_stations_output
         if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     for station_id, (x, y) in stations['collection'].items():
-                        f += f"{x:G} {y:G}".ljust(63) + f" ! {station_id}\n"
+                        f += f"{x:G} {y:G}".ljust(63)
+                        f += f" ! {station_id}\n"
             else:
                 for station_id, (x, y) in stations['collection'].items():
-                    f += f"{x:G} {y:G}".ljust(63) + f" ! {station_id}\n"
+                    f += f"{x:G} {y:G}".ljust(63)
+                    f += f" ! {station_id}\n"
         if self.IM == 10:
             # concentration out stations
             f += (f"{self.NOUTC:G} {self.TOUTSC:G} " +
-                  f"{self.TOUTFC:G} {self.NSPOOLC:G}").ljust(63) + \
-                 " ! NOUTC TOUTSC TOUTFC NSPOOLC\n"
-            f += f"{self.NSTAC:<63d} ! NSTAC\n"
+                  f"{self.TOUTFC:G} {self.NSPOOLC:G}").ljust(63)
+            f += " ! NOUTC TOUTSC TOUTFC NSPOOLC\n"
+            f += f"{self.NSTAC:d}".ljust(63) + " ! NSTAC\n"
             stations = self.concentration_stations_output
             if stations['sampling_rate'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
-                                in stations['collection'].items():
+                          in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) \
-                            in stations['collection'].items():
+                      in stations['collection'].items():
                         f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
-
         if self.NWS > 0:
             # meteorological out stations
             f += (f"{self.NOUTM:G} {self.TOUTSM:G} " +
-                  f"{self.TOUTFM:G} {self.NSPOOLM:G}").ljust(63) + \
-                 " ! NOUTM TOUTSM TOUTFM NSPOOLM\n"
-            f += f"{self.NSTAM:<63d} ! NSTAM\n"
+                  f"{self.TOUTFM:G} {self.NSPOOLM:G}").ljust(63)
+            f += " ! NOUTM TOUTSM TOUTFM NSPOOLM\n"
+            f += f"{self.NSTAM:d}".ljust(63) + " ! NSTAM\n"
             stations = self.meteorological_stations_output
             if stations['sampling_rate'] is not None:
                 if stations['sampling_rate'] is not None:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             for station_id, (x, y) \
-                                    in stations['collection'].items():
+                              in stations['collection'].items():
                                 f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
-                                in stations['collection'].items():
+                          in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
-
         # elevation global outputs
         f += (f"{self.NOUTGE:d} {self.TOUTSGE:f} "
-              + f"{self.TOUTFGE:f} {self.NSPOOLGE:d}").ljust(63) + \
-             " ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n"
+              + f"{self.TOUTFGE:f} {self.NSPOOLGE:d}").ljust(63)
+        f += " ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n"
         # velocity global otuputs
         f += (f"{self.NOUTGV:d} {self.TOUTSGV:f} "
-              + f"{self.TOUTFGV:f} {self.NSPOOLGV:d}").ljust(63) + \
-             " ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV\n"
+              + f"{self.TOUTFGV:f} {self.NSPOOLGV:d}").ljust(63)
+        f += " ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV\n"
         if self.IM == 10:
             f += (f"{self.NOUTGC:d} {self.TOUTSGC:f} "
-                  + f"{self.TOUTFGC:f} {self.NSPOOLGC:d}").ljust(63) + \
-                 " ! NOUTSGC TOUTGC TOUTFGC NSPOOLGC\n"
+                  + f"{self.TOUTFGC:f} {self.NSPOOLGC:d}").ljust(63)
+            f += " ! NOUTSGC TOUTGC TOUTFGC NSPOOLGC\n"
         if self.NWS != 0:
             f += (f"{self.NOUTGM:d} {self.TOUTSGM:f} "
-                  + f"{self.TOUTFGM:f} {self.NSPOOLGM:d}").ljust(63) + \
-                 " ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM\n"
+                  + f"{self.TOUTFGM:f} {self.NSPOOLGM:d}").ljust(63)
+            f += " ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM\n"
         # harmonic analysis requests
         harmonic_analysis = False
         self._outputs = [self.elevation_surface_output,
@@ -239,38 +249,39 @@ class _Fort15:
                 else:
                     harmonic_analysis = True
                     break
-        f += f'{self.NFREQ:<63d} ! NFREQ\n'
+        f += f'{self.NFREQ:d}'.ljust(63) + ' ! NFREQ\n'
         if harmonic_analysis:
             for constituent, forcing in self.tidal_forcing:
-                f += f'{constituent:<63} \n'
+                f += f'{constituent}'.ljust(63) + ' \n'
                 f += (f'{forcing[1]:<.16G} {forcing[3]:<.16G}'
                       + f'{forcing[4]:<.16G}').ljust(63) + '\n'
         f += (f'{self.THAS:G} {self.THAF:G} '
-              + f"{self.NHAINC} {self.FMV}").ljust(63) + \
-             ' ! THAS THAF NHAINC FMV\n'
+              + f"{self.NHAINC} {self.FMV}").ljust(63)
+        f += ' ! THAS THAF NHAINC FMV\n'
         f += (f"{self.NHASE:G} {self.NHASV:G} "
-              + f"{self.NHAGE:G} {self.NHAGV:G}").ljust(63) + \
-             " ! NHASE NHASV NHAGE NHAGV\n"
+              + f"{self.NHAGE:G} {self.NHAGV:G}").ljust(63)
+        f += " ! NHASE NHASV NHAGE NHAGV\n"
         # ----------------
         # hostart file generation
         # ----------------
-        f += f"{self.NHSTAR:d} {self.NHSINC:d}".ljust(63) + \
-             " ! NHSTAR NHSINC\n"
+        f += f"{self.NHSTAR:d} {self.NHSINC:d}".ljust(63)
+        f += " ! NHSTAR NHSINC\n"
         f += (f"{self.ITITER:<1d} {self.ISLDIA:<1d} "
-              + f"{self.CONVCR:<.15G} {self.ITMAX:<4d}").ljust(63) + \
-             " ! ITITER ISLDIA CONVCR ITMAX\n"
+              + f"{self.CONVCR:<.15G} {self.ITMAX:<4d}").ljust(63)
+        f += " ! ITITER ISLDIA CONVCR ITMAX\n"
         if self.vertical_mode == '3D':
             raise NotImplementedError('3D runs not yet implemented')
-        f += f"{self.NCPROJ:<63} ! NCPROJ\n"
-        f += f"{self.NCINST:<63} ! NCINST\n"
-        f += f"{self.NCSOUR:<63} ! NCSOUR\n"
-        f += f"{self.NCHIST:<63} ! NCHIST\n"
-        f += f"{self.NCREF:<63} ! NCREF\n"
-        f += f"{self.NCCOM:<63} ! NCCOM\n"
-        f += f"{self.NCHOST:<63} ! NCHOST\n"
-        f += f"{self.NCCONV:<63} ! NCONV\n"
-        f += f"{self.NCCONT:<63} ! NCCONT\n"
-        f += f"{self.NCDATE:<63} ! Forcing start date / NCDATE\n"
+        f += f"{self.NCPROJ}".ljust(63) + " ! NCPROJ\n"
+        f += f"{self.NCINST}".ljust(63) + " ! NCINST\n"
+        f += f"{self.NCSOUR}".ljust(63) + " ! NCSOUR\n"
+        f += f"{self.NCHIST}".ljust(63) + " ! NCHIST\n"
+        f += f"{self.NCREF}".ljust(63) + " ! NCREF\n"
+        f += f"{self.NCCOM}".ljust(63) + " ! NCCOM\n"
+        f += f"{self.NCHOST}".ljust(63) + " ! NCHOST\n"
+        f += f"{self.NCCONV}".ljust(63) + " ! NCONV\n"
+        f += f"{self.NCCONT}".ljust(63) + " ! NCCONT\n"
+        f += f"{self.NCDATE}".ljust(63)
+        f += " ! Forcing start date / NCDATE\n"
         del self._outputs
         del self._runtype
         return f
@@ -631,7 +642,8 @@ class _Fort15:
 
             def get_digit_3():
                 if self.lateral_stress_in_momentum == 'velocity_based':
-                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method \
+                            == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 3
                         else:
@@ -640,7 +652,8 @@ class _Fort15:
                         raise NotImplementedError('not implemented in adcirc')
                         return 5
                 elif self.lateral_stress_in_momentum == 'flux_based':
-                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
+                    if self.lateral_stress_in_momentum_method \
+                            == 'integration_by_parts':
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 4
                         else:
@@ -664,7 +677,8 @@ class _Fort15:
                     return 2
 
             def get_digit_6():
-                if not self.baroclinicity and self.gwce_solution_scheme == 'semi-implicit':
+                if (not self.baroclinicity and
+                        self.gwce_solution_scheme == 'semi-implicit'):
                     return 1
                 elif (not self.baroclinicity and
                       self.gwce_solution_scheme == 'explicit'):
@@ -887,9 +901,9 @@ class _Fort15:
             DRAMP += 10 * ' '
             return DRAMP
         except AttributeError:
-            DRAMP = self.spinup_factor * ((self.start_date -
-                                           self.forcing_start_date) /
-                                          timedelta(days=1))
+            DRAMP = self.spinup_factor * (
+                    (self.start_date - self.forcing_start_date).total_seconds()
+                    / (60. * 60. * 24.))
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
@@ -932,18 +946,18 @@ class _Fort15:
         try:
             return self.__DRAMPElev
         except AttributeError:
-            return self.spinup_factor * ((self.start_date -
-                                          self.forcing_start_date) /
-                                         timedelta(days=1))
+            return self.spinup_factor * (
+                    (self.start_date - self.forcing_start_date).total_seconds()
+                    / (60. * 60. * 24.))
 
     @property
     def DRAMPTip(self):
         try:
             return self.__DRAMPTip
         except AttributeError:
-            return self.spinup_factor * ((self.start_date -
-                                          self.forcing_start_date) /
-                                         timedelta(days=1))
+            return self.spinup_factor * (
+                    (self.start_date - self.forcing_start_date).total_seconds()
+                    / (60. * 60. * 24.))
 
     @property
     def DRAMPMete(self):
@@ -2169,8 +2183,7 @@ class _Fort15:
             if output['spinup'] is not None:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds() / (
-                                60. * 60. * 24.)
+                        time = self.spinup_time.total_seconds() / (60. * 60. * 24.)
                         if time > 0:
                             return time
                         else:
@@ -2214,12 +2227,14 @@ class _Fort15:
                 return 0
         else:
             if output['sampling_rate'] is not None:
-                if (output_type == 'surface' and
-                        output['sampling_rate'].total_seconds() == 0):
-                    return int((
-                                       self.end_date - self.start_date).total_seconds() / self.DTDP)
+                if (output_type == 'surface'
+                        and output['sampling_rate'].total_seconds() == 0):
+                    return int(
+                        (self.end_date - self.start_date).total_seconds()
+                        / self.DTDP)
                 return int(round(
-                    (output['sampling_rate'].total_seconds() / self.DTDP)))
+                    (output['sampling_rate'].total_seconds() / self.DTDP))
+                )
             else:
                 return 0
 
