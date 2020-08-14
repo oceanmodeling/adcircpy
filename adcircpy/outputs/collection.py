@@ -35,10 +35,11 @@ class OutputCollection(
         return [_ for _ in self._container.keys() if _ is not None]
 
     def _certify_output_type(self, inst, obj):
+        # TODO: should use _filetype attribute instead or create a Enum class
         if isinstance(inst, obj):
             return inst
         elif isinstance(inst, (str, pathlib.Path)):
-            return obj.open(inst, crs=self.crs)
+            return obj(inst, crs=self.crs)
 
     @property
     def maxele(self):
