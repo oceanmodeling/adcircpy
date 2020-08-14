@@ -1,5 +1,5 @@
-import uuid
 from datetime import timedelta
+import uuid
 
 from adcircpy.server._base_config import _BaseServerConfig
 
@@ -18,7 +18,6 @@ class SlurmConfig(_BaseServerConfig):
             filename: str = 'slurm.job',
             run_directory: str = '.',
             run_name: str = None,
-            slurm_nodes: int = None,
             mail_type: str = None,
             mail_user: str = None,
             log_filename: str = None,
@@ -38,13 +37,14 @@ class SlurmConfig(_BaseServerConfig):
         :param walltime: time delta
         :param driver_script_filename: file path to the driver shell script
         :param run_directory: directory to run in
-        :param slurm_nodes: number of total nodes
         :param mail_type: email type
         :param mail_user: email address
         :param log_filename: file path to output log file
         :param modules: list of file paths to modules to load
         :param path_prefix: file path to prepend to the PATH
         :param extra_commands: list of extra shell commands to insert into script
+        :param launcher: command to start processes on target system (`srun`, `ibrun`, etc.)
+        :param nodes: number of total nodes
         """
         self._account = account
         self._slurm_ntasks = slurm_ntasks
@@ -53,7 +53,6 @@ class SlurmConfig(_BaseServerConfig):
         self._walltime = walltime
         self._filename = filename
         self._run_directory = run_directory
-        self._slurm_nodes = slurm_nodes
         self._mail_type = mail_type
         self._mail_user = mail_user
         self._log_filename = log_filename
@@ -133,8 +132,8 @@ class SlurmConfig(_BaseServerConfig):
             f += f'#SBATCH --output={self._log_filename}\n'
 
         f += f'#SBATCH -n {self._slurm_ntasks}\n'
-        if self._slurm_nodes is not None:
-            f += f'#SBATCH -N {self._slurm_nodes}\n'
+        if self._nodes is not None:
+            f += f'#SBATCH -N {self._nodes}\n'
 
         f += f'#SBATCH --time={self._walltime}\n' \
              f'#SBATCH --partition={self._partition}\n' \
