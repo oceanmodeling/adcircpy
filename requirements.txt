@@ -1,0 +1,25 @@
+bs4
+eventlet
+fiona
+haversine
+matplotlib
+netcdf4
+numpy
+ordered-set
+pandas
+paramiko
+pip
+psutil
+pyproj>=2.6
+requests
+scipy
+seaborn
+shapely
+utm
+wget
+# development dependencies
+coverage
+coverage-badge
+flake8
+nose
+rednose
