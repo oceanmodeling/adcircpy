@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 import pathlib
 
-from adcircpy.forcing.tides.tpxo import TPXO
 import numpy as np
+
+from adcircpy.forcing.tides.tpxo import TPXO
 
 
 class _Fort15:
@@ -190,12 +191,12 @@ class _Fort15:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         for station_id, (x, y) \
-                          in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
                 else:
                     for station_id, (x, y) \
-                      in stations['collection'].items():
+                            in stations['collection'].items():
                         f += f"{x:G} {y:G}".ljust(63)
                         f += f" ! {station_id}\n"
         if self.NWS > 0:
@@ -210,12 +211,12 @@ class _Fort15:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             for station_id, (x, y) \
-                              in stations['collection'].items():
+                                    in stations['collection'].items():
                                 f += f"{x:G} {y:G}".ljust(63)
                                 f += f" ! {station_id}\n"
                     else:
                         for station_id, (x, y) \
-                          in stations['collection'].items():
+                                in stations['collection'].items():
                             f += f"{x:G} {y:G}".ljust(63)
                             f += f" ! {station_id}\n"
         # elevation global outputs
@@ -2183,7 +2184,8 @@ class _Fort15:
             if output['spinup'] is not None:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds() / (60. * 60. * 24.)
+                        time = self.spinup_time.total_seconds() / (
+                                60. * 60. * 24.)
                         if time > 0:
                             return time
                         else:
