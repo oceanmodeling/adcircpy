@@ -1,3 +1,4 @@
+from functools import lru_cache
 # from collections.abc import Mapping
 import pathlib
 
@@ -50,12 +51,9 @@ class OutputCollection(
         return self._crs
 
     @property
+    @lru_cache(maxsize=None)
     def _container(self):
-        try:
-            return self.__container
-        except AttributeError:
-            self.__container = dict()
-            return self.__container
+        return {}
 
     @property
     def _maxele(self):
