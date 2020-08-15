@@ -4,34 +4,41 @@ on: [push]
 
 jobs:
   tests:
-    name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest]
         python-version: [3.6, 3.7, 3.8]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Retrieve packages from cache
-        uses: actions/cache@v2
+      # - name: Checkout repository
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
-          restore-keys: ${{ runner.os }}-pip-
-      - name: Install dependencies
+          python-version: ${{ matrix.python-version }}
+      - name: install deps
+      # - name: Retrieve packages from cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: ${{ runner.os }}-pip-${{ hashFiles('setup.py') }}
+      #     restore-keys: ${{ runner.os }}-pip-
+      # - name: Install deps
+        # run: apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
+      # - name: Install dependencies
         run: |
+          apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
           cd $GITHUB_WORKSPACE
-          pip install -r requirements.txt
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Test with coverage
-        run: coverage run --source adcircpy -m nose --nologcapture --verbose
-      - name: Generate coverage report
-        run: coverage report -m
+          python setup.py install
+      # - name: Lint with flake8
+      #   run: |
+      #     # stop the build if there are Python syntax errors or undefined names
+      #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+      #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      # - name: Test with coverage
+      #   run: coverage run --source adcircpy -m nose --nologcapture --verbose
+      # - name: Generate coverage report
+      #   run: coverage report -m
