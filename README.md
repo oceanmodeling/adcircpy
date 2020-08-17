@@ -28,7 +28,7 @@ This program exposes a few commands available from the command line interface. Y
 * `best_track_file`
 * `plot_maxele`
 * `plot_fort61` 
-* `plot_fort63`
+* `fort63`
 
 #### Command line examples:
 ##### Hurricane Sandy (AL182012)
