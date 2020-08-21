@@ -87,17 +87,17 @@ class _DriverFile:
 
         f += bash_if_statement(
             if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-            if_block='duration=$SECONDS\n'
-                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n'
-                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n'
+            if_block='duration=$SECONDS\n' \
+                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
                      f'exit {error_exit_code}',
             else_blocks=[
                 'run_hotstart_phase\n'
-                'duration=$SECONDS\n' +
+                'duration=$SECONDS\n' + \
                 bash_if_statement(
                     if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n'
-                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n'
+                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
                              f'exit {error_exit_code}').strip('\n')
             ]
         )
@@ -202,7 +202,6 @@ class _DriverFile:
 
     @property
     def _executable(self):
-
         if self._nprocs == 1:
             if self._driver.wave_forcing is not None:
                 return 'adcswan'
@@ -240,9 +239,8 @@ def bash_if_statement(
         if_condition: str,
         if_block: str,
         else_blocks: [str] = None,
-        indent_spaces: int = 2
+        indent_string: str = '  '
 ) -> str:
-    indent_string = ' ' * indent_spaces
     output = f'if {if_condition}; then\n' + \
              indent(if_block, indent_string) + '\n'
 
@@ -253,7 +251,7 @@ def bash_if_statement(
             else:
                 assert len(else_block) == 2, \
                     f'could not parse else condition / block: {else_block}'
-                output += f'elif {else_block[0]}; then\n'
+                output += f'elif {else_block[0]}\n'
                 else_block = else_block[1]
             output += indent(else_block, indent_string) + '\n'
 
@@ -265,8 +263,8 @@ def bash_if_statement(
 def bash_function(
         name: str,
         function_block: str,
-        indent_spaces: int = 2
+        indent_string: str = '  '
 ) -> str:
     return f'{name}() {{\n' + \
-           indent(function_block, ' ' * indent_spaces) + '\n' + \
+           indent(function_block, indent_string) + '\n' + \
            '}\n'
