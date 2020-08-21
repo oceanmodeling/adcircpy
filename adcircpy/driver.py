@@ -396,9 +396,7 @@ class AdcircRun(_Fort15):
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
         if driver is not None:
-            _DriverFile(self).write(
-                output_directory / driver
-            )
+            _DriverFile(self).write(output_directory / driver, overwrite)
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
