@@ -41,9 +41,14 @@ def repository_root(path: str = None) -> str:
         return repository_root(os.path.dirname(path))
 
 
-def get_logger(name: str, log_filename: str = None, file_level: int = None,
-               console_level: int = None,
-               log_format: str = None) -> logging.Logger:
+def get_logger(
+        name: str,
+        log_filename: str = None,
+        file_level: int = None,
+        console_level: int = None,
+        log_format: str = None,
+        name_field_length: int = 15
+) -> logging.Logger:
     if file_level is None:
         file_level = logging.DEBUG
     if console_level is None:
@@ -82,7 +87,7 @@ def get_logger(name: str, log_filename: str = None, file_level: int = None,
         logger.addHandler(file_handler)
 
     if log_format is None:
-        log_format = '[%(asctime)s] %(name)-15s %(levelname)-8s: %(message)s'
+        log_format = f'[%(asctime)s] %(name)-{name_field_length}s %(levelname)-8s: %(message)s'
     log_formatter = logging.Formatter(log_format)
     for handler in logger.handlers:
         handler.setFormatter(log_formatter)
