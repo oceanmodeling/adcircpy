@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 import os
 import pathlib
+import sys
 import tarfile
 import unittest
 
 import requests
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy.forcing.tides.tpxo import TPXO
 from adcircpy.server import SlurmConfig
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
@@ -33,6 +35,12 @@ class TestAdcircRun(unittest.TestCase):
             with tarfile.open(temp_filename, 'r:bz2') as tar:
                 tar.extractall(INPUT_DIRECTORY)
             os.remove(temp_filename)
+
+        tpxo_filename_prefix = os.path.dirname(os.path.dirname(sys.executable))
+        tpxo_filename = pathlib.Path(tpxo_filename_prefix) / \
+                        'lib/h_tpxo9.v1.nc'
+        if not tpxo_filename.is_file():
+            TPXO._fetch_tpxo_file(tpxo_filename_prefix, tpxo_filename)
 
         # open mesh file
         mesh = AdcircMesh.open(FORT14_FILENAME, crs=4326)
