@@ -85,17 +85,17 @@ class _DriverFile:
 
         f += bash_if_statement(
             if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-            if_block='duration=$SECONDS\n' \
-                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+            if_block='duration=$SECONDS\n'
+                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n'
+                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n'
                      f'exit {error_exit_code}',
             else_blocks=[
                 'run_hotstart_phase\n'
-                'duration=$SECONDS\n' + \
+                'duration=$SECONDS\n' +
                 bash_if_statement(
                     if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n'
+                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n'
                              f'exit {error_exit_code}').strip('\n')
             ]
         )
