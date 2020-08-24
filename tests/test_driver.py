@@ -10,31 +10,36 @@ import requests
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.forcing.tides.tpxo import TPXO
 from adcircpy.server import SlurmConfig
+from adcircpy.server._driver_file import _DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
 REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
+OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
 FORT14_FILENAME = INPUT_DIRECTORY / 'fort.14'
 
-os.makedirs(DATA_DIRECTORY, exist_ok=True)
 os.makedirs(INPUT_DIRECTORY, exist_ok=True)
 os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
 
 
 class TestAdcircRun(unittest.TestCase):
-    def test_slurm_driver(self):
+    def setUp(self):
         # fetch Shinnecock Inlet test data
         if not FORT14_FILENAME.is_file():
             url = "https://www.dropbox.com/s/1wk91r67cacf132/" \
                   "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
             remote_file = requests.get(url, stream=True)
-            temp_filename = DATA_DIRECTORY / 'temp.tar.gz'
-            with open(temp_filename, 'wb') as f:
+            input_filename = DATA_DIRECTORY / 'NetCDF_shinnecock_inlet.tar.bz2'
+            with open(input_filename, 'wb') as f:
                 f.write(remote_file.raw.read())
-            with tarfile.open(temp_filename, 'r:bz2') as tar:
+            with tarfile.open(input_filename, 'r:bz2') as tar:
                 tar.extractall(INPUT_DIRECTORY)
-            os.remove(temp_filename)
+            os.remove(input_filename)
+
+    def test_slurm_driver(self):
+        output_directory = OUTPUT_DIRECTORY / 'slurm'
+        reference_directory = REFERENCE_DIRECTORY / 'slurm'
+        os.makedirs(output_directory, exist_ok=True)
 
         tpxo_filename_prefix = os.path.dirname(os.path.dirname(sys.executable))
         tpxo_filename = pathlib.Path(tpxo_filename_prefix) / \
@@ -71,11 +76,12 @@ class TestAdcircRun(unittest.TestCase):
             spinup_time=timedelta(days=5),
             server_config=slurm
         )
-        driver.write(OUTPUT_DIRECTORY / 'slurm', overwrite=True)
+        _DriverFile(driver).write(output_directory / 'slurm.job',
+                                  overwrite=True)
 
-        with open(OUTPUT_DIRECTORY / 'slurm/slurm.job') as generated:
-            with open(REFERENCE_DIRECTORY / 'slurm/slurm.job') as reference:
-                assert generated.read() == reference.read()
+        with open(output_directory / 'slurm.job') as generated_file:
+            with open(reference_directory / 'slurm.job') as reference_file:
+                assert generated_file.read() == reference_file.read()
 
 
 if __name__ == '__main__':
