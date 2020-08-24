@@ -250,7 +250,7 @@ def bash_if_statement(
             else:
                 assert len(else_block) == 2, \
                     f'could not parse else condition / block: {else_block}'
-                output += f'elif {else_block[0]}\n'
+                output += f'elif {else_block[0]}; then\n'
                 else_block = else_block[1]
             output += indent(else_block, indent_string) + '\n'
 
