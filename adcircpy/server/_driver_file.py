@@ -237,8 +237,9 @@ def bash_if_statement(
         if_condition: str,
         if_block: str,
         else_blocks: [str] = None,
-        indent_string: str = '  '
+        indent_spaces: int = 2
 ) -> str:
+    indent_string = ' ' * indent_spaces
     output = f'if {if_condition}; then\n' + \
              indent(if_block, indent_string) + '\n'
 
@@ -261,8 +262,8 @@ def bash_if_statement(
 def bash_function(
         name: str,
         function_block: str,
-        indent_string: str = '  '
+        indent_spaces: int = 2
 ) -> str:
     return f'{name}() {{\n' + \
-           indent(function_block, indent_string) + '\n' + \
+           indent(function_block, ' ' * indent_spaces) + '\n' + \
            '}\n'
