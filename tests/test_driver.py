@@ -45,6 +45,7 @@ class TestAdcircRun(unittest.TestCase):
         tpxo_filename = pathlib.Path(tpxo_filename_prefix) / \
                         'lib/h_tpxo9.v1.nc'
         if not tpxo_filename.is_file():
+            print('downloading TPXO NetCDF...')
             TPXO._fetch_tpxo_file(tpxo_filename_prefix, tpxo_filename)
 
         # open mesh file
