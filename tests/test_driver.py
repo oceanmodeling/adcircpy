@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 import os
 import pathlib
-import sys
 import tarfile
 import unittest
 
 import requests
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.forcing.tides.tpxo import TPXO
+from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.server import SlurmConfig
 from adcircpy.server._driver_file import _DriverFile
 
@@ -41,21 +39,8 @@ class TestAdcircRun(unittest.TestCase):
         reference_directory = REFERENCE_DIRECTORY / 'slurm'
         os.makedirs(output_directory, exist_ok=True)
 
-        tpxo_filename_prefix = os.path.dirname(os.path.dirname(sys.executable))
-        tpxo_filename = pathlib.Path(tpxo_filename_prefix) / \
-                        'lib/h_tpxo9.v1.nc'
-        if not tpxo_filename.is_file():
-            print('downloading TPXO NetCDF...')
-            TPXO._fetch_tpxo_file(tpxo_filename_prefix, tpxo_filename)
-
         # open mesh file
         mesh = AdcircMesh.open(FORT14_FILENAME, crs=4326)
-
-        # init tidal forcing and setup requests
-        tidal_forcing = Tides()
-        tidal_forcing.use_all()
-
-        mesh.add_forcing(tidal_forcing)
 
         # instantiate AdcircRun object.
         slurm = SlurmConfig(
