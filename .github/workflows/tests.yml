@@ -22,8 +22,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ matrix.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-          restore-keys: ${{ matrix.os }}-pip-${{ matrix.python-version }}-
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
+          restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - name: Install dependencies
         run: |
           apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
