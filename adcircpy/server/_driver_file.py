@@ -23,6 +23,8 @@ class _DriverFile:
             f += self._server_config._prefix
         else:
             f += '\n' \
+                 'ulimit -s unlimited\n' \
+                 '\n' \
                  'set -e\n'
             if self._executable.startswith('p') and self._server_config > 1:
                 f += f'\n' \
@@ -148,7 +150,7 @@ class _DriverFile:
 
         if self._driver.wind_forcing is not None:
             if self._driver.wind_forcing.NWS in [19, 20]:
-                f += 'ln -sf ../fort.22.best_track ./fort.22\n' \
+                f += 'ln -sf ../fort.22 ./fort.22\n' \
                      'aswip\n' \
                      f'mv NWS_{self._driver.wind_forcing.NWS}_fort.22 fort.22\n'
             else:
