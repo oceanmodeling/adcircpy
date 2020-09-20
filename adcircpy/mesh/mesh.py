@@ -294,7 +294,7 @@ class AdcircMesh(_EuclideanMesh2D):
             return False
 
     def import_nodal_attributes(self, fort13):
-        fort13 = self._parse_fort13(fort13)
+        fort13 = parse_fort13(fort13)
         if fort13.pop('NumOfNodes') != len(self.node_id):
             raise Exception('fort.13 file does not match the mesh.')
         self._AGRID = fort13.pop('AGRID')
@@ -304,14 +304,14 @@ class AdcircMesh(_EuclideanMesh2D):
                 values = values.reshape((values.shape[0], 1))
             full_values = np.full(
                 (self.values.size,
-                 np.asarray(data['default_values']).flatten().size),
+                 np.asarray(data['defaults']).flatten().size),
                 np.nan)
             for i, idx in enumerate(data['indexes']):
                 for j, value in enumerate(values[i, :].tolist()):
                     full_values[idx, j] = value
             idxs = np.where(np.isnan(full_values).all(axis=1))[0]
             for idx in idxs:
-                for i, value in enumerate(data['default_values']):
+                for i, value in enumerate(data['defaults']):
                     full_values[idx, i] = value
             # converts from column major to row major, leave it column major.
             # if full_values.shape[1] == 1:
@@ -489,7 +489,7 @@ class AdcircMesh(_EuclideanMesh2D):
     @fig._figure
     def make_plot(
             self,
-            axes: pyplot.Axes = None,
+            axes=None,
             vmin: float = None,
             vmax: float = None,
             show: bool = False,
@@ -499,6 +499,9 @@ class AdcircMesh(_EuclideanMesh2D):
             cbar_label: str = None,
             **kwargs
     ):
+        if axes is None:
+            _fig = plt.figure()
+            axes = _fig.add_subplot(111)
         if vmin is None:
             vmin = np.min(self.values)
         if vmax is None:
@@ -536,8 +539,6 @@ class AdcircMesh(_EuclideanMesh2D):
         cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
         if cbar_label is not None:
             cbar.set_label(cbar_label)
-        if show:
-            pyplot.show()
         return axes
 
     @fig._figure
@@ -950,3 +951,39 @@ class AdcircMesh(_EuclideanMesh2D):
             'iwrtype': None,
             'isrtype': None,  # rain
         }
+
+
+def parse_fort13(path):
+    fort13 = {}
+    with open(path, 'r') as f:
+        fort13['AGRID'] = f.readline().strip()
+        fort13['NumOfNodes'] = NP = int(f.readline().split()[0])
+        NAttr = int(f.readline().split()[0])
+        i = 0
+        while i < NAttr:
+            attribute_name = f.readline().strip()
+            units = f.readline().strip()
+            if units == '1':
+                units = 'unitless'
+            f.readline()
+            defaults = [float(x) for x in f.readline().split()]
+            fort13[attribute_name] = {'units': units,
+                                      'defaults': defaults,
+                                      'indexes': []}
+            i += 1
+        for i in range(NAttr):
+            attribute_name = f.readline().strip()
+            numOfNodes = int(f.readline())
+            values = np.zeros((NP, len(fort13[attribute_name]['defaults'])))
+            values[:] = np.nan
+            j = 0
+            while j < numOfNodes:
+                str = f.readline().split()
+                index = int(str[0]) - 1
+                fort13[attribute_name]['indexes'].append(index)
+                node_values = [float(x) for x in str[1:]]
+                values[index, :] = node_values
+                j += 1
+            values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
+            fort13[attribute_name]['values'] = values
+        return fort13

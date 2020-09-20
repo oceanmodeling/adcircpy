@@ -13,7 +13,14 @@ from adcircpy.mesh import sms2dm
 from adcircpy.mesh._figures import _figure
 
 
+# class OutputVariable(Enum):
+#     FORT63 = 'zeta'
+
+
 class _SurfaceOutput(metaclass=abc.ABCMeta):
+
+    # change this for __types__
+
     _physical_variables = {
         "fort.63": "zeta",
         "maxele": "zeta_max"

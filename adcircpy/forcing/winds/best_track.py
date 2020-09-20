@@ -7,7 +7,7 @@ import pathlib
 import time
 import urllib.request
 
-from adcircpy.forcing.winds.base import _WindForcing
+from adcircpy.forcing.winds._base import _WindForcing
 from haversine import haversine
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
@@ -274,7 +274,12 @@ class BestTrackForcing(_WindForcing):
                     float(line[9].strip(' ')))
                 data['development_level'].append(
                     line[10].strip(' '))
-                data['isotach'].append(int(line[11].strip(' ')))
+                try:
+                    data['isotach'].append(int(line[11].strip(' ')))
+                except ValueError:
+                    raise Exception(
+                        'Error: No radial wind information for this storm; '
+                        'parametric wind model cannot be built.')
                 data['quadrant'].append(line[12].strip(' '))
                 data['radius_for_NEQ'].append(
                     int(line[13].strip(' ')))
