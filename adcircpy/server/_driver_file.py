@@ -19,7 +19,8 @@ class _DriverFile:
         if not isinstance(self._server_config, int):
             f += self._server_config._prefix
         else:
-            f += '\nset -e\n'
+            f += '\nulimit -s unlimited\n' \
+                 '\nset -e\n'
 
         if self._executable.startswith('p') \
                 and isinstance(self._server_config, int):
@@ -156,7 +157,7 @@ run_hotstart_phase() {
             f += "  ln -sf ../coldstart/fort.67\n"
         if self._driver.wind_forcing is not None:
             if self._driver.wind_forcing.NWS in [19, 20]:
-                f += "  ln -sf ../fort.22.best_track ./fort.22\n"
+                f += "  ln -sf ../fort.22 ./fort.22\n"
                 f += "  aswip\n"
                 f += f"  mv NWS_{self._driver.wind_forcing.NWS}_fort.22 "
                 f += "fort.22\n"
