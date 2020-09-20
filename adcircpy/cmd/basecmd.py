@@ -137,7 +137,7 @@ class _AdcircCommand:
         if self._args.use_slurm:
             kwargs = {
                 "account": self._args.account,
-                "slurm_ntasks": self._args.slurm_ntasks,
+                "ntasks": self._args.slurm_ntasks,
                 "partition": self._args.partition,
                 "walltime": timedelta(hours=self._args.walltime),
                 "mail_type": self._args.mail_type,

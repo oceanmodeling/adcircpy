@@ -138,6 +138,7 @@ class SlurmConfig(_BaseServerConfig):
         f += f'#SBATCH --time={self._walltime}\n' \
              f'#SBATCH --partition={self._partition}\n' \
              f'\n' \
+             f'ulimit -s unlimited\n' \
              f'set -e\n'
 
         if self._modules is not None:
