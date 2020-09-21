@@ -137,8 +137,8 @@ def gwce_solution_scheme(parser):
     parser.add_argument(
         "--gwce-solution-scheme",
         choices=['semi-implicit', 'explicit'],
-        # default='explicit'
-        default='semi-implicit'
+        default='explicit'
+        # default='semi-implicit'
     )
 
 
