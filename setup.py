@@ -28,6 +28,7 @@ setuptools.setup(
         'fiona',
         'haversine',
         'matplotlib',
+        'nemspy',
         'netCDF4',
         'numpy',
         'ordered_set',
