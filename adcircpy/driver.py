@@ -341,7 +341,8 @@ class AdcircRun(_Fort15):
             fort15: str = 'fort.15',
             coldstart: str = 'fort.15.coldstart',
             hotstart: str = 'fort.15.hotstart',
-            driver: str = 'driver.sh'
+            driver: str = 'driver.sh',
+            nems: bool = False
     ):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
@@ -396,7 +397,9 @@ class AdcircRun(_Fort15):
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
         if driver is not None:
-            _DriverFile(self).write(output_directory / driver, overwrite)
+            _DriverFile(self, nems).write(
+                output_directory / driver,
+                overwrite
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
