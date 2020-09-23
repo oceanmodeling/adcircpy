@@ -6,9 +6,8 @@ from adcircpy.server.slurm_config import SlurmConfig
 
 class _DriverFile:
 
-    def __init__(self, driver, nems: bool = False):
+    def __init__(self, driver):
         self._driver = driver
-        self.nems = nems
 
     def write(self, path: str, overwrite: bool = False):
         if not os.path.exists(path) or overwrite:
@@ -201,9 +200,8 @@ class _DriverFile:
 
     @property
     def _executable(self):
-        if self.nems:
-            return 'NEMS.x'
-        elif self._nprocs == 1:
+
+        if self._nprocs == 1:
             if self._driver.wave_forcing is not None:
                 return 'adcswan'
             else:
