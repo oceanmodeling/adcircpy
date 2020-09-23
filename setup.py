@@ -8,7 +8,6 @@ import versioneer
 PARENT = pathlib.Path(__file__).parent.absolute()
 conf = setuptools.config.read_configuration(PARENT / 'setup.cfg')
 meta = conf['metadata']
-
 setuptools.setup(
     name=meta['name'],
     version=versioneer.get_version(),
@@ -23,33 +22,32 @@ setuptools.setup(
     cmdclass=versioneer.get_cmdclass(),
     setup_requires=["setuptools>=41.2"],
     install_requires=[
-        'bs4',
-        'eventlet',
-        'fiona',
-        'haversine',
         'matplotlib',
-        'nemspy',
         'netCDF4',
+        'scipy',
+        'haversine',
+        'wget',
+        'utm',
+        'requests',
+        'eventlet',
+        'bs4',
+        'seaborn',
+        'pandas',
+        'pyproj>=2.6',
         'numpy',
         'ordered_set',
-        'pandas',
-        'paramiko',
-        'psutil',
         # 'pygrib', # TODO: make separate install
-        'pyproj>=2.6',
-        'requests',
-        'scipy',
-        'seaborn',
+        'psutil',
         'shapely',
-        'tropycal',
-        'utm',
+        'paramiko',
+        'fiona',
         'wget',
+        'tropycal',
         # test and development dependencies
-        'colored_traceback',
-        'coverage',
-        'coverage-badge',
         'nose',
-        'rednose'
+        'rednose',
+        'coverage-badge',
+        'colored_traceback',
     ],
     entry_points={
         'console_scripts': [
