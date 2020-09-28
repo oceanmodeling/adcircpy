@@ -1,7 +1,7 @@
 # ADCIRCPy
 ## Python library for automating ADCIRC model runs.
-[![tests](https://github.com/JaimeCalzadaNOAA/adcircpy/workflows/tests/badge.svg)](https://github.com/jreniel/adcircpy/actions)
-[![coverage](tests/coverage.svg)](https://github.com/jreniel/adcircpy/actions)
+[![tests](https://github.com/JaimeCalzadaNOAA/adcircpy/workflows/tests/badge.svg)](https://github.com/JaimeCalzadaNOAA/adcircpy/actions)
+[![coverage](tests/coverage.svg)](https://github.com/JaimeCalzadaNOAA/adcircpy/actions)
 
 ### Installation notes:
 
