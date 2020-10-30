@@ -399,7 +399,8 @@ class AdcircRun(_Fort15):
         if driver is not None:
             _DriverFile(self, nems).write(
                 output_directory / driver,
-                overwrite
+                overwrite=True,
+            )
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
