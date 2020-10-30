@@ -42,12 +42,11 @@ class _Fort15:
         f += f'{self.G:G}'.ljust(63) + ' ! gravitational acceleration\n'
         f += f'{self.TAU0:G}'.ljust(63) + ' ! TAU0\n'
         if self.TAU0 == -5:
-            f += (f'{self.Tau0FullDomainMin:G} '
-                  + f'{self.Tau0FullDomainMax:G}').ljust(63)
-            f += ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
-        f += f'{self.DTDP:.6f}'.ljust(63) + ' ! DTDP\n'
-        f += f'{self.STATIM:G}'.ljust(63) + ' ! STATIM\n'
-        f += f'{self.REFTIM:G}'.ljust(63) + ' ! REFTIM\n'
+            tau0_range = f'{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}'
+            f += f'{tau0_range:<63>} ! Tau0FullDomainMin Tau0FullDomainMax \n'
+        f += f'{self.DTDP:<63.6f} ! DTDP\n'
+        f += f'{self.STATIM:<63G} ! STATIM\n'
+        f += f'{self.REFTIM:<63G} ! REFTIM\n'
         if self.NWS not in [0, 1, 9, 11]:
             f += f'{self.WTIMINC}'.ljust(63) + '! WTIMINC\n'
         f += f'{self.RNDAY:G}'.ljust(63) + ' ! RNDAY\n'
