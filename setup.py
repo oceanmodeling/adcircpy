@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 import pathlib
 
-from dunamai import Version
 import setuptools
+
+try:
+    from dunamai import Version
+except ImportError:
+    import sys
+    import subprocess
+
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
+    from dunamai import Version
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 conf = setuptools.config.read_configuration(PARENT / 'setup.cfg')

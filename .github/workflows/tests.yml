@@ -27,10 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
-          python -m pip install --upgrade pip dunamai
           pip install -e .[development]
-          cd $GITHUB_WORKSPACE
-          python setup.py install
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
