@@ -22,13 +22,8 @@ class _DriverFile:
         if not isinstance(self._server_config, int):
             f += self._server_config._prefix
         else:
-            f += '\n' \
-                 'ulimit -s unlimited\n' \
-                 '\n' \
-                 'set -e\n'
-            if self._executable.startswith('p') and self._server_config > 1:
-                f += f'\n' \
-                     f'NPROCS={self._nprocs}\n'
+            f += '\nulimit -s unlimited\n' \
+                 '\nset -e\n'
 
         f += '\n'
 
