@@ -9,6 +9,7 @@
 #SBATCH --time=08:00:00
 #SBATCH --partition=partition
 
+ulimit -s unlimited
 set -e
 
 module load intel/2020 impi/2020 netcdf/4.7.2-parallel
