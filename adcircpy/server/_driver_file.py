@@ -25,6 +25,11 @@ class _DriverFile:
             f += '\nulimit -s unlimited\n' \
                  '\nset -e\n'
 
+        if self._executable.startswith('p') and \
+                isinstance(self._server_config, int):
+            if self._server_config > 1:
+                f += f"\nNPROCS={self._nprocs}\n"
+
         f += '\n'
 
         if self._driver.spinup_time.total_seconds() == 0:
