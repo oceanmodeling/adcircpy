@@ -1,6 +1,6 @@
 name: tests
 
-on: [push]
+on: [ push ]
 
 jobs:
   tests:
@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [ 3.6, 3.7, 3.8 ]
 
     steps:
       - name: Checkout repository
@@ -27,9 +27,8 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
-          python -m pip install --upgrade pip flake8 coverage
-          cd $GITHUB_WORKSPACE
-          python setup.py install
+          pip install wheel
+          pip install -e .[development]
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

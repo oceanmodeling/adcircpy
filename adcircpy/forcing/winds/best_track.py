@@ -7,7 +7,6 @@ import pathlib
 import time
 import urllib.request
 
-from adcircpy.forcing.winds._base import _WindForcing
 from haversine import haversine
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
@@ -16,8 +15,10 @@ from pandas import DataFrame, read_csv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
 
+from adcircpy.forcing.winds._base import WindForcing
 
-class BestTrackForcing(_WindForcing):
+
+class BestTrackForcing(WindForcing):
 
     def __init__(self, storm_id, start_date=None, end_date=None, dst_crs=None):
         self._storm_id = storm_id

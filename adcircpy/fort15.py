@@ -7,7 +7,7 @@ import numpy as np
 from adcircpy.forcing.tides.tpxo import TPXO
 
 
-class _Fort15:
+class Fort15:
     def fort15(self, runtype):
         self._runtype = runtype
         # ----------------

@@ -5,7 +5,7 @@ import numpy
 import requests
 
 
-class _RESTWrapper:
+class RESTWrapper:
 
     def __init__(self, product, start_date, end_date, format='json',
                  units='metric', time_zone='gmt', datum='msl'):

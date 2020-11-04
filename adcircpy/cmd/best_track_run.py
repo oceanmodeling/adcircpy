@@ -2,11 +2,11 @@
 import logging
 
 from adcircpy.cmd import argument_parser
-from adcircpy.cmd.basecmd import _AdcircCommand
+from adcircpy.cmd.basecmd import AdcircCommand
 from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
-class _BestTrackRunCommand(_AdcircCommand):
+class BestTrackRunCommand(AdcircCommand):
 
     def __init__(self, args):
         super().__init__(args)
@@ -28,4 +28,4 @@ def main():
     logging.getLogger("fiona").setLevel(logging.WARNING)
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
     logging.getLogger("paramiko").setLevel(logging.WARNING)
-    exit(_BestTrackRunCommand(args).run())
+    exit(BestTrackRunCommand(args).run())

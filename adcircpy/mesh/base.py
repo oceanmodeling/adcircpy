@@ -17,10 +17,10 @@ from pyproj import CRS, Proj, Transformer
 from shapely.geometry import Polygon
 
 from adcircpy.mesh import grd, sms2dm
-from adcircpy.mesh._figures import _figure as _fig
+from adcircpy.mesh.figures import _figure as _fig
 
 
-class _EuclideanMesh2D:
+class EuclideanMesh2D:
     def __init__(
             self,
             coords,
