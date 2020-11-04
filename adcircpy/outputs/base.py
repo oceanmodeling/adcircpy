@@ -10,7 +10,7 @@ import numpy as np
 from pyproj import CRS
 
 from adcircpy.mesh import sms2dm
-from adcircpy.mesh._figures import _figure
+from adcircpy.mesh.figures import _figure
 
 
 # class OutputVariable(Enum):

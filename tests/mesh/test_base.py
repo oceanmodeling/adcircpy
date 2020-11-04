@@ -6,7 +6,7 @@ import unittest
 import numpy
 from pyproj import CRS, Proj
 
-from adcircpy.mesh._base import _EuclideanMesh2D
+from adcircpy.mesh.base import _EuclideanMesh2D
 
 
 class EuclideanMesh2DTestCase(unittest.TestCase):

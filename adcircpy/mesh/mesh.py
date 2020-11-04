@@ -11,10 +11,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from shapely.geometry import LineString, mapping
 
-from adcircpy.forcing._bctypes import _BoundaryCondition
+from adcircpy.forcing.bctypes import _BoundaryCondition
 from adcircpy.forcing.winds._base import _WindForcing
-from adcircpy.mesh import _figures as fig, grd, sms2dm
-from adcircpy.mesh._base import _EuclideanMesh2D
+from adcircpy.mesh import figures as fig, grd, sms2dm
+from adcircpy.mesh.base import _EuclideanMesh2D
 
 
 class AdcircMesh(_EuclideanMesh2D):

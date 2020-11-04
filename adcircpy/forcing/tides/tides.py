@@ -4,11 +4,11 @@ from functools import lru_cache
 
 import numpy as np
 
-from adcircpy.forcing import _bctypes
+from adcircpy.forcing import bctypes
 from adcircpy.forcing.tides.tpxo import TPXO
 
 
-class Tides(_bctypes._EtaBc):
+class Tides(bctypes._EtaBc):
 
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)

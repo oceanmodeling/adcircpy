@@ -11,12 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
 
-from adcircpy._fort15 import _Fort15
 from adcircpy.forcing import Tides  # , Winds
+from adcircpy.fort15 import _Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server import SSHConfig, SlurmConfig
-from adcircpy.server._driver_file import _DriverFile
+from adcircpy.server.driver_file import _DriverFile
 
 
 class AdcircRun(_Fort15):

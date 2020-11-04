@@ -8,7 +8,7 @@ import requests
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.server import SlurmConfig
-from adcircpy.server._driver_file import _DriverFile
+from adcircpy.server.driver_file import _DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
