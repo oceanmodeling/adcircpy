@@ -4,7 +4,7 @@ from textwrap import indent
 from adcircpy.server.slurm_config import SlurmConfig
 
 
-class _DriverFile:
+class DriverFile:
 
     def __init__(self, driver):
         self._driver = driver

@@ -11,15 +11,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
 
-from adcircpy._fort15 import _Fort15
 from adcircpy.forcing import Tides  # , Winds
+from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server import SSHConfig, SlurmConfig
-from adcircpy.server._driver_file import _DriverFile
+from adcircpy.server.driver_file import DriverFile
 
 
-class AdcircRun(_Fort15):
+class AdcircRun(Fort15):
 
     def __init__(
             self,
@@ -396,12 +396,12 @@ class AdcircRun(_Fort15):
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
         if driver is not None:
-            _DriverFile(self).write(output_directory / driver, overwrite)
+            DriverFile(self).write(output_directory / driver, overwrite)
 
     def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
         for station_type in station_types:
-            stations = _Fort15.parse_stations(fort15, station_type)
+            stations = Fort15.parse_stations(fort15, station_type)
             for name, vertices in stations.items():
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
