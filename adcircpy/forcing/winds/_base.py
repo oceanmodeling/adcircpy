@@ -1,2 +1,2 @@
-class _WindForcing:
+class WindForcing:
     pass

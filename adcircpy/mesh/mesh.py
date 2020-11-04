@@ -11,13 +11,13 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from shapely.geometry import LineString, mapping
 
-from adcircpy.forcing._bctypes import _BoundaryCondition
-from adcircpy.forcing.winds._base import _WindForcing
-from adcircpy.mesh import _figures as fig, grd, sms2dm
-from adcircpy.mesh._base import _EuclideanMesh2D
+from adcircpy.forcing.bctypes import BoundaryCondition
+from adcircpy.forcing.winds._base import WindForcing
+from adcircpy.mesh import figures as fig, grd, sms2dm
+from adcircpy.mesh.base import EuclideanMesh2D
 
 
-class AdcircMesh(_EuclideanMesh2D):
+class AdcircMesh(EuclideanMesh2D):
     """
     Class that represents the unstructured planar mesh used by ADCIRC.
     """
@@ -165,14 +165,14 @@ class AdcircMesh(_EuclideanMesh2D):
             self.set_boundary_data(interior_ibtype, bnd_id, data)
 
     def add_forcing(self, forcing, id=None):
-        if isinstance(forcing, _BoundaryCondition):
+        if isinstance(forcing, BoundaryCondition):
             if id is None:
                 for i in range(len(self.open_boundaries)):
                     self.add_forcing(forcing, i)
             else:
                 self._boundary_forcing[forcing.btype]["bnd_ids"].add(id)
                 self._boundary_forcing[forcing.btype].update({"obj": forcing})
-        elif isinstance(forcing, _WindForcing):
+        elif isinstance(forcing, WindForcing):
             self._surface_forcing.update({'imetype': forcing})
         else:
             msg = f"Unrecognized forcing type {forcing}."
