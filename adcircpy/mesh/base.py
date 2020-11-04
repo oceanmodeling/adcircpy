@@ -20,7 +20,7 @@ from adcircpy.mesh import grd, sms2dm
 from adcircpy.mesh.figures import _figure as _fig
 
 
-class _EuclideanMesh2D:
+class EuclideanMesh2D:
     def __init__(
             self,
             coords,

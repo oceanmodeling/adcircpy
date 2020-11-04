@@ -1,2 +1,2 @@
-class _BaseServerConfig:
+class BaseServerConfig:
     pass

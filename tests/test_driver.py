@@ -8,7 +8,7 @@ import requests
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.server import SlurmConfig
-from adcircpy.server.driver_file import _DriverFile
+from adcircpy.server.driver_file import DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -62,8 +62,8 @@ class TestAdcircRun(unittest.TestCase):
             spinup_time=timedelta(days=5),
             server_config=slurm
         )
-        _DriverFile(driver).write(output_directory / 'slurm.job',
-                                  overwrite=True)
+        DriverFile(driver).write(output_directory / 'slurm.job',
+                                 overwrite=True)
 
         with open(output_directory / 'slurm.job') as generated_file:
             with open(reference_directory / 'slurm.job') as reference_file:

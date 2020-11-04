@@ -6,7 +6,7 @@ import pathlib
 from adcircpy import AdcircMesh, AdcircRun, Tides, server
 
 
-class _AdcircCommand:
+class AdcircCommand:
 
     def __init__(self, args):
         self._args = args

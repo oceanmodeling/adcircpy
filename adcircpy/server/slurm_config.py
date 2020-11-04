@@ -1,10 +1,10 @@
 from datetime import timedelta
 import uuid
 
-from adcircpy.server.base_config import _BaseServerConfig
+from adcircpy.server.base_config import BaseServerConfig
 
 
-class SlurmConfig(_BaseServerConfig):
+class SlurmConfig(BaseServerConfig):
     """
     Object instance of a Slurm shell script (`*.job`).
     """

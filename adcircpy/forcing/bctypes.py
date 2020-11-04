@@ -1,38 +1,38 @@
 from abc import ABCMeta, abstractmethod
 
 
-class _BoundaryCondition(metaclass=ABCMeta):
+class BoundaryCondition(metaclass=ABCMeta):
     @property
     @abstractmethod
     def btype(self):
         raise NotImplementedError
 
 
-class _EtaBc(_BoundaryCondition):
+class EtaBc(BoundaryCondition):
     @property
     def btype(self):
         return 'iettype'
 
 
-class _VelBc(_BoundaryCondition):
+class VelBc(BoundaryCondition):
     @property
     def btype(self):
         return 'ifltype'
 
 
-class _TempBc(_BoundaryCondition):
+class TempBc(BoundaryCondition):
     @property
     def btype(self):
         return 'itetype'
 
 
-class _SalBc(_BoundaryCondition):
+class SalBc(BoundaryCondition):
     @property
     def btype(self):
         return 'isatype'
 
 
-class _TraceBc(_BoundaryCondition):
+class TraceBc(BoundaryCondition):
     @property
     def btype(self):
         return 'itrtype'

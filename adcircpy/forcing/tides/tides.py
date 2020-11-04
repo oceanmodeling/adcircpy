@@ -8,7 +8,7 @@ from adcircpy.forcing import bctypes
 from adcircpy.forcing.tides.tpxo import TPXO
 
 
-class Tides(bctypes._EtaBc):
+class Tides(bctypes.EtaBc):
 
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)

@@ -17,8 +17,7 @@ from adcircpy.mesh.figures import _figure
 #     FORT63 = 'zeta'
 
 
-class _SurfaceOutput(metaclass=abc.ABCMeta):
-
+class SurfaceOutput(metaclass=abc.ABCMeta):
     # change this for __types__
 
     _physical_variables = {
@@ -204,7 +203,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
             return False
 
 
-class _SurfaceOutputTimeseries(_SurfaceOutput):
+class SurfaceOutputTimeseries(SurfaceOutput):
 
     def __init__(self, path, crs=None, index=0):
         super().__init__(path, crs)
@@ -242,7 +241,7 @@ class _SurfaceOutputTimeseries(_SurfaceOutput):
         """ Subclass must implement animation method."""
 
 
-class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
+class ScalarSurfaceOutputTimeseries(SurfaceOutputTimeseries):
 
     def animation(
             self,
@@ -251,7 +250,7 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             start_frame=0,
             end_frame=-1,
             **kwargs
-            ):
+    ):
 
         fig = plt.figure(
             figsize=kwargs.get("figsize")
