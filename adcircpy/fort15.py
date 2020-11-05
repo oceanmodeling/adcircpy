@@ -703,14 +703,29 @@ class Fort15:
                     return 2
 
             def get_digit_6():
-                if not self.baroclinicity and self.gwce_solution_scheme == 'semi-implicit':
+                if (not self.baroclinicity and
+                        self.gwce_solution_scheme == 'semi-implicit-legacy'):
                     return 1
-                elif not self.baroclinicity and self.gwce_solution_scheme == 'explicit':
+
+                elif (not self.baroclinicity and
+                      self.gwce_solution_scheme == 'explicit'):
                     return 2
-                elif self.baroclinicity and self.gwce_solution_scheme == 'semi-implicit':
+
+                elif (not self.baroclinicity and
+                      self.gwce_solution_scheme == 'semi-implicit'):
                     return 3
-                elif self.baroclinicity and self.gwce_solution_scheme == 'explicit':
-                    return 4
+
+                else:
+                    raise Exception(
+                        f'No IM digit 6 for {self.baroclinicity}, '
+                        f'{self.gwce_solution_scheme}')
+
+                # elif (self.baroclinicity and
+                #       self.gwce_solution_scheme == 'semi-implicit'):
+                #     return 3
+                # elif (self.baroclinicity and
+                #       self.gwce_solution_scheme == 'explicit'):
+                #     return 4
 
             IM = '{:d}'.format(get_digit_1())
             IM += '{:d}'.format(get_digit_2())
@@ -1011,30 +1026,36 @@ class Fort15:
         try:
             return self.__A00
         except AttributeError:
-            A00 = 0.35
             if self.gwce_solution_scheme == 'explicit':
                 return 0
-            return A00
+            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+                return 0.35
+            if self.gwce_solution_scheme == 'semi-implicit':
+                return 0.5
 
     @property
     def B00(self):
         try:
             return self.__B00
         except AttributeError:
-            B00 = 0.30
             if self.gwce_solution_scheme == 'explicit':
-                return 1
-            return B00
+                return 0
+            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+                return 0.30
+            if self.gwce_solution_scheme == 'semi-implicit':
+                return 0.5
 
     @property
     def C00(self):
         try:
             return self.__C00
         except AttributeError:
-            C00 = 0.35
             if self.gwce_solution_scheme == 'explicit':
                 return 0
-            return C00
+            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+                return 0.35
+            if self.gwce_solution_scheme == 'semi-implicit':
+                return 0
 
     @property
     def H0(self):

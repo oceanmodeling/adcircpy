@@ -136,9 +136,9 @@ def timestep(parser):
 def gwce_solution_scheme(parser):
     parser.add_argument(
         "--gwce-solution-scheme",
-        choices=['semi-implicit', 'explicit'],
-        default='explicit'
-        # default='semi-implicit'
+        choices=['semi-implicit', 'explicit', 'semi-implicit-legacy'],
+        # default='explicit',
+        default='semi-implicit'
     )
 
 
