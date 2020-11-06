@@ -608,15 +608,33 @@ class Fort15:
             return 100
 
     @property
-    def NWS(self):
+    def NWS(self) -> int:
+        """
+        wind stress number
+        http://adcirc.org/home/documentation/users-manual-v50/input-file-descriptions/nws-values-table/
+        """
+
         if self._runtype == 'coldstart':
             return 0
         else:
             if self.wind_forcing is not None:
                 # check for wave forcing here as well.
-                return self.wind_forcing.NWS
+                return int(self.wind_forcing.NWS % 100)
             else:
                 return 0
+
+    @property
+    def NRS(self) -> int:
+        """
+        radiative (wave) stress number
+
+        100 - fort.23
+        300 - SWAN
+        400 - STWAVE
+        500 - WW3
+        """
+
+        return int(round(self.NWS / 100))
 
     @property
     def ICS(self):
