@@ -58,7 +58,12 @@ class Fort15:
             f'{self.REFTIM:<63G} ! REFTIM',
         ])
         if self.NWS not in [0, 1, 9, 11]:
-            f.append(f'{self.WTIMINC:<63} ! WTIMINC')
+            interval = f'{self.WTIMINC}'
+            description = 'WTIMINC - meteorological data time increment'
+            if self.NRS in [1, 3, 4, 5]:
+                interval += f'{self.RSTIMINC}'
+                description += ', RSTIMINC wave forcing increment'
+            f.append(f'{interval:<63} ! {description}')
         f.extend([
             f'{self.RNDAY:<63G} ! RNDAY',
             f'{self.DRAMP:<63} ! DRAMP',
@@ -934,6 +939,16 @@ class Fort15:
     def WTIMINC(self):
         if self.NWS not in [0, 1, 9, 11]:
             return self.wind_forcing.WTIMINC
+        else:
+            return 0
+
+    @property
+    def RSTIMINC(self):
+        if self.NRS in [1, 3, 4, 5]:
+            if self.wave_forcing is not None:
+                return self.wave_forcing.RSTIMINC
+            else:
+                return self.WTIMINC
         else:
             return 0
 
