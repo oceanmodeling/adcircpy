@@ -41,7 +41,7 @@ class Fort15:
         f.extend([
             f'{self.NCOR:<63d} ! NCOR',
             f'{self.NTIP:<63d} ! NTIP',
-            f'{self.NWS:<63d} ! NWS',
+            f'{int((self.NRS * 100) + self.NWS):<63d} ! NWS',
             f'{self.NRAMP:<63d} ! NRAMP',
             f'{self.G:<63G} ! gravitational acceleration',
             f'{self.TAU0:<63G} ! TAU0',
