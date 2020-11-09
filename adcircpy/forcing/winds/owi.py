@@ -1,10 +1,11 @@
 from datetime import datetime
 
-from adcircpy.forcing.winds.base import _WindForcing
 import numpy as np
 
+from adcircpy.forcing.winds.base import WindForcing
 
-class OwiForcing(_WindForcing):
+
+class OwiForcing(WindForcing):
     def __init__(self):
         self.__basin_scale_pressure = None
         self.__basin_scale_winds = None
