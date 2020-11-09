@@ -7,7 +7,7 @@ import unittest
 import numpy
 import requests
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
+from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
 
@@ -82,16 +82,6 @@ class TestAdcircRun(unittest.TestCase):
 
         # let's also add a mannings to the domain (constant for this example)
         mesh.mannings_n_at_sea_floor = numpy.full(mesh.values.shape, 0.025)
-
-        # init tidal forcing and setup requests
-        tidal_forcing = Tides()
-        tidal_forcing.use_constituent('M2')
-        tidal_forcing.use_constituent('N2')
-        tidal_forcing.use_constituent('S2')
-        tidal_forcing.use_constituent('K1')
-        tidal_forcing.use_constituent('O1')
-
-        mesh.add_forcing(tidal_forcing)
 
         # set simulation dates
         spinup_time = timedelta(days=2)
