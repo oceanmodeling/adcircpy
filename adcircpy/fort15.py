@@ -5,9 +5,16 @@ import pathlib
 import numpy as np
 
 from adcircpy.forcing.tides.tpxo import TPXO
+from adcircpy.forcing.waves._base import WaveForcing
+from adcircpy.forcing.winds._base import WindForcing
 
 
 class Fort15:
+    def __init__(self, wind_forcing: WindForcing = None,
+                 wave_forcing: WaveForcing = None):
+        self.wind_forcing = wind_forcing
+        self.wave_forcing = wave_forcing
+
     def fort15(self, runtype):
         self._runtype = runtype
         # ----------------
@@ -619,21 +626,15 @@ class Fort15:
         http://adcirc.org/home/documentation/users-manual-v50/input-file-descriptions/nws-values-table/
         """
 
-        try:
-            self.__nws
-        except AttributeError:
-            if self._runtype == 'coldstart':
-                self.__nws = 0
-            elif self.wind_forcing is not None:
-                # check for wave forcing here as well.
-                self.__nws = self.wind_forcing.NWS
-            else:
-                self.__nws = 0
-        return int(self.__nws % 100)
+        if self._runtype == 'coldstart':
+            nws = 0
+        elif self.wind_forcing is not None:
+            # check for wave forcing here as well.
+            nws = self.wind_forcing.NWS
+        else:
+            nws = 0
 
-    @NWS.setter
-    def NWS(self, nws: int):
-        self.__nws = nws
+        return int(nws % 100)
 
     @property
     def NRS(self) -> int:

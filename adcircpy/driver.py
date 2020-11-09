@@ -12,6 +12,8 @@ import numpy as np
 from psutil import cpu_count
 
 from adcircpy.forcing import Tides  # , Winds
+from adcircpy.forcing.waves._base import WaveForcing
+from adcircpy.forcing.winds._base import WindForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
@@ -28,8 +30,11 @@ class AdcircRun(Fort15):
             end_date: datetime,
             spinup_time: timedelta = None,
             netcdf: bool = True,
-            server_config: Union[int, SSHConfig, SlurmConfig] = None
+            server_config: Union[int, SSHConfig, SlurmConfig] = None,
+            wind_forcing: WindForcing = None,
+            wave_forcing: WaveForcing = None,
     ):
+        super(wind_forcing, wave_forcing)
         self._mesh = mesh
         self._start_date = start_date
         self._end_date = end_date
