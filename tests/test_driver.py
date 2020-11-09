@@ -24,8 +24,10 @@ class TestAdcircRun(unittest.TestCase):
     def setUp(self):
         # fetch Shinnecock Inlet test data
         if not FORT14_FILENAME.is_file():
-            url = "https://www.dropbox.com/s/1wk91r67cacf132/" \
-                  "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
+            url = (
+                'https://www.dropbox.com/s/1wk91r67cacf132/'
+                'NetCDF_shinnecock_inlet.tar.bz2?dl=1'
+            )
             remote_file = requests.get(url, stream=True)
             input_filename = DATA_DIRECTORY / 'NetCDF_shinnecock_inlet.tar.bz2'
             with open(input_filename, 'wb') as f:
@@ -53,14 +55,14 @@ class TestAdcircRun(unittest.TestCase):
             mail_user='example@email.gov',
             log_filename='example_3.log',
             modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-            path_prefix='$HOME/adcirc/build'
+            path_prefix='$HOME/adcirc/build',
         )
         driver = AdcircRun(
             mesh=mesh,
             start_date=datetime.now(),
             end_date=timedelta(days=7),
             spinup_time=timedelta(days=5),
-            server_config=slurm
+            server_config=slurm,
         )
         DriverFile(driver).write(output_directory / 'slurm.job',
                                  overwrite=True)

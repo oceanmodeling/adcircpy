@@ -44,11 +44,11 @@ class OwiForcing(WindForcing):
                     OWI['datetime'].append(
                         datetime.strptime(line[68:80], '%Y%m%d%H%M'))
                     OWI['values'].append(
-                        np.asarray(values).reshape(
-                            (OWI['iLon'], OWI['iLat'])))
+                        np.asarray(values).reshape((OWI['iLon'], OWI['iLat']))
+                    )
                     values = list()
                 else:
-                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
+                    for n in [line[i: i + 10] for i in range(0, 80, 10)]:
                         values.append(float(n))
         return OWI
 
@@ -85,7 +85,7 @@ class OwiForcing(WindForcing):
                     values_u = list()
                     values_v = list()
                 else:
-                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
+                    for n in [line[i: i + 10] for i in range(0, 80, 10)]:
                         if len(values_u) != size:
                             values_u.append(float(n))
                         else:

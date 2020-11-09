@@ -7,20 +7,19 @@ from adcircpy.mesh.grd import euclidean_mesh, reader, writer
 
 
 class GrdTestCase(unittest.TestCase):
-
     def setUp(self):
         self.nodes = {
-            '1': ((0., 0.), -99999.),
-            '2': ((.5, 0.), -99999.),
-            '3': ((1., 0.), -99999.),
-            '4': ((1., 1.), -99999.),
-            '5': ((0., 1.), -99999.),
-            '6': ((.5, 1.5), -99999.),
-            '7': ((.33, .33), -99999.),
-            '8': ((.66, .33), -99999.),
-            '9': ((.5, .66), -99999.),
-            '10': ((-1., 1.), -99999.),
-            '11': ((-1., 0.), -99999.),
+            '1': ((0.0, 0.0), -99999.0),
+            '2': ((0.5, 0.0), -99999.0),
+            '3': ((1.0, 0.0), -99999.0),
+            '4': ((1.0, 1.0), -99999.0),
+            '5': ((0.0, 1.0), -99999.0),
+            '6': ((0.5, 1.5), -99999.0),
+            '7': ((0.33, 0.33), -99999.0),
+            '8': ((0.66, 0.33), -99999.0),
+            '9': ((0.5, 0.66), -99999.0),
+            '10': ((-1.0, 1.0), -99999.0),
+            '11': ((-1.0, 0.0), -99999.0),
         }
         self.elements = {
             '1': ['5', '7', '9'],
@@ -32,30 +31,29 @@ class GrdTestCase(unittest.TestCase):
             '7': ['4', '6', '5'],
             '8': ['5', '10', '11', '1'],
             '9': ['9', '4', '5'],
-            '10': ['5', '1', '7']
+            '10': ['5', '1', '7'],
         }
 
         self.boundaries = dict()
 
         self.boundaries[None] = {  # "open" boundaries
             0: {'indexes': ['10', '11', '1', '2']},
-            1: {'indexes': ['2', '3', '4']}
+            1: {'indexes': ['2', '3', '4']},
         }
 
         self.boundaries[0] = {  # "land" boundaries
             0: {'indexes': ['4', '6']},
-            1: {'indexes': ['6', '5', '10']}
+            1: {'indexes': ['6', '5', '10']},
         }
 
-        self.boundaries[1] = {  # "interior" boundary
-            0: {'indexes': ['7', '8', '9', '7']}
-        }
+        self.boundaries[1] = {
+            0: {'indexes': ['7', '8', '9', '7']}}  # "interior" boundary
 
         self.grd = {
             'nodes': self.nodes,
             'elements': self.elements,
             'boundaries': self.boundaries,
-            'description': 'grd_unittest'
+            'description': 'grd_unittest',
         }
 
     def test_write_read(self):
@@ -67,12 +65,8 @@ class GrdTestCase(unittest.TestCase):
     def test_overwrite(self):
         tmpdir = tempfile.TemporaryDirectory()
         writer(self.grd, pathlib.Path(tmpdir.name) / 'hgrid.grd')
-        self.assertRaises(
-            Exception,
-            writer,
-            self.grd,
-            pathlib.Path(tmpdir.name) / 'hgrid.grd'
-        )
+        self.assertRaises(Exception, writer, self.grd,
+                          pathlib.Path(tmpdir.name) / 'hgrid.grd')
 
     def test_no_ocean_bnd(self):
         tmpdir = tempfile.TemporaryDirectory()

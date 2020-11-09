@@ -8,7 +8,7 @@ def get_logger(
         log_filename: str = None,
         file_level: int = None,
         console_level: int = None,
-        name_field_length: int = 15
+        name_field_length: int = 15,
 ) -> logging.Logger:
     """
     Retrieve an instance of `logging.Logger` with split console output (`stdout` and `stderr`).
@@ -37,6 +37,7 @@ def get_logger(
             logger.setLevel(logging.DEBUG)
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
+
                     class LoggingOutputFilter(logging.Filter):
                         def filter(self, rec):
                             return rec.levelno in (logging.DEBUG, logging.INFO)
@@ -53,8 +54,10 @@ def get_logger(
     if log_filename is not None:
         file_handler = logging.FileHandler(log_filename)
         file_handler.setLevel(file_level)
-        for existing_file_handler in [handler for handler in logger.handlers if
-                                      type(handler) is logging.FileHandler]:
+        for existing_file_handler in [
+            handler for handler in logger.handlers if
+            type(handler) is logging.FileHandler
+        ]:
             logger.removeHandler(existing_file_handler)
         logger.addHandler(file_handler)
 

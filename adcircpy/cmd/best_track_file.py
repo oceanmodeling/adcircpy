@@ -6,35 +6,44 @@ from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Program to generate fort.22 from HURDAT2.")
+        description='Program to generate fort.22 from HURDAT2.')
+    parser.add_argument('storm_id', help='Storm id from HURDAT2 database.')
+    parser.add_argument('--save-path', help='Output path for fort.22 file.')
+    parser.add_argument('--start-date', help='format is %Y%m%d%H')
+    parser.add_argument('--end-date', help='format is %Y%m%d%H')
+    parser.add_argument('--quiet', '-q', action='store_true', default=False)
     parser.add_argument(
-        "storm_id",
-        help="Storm id from HURDAT2 database.")
-    parser.add_argument(
-        "--save-path",
-        help="Output path for fort.22 file.")
-    parser.add_argument(
-        '--start-date', help="format is %Y%m%d%H")
-    parser.add_argument(
-        '--end-date', help="format is %Y%m%d%H")
-    parser.add_argument(
-        '--quiet', '-q', action='store_true', default=False)
-    parser.add_argument(
-        '--six-hourly', '-s', action='store_true', default=False,
-        help='Filter data to six-hourly only.')
-    parser.add_argument(
-        '--show-HU-only', '-hu', action='store_true', default=False,
-        help='Removes both tropical storm (TS) and extratropical (EX) entries.'
+        '--six-hourly',
+        '-s',
+        action='store_true',
+        default=False,
+        help='Filter data to six-hourly only.',
     )
     parser.add_argument(
-        '--remove-TS', action='store_true', default=False,
-        help='Removes tropical storm (TS) entries.')
+        '--show-HU-only',
+        '-hu',
+        action='store_true',
+        default=False,
+        help='Removes both tropical storm (TS) and extratropical (EX) entries.',
+    )
     parser.add_argument(
-        '--remove-EX', action='store_true', default=False,
-        help='Removes extratropical (EX) entries.')
+        '--remove-TS',
+        action='store_true',
+        default=False,
+        help='Removes tropical storm (TS) entries.',
+    )
     parser.add_argument(
-        '--plot-track', action='store_true', default=False,
-        help='Shows a simple plot of the track.')
+        '--remove-EX',
+        action='store_true',
+        default=False,
+        help='Removes extratropical (EX) entries.',
+    )
+    parser.add_argument(
+        '--plot-track',
+        action='store_true',
+        default=False,
+        help='Shows a simple plot of the track.',
+    )
     return parser.parse_args()
 
 
@@ -73,5 +82,5 @@ def main():
     #         print('File written to: {}'.format(args.save_path))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

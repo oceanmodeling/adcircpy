@@ -32,13 +32,13 @@ class TPXO:
             self._nc = Dataset(file)
             return
 
-        msg = "No TPXO file found. You need to register and request a "
-        msg += "copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)"
-        msg += " from the authors at https://www.tpxo.net. Once you obtain"
-        msg += " this copy, set the environment variable TPXO_NCFILE "
-        msg += "to point to the path of the h_tpxo9.v1.nc file. \n"
-        msg += "You may also install this file manually by placing it on "
-        msg += f"the {str(file)} path."
+        msg = 'No TPXO file found. You need to register and request a '
+        msg += 'copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)'
+        msg += ' from the authors at https://www.tpxo.net. Once you obtain'
+        msg += ' this copy, set the environment variable TPXO_NCFILE '
+        msg += 'to point to the path of the h_tpxo9.v1.nc file. \n'
+        msg += 'You may also install this file manually by placing it on '
+        msg += f'the {str(file)} path.'
         raise FileNotFoundError(msg)
 
     def __call__(self, constituent, vertices):
@@ -86,8 +86,23 @@ class TPXO:
 
     @property
     def tpxo_constituents(self):
-        return ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
-                'M4', 'MN4', 'MS4', '2N2', 'S1']
+        return [
+            'M2',
+            'S2',
+            'N2',
+            'K2',
+            'K1',
+            'O1',
+            'P1',
+            'Q1',
+            'Mm',
+            'Mf',
+            'M4',
+            'MN4',
+            'MS4',
+            '2N2',
+            'S1',
+        ]
 
     def _get_interpolation(self, tpxo_array, constituent, vertices):
         """
@@ -96,7 +111,7 @@ class TPXO:
         """
         constituent = self.tpxo_constituents.index(constituent)
         array = tpxo_array[constituent, :, :].flatten()
-        _x = np.asarray([x + 360. for x in vertices[:, 0] if x < 0]).flatten()
+        _x = np.asarray([x + 360.0 for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()
         x, y = np.meshgrid(self.x, self.y, indexing='ij')
         x = x.flatten()
@@ -108,20 +123,22 @@ class TPXO:
                 np.logical_and(x >= np.min(_x) - 2 * dx,
                                x <= np.max(_x) + 2 * dx),
                 np.logical_and(y >= np.min(_y) - 2 * dy,
-                               y <= np.max(_y) + 2 * dy)))
-        return griddata(
-            (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
+                               y <= np.max(_y) + 2 * dy),
+            )
+        )
+        return griddata((x[_idx], y[_idx]), array[_idx], (_x, _y),
+                        method='nearest')
 
     def _assert_vertices(self, vertices):
-        msg = "vertices must be of shape M x 2"
+        msg = 'vertices must be of shape M x 2'
         assert vertices.shape[1] == 2, msg
 
     @staticmethod
     def _fetch_tpxo_file(prefix: str, file: str):
-        url = "https://www.dropbox.com/s/uc44cbo5s2x4n93/"
-        url += "h_tpxo9.v1.tar.gz?dl=1"
+        url = 'https://www.dropbox.com/s/uc44cbo5s2x4n93/'
+        url += 'h_tpxo9.v1.tar.gz?dl=1'
 
-        def query_yes_no(question: str, default: str = "yes") -> bool:
+        def query_yes_no(question: str, default: str = 'yes') -> bool:
             """
             Ask a yes/no question via raw_input() and return their answer.
 
@@ -130,19 +147,14 @@ class TPXO:
             :returns: whether 'yes' or 'no' was selected by the user
             """
 
-            valid = {
-                "yes": True,
-                "y": True,
-                "ye": True,
-                "no": False,
-                "n": False
-            }
+            valid = {'yes': True, 'y': True, 'ye': True, 'no': False,
+                     'n': False}
             if default is None:
-                prompt = " [y/n] "
-            elif default == "yes":
-                prompt = " [Y/n] "
-            elif default == "no":
-                prompt = " [y/N] "
+                prompt = ' [y/n] '
+            elif default == 'yes':
+                prompt = ' [Y/n] '
+            elif default == 'no':
+                prompt = ' [y/N] '
             else:
                 raise ValueError("invalid default answer: '%s'" % default)
 
@@ -157,20 +169,20 @@ class TPXO:
                     sys.stdout.write(
                         "Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
-        q = "******* PLEASE READ *******\n"
-        q += "A function that is being invoked requires the TPXO file.\n"
+        q = '******* PLEASE READ *******\n'
+        q += 'A function that is being invoked requires the TPXO file.\n'
         q += 'This software can automatically fetch the TPXO file for you usin'
         q += 'g your internet connection.\n'
         q += 'You may also cancel this operation and provide the path to the '
         q += 'h_tpxo9.v1.nc file using the TPXO_NCFILE environment variable.\n'
-        q += "By downloading this file and using this software, you are "
-        q += "accepting the licensing agreement for the TPXO file found here:"
-        q += "\nhttps://drive.google.com/file/d/1f00WojHqu7_VE5Hg9OdiVBjymH76d"
-        q += "FCy/view\n"
+        q += 'By downloading this file and using this software, you are '
+        q += 'accepting the licensing agreement for the TPXO file found here:'
+        q += '\nhttps://drive.google.com/file/d/1f00WojHqu7_VE5Hg9OdiVBjymH76d'
+        q += 'FCy/view\n'
         q += 'If you accept the agreement, you may also download the TPXO '
-        q += f"file from: {url}\n"
-        q += "Would you like this software to fetch and stage the TPXO file "
-        q += "from the internet now?\n"
+        q += f'file from: {url}\n'
+        q += 'Would you like this software to fetch and stage the TPXO file '
+        q += 'from the internet now?\n'
         a = query_yes_no(q)
         if a is False:
             raise RuntimeError('No TPXO database found.')
@@ -181,8 +193,8 @@ class TPXO:
             print(msg)
             tmpdir = tempfile.TemporaryDirectory()
             _tmpdir = pathlib.Path(tmpdir.name)
-            wget.download(url, out=str(_tmpdir / "h_tpxo9.v1.tar.gz"))
-            with tarfile.open(_tmpdir / "h_tpxo9.v1.tar.gz") as f:
+            wget.download(url, out=str(_tmpdir / 'h_tpxo9.v1.tar.gz'))
+            with tarfile.open(_tmpdir / 'h_tpxo9.v1.tar.gz') as f:
                 f.extract('h_tpxo9.v1.nc', path=prefix + '/lib')
 
     @property
@@ -195,6 +207,6 @@ class TPXO:
 
 
 def install():
-    prefix = "/".join(sys.executable.split('/')[:-2])
+    prefix = '/'.join(sys.executable.split('/')[:-2])
     file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
     TPXO._fetch_tpxo_file(prefix, file)

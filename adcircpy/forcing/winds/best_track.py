@@ -19,7 +19,6 @@ from adcircpy.forcing.winds.base import WindForcing
 
 
 class BestTrackForcing(WindForcing):
-
     def __init__(self, storm_id, start_date=None, end_date=None, dst_crs=None):
         self._storm_id = storm_id
         self._start_date = start_date
@@ -30,25 +29,26 @@ class BestTrackForcing(WindForcing):
         """
         Important: bbox must be expressed in Mercator projection (EPSG:3395)
         """
-        msg = f"bbox must be a {Bbox} instance."
+        msg = f'bbox must be a {Bbox} instance.'
         assert isinstance(bbox, Bbox), msg
         bbox_pol = Polygon(
-            [[bbox.xmin, bbox.ymin],
-             [bbox.xmax, bbox.ymin],
-             [bbox.xmax, bbox.ymax],
-             [bbox.xmin, bbox.ymax],
-             [bbox.xmin, bbox.ymin]
-             ])
+            [
+                [bbox.xmin, bbox.ymin],
+                [bbox.xmax, bbox.ymin],
+                [bbox.xmax, bbox.ymax],
+                [bbox.xmin, bbox.ymax],
+                [bbox.xmin, bbox.ymin],
+            ]
+        )
         _switch = True
         unique_dates = np.unique(self._df['datetime'])
         for _datetime in unique_dates:
             records = self._df[self._df['datetime'] == _datetime]
             radii = records['radius_of_last_closed_isobar'].iloc[0]
-            radii = 1852. * radii  # convert to meters
-            merc = Proj("EPSG:3395")
-            x, y = merc(
-                records['longitude'].iloc[0],
-                records['latitude'].iloc[0])
+            radii = 1852.0 * radii  # convert to meters
+            merc = Proj('EPSG:3395')
+            x, y = merc(records['longitude'].iloc[0],
+                        records['latitude'].iloc[0])
             p = Point(x, y)
             pol = p.buffer(radii)
             if _switch:
@@ -58,7 +58,7 @@ class BestTrackForcing(WindForcing):
                     self.start_date = records['datetime'].iloc[0]
                     _switch = False
                     continue
-                    # self.start_date = 
+                    # self.start_date =
             else:
                 if pol.intersects(bbox_pol):
                     continue
@@ -75,8 +75,8 @@ class BestTrackForcing(WindForcing):
             # when dealing with nautical degrees, U is sine and V is cosine.
             U = self.speed.iloc[i] * np.sin(np.deg2rad(self.direction.iloc[i]))
             V = self.speed.iloc[i] * np.cos(np.deg2rad(self.direction.iloc[i]))
-            ax.quiver(
-                self.longitude.iloc[i], self.latitude.iloc[i], U, V, **kwargs)
+            ax.quiver(self.longitude.iloc[i], self.latitude.iloc[i], U, V,
+                      **kwargs)
             ax.annotate(
                 self.df['datetime'].iloc[i],
                 (self.longitude.iloc[i], self.latitude.iloc[i])
@@ -143,8 +143,8 @@ class BestTrackForcing(WindForcing):
 
     @property
     def df(self):
-        start_date_mask = self._df["datetime"] >= self.start_date
-        end_date_mask = self._df["datetime"] <= self._file_end_date
+        start_date_mask = self._df['datetime'] >= self.start_date
+        end_date_mask = self._df['datetime'] <= self._file_end_date
         return self._df[start_date_mask & end_date_mask]
 
     @property
@@ -152,62 +152,66 @@ class BestTrackForcing(WindForcing):
         record_number = self._generate_record_numbers()
         fort22 = ''
         for i, (_, row) in enumerate(self.df.iterrows()):
-            fort22 += "{:<2},".format(row["basin"])
-            fort22 += "{:>3},".format(row["storm_number"])
-            fort22 += "{:>11},".format(row["datetime"].strftime('%Y%m%d%H'))
-            fort22 += "{:3},".format("")
-            fort22 += "{:>5},".format(row["record_type"])
-            fort22 += "{:>4},".format(int((row["datetime"] - self.start_date)
-                                          .total_seconds() / 3600))
-            if row["latitude"] >= 0:
-                fort22 += "{:>4}N,".format(int(row["latitude"] / .1))
+            fort22 += '{:<2},'.format(row['basin'])
+            fort22 += '{:>3},'.format(row['storm_number'])
+            fort22 += '{:>11},'.format(row['datetime'].strftime('%Y%m%d%H'))
+            fort22 += '{:3},'.format("")
+            fort22 += '{:>5},'.format(row['record_type'])
+            fort22 += '{:>4},'.format(
+                int((row['datetime'] - self.start_date).total_seconds() / 3600)
+            )
+            if row['latitude'] >= 0:
+                fort22 += '{:>4}N,'.format(int(row['latitude'] / 0.1))
             else:
-                fort22 += "{:>4}S,".format(int(row["latitude"] / -.1))
-            if row["longitude"] >= 0:
-                fort22 += "{:>5}E,".format(int(row["longitude"] / .1))
+                fort22 += '{:>4}S,'.format(int(row['latitude'] / -0.1))
+            if row['longitude'] >= 0:
+                fort22 += '{:>5}E,'.format(int(row['longitude'] / 0.1))
             else:
-                fort22 += "{:>5}W,".format(int(row["longitude"] / -.1))
-            fort22 += "{:>4},".format(int(row["max_sustained_wind_speed"]))
-            fort22 += "{:>5},".format(int(row["central_pressure"]))
-            fort22 += "{:>3},".format(row["development_level"])
-            fort22 += "{:>4},".format(int(row["isotach"]))
-            fort22 += "{:>4},".format(row["quadrant"])
-            fort22 += "{:>5},".format(int(row["radius_for_NEQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_SEQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_SWQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_NWQ"]))
-            if row["background_pressure"] is None:
-                row["background_pressure"] = \
-                    self.df["background_pressure"].iloc[i - 1]
-            if (row["background_pressure"] <= row["central_pressure"]
-                    and 1013 > row["central_pressure"]):
-                fort22 += "{:>5},".format(1013)
-            elif (row["background_pressure"] <= row["central_pressure"]
-                  and 1013 <= row["central_pressure"]):
-                fort22 += "{:>5},".format(int(row["central_pressure"] + 1))
+                fort22 += '{:>5}W,'.format(int(row['longitude'] / -0.1))
+            fort22 += '{:>4},'.format(int(row['max_sustained_wind_speed']))
+            fort22 += '{:>5},'.format(int(row['central_pressure']))
+            fort22 += '{:>3},'.format(row['development_level'])
+            fort22 += '{:>4},'.format(int(row['isotach']))
+            fort22 += '{:>4},'.format(row['quadrant'])
+            fort22 += '{:>5},'.format(int(row['radius_for_NEQ']))
+            fort22 += '{:>5},'.format(int(row['radius_for_SEQ']))
+            fort22 += '{:>5},'.format(int(row['radius_for_SWQ']))
+            fort22 += '{:>5},'.format(int(row['radius_for_NWQ']))
+            if row['background_pressure'] is None:
+                row['background_pressure'] = \
+                self.df['background_pressure'].iloc[i - 1]
+            if (
+                    row['background_pressure'] <= row['central_pressure']
+                    and 1013 > row['central_pressure']
+            ):
+                fort22 += '{:>5},'.format(1013)
+            elif (
+                    row['background_pressure'] <= row['central_pressure']
+                    and 1013 <= row['central_pressure']
+            ):
+                fort22 += '{:>5},'.format(int(row['central_pressure'] + 1))
             else:
-                fort22 += "{:>5},".format(int(row["background_pressure"]))
-            fort22 += "{:>5},".format(int(
-                row["radius_of_last_closed_isobar"]))
-            fort22 += "{:>4},".format(int(row["radius_of_maximum_winds"]))
-            fort22 += "{:>5},".format('')  # gust
-            fort22 += "{:>4},".format('')  # eye
-            fort22 += "{:>4},".format('')  # subregion
-            fort22 += "{:>4},".format('')  # maxseas
-            fort22 += "{:>4},".format('')  # initials
-            fort22 += "{:>3},".format(row["direction"])
-            fort22 += "{:>4},".format(row["speed"])
-            fort22 += "{:^12},".format(row["name"])
+                fort22 += '{:>5},'.format(int(row['background_pressure']))
+            fort22 += '{:>5},'.format(int(row['radius_of_last_closed_isobar']))
+            fort22 += '{:>4},'.format(int(row['radius_of_maximum_winds']))
+            fort22 += '{:>5},'.format('')  # gust
+            fort22 += '{:>4},'.format('')  # eye
+            fort22 += '{:>4},'.format('')  # subregion
+            fort22 += '{:>4},'.format('')  # maxseas
+            fort22 += '{:>4},'.format('')  # initials
+            fort22 += '{:>3},'.format(row['direction'])
+            fort22 += '{:>4},'.format(row['speed'])
+            fort22 += '{:^12},'.format(row['name'])
             # from this point forwards it's all aswip
-            fort22 += "{:>4},".format(record_number[i])
-            fort22 += "\n"
+            fort22 += '{:>4},'.format(record_number[i])
+            fort22 += '\n'
         return fort22
 
     @property
     def _storm_id(self):
-        storm_id = f"{self.basin}"
-        storm_id += f"{self.storm_number}"
-        storm_id += f"{self.year}"
+        storm_id = f'{self.basin}'
+        storm_id += f'{self.storm_number}'
+        storm_id += f'{self.year}'
         return storm_id
 
     @property
@@ -225,27 +229,27 @@ class BestTrackForcing(WindForcing):
             return self.__df
         except AttributeError:
             data = {
-                "basin": list(),
-                "storm_number": list(),
-                "datetime": list(),
-                "record_type": list(),
-                "latitude": list(),
-                "longitude": list(),
-                "max_sustained_wind_speed": list(),
-                "central_pressure": list(),
-                "development_level": list(),
-                "isotach": list(),
-                "quadrant": list(),
-                "radius_for_NEQ": list(),
-                "radius_for_SEQ": list(),
-                "radius_for_SWQ": list(),
-                "radius_for_NWQ": list(),
-                "background_pressure": list(),
-                "radius_of_last_closed_isobar": list(),
-                "radius_of_maximum_winds": list(),
-                "name": list(),
-                "direction": list(),
-                "speed": list()
+                'basin': list(),
+                'storm_number': list(),
+                'datetime': list(),
+                'record_type': list(),
+                'latitude': list(),
+                'longitude': list(),
+                'max_sustained_wind_speed': list(),
+                'central_pressure': list(),
+                'development_level': list(),
+                'isotach': list(),
+                'quadrant': list(),
+                'radius_for_NEQ': list(),
+                'radius_for_SEQ': list(),
+                'radius_for_SWQ': list(),
+                'radius_for_NWQ': list(),
+                'background_pressure': list(),
+                'radius_of_last_closed_isobar': list(),
+                'radius_of_maximum_winds': list(),
+                'name': list(),
+                'direction': list(),
+                'speed': list(),
             }
             for i, line in enumerate(gzip.GzipFile(fileobj=self.__atcf)):
                 line = line.decode('UTF-8').split(',')
@@ -260,36 +264,31 @@ class BestTrackForcing(WindForcing):
                     datetime.strptime(_datetime, '%Y%m%d%H%M'))
                 data['record_type'].append(line[4].strip(' '))
                 if 'N' in line[6]:
-                    _lat = float(line[6].strip('N ')) * .1
+                    _lat = float(line[6].strip('N ')) * 0.1
                 elif 'S' in line:
-                    _lat = float(line[6].strip('S ')) * -.1
+                    _lat = float(line[6].strip('S ')) * -0.1
                 data['latitude'].append(_lat)
                 if 'E' in line[7]:
-                    _lon = float(line[7].strip('E ')) * .1
+                    _lon = float(line[7].strip('E ')) * 0.1
                 elif 'W' in line[7]:
-                    _lon = float(line[7].strip('W ')) * -.1
+                    _lon = float(line[7].strip('W ')) * -0.1
                 data['longitude'].append(_lon)
                 data['max_sustained_wind_speed'].append(
                     float(line[8].strip(' ')))
-                data['central_pressure'].append(
-                    float(line[9].strip(' ')))
-                data['development_level'].append(
-                    line[10].strip(' '))
+                data['central_pressure'].append(float(line[9].strip(' ')))
+                data['development_level'].append(line[10].strip(' '))
                 try:
                     data['isotach'].append(int(line[11].strip(' ')))
                 except ValueError:
                     raise Exception(
                         'Error: No radial wind information for this storm; '
-                        'parametric wind model cannot be built.')
+                        'parametric wind model cannot be built.'
+                    )
                 data['quadrant'].append(line[12].strip(' '))
-                data['radius_for_NEQ'].append(
-                    int(line[13].strip(' ')))
-                data['radius_for_SEQ'].append(
-                    int(line[14].strip(' ')))
-                data['radius_for_SWQ'].append(
-                    int(line[15].strip(' ')))
-                data['radius_for_NWQ'].append(
-                    int(line[16].strip(' ')))
+                data['radius_for_NEQ'].append(int(line[13].strip(' ')))
+                data['radius_for_SEQ'].append(int(line[14].strip(' ')))
+                data['radius_for_SWQ'].append(int(line[15].strip(' ')))
+                data['radius_for_NWQ'].append(int(line[16].strip(' ')))
                 if len(line) > 18:
                     data['background_pressure'].append(
                         int(line[17].strip(' ')))
@@ -305,7 +304,8 @@ class BestTrackForcing(WindForcing):
                     data['background_pressure'].append(
                         data['background_pressure'][-1])
                     data['radius_of_last_closed_isobar'].append(
-                        data['radius_of_last_closed_isobar'][-1])
+                        data['radius_of_last_closed_isobar'][-1]
+                    )
                     data['radius_of_maximum_winds'].append(
                         data['radius_of_maximum_winds'][-1])
                     data['name'].append('')
@@ -328,62 +328,68 @@ class BestTrackForcing(WindForcing):
         """
         Output has units of meters per second.
         """
-        merc = Proj("EPSG:3395")
+        merc = Proj('EPSG:3395')
         x, y = merc(data['longitude'], data['latitude'])
         unique_datetimes = np.unique(data['datetime'])
         for i, _datetime in enumerate(unique_datetimes):
-            indexes, = np.where(
-                np.asarray(data['datetime']) == _datetime)
+            (indexes,) = np.where(np.asarray(data['datetime']) == _datetime)
             for idx in indexes:
                 if indexes[-1] + 1 < len(data['datetime']):
-                    dt = ((data['datetime'][indexes[-1] + 1]
-                           - data['datetime'][idx])
-                          .total_seconds() / (60. * 60.))
+                    dt = (
+                                 data['datetime'][indexes[-1] + 1] -
+                                 data['datetime'][idx]
+                         ).total_seconds() / (60.0 * 60.0)
                     dx = haversine(
                         (data['latitude'][idx],
                          data['longitude'][indexes[-1] + 1]),
-                        (data['latitude'][idx],
-                         data['longitude'][idx]), unit='nmi')
+                        (data['latitude'][idx], data['longitude'][idx]),
+                        unit='nmi',
+                    )
                     dy = haversine(
                         (data['latitude'][indexes[-1] + 1],
                          data['longitude'][idx]),
-                        (data['latitude'][idx],
-                         data['longitude'][idx]), unit='nmi')
+                        (data['latitude'][idx], data['longitude'][idx]),
+                        unit='nmi',
+                    )
                     vx = np.copysign(
                         dx / dt,
-                        data['longitude'][indexes[-1] + 1]
-                        - data['longitude'][idx])
+                        data['longitude'][indexes[-1] + 1] - data['longitude'][
+                            idx]
+                    )
                     vy = np.copysign(
                         dy / dt,
-                        data['latitude'][indexes[-1] + 1]
-                        - data['latitude'][idx])
+                        data['latitude'][indexes[-1] + 1] - data['latitude'][
+                            idx]
+                    )
                 else:
-                    dt = ((data['datetime'][idx]
-                           - data['datetime'][indexes[0] - 1])
-                          .total_seconds() / (60. * 60.))
+                    dt = (
+                                 data['datetime'][idx] - data['datetime'][
+                             indexes[0] - 1]
+                         ).total_seconds() / (60.0 * 60.0)
                     dx = haversine(
                         (data['latitude'][idx],
                          data['longitude'][indexes[0] - 1]),
-                        (data['latitude'][idx],
-                         data['longitude'][idx]), unit='nmi')
+                        (data['latitude'][idx], data['longitude'][idx]),
+                        unit='nmi',
+                    )
                     dy = haversine(
                         (data['latitude'][indexes[0] - 1],
                          data['longitude'][idx]),
-                        (data['latitude'][idx],
-                         data['longitude'][idx]), unit='nmi')
+                        (data['latitude'][idx], data['longitude'][idx]),
+                        unit='nmi',
+                    )
                     vx = np.copysign(
-                        dx / dt,
-                        data['longitude'][idx]
-                        - data['longitude'][indexes[0] - 1])
+                        dx / dt, data['longitude'][idx] - data['longitude'][
+                            indexes[0] - 1]
+                    )
                     vy = np.copysign(
-                        dy / dt,
-                        data['latitude'][idx]
-                        - data['latitude'][indexes[0] - 1])
+                        dy / dt, data['latitude'][idx] - data['latitude'][
+                            indexes[0] - 1]
+                    )
                 speed = np.sqrt(dx ** 2 + dy ** 2) / dt
-                bearing = (360. + np.rad2deg(np.arctan2(vx, vy))) % 360
+                bearing = (360.0 + np.rad2deg(np.arctan2(vx, vy))) % 360
                 data['speed'].append(int(np.around(speed, 0)))
-                data['direction'].append(
-                    int(np.around(bearing, 0)))
+                data['direction'].append(int(np.around(bearing, 0)))
         return data
 
     def transform_to(self, crs):
@@ -478,9 +484,10 @@ class BestTrackForcing(WindForcing):
         except urllib.error.URLError as e:
             if '550' in e.reason:
                 raise NameError(
-                    f'Did not find storm with id {storm_id}. '
-                    + f'Submitted URL was {url}.')
+                    f'Did not find storm with id {storm_id}. ' + f'Submitted URL was {url}.'
+                )
             else:
+
                 @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
                 def make_request():
                     return urllib.request.urlopen(url)
@@ -497,8 +504,10 @@ class BestTrackForcing(WindForcing):
             start_date = self._df['datetime'].iloc[0]
         msg = f"start_date must be >= {self._df['datetime'].iloc[0]} "
         msg += f"and <{self._df['datetime'].iloc[-1]}"
-        assert start_date >= self._df['datetime'].iloc[0] \
-               and start_date < self._df['datetime'].iloc[-1], msg
+        assert (
+                start_date >= self._df['datetime'].iloc[0]
+                and start_date < self._df['datetime'].iloc[-1]
+        ), msg
         self.__start_date = start_date
 
     @_end_date.setter
@@ -509,11 +518,13 @@ class BestTrackForcing(WindForcing):
             end_date = self._df['datetime'].iloc[-1]
         msg = f"end_date must be >= {self._df['datetime'].iloc[0]} "
         msg += f"and <= {self._df['datetime'].iloc[-1]}. "
-        msg += f"The given end_date was {end_date}."
-        assert end_date > self._df['datetime'].iloc[0] \
-               and end_date <= self._df['datetime'].iloc[-1], msg
-        msg = "end_date must be larger than start_date.\n"
-        msg += f"start_date is {self.start_date} and end_date is {end_date}."
+        msg += f'The given end_date was {end_date}.'
+        assert (
+                end_date > self._df['datetime'].iloc[0]
+                and end_date <= self._df['datetime'].iloc[-1]
+        ), msg
+        msg = 'end_date must be larger than start_date.\n'
+        msg += f'start_date is {self.start_date} and end_date is {end_date}.'
         assert end_date > self.start_date, msg
         self.__end_date = end_date
 
@@ -539,7 +550,6 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
     """
 
     def deco_retry(f):
-
         @wraps(f)
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay
@@ -547,7 +557,7 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
                 try:
                     return f(*args, **kwargs)
                 except ExceptionToCheck as e:
-                    msg = "%s, Retrying in %d seconds..." % (str(e), mdelay)
+                    msg = '%s, Retrying in %d seconds...' % (str(e), mdelay)
                     if logger:
                         logger.warning(msg)
                     # else:
@@ -570,12 +580,10 @@ def atcf_id(storm_id):
         return urllib.request.urlopen(url)
 
     res = request_url()
-    df = read_csv(
-        StringIO("".join([_.decode('utf-8') for _ in res])),
-        header=None,
-    )
-    name = f"{storm_id[:-4].upper():>10}"
-    year = f"{storm_id[-4:]:>5}"
+    df = read_csv(StringIO("".join([_.decode('utf-8') for _ in res])),
+                  header=None, )
+    name = f'{storm_id[:-4].upper():>10}'
+    year = f'{storm_id[-4:]:>5}'
     entry = df[(df[0].isin([name]) & df[8].isin([year]))]
     if len(entry) == 0:
         return None

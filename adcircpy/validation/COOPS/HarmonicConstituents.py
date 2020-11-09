@@ -21,8 +21,8 @@ class HarmonicConstituents(dict):
         self._cachedir = utils.get_cache_dir()
         self._harmConstCache = self._cachedir + '/harm_const.json'
         if os.path.isfile(self._harmConstCache):
-            self._cache = json.loads(open(self._harmConstCache, 'r')
-                                     .readlines()[0])
+            self._cache = json.loads(
+                open(self._harmConstCache, 'r').readlines()[0])
         else:
             self._cache = dict()
 
@@ -36,24 +36,27 @@ class HarmonicConstituents(dict):
         # Parse from html, not available through rest.
         url = self._url + station
         soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-        table = soup.find("table")
+        table = soup.find('table')
         if table is not None:
-            headings = [th.get_text().strip() for th in table.find("tr")
-                .find_all("th")]
+            headings = [th.get_text().strip() for th in
+                        table.find('tr').find_all('th')]
             datasets = list()
-            for row in table.find_all("tr")[1:]:
-                datasets.append(dict(zip(headings, (td.get_text() for td in
-                                                    row.find_all("td")))))
+            for row in table.find_all('tr')[1:]:
+                datasets.append(
+                    dict(zip(headings,
+                             (td.get_text() for td in row.find_all('td'))))
+                )
             for dataset in datasets:
                 if station not in self._cache.keys():
                     self._cache[station] = dict()
-                if float(dataset['Amplitude']) != 0.:
+                if float(dataset['Amplitude']) != 0.0:
                     self._cache[station][dataset['Name']] = {
                         'amplitude': float(dataset['Amplitude']) / 3.28084,
                         'phase': float(dataset['Phase']),
                         'speed': float(dataset['Speed']),
                         'description': dataset['Description'],
-                        'units': 'meters'}
+                        'units': 'meters',
+                    }
         else:
             self._cache[station] is None
         self._rebuild = True

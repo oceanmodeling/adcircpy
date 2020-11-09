@@ -19,12 +19,12 @@ class TidalRunCommand(AdcircCommand):
     @property
     @lru_cache(maxsize=None)
     def _start_date(self):
-        return datetime.strptime(self.args.start_date, "%Y-%m-%dT%H:%M")
+        return datetime.strptime(self.args.start_date, '%Y-%m-%dT%H:%M')
 
     @property
     @lru_cache(maxsize=None)
     def _end_date(self):
-        return datetime.strptime(self.args.end_date, "%Y-%m-%dT%H:%M")
+        return datetime.strptime(self.args.end_date, '%Y-%m-%dT%H:%M')
 
 
 def main():
@@ -32,10 +32,10 @@ def main():
     if len(args.constituents) == 0:
         args.constituents = ['all']
     logging.basicConfig(level=args.log_level)
-    logging.getLogger("rasterio").setLevel(logging.WARNING)
-    logging.getLogger("fiona").setLevel(logging.WARNING)
-    logging.getLogger("matplotlib").setLevel(logging.WARNING)
-    logging.getLogger("paramiko").setLevel(logging.WARNING)
+    logging.getLogger('rasterio').setLevel(logging.WARNING)
+    logging.getLogger('fiona').setLevel(logging.WARNING)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    logging.getLogger('paramiko').setLevel(logging.WARNING)
     drv = TidalRunCommand(args)
     retv = drv.run()
     exit(retv)

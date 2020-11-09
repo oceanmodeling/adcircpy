@@ -1,5 +1,3 @@
 from adcircpy.forcing.tides import Tides
 
-__all__ = [
-    "Tides"
-]
+__all__ = ['Tides']

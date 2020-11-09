@@ -7,7 +7,6 @@ from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 class BestTrackRunCommand(AdcircCommand):
-
     def __init__(self, args):
         super().__init__(args)
         bt = BestTrackForcing(self._args.storm_id)
@@ -16,7 +15,7 @@ class BestTrackRunCommand(AdcircCommand):
             self._start_date = bt.start_date
             self._end_date = bt.end_date
         else:
-            raise NotImplementedError("add custom date times?")
+            raise NotImplementedError('add custom date times?')
 
 
 def main():
@@ -24,8 +23,8 @@ def main():
     # if len(args.constituents) == 0:
     #     args.constituents = ['all']
     logging.basicConfig(level=args.log_level)
-    logging.getLogger("rasterio").setLevel(logging.WARNING)
-    logging.getLogger("fiona").setLevel(logging.WARNING)
-    logging.getLogger("matplotlib").setLevel(logging.WARNING)
-    logging.getLogger("paramiko").setLevel(logging.WARNING)
+    logging.getLogger('rasterio').setLevel(logging.WARNING)
+    logging.getLogger('fiona').setLevel(logging.WARNING)
+    logging.getLogger('matplotlib').setLevel(logging.WARNING)
+    logging.getLogger('paramiko').setLevel(logging.WARNING)
     exit(BestTrackRunCommand(args).run())
