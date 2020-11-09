@@ -12,7 +12,7 @@ import numpy as np
 from shapely.geometry import LineString, mapping
 
 from adcircpy.forcing.bctypes import BoundaryCondition
-from adcircpy.forcing.winds._base import WindForcing
+from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.mesh import figures as fig, grd, sms2dm
 from adcircpy.mesh.base import EuclideanMesh2D
 

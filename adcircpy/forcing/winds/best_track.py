@@ -15,7 +15,7 @@ from pandas import DataFrame, read_csv
 from pyproj import Proj
 from shapely.geometry import Point, Polygon
 
-from adcircpy.forcing.winds._base import WindForcing
+from adcircpy.forcing.winds.base import WindForcing
 
 
 class BestTrackForcing(WindForcing):
