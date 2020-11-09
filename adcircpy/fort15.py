@@ -619,14 +619,21 @@ class Fort15:
         http://adcirc.org/home/documentation/users-manual-v50/input-file-descriptions/nws-values-table/
         """
 
-        if self._runtype == 'coldstart':
-            return 0
-        else:
-            if self.wind_forcing is not None:
+        try:
+            self.__nws
+        except AttributeError:
+            if self._runtype == 'coldstart':
+                self.__nws = 0
+            elif self.wind_forcing is not None:
                 # check for wave forcing here as well.
-                return int(self.wind_forcing.NWS % 100)
+                self.__nws = self.wind_forcing.NWS
             else:
-                return 0
+                self.__nws = 0
+        return int(self.__nws % 100)
+
+    @NWS.setter
+    def NWS(self, nws: int):
+        self.__nws = nws
 
     @property
     def NRS(self) -> int:
@@ -639,7 +646,7 @@ class Fort15:
         500 - WW3
         """
 
-        return int(round(self.NWS / 100))
+        return int(round(self.__nws / 100))
 
     @property
     def ICS(self):
