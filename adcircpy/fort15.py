@@ -5,8 +5,8 @@ import pathlib
 import numpy as np
 
 from adcircpy.forcing.tides.tpxo import TPXO
-from adcircpy.forcing.waves._base import WaveForcing
-from adcircpy.forcing.winds._base import WindForcing
+from adcircpy.forcing.waves.base import WaveForcing
+from adcircpy.forcing.winds.base import WindForcing
 
 
 class Fort15:

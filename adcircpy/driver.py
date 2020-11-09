@@ -12,8 +12,8 @@ import numpy as np
 from psutil import cpu_count
 
 from adcircpy.forcing import Tides  # , Winds
-from adcircpy.forcing.waves._base import WaveForcing
-from adcircpy.forcing.winds._base import WindForcing
+from adcircpy.forcing.waves.base import WaveForcing
+from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
