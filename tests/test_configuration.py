@@ -8,6 +8,8 @@ import numpy
 import requests
 
 from adcircpy import AdcircMesh, AdcircRun
+from adcircpy.forcing.waves.base import WaveForcing
+from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
 
@@ -94,6 +96,8 @@ class TestAdcircRun(unittest.TestCase):
             start_date,
             end_date,
             spinup_time,
+            wind_forcing=WindForcing(17, 3600),
+            wave_forcing=WaveForcing(5, 3600),
         )
 
         driver.write(output_directory, overwrite=True)

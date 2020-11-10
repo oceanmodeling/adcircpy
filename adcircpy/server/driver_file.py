@@ -149,12 +149,12 @@ class DriverFile:
             f += 'ln -sf ../coldstart/fort.67\n'
 
         if self._driver.wind_forcing is not None:
-            if self._driver.wind_forcing.NWS in [19, 20]:
+            if self._driver.NWS in [19, 20]:
                 f += 'ln -sf ../fort.22 ./fort.22\n' \
                      'aswip\n' \
-                     f'mv NWS_{self._driver.wind_forcing.NWS}_fort.22 fort.22\n'
+                     f'mv NWS_{self._driver.NWS}_fort.22 fort.22\n'
             else:
-                msg = f'unsupported NWS value {self._driver.wind_forcing.NWS}'
+                msg = f'unsupported NWS value {self._driver.NWS}'
                 raise NotImplementedError(msg)
 
         if self._executable.startswith('p'):

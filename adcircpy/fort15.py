@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from functools import lru_cache
+import math
+from os import PathLike
 import pathlib
 
 import numpy as np
@@ -15,7 +17,7 @@ class Fort15:
         self.wind_forcing = wind_forcing
         self.wave_forcing = wave_forcing
 
-    def fort15(self, runtype):
+    def fort15(self, runtype: str):
         self._runtype = runtype
         # ----------------
         # model options
@@ -326,7 +328,7 @@ class Fort15:
         del self._runtype
         return '\n'.join(f)
 
-    def write(self, runtype, path, overwrite=False):
+    def write(self, runtype: str, path: PathLike, overwrite: bool = False):
         assert runtype in ['coldstart', 'hotstart']
         fort15 = pathlib.Path(path)
         if fort15.exists() and not overwrite:
@@ -630,11 +632,11 @@ class Fort15:
             nws = 0
         elif self.wind_forcing is not None:
             # check for wave forcing here as well.
-            nws = self.wind_forcing.NWS
+            nws = int(self.wind_forcing.NWS % 100)
         else:
             nws = 0
 
-        return int(nws % 100)
+        return nws
 
     @property
     def NRS(self) -> int:
@@ -647,7 +649,16 @@ class Fort15:
         500 - WW3
         """
 
-        return int(round(self.__nws / 100))
+        if self._runtype == 'coldstart':
+            nrs = 0
+        elif self.wave_forcing is not None:
+            nrs = self.wave_forcing.NRS
+        elif self.wind_forcing is not None:
+            nrs = int(math.floor(self.wind_forcing.NWS / 100))
+        else:
+            nrs = 0
+
+        return nrs
 
     @property
     def ICS(self):
