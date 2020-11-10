@@ -33,6 +33,7 @@ ij_shell_switch_cases_indented = false
 
 [{*.py, *.pyw, soundings}]
 max_line_length = 79
+ij_continuation_indent_size = 4
 ij_python_align_collections_and_comprehensions = true
 ij_python_align_multiline_imports = true
 ij_python_align_multiline_parameters = true
