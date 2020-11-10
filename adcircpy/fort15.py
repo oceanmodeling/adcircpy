@@ -6,8 +6,8 @@ import pathlib
 
 import numpy as np
 
-from adcircpy import AdcircMesh
 from adcircpy.forcing.tides.tpxo import TPXO
+from adcircpy.mesh.mesh import AdcircMesh
 
 
 class Fort15:

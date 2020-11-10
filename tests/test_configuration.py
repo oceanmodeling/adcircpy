@@ -90,14 +90,18 @@ class TestAdcircRun(unittest.TestCase):
         start_date = datetime(2015, 12, 14) + spinup_time
         end_date = start_date + timedelta(days=3)
 
+        wind_forcing = WindForcing(17, 3600)
+        wave_forcing = WaveForcing(5, 3600)
+
+        mesh.add_forcing(wind_forcing)
+        mesh.add_forcing(wave_forcing)
+
         # instantiate AdcircRun object.
         driver = AdcircRun(
             mesh,
             start_date,
             end_date,
             spinup_time,
-            wind_forcing=WindForcing(17, 3600),
-            wave_forcing=WaveForcing(5, 3600),
         )
 
         driver.write(output_directory, overwrite=True)
