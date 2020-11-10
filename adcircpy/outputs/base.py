@@ -254,7 +254,7 @@ class ScalarSurfaceOutputTimeseries(SurfaceOutputTimeseries):
 
         fig = plt.figure(
             figsize=kwargs.get("figsize")
-            )
+        )
         ax = fig.add_subplot(111)
         plt.tight_layout(pad=2)
         _oi = self.index
@@ -280,17 +280,17 @@ class ScalarSurfaceOutputTimeseries(SurfaceOutputTimeseries):
                 self.values,
                 cmap=kwargs.get("cmap", self._cmap),
                 levels=kwargs.get("levels", self._levels),
-                )
+            )
             ax.set_ylim(
                 ymin=kwargs.get("ymin"),
                 ymax=kwargs.get("ymax"),
                 auto=True
-                )
+            )
             ax.set_xlim(
                 xmin=kwargs.get("xmin"),
                 xmax=kwargs.get("xmax"),
                 auto=True
-                )
+            )
             # ax.set_title(dates[i].strftime('%b %d, %Y %H:%M'))
             ax.set_xlabel('Longitude (°E)')
             ax.set_ylabel('Latitude (°N)')
@@ -306,7 +306,7 @@ class ScalarSurfaceOutputTimeseries(SurfaceOutputTimeseries):
             animate,
             frames,
             blit=False
-            )
+        )
 
         if save:
             anim.save(
