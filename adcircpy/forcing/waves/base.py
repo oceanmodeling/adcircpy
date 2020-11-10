@@ -8,6 +8,6 @@ class WaveForcing(Forcing):
         self.NRS = nrs
         self.RSTIMINC = interval_seconds
 
-    def write(self, directory: PathLike, overwrite: bool):
+    def write(self, directory: PathLike, overwrite: bool = False):
         # TODO implement this
         raise NotImplementedError

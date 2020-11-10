@@ -8,6 +8,6 @@ class WindForcing(Forcing):
         self.NWS = nws
         self.WTIMINC = interval_seconds
 
-    def write(self, directory: PathLike, overwrite: bool):
+    def write(self, directory: PathLike, overwrite: bool = False):
         # TODO implement this
         raise NotImplementedError
