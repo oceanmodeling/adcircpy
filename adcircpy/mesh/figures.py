@@ -13,8 +13,8 @@ def get_topobathy_kwargs(values, vmin, vmax, colors=256):
         levels = np.linspace(vmin, vmax, colors)
     else:
         wet_count = int(np.floor(
-            colors*(float((values < 0.).sum()) / float(values.size))))
-        col_val = float(wet_count)/colors
+            colors * (float((values < 0.).sum()) / float(values.size))))
+        col_val = float(wet_count) / colors
         dry_count = colors - wet_count
         colors_undersea = plt.cm.bwr(np.linspace(1., 0., wet_count))
         colors_land = plt.cm.terrain(np.linspace(0.25, 1., dry_count))
@@ -29,7 +29,7 @@ def get_topobathy_kwargs(values, vmin, vmax, colors=256):
             vmax=vmax,
             vmin=vmin,
             col_val=col_val
-            )
+        )
     else:
         norm = None
     return {'cmap': cmap,
