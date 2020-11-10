@@ -30,8 +30,6 @@ class AdcircRun(Fort15):
             spinup_time: timedelta = None,
             netcdf: bool = True,
             server_config: Union[int, SSHConfig, SlurmConfig] = None,
-            wind_forcing: WindForcing = None,
-            wave_forcing: WaveForcing = None,
     ):
         self._mesh = mesh
         self._start_date = start_date
@@ -39,7 +37,6 @@ class AdcircRun(Fort15):
         self._spinup_time = spinup_time
         self._netcdf = netcdf
         self._server_config = server_config
-        super().__init__(wind_forcing, wave_forcing)
 
     def add_elevation_output_station(
             self,

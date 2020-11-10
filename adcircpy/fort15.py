@@ -6,16 +6,13 @@ import pathlib
 
 import numpy as np
 
+from adcircpy import AdcircMesh
 from adcircpy.forcing.tides.tpxo import TPXO
-from adcircpy.forcing.waves.base import WaveForcing
-from adcircpy.forcing.winds.base import WindForcing
 
 
 class Fort15:
-    def __init__(self, wind_forcing: WindForcing = None,
-                 wave_forcing: WaveForcing = None):
-        self.wind_forcing = wind_forcing
-        self.wave_forcing = wave_forcing
+    def __init__(self, mesh: AdcircMesh = None):
+        self.mesh = mesh
 
     def fort15(self, runtype: str):
         self._runtype = runtype
@@ -630,9 +627,11 @@ class Fort15:
 
         if self._runtype == 'coldstart':
             nws = 0
-        elif self.wind_forcing is not None:
-            # check for wave forcing here as well.
-            nws = int(self.wind_forcing.NWS % 100)
+        elif self.mesh is not None:
+            wind_forcing = self.mesh._surface_forcing['imetype']
+            if wind_forcing is not None:
+                # check for wave forcing here as well.
+                nws = int(wind_forcing.NWS % 100)
         else:
             nws = 0
 
@@ -651,10 +650,15 @@ class Fort15:
 
         if self._runtype == 'coldstart':
             nrs = 0
-        elif self.wave_forcing is not None:
-            nrs = self.wave_forcing.NRS
-        elif self.wind_forcing is not None:
-            nrs = int(math.floor(self.wind_forcing.NWS / 100))
+        elif self.mesh is not None:
+            wind_forcing = self.mesh._surface_forcing['imetype']
+            wave_forcing = self.mesh._surface_forcing['iwrtype']
+            if wave_forcing is not None:
+                nrs = wave_forcing.NRS
+            elif wind_forcing is not None:
+                nrs = int(math.floor(wind_forcing.NWS / 100))
+            else:
+                nrs = 0
         else:
             nrs = 0
 
@@ -746,7 +750,7 @@ class Fort15:
 
             def get_digit_6():
                 if (not self.baroclinicity and
-                        self.gwce_solution_scheme == 'semi-implicit-legacy'):
+                    self.gwce_solution_scheme == 'semi-implicit-legacy'):
                     return 1
 
                 elif (not self.baroclinicity and
@@ -892,7 +896,7 @@ class Fort15:
             return self.__TAU0
         except AttributeError:
             if self.mesh.has_nodal_attribute(
-                    'primitive_weighting_in_continuity_equation', self._runtype
+                'primitive_weighting_in_continuity_equation', self._runtype
             ):
                 return -3
             if self.NOLIBF != 2:
@@ -991,8 +995,8 @@ class Fort15:
             return DRAMP
         except AttributeError:
             DRAMP = self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
@@ -1037,8 +1041,8 @@ class Fort15:
             return self.__DRAMPElev
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
 
     @property
@@ -1047,8 +1051,8 @@ class Fort15:
             return self.__DRAMPTip
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
 
     @property
@@ -1482,7 +1486,7 @@ class Fort15:
                     else:
                         dt = self.start_date - self.forcing_start_date
                         return (self.STATIM + dt.total_seconds()) / (
-                                24.0 * 60.0 * 60.0)
+                            24.0 * 60.0 * 60.0)
                 except TypeError:
                     #  if self.DRAMP is not castable to float()
                     raise
@@ -1506,7 +1510,7 @@ class Fort15:
             else:
                 dt = self.start_date - self.forcing_start_date
                 return (self.STATIM + dt.total_seconds()) / (
-                        24.0 * 60.0 * 60.0)
+                    24.0 * 60.0 * 60.0)
 
     @property
     def NHAINC(self):
@@ -2124,7 +2128,7 @@ class Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-            self, lateral_stress_in_momentum_is_symmetrical
+        self, lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical
@@ -2279,7 +2283,7 @@ class Fort15:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
                         time = self.spinup_time.total_seconds() / (
-                                60.0 * 60.0 * 24.0)
+                            60.0 * 60.0 * 24.0)
                         if time > 0:
                             return time
                         else:
@@ -2326,7 +2330,7 @@ class Fort15:
                 if output_type == 'surface' and output[
                     'sampling_rate'].total_seconds() == 0:
                     return int((
-                                       self.end_date - self.start_date).total_seconds() / self.DTDP)
+                                   self.end_date - self.start_date).total_seconds() / self.DTDP)
                 return int(round(
                     (output['sampling_rate'].total_seconds() / self.DTDP)))
             else:

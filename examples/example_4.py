@@ -16,10 +16,8 @@ FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
 
 
 def main():
-    # fetch shinnecock inlet test data
     if not FORT14.is_file():
-        url = "https://www.dropbox.com/s/1wk91r67cacf132/"
-        url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
+        url = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
         with open(tmpfile.name, 'b+w') as f:
@@ -27,16 +25,18 @@ def main():
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
             tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
 
-    # open mesh file
     mesh = AdcircMesh.open(FORT14, crs=4326)
 
-    # init tidal forcing and setup requests
     tidal_forcing = Tides()
     tidal_forcing.use_all()
 
-    mesh.add_forcing(tidal_forcing)
+    wind_forcing = WindForcing(17, 3600)
+    wave_forcing = WaveForcing(5, 3600)
 
-    # instantiate AdcircRun object.
+    mesh.add_forcing(tidal_forcing)
+    mesh.add_forcing(wind_forcing)
+    mesh.add_forcing(wave_forcing)
+
     slurm = SlurmConfig(
         account='account',
         ntasks=1000,
@@ -55,8 +55,6 @@ def main():
         end_date=timedelta(days=7),
         spinup_time=timedelta(days=5),
         server_config=slurm,
-        wind_forcing=WindForcing(17, 3600),
-        wave_forcing=WaveForcing(5, 3600),
     )
 
     driver.write(PARENT / "outputs/example_4", overwrite=True)
