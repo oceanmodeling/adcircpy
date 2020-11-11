@@ -72,7 +72,7 @@ class Fort15:
             interval = f'{self.WTIMINC}'
             description = 'WTIMINC - meteorological data time increment'
             if self.NRS in [1, 3, 4, 5]:
-                interval += f'{self.RSTIMINC}'
+                interval += f' {self.RSTIMINC}'
                 description += ', RSTIMINC wave forcing increment'
             f.append(f'{interval:<63} ! {description}')
         f.extend([
