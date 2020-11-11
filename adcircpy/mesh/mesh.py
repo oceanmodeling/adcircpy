@@ -972,6 +972,7 @@ def parse_fort13(path):
                 node_values = [float(x) for x in str[1:]]
                 values[index, :] = node_values
                 j += 1
-            values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
+            values[np.where(np.isnan(values[:, 0])), :] = \
+                fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13
