@@ -10,4 +10,4 @@ class WindForcing(Forcing):
 
     def write(self, directory: PathLike, overwrite: bool = False):
         # TODO implement this
-        raise NotImplementedError
+        pass

@@ -12,7 +12,12 @@ from adcircpy.mesh.mesh import AdcircMesh
 
 class Fort15:
     def __init__(self, mesh: AdcircMesh = None):
-        self.mesh = mesh
+        self.__mesh = mesh
+        self._runtype = None
+
+    @property
+    def mesh(self):
+        return self.__mesh
 
     def fort15(self, runtype: str):
         self._runtype = runtype

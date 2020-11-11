@@ -1,4 +1,4 @@
-created on 2020-11-09 07:58                                     ! RUNDES
+created on 2020-11-11 12:21                                     ! RUNDES
  Shinacock Inlet Coarse Grid                                    ! RUNID
 1                                                               ! NFOVER
 1                                                               ! NABOUT
@@ -13,13 +13,14 @@ created on 2020-11-09 07:58                                     ! RUNDES
 0                                                               ! NWP
 1                                                               ! NCOR
 1                                                               ! NTIP
-0                                                               ! NWS
+517                                                             ! NWS
 8                                                               ! NRAMP
 9.81                                                            ! gravitational acceleration
 0.005                                                           ! TAU0
 2.510781                                                        ! DTDP
 0                                                               ! STATIM
 0                                                               ! REFTIM
+3600 3600                                                       ! WTIMINC - meteorological data time increment, RSTIMINC wave forcing increment
 5                                                               ! RNDAY
 2.000 0.000 0.000 0.000 2.000 2.000 1.000 0.000 2.000           ! DRAMP
 0.5 0.5 0                                                       ! A00 B00 C00
@@ -34,8 +35,11 @@ created on 2020-11-09 07:58                                     ! RUNDES
 0 0 0 0                                                         ! NOUTE TOUTSE TOUTFE NSPOOLE
 0                                                               ! NSTAE
 0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV0                                                               ! NSTAV
+0 0 0 0                                                         ! NOUTM TOUTSM TOUTFM NSPOOLM
+0                                                               ! NSTAM
 0 0.000000 0.000000 0                                           ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE
 0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV
+0 0.000000 0.000000 0                                           ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM
 0                                                               ! NFREQ
 0 0 0 0                                                         ! THAS THAF NHAINC FMV
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV

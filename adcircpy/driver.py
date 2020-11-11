@@ -31,7 +31,7 @@ class AdcircRun(Fort15):
             netcdf: bool = True,
             server_config: Union[int, SSHConfig, SlurmConfig] = None,
     ):
-        self._mesh = mesh
+        super().__init__(mesh)
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
