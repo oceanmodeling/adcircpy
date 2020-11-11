@@ -22,8 +22,8 @@ from adcircpy.mesh.figures import _figure as _fig
 
 class EuclideanMesh2D:
     def __init__(
-            self, coords, triangles=None, quads=None, values=None, crs=None,
-            description=None,
+        self, coords, triangles=None, quads=None, values=None, crs=None,
+        description=None,
     ):
         self._coords = coords
         self._triangles = triangles
@@ -199,8 +199,8 @@ class EuclideanMesh2D:
 
     @_fig
     def triplot(
-            self, axes=None, show=False, figsize=None, linewidth=0.07,
-            color='black', **kwargs
+        self, axes=None, show=False, figsize=None, linewidth=0.07,
+        color='black', **kwargs
     ):
         if len(self.triangles) > 0:
             kwargs.update({'linewidth': linewidth})
@@ -212,14 +212,14 @@ class EuclideanMesh2D:
 
     @_fig
     def quadplot(
-            self,
-            axes=None,
-            show=False,
-            figsize=None,
-            facecolor='none',
-            edgecolor='k',
-            linewidth=0.07,
-            **kwargs,
+        self,
+        axes=None,
+        show=False,
+        figsize=None,
+        facecolor='none',
+        edgecolor='k',
+        linewidth=0.07,
+        **kwargs,
     ):
         if len(self.quads) > 0:
             pc = PolyCollection(
@@ -353,8 +353,9 @@ class EuclideanMesh2D:
         areas.pop(idx)
         _id = 0
         _index_ring_collection = dict()
-        _index_ring_collection[_id] = {'exterior': np.asarray(exterior),
-                                       'interiors': []}
+        _index_ring_collection[_id] = {
+            'exterior': np.asarray(exterior),
+            'interiors': []}
         e0, e1 = [list(t) for t in zip(*exterior)]
         path = Path(vertices[e0 + [e0[0]], :], closed=True)
         while len(index_ring_collection) > 0:
@@ -367,7 +368,7 @@ class EuclideanMesh2D:
             # filter out nested rings
             real_interiors = list()
             for i, p_interior in reversed(
-                    list(enumerate(potential_interiors))):
+                list(enumerate(potential_interiors))):
                 _p_interior = index_ring_collection[p_interior]
                 check = [
                     index_ring_collection[_]
@@ -548,12 +549,12 @@ class EuclideanMesh2D:
         _geom = np.asarray(list(geom.values()))
         if len(_geom) > 0:
             assert (
-                    _geom.shape[1] == geom_types[geom_type]
+                _geom.shape[1] == geom_types[geom_type]
             ), f'Invalid shape for geom {_geom.shape}.'
             for IDtags in geom.values():
                 for IDtag in IDtags:
                     assert (
-                            IDtag in self.coords_id
+                        IDtag in self.coords_id
                     ), f'{geom_type} members must be a subset of coords keys'
 
     @property

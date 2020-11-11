@@ -94,11 +94,11 @@ class TidalStations(Mapping):
         segments = [(start_date, end_date)]
         interval = 2
         while np.any(
-                [
-                    (_end_date - _start_date).total_seconds() > timedelta(
-                        days=31).total_seconds()
-                    for _start_date, _end_date in segments
-                ]
+            [
+                (_end_date - _start_date).total_seconds() > timedelta(
+                    days=31).total_seconds()
+                for _start_date, _end_date in segments
+            ]
         ):
             segments = [
                 (from_datetime, to_datetime)

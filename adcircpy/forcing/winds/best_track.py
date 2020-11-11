@@ -181,13 +181,13 @@ class BestTrackForcing(WindForcing):
                 row['background_pressure'] = \
                 self.df['background_pressure'].iloc[i - 1]
             if (
-                    row['background_pressure'] <= row['central_pressure']
-                    and 1013 > row['central_pressure']
+                row['background_pressure'] <= row['central_pressure']
+                and 1013 > row['central_pressure']
             ):
                 fort22 += '{:>5},'.format(1013)
             elif (
-                    row['background_pressure'] <= row['central_pressure']
-                    and 1013 <= row['central_pressure']
+                row['background_pressure'] <= row['central_pressure']
+                and 1013 <= row['central_pressure']
             ):
                 fort22 += '{:>5},'.format(int(row['central_pressure'] + 1))
             else:
@@ -336,8 +336,8 @@ class BestTrackForcing(WindForcing):
             for idx in indexes:
                 if indexes[-1] + 1 < len(data['datetime']):
                     dt = (
-                                 data['datetime'][indexes[-1] + 1] -
-                                 data['datetime'][idx]
+                             data['datetime'][indexes[-1] + 1] -
+                             data['datetime'][idx]
                          ).total_seconds() / (60.0 * 60.0)
                     dx = haversine(
                         (data['latitude'][idx],
@@ -363,7 +363,7 @@ class BestTrackForcing(WindForcing):
                     )
                 else:
                     dt = (
-                                 data['datetime'][idx] - data['datetime'][
+                             data['datetime'][idx] - data['datetime'][
                              indexes[0] - 1]
                          ).total_seconds() / (60.0 * 60.0)
                     dx = haversine(
@@ -505,8 +505,8 @@ class BestTrackForcing(WindForcing):
         msg = f"start_date must be >= {self._df['datetime'].iloc[0]} "
         msg += f"and <{self._df['datetime'].iloc[-1]}"
         assert (
-                start_date >= self._df['datetime'].iloc[0]
-                and start_date < self._df['datetime'].iloc[-1]
+            start_date >= self._df['datetime'].iloc[0]
+            and start_date < self._df['datetime'].iloc[-1]
         ), msg
         self.__start_date = start_date
 
@@ -520,8 +520,8 @@ class BestTrackForcing(WindForcing):
         msg += f"and <= {self._df['datetime'].iloc[-1]}. "
         msg += f'The given end_date was {end_date}.'
         assert (
-                end_date > self._df['datetime'].iloc[0]
-                and end_date <= self._df['datetime'].iloc[-1]
+            end_date > self._df['datetime'].iloc[0]
+            and end_date <= self._df['datetime'].iloc[-1]
         ), msg
         msg = 'end_date must be larger than start_date.\n'
         msg += f'start_date is {self.start_date} and end_date is {end_date}.'

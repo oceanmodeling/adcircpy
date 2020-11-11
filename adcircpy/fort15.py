@@ -43,7 +43,7 @@ class Fort15:
         f += f'{self.TAU0:G}'.ljust(63) + ' ! TAU0\n'
         if self.TAU0 == -5:
             f += (
-                        f'{self.Tau0FullDomainMin:G} ' + f'{self.Tau0FullDomainMax:G}').ljust(
+                    f'{self.Tau0FullDomainMin:G} ' + f'{self.Tau0FullDomainMax:G}').ljust(
                 63)
             f += ' ! Tau0FullDomainMin Tau0FullDomainMax \n'
         f += f'{self.DTDP:.6f}'.ljust(63) + ' ! DTDP\n'
@@ -150,7 +150,7 @@ class Fort15:
         # ----------------
         # elevation out stations
         f += (
-                    f'{self.NOUTE:G} {self.TOUTSE:G} ' + f'{self.TOUTFE:G} {self.NSPOOLE:G}').ljust(
+                f'{self.NOUTE:G} {self.TOUTSE:G} ' + f'{self.TOUTFE:G} {self.NSPOOLE:G}').ljust(
             63
         )
         f += ' ! NOUTE TOUTSE TOUTFE NSPOOLE\n'
@@ -168,7 +168,7 @@ class Fort15:
                     f += f' ! {station_id}\n'
         # velocity out stations
         f += (
-                    f'{self.NOUTV:G} {self.TOUTSV:G} ' + f'{self.TOUTFV:G} {self.NSPOOLV:G}').ljust(
+                f'{self.NOUTV:G} {self.TOUTSV:G} ' + f'{self.TOUTFV:G} {self.NSPOOLV:G}').ljust(
             63
         )
         f += ' ! NOUTV TOUTSV TOUTFV NSPOOLV\n'
@@ -187,7 +187,7 @@ class Fort15:
         if self.IM == 10:
             # concentration out stations
             f += (
-                    f'{self.NOUTC:G} {self.TOUTSC:G} ' + f'{self.TOUTFC:G} {self.NSPOOLC:G}'
+                f'{self.NOUTC:G} {self.TOUTSC:G} ' + f'{self.TOUTFC:G} {self.NSPOOLC:G}'
             ).ljust(63)
             f += ' ! NOUTC TOUTSC TOUTFC NSPOOLC\n'
             f += f'{self.NSTAC:d}'.ljust(63) + ' ! NSTAC\n'
@@ -206,7 +206,7 @@ class Fort15:
         if self.NWS > 0:
             # meteorological out stations
             f += (
-                    f'{self.NOUTM:G} {self.TOUTSM:G} ' + f'{self.TOUTFM:G} {self.NSPOOLM:G}'
+                f'{self.NOUTM:G} {self.TOUTSM:G} ' + f'{self.TOUTFM:G} {self.NSPOOLM:G}'
             ).ljust(63)
             f += ' ! NOUTM TOUTSM TOUTFM NSPOOLM\n'
             f += f'{self.NSTAM:d}'.ljust(63) + ' ! NSTAM\n'
@@ -226,22 +226,22 @@ class Fort15:
                             f += f' ! {station_id}\n'
         # elevation global outputs
         f += (
-                f'{self.NOUTGE:d} {self.TOUTSGE:f} ' + f'{self.TOUTFGE:f} {self.NSPOOLGE:d}'
+            f'{self.NOUTGE:d} {self.TOUTSGE:f} ' + f'{self.TOUTFGE:f} {self.NSPOOLGE:d}'
         ).ljust(63)
         f += ' ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE\n'
         # velocity global otuputs
         f += (
-                f'{self.NOUTGV:d} {self.TOUTSGV:f} ' + f'{self.TOUTFGV:f} {self.NSPOOLGV:d}'
+            f'{self.NOUTGV:d} {self.TOUTSGV:f} ' + f'{self.TOUTFGV:f} {self.NSPOOLGV:d}'
         ).ljust(63)
         f += ' ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV\n'
         if self.IM == 10:
             f += (
-                    f'{self.NOUTGC:d} {self.TOUTSGC:f} ' + f'{self.TOUTFGC:f} {self.NSPOOLGC:d}'
+                f'{self.NOUTGC:d} {self.TOUTSGC:f} ' + f'{self.TOUTFGC:f} {self.NSPOOLGC:d}'
             ).ljust(63)
             f += ' ! NOUTSGC TOUTGC TOUTFGC NSPOOLGC\n'
         if self.NWS != 0:
             f += (
-                    f'{self.NOUTGM:d} {self.TOUTSGM:f} ' + f'{self.TOUTFGM:f} {self.NSPOOLGM:d}'
+                f'{self.NOUTGM:d} {self.TOUTSGM:f} ' + f'{self.TOUTFGM:f} {self.NSPOOLGM:d}'
             ).ljust(63)
             f += ' ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM\n'
         # harmonic analysis requests
@@ -266,15 +266,15 @@ class Fort15:
             for constituent, forcing in self.tidal_forcing:
                 f += f'{constituent}'.ljust(63) + ' \n'
                 f += (
-                                 f'{forcing[1]:<.16G} {forcing[3]:<.16G}' + f'{forcing[4]:<.16G}').ljust(
+                             f'{forcing[1]:<.16G} {forcing[3]:<.16G}' + f'{forcing[4]:<.16G}').ljust(
                     63
                 ) + '\n'
         f += (
-                    f'{self.THAS:G} {self.THAF:G} ' + f'{self.NHAINC} {self.FMV}').ljust(
+                f'{self.THAS:G} {self.THAF:G} ' + f'{self.NHAINC} {self.FMV}').ljust(
             63)
         f += ' ! THAS THAF NHAINC FMV\n'
         f += (
-                    f'{self.NHASE:G} {self.NHASV:G} ' + f'{self.NHAGE:G} {self.NHAGV:G}').ljust(
+                f'{self.NHASE:G} {self.NHASV:G} ' + f'{self.NHAGE:G} {self.NHAGV:G}').ljust(
             63)
         f += ' ! NHASE NHASV NHAGE NHAGV\n'
         # ----------------
@@ -283,7 +283,7 @@ class Fort15:
         f += f'{self.NHSTAR:d} {self.NHSINC:d}'.ljust(63)
         f += ' ! NHSTAR NHSINC\n'
         f += (
-                f'{self.ITITER:<1d} {self.ISLDIA:<1d} ' + f'{self.CONVCR:<.15G} {self.ITMAX:<4d}'
+            f'{self.ITITER:<1d} {self.ISLDIA:<1d} ' + f'{self.CONVCR:<.15G} {self.ITMAX:<4d}'
         ).ljust(63)
         f += ' ! ITITER ISLDIA CONVCR ITMAX\n'
         if self.vertical_mode == '3D':
@@ -694,8 +694,8 @@ class Fort15:
 
             def get_digit_6():
                 if (
-                        not self.baroclinicity
-                        and self.gwce_solution_scheme == 'semi-implicit-legacy'
+                    not self.baroclinicity
+                    and self.gwce_solution_scheme == 'semi-implicit-legacy'
                 ):
                     return 1
 
@@ -841,7 +841,7 @@ class Fort15:
             return self.__TAU0
         except AttributeError:
             if self.mesh.has_nodal_attribute(
-                    'primitive_weighting_in_continuity_equation', self._runtype
+                'primitive_weighting_in_continuity_equation', self._runtype
             ):
                 return -3
             if self.NOLIBF != 2:
@@ -930,8 +930,8 @@ class Fort15:
             return DRAMP
         except AttributeError:
             DRAMP = self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
@@ -976,8 +976,8 @@ class Fort15:
             return self.__DRAMPElev
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
 
     @property
@@ -986,8 +986,8 @@ class Fort15:
             return self.__DRAMPTip
         except AttributeError:
             return self.spinup_factor * (
-                    (self.start_date - self.forcing_start_date).total_seconds()
-                    / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date).total_seconds()
+                / (60.0 * 60.0 * 24.0)
             )
 
     @property
@@ -1421,7 +1421,7 @@ class Fort15:
                     else:
                         dt = self.start_date - self.forcing_start_date
                         return (self.STATIM + dt.total_seconds()) / (
-                                    24.0 * 60.0 * 60.0)
+                                24.0 * 60.0 * 60.0)
                 except TypeError:
                     #  if self.DRAMP is not castable to float()
                     raise
@@ -1445,7 +1445,7 @@ class Fort15:
             else:
                 dt = self.start_date - self.forcing_start_date
                 return (self.STATIM + dt.total_seconds()) / (
-                            24.0 * 60.0 * 60.0)
+                        24.0 * 60.0 * 60.0)
 
     @property
     def NHAINC(self):
@@ -2063,7 +2063,7 @@ class Fort15:
 
     @lateral_stress_in_momentum_is_symmetrical.setter
     def lateral_stress_in_momentum_is_symmetrical(
-            self, lateral_stress_in_momentum_is_symmetrical
+        self, lateral_stress_in_momentum_is_symmetrical
     ):
         self.__lateral_stress_in_momentum_is_symmetrical = bool(
             lateral_stress_in_momentum_is_symmetrical
@@ -2218,7 +2218,7 @@ class Fort15:
                 if output['spinup_end'] is None:
                     if self.NOUTGE != 0:
                         time = self.spinup_time.total_seconds() / (
-                                    60.0 * 60.0 * 24.0)
+                                60.0 * 60.0 * 24.0)
                         if time > 0:
                             return time
                         else:
@@ -2265,7 +2265,7 @@ class Fort15:
                 if output_type == 'surface' and output[
                     'sampling_rate'].total_seconds() == 0:
                     return int((
-                                           self.end_date - self.start_date).total_seconds() / self.DTDP)
+                                       self.end_date - self.start_date).total_seconds() / self.DTDP)
                 return int(round(
                     (output['sampling_rate'].total_seconds() / self.DTDP)))
             else:

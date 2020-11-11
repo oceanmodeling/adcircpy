@@ -98,12 +98,12 @@ class AdcircCommand:
             _major = ('Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2')
             _all = (*_major, 'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1')
             if 'all' in self._args.constituents and len(
-                    self._args.constituents) > 1:
+                self._args.constituents) > 1:
                 msg = 'When using all, must only pass one'
                 raise IOError(msg)
 
             elif 'major' in self._args.constituents and len(
-                    self._args.constituents) > 1:
+                self._args.constituents) > 1:
                 msg = 'When using major, must only pass one'
                 raise IOError(msg)
             if 'all' in self._args.constituents:

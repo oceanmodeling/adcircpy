@@ -4,11 +4,11 @@ import sys
 
 
 def get_logger(
-        name: str,
-        log_filename: str = None,
-        file_level: int = None,
-        console_level: int = None,
-        name_field_length: int = 15,
+    name: str,
+    log_filename: str = None,
+    file_level: int = None,
+    console_level: int = None,
+    name_field_length: int = 15,
 ) -> logging.Logger:
     """
     Retrieve an instance of `logging.Logger` with split console output (`stdout` and `stderr`).

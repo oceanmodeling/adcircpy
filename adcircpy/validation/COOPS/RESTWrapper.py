@@ -7,14 +7,14 @@ import requests
 
 class RESTWrapper:
     def __init__(
-            self,
-            product,
-            start_date,
-            end_date,
-            format='json',
-            units='metric',
-            time_zone='gmt',
-            datum='msl',
+        self,
+        product,
+        start_date,
+        end_date,
+        format='json',
+        units='metric',
+        time_zone='gmt',
+        datum='msl',
     ):
         self._product = product
 

@@ -23,7 +23,7 @@ class AdcircMesh(EuclideanMesh2D):
     """
 
     def __init__(
-            self, nodes, elements, boundaries=None, crs=None, description=None,
+        self, nodes, elements, boundaries=None, crs=None, description=None,
     ):
         self._nodes = nodes
         self._elements = elements
@@ -71,15 +71,14 @@ class AdcircMesh(EuclideanMesh2D):
             msg = 'Destination path exists and overwrite=False'
             raise IOError(msg)
         with fiona.open(
-                path.absolute(),
-                'w',
-                driver='ESRI Shapefile',
-                crs=self.crs.srs,
-                schema={
-                    'geometry': 'LineString',
-                    'properties': {'id': 'int', 'ibtype': 'str',
-                                   'bnd_id': 'str'},
-                },
+            path.absolute(),
+            'w',
+            driver='ESRI Shapefile',
+            crs=self.crs.srs,
+            schema={
+                'geometry': 'LineString',
+                'properties': {'id': 'int', 'ibtype': 'str', 'bnd_id': 'str'},
+            },
         ) as dst:
             _cnt = 0
             for ibtype, bnds in self.boundaries.items():
@@ -99,7 +98,7 @@ class AdcircMesh(EuclideanMesh2D):
                     _cnt += 1
 
     def generate_boundaries(
-            self, threshold=0.0, land_ibtype=0, interior_ibtype=1,
+        self, threshold=0.0, land_ibtype=0, interior_ibtype=1,
     ):
         if np.any(np.isnan(self.values)):
             msg = 'Mesh contains invalid values. Raster values must '
@@ -190,8 +189,8 @@ class AdcircMesh(EuclideanMesh2D):
             self._nodal_attribute_collection[name] = None
 
     def set_nodal_attribute(
-            self, attribute_name, values, coldstart: bool = False,
-            hotstart: bool = False
+        self, attribute_name, values, coldstart: bool = False,
+        hotstart: bool = False
     ):
         if attribute_name not in self.get_nodal_attribute_names():
             raise AttributeError(
@@ -313,14 +312,14 @@ class AdcircMesh(EuclideanMesh2D):
             self.set_nodal_attribute(attribute, full_values)
 
     def generate_tau0(
-            self,
-            default_value=0.03,
-            threshold_distance=1750.0,
-            shallow_tau0=0.02,
-            deep_tau0=0.005,
-            threshold_depth=-10.0,
-            coldstart=True,
-            hotstart=True,
+        self,
+        default_value=0.03,
+        threshold_distance=1750.0,
+        shallow_tau0=0.02,
+        deep_tau0=0.005,
+        threshold_depth=-10.0,
+        coldstart=True,
+        hotstart=True,
     ):
         """
         Reimplementation of tau0_gen.f by Robert Weaver (2008)
@@ -348,8 +347,8 @@ class AdcircMesh(EuclideanMesh2D):
                 else:
                     values[k] = deep_tau0
         if (
-                'primitive_weighting_in_continuity_equation'
-                not in self.get_nodal_attribute_names()
+            'primitive_weighting_in_continuity_equation'
+            not in self.get_nodal_attribute_names()
         ):
             self.add_nodal_attribute(
                 'primitive_weighting_in_continuity_equation', 'unitless')
@@ -472,16 +471,16 @@ class AdcircMesh(EuclideanMesh2D):
     # plotting functions
     @fig._figure
     def make_plot(
-            self,
-            axes=None,
-            vmin: float = None,
-            vmax: float = None,
-            show: bool = False,
-            title: str = None,
-            # figsize=rcParams["figure.figsize"],
-            extent: (float, float, float, float) = None,
-            cbar_label: str = None,
-            **kwargs,
+        self,
+        axes=None,
+        vmin: float = None,
+        vmax: float = None,
+        show: bool = False,
+        title: str = None,
+        # figsize=rcParams["figure.figsize"],
+        extent: (float, float, float, float) = None,
+        cbar_label: str = None,
+        **kwargs,
     ):
         if axes is None:
             _fig = plt.figure()
@@ -518,14 +517,14 @@ class AdcircMesh(EuclideanMesh2D):
 
     @fig._figure
     def plot_boundary(
-            self,
-            ibtype: str,
-            id: int,
-            tags: bool = True,
-            axes: pyplot.Axes = None,
-            show: bool = False,
-            figsize: (float, float) = None,
-            **kwargs,
+        self,
+        ibtype: str,
+        id: int,
+        tags: bool = True,
+        axes: pyplot.Axes = None,
+        show: bool = False,
+        figsize: (float, float) = None,
+        **kwargs,
     ):
 
         boundary = list(
@@ -544,11 +543,11 @@ class AdcircMesh(EuclideanMesh2D):
 
     @fig._figure
     def plot_boundaries(
-            self,
-            axes: pyplot.Axes = None,
-            show: bool = False,
-            figsize: (float, float) = None,
-            **kwargs,
+        self,
+        axes: pyplot.Axes = None,
+        show: bool = False,
+        figsize: (float, float) = None,
+        **kwargs,
     ):
         kwargs.update({'axes': axes})
         for ibtype, bnds in self.boundaries.items():
@@ -956,8 +955,10 @@ def parse_fort13(path):
                 units = 'unitless'
             f.readline()
             defaults = [float(x) for x in f.readline().split()]
-            fort13[attribute_name] = {'units': units, 'defaults': defaults,
-                                      'indexes': []}
+            fort13[attribute_name] = {
+                'units': units,
+                'defaults': defaults,
+                'indexes': []}
             i += 1
         for i in range(NAttr):
             attribute_name = f.readline().strip()
@@ -973,6 +974,6 @@ def parse_fort13(path):
                 values[index, :] = node_values
                 j += 1
             values[np.where(np.isnan(values[:, 0])), :] = \
-                fort13[attribute_name]['defaults']
+            fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13

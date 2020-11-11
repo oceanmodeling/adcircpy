@@ -73,11 +73,11 @@ class DriverFile:
     @property
     def _dual_phase_run(self):
         return (
-                self._bash_main_dual_phase
-                + '\n'
-                + self._run_coldstart_phase
-                + '\n'
-                + self._run_hotstart_phase
+            self._bash_main_dual_phase
+            + '\n'
+            + self._run_coldstart_phase
+            + '\n'
+            + self._run_hotstart_phase
         )
 
     @property
@@ -254,8 +254,8 @@ class DriverFile:
 
 
 def bash_if_statement(
-        if_condition: str, if_block: str, else_blocks: [str] = None,
-        indent_string: str = '  '
+    if_condition: str, if_block: str, else_blocks: [str] = None,
+    indent_string: str = '  '
 ) -> str:
     output = f'if {if_condition}; then\n' + indent(if_block,
                                                    indent_string) + '\n'
@@ -266,7 +266,7 @@ def bash_if_statement(
                 output += 'else\n'
             else:
                 assert (
-                        len(else_block) == 2
+                    len(else_block) == 2
                 ), f'could not parse else condition / block: {else_block}'
                 output += f'elif {else_block[0]}\n'
                 else_block = else_block[1]

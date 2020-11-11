@@ -13,7 +13,7 @@ def holland_B(hurdat, coriolis=True):
     def with_coriolis(Vmax, Rmax, Pn, Pc, eye_lat):
         f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_lat)))
         return (Vmax ** 2 + Vmax * Rmax * f * air_density * np.exp(1)) / (
-                    Pn - Pc)
+                Pn - Pc)
 
     def no_coriolis(Vmax, Pn, Pc):
         return (Vmax ** 2 * air_density * np.exp(1)) / (Pn - Pc)
@@ -54,7 +54,7 @@ def main():
 
         def holland2010(r, B, x):
             return Vmax * (
-                        ((Rmax / r) ** B) * np.exp(1 - (Rmax / r) ** B)) ** x
+                    ((Rmax / r) ** B) * np.exp(1 - (Rmax / r) ** B)) ** x
 
         def V(B, x):
             def v(r):

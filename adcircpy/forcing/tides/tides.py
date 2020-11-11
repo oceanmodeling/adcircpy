@@ -182,66 +182,66 @@ class Tides(bctypes.EtaBc):
     def get_greenwich_factor(self, constituent):
         if constituent == 'M2':
             return 2.0 * (self.DT - self.DS + self.DH) + 2.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'S2':
             return 2.0 * self.DT
         elif constituent == 'N2':
             return (
-                    2.0 * (self.DT + self.DH)
-                    - 3.0 * self.DS
-                    + self.DP
-                    + 2.0 * (self.DXI - self.DNU)
+                2.0 * (self.DT + self.DH)
+                - 3.0 * self.DS
+                + self.DP
+                + 2.0 * (self.DXI - self.DNU)
             )
         elif constituent == 'K1':
             return self.DT + self.DH - 90.0 - self.DNUP
         elif constituent == 'M4':
             return 4.0 * (self.DT - self.DS + self.DH) + 4.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'O1':
             return self.DT - 2.0 * self.DS + self.DH + 90.0 + 2.0 * self.DXI - self.DNU
         elif constituent == 'M6':
             return 6.0 * (self.DT - self.DS + self.DH) + 6.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'MK3':
             return (
-                    3.0 * (self.DT + self.DH)
-                    - 2.0 * self.DS
-                    - 90.0
-                    + 2.0 * (self.DXI - self.DNU)
-                    - self.DNUP
+                3.0 * (self.DT + self.DH)
+                - 2.0 * self.DS
+                - 90.0
+                + 2.0 * (self.DXI - self.DNU)
+                - self.DNUP
             )
         elif constituent == 'S4':
             return 4.0 * self.DT
         elif constituent == 'MN4':
             return (
-                    4.0 * (self.DT + self.DH)
-                    - 5.0 * self.DS
-                    + self.DP
-                    + 4.0 * (self.DXI - self.DNU)
+                4.0 * (self.DT + self.DH)
+                - 5.0 * self.DS
+                + self.DP
+                + 4.0 * (self.DXI - self.DNU)
             )
         elif constituent == 'Nu2':
             return (
-                    2.0 * self.DT
-                    - 3.0 * self.DS
-                    + 4.0 * self.DH
-                    - self.DP
-                    + 2.0 * (self.DXI - self.DNU)
+                2.0 * self.DT
+                - 3.0 * self.DS
+                + 4.0 * self.DH
+                - self.DP
+                + 2.0 * (self.DXI - self.DNU)
             )
         elif constituent == 'S6':
             return 6.0 * self.DT
         elif constituent == 'MU2':
             return 2.0 * (self.DT + 2.0 * (self.DH - self.DS)) + 2.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == '2N2':
             return 2.0 * (
-                        self.DT - 2.0 * self.DS + self.DH + self.DP) + 2.0 * (
-                           self.DXI - self.DNU
+                    self.DT - 2.0 * self.DS + self.DH + self.DP) + 2.0 * (
+                       self.DXI - self.DNU
                    )
         elif constituent == 'OO1':
             return self.DT + 2.0 * self.DS + self.DH - 90.0 - 2.0 * self.DXI - self.DNU
         elif constituent == 'lambda2':
             return 2.0 * self.DT - self.DS + self.DP + 180.0 + 2.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'S1':
             return self.DT
         elif constituent == 'M1':
@@ -260,16 +260,16 @@ class Tides(bctypes.EtaBc):
             return 2.0 * self.DS - 2.0 * self.DXI
         elif constituent == 'RHO':
             return (
-                    self.DT
-                    + 3.0 * (self.DH - self.DS)
-                    - self.DP
-                    + 90.0
-                    + 2.0 * self.DXI
-                    - self.DNU
+                self.DT
+                + 3.0 * (self.DH - self.DS)
+                - self.DP
+                + 90.0
+                + 2.0 * self.DXI
+                - self.DNU
             )
         elif constituent == 'Q1':
             return (
-                    self.DT - 3.0 * self.DS + self.DH + self.DP + 90.0 + 2.0 * self.DXI - self.DNU
+                self.DT - 3.0 * self.DS + self.DH + self.DP + 90.0 + 2.0 * self.DXI - self.DNU
             )
         elif constituent == 'T2':
             return 2.0 * self.DT - self.DH + self.DP1
@@ -277,89 +277,89 @@ class Tides(bctypes.EtaBc):
             return 2.0 * self.DT + self.DH - self.DP1 + 180.0
         elif constituent == '2Q1':
             return (
-                    self.DT
-                    - 4.0 * self.DS
-                    + self.DH
-                    + 2.0 * self.DP
-                    + 90.0
-                    + 2.0 * self.DXI
-                    - self.DNU
+                self.DT
+                - 4.0 * self.DS
+                + self.DH
+                + 2.0 * self.DP
+                + 90.0
+                + 2.0 * self.DXI
+                - self.DNU
             )
         elif constituent == 'P1':
             return self.DT - self.DH + 90.0
         elif constituent == '2SM2':
             return 2.0 * (self.DT + self.DS - self.DH) + 2.0 * (
-                        self.DNU - self.DXI)
+                    self.DNU - self.DXI)
         elif constituent == 'M3':
             return 3.0 * (self.DT - self.DS + self.DH) + 3.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'L2':
             return (
-                    2.0 * (self.DT + self.DH)
-                    - self.DS
-                    - self.DP
-                    + 180.0
-                    + 2.0 * (self.DXI - self.DNU)
-                    - self.DR
+                2.0 * (self.DT + self.DH)
+                - self.DS
+                - self.DP
+                + 180.0
+                + 2.0 * (self.DXI - self.DNU)
+                - self.DR
             )
         elif constituent == '2MK3':
             return (
-                    3.0 * (self.DT + self.DH)
-                    - 4.0 * self.DS
-                    + 90.0
-                    + 4.0 * (self.DXI - self.DNU)
-                    + self.DNUP
+                3.0 * (self.DT + self.DH)
+                - 4.0 * self.DS
+                + 90.0
+                + 4.0 * (self.DXI - self.DNU)
+                + self.DNUP
             )
         elif constituent == 'K2':
             return 2.0 * (self.DT + self.DH) - 2.0 * self.DNUP2
         elif constituent == 'M8':
             return 8.0 * (self.DT - self.DS + self.DH) + 8.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         elif constituent == 'MS4':
             return 2.0 * (2.0 * self.DT - self.DS + self.DH) + 2.0 * (
-                        self.DXI - self.DNU)
+                    self.DXI - self.DNU)
         else:
             msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
 
     def get_lunar_node(self):
         return (
-                259.1560564
-                - 19.328185764 * self.DYR
-                - 0.0529539336 * self.DDAY
-                - 0.0022064139 * self.hour_middle
+            259.1560564
+            - 19.328185764 * self.DYR
+            - 0.0529539336 * self.DDAY
+            - 0.0022064139 * self.hour_middle
         )
 
     def get_lunar_perigee(self):
         return (
-                334.3837214
-                + 40.66246584 * self.DYR
-                + 0.111404016 * self.DDAY
-                + 0.004641834 * self.hour_middle
+            334.3837214
+            + 40.66246584 * self.DYR
+            + 0.111404016 * self.DDAY
+            + 0.004641834 * self.hour_middle
         )
 
     def get_lunar_mean_longitude(self):
         return (
-                277.0256206
-                + 129.38482032 * self.DYR
-                + 13.176396768 * self.DDAY
-                + 0.549016532 * self.forcing_start_date.hour
+            277.0256206
+            + 129.38482032 * self.DYR
+            + 13.176396768 * self.DDAY
+            + 0.549016532 * self.forcing_start_date.hour
         )
 
     def get_solar_perigee(self):
         return (
-                281.2208569
-                + 0.01717836 * self.DYR
-                + 0.000047064 * self.DDAY
-                + 0.000001961 * self.start_date.hour
+            281.2208569
+            + 0.01717836 * self.DYR
+            + 0.000047064 * self.DDAY
+            + 0.000001961 * self.start_date.hour
         )
 
     def get_solar_mean_longitude(self):
         return (
-                280.1895014
-                - 0.238724988 * self.DYR
-                + 0.9856473288 * self.DDAY
-                + 0.0410686387 * self.start_date.hour
+            280.1895014
+            - 0.238724988 * self.DYR
+            + 0.9856473288 * self.DDAY
+            + 0.0410686387 * self.start_date.hour
         )
 
     @property
@@ -536,8 +536,15 @@ class Tides(bctypes.EtaBc):
 
     @property
     def tidal_species_type(self):
-        return {'M2': 2, 'S2': 2, 'N2': 2, 'K2': 2, 'K1': 1, 'O1': 1, 'P1': 1,
-                'Q1': 1}
+        return {
+            'M2': 2,
+            'S2': 2,
+            'N2': 2,
+            'K2': 2,
+            'K1': 1,
+            'O1': 1,
+            'P1': 1,
+            'Q1': 1}
 
     @property
     def earth_tidal_potentials(self):
@@ -555,8 +562,8 @@ class Tides(bctypes.EtaBc):
     @property
     def hour_middle(self):
         return self.forcing_start_date.hour + (
-                (
-                            self.end_date - self.forcing_start_date).total_seconds() / 3600 / 2
+            (
+                    self.end_date - self.forcing_start_date).total_seconds() / 3600 / 2
         )
 
     @property
@@ -578,9 +585,9 @@ class Tides(bctypes.EtaBc):
     @property
     def DDAY(self):
         return (
-                self.forcing_start_date.timetuple().tm_yday
-                + int((self.forcing_start_date.year - 1901.0) / 4.0)
-                - 1
+            self.forcing_start_date.timetuple().tm_yday
+            + int((self.forcing_start_date.year - 1901.0) / 4.0)
+            - 1
         )
 
     @property
@@ -626,7 +633,7 @@ class Tides(bctypes.EtaBc):
     @property
     def NUP(self):
         return np.arctan(np.sin(self.NU) / (
-                    np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I)))
+                np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I)))
 
     @property
     def DNUP(self):
@@ -655,11 +662,11 @@ class Tides(bctypes.EtaBc):
     @property
     def NUP2(self):
         return (
-                np.arctan(
-                    np.sin(2.0 * self.NU)
-                    / (np.cos(2.0 * self.NU) + 0.0726184 / np.sin(self.I) ** 2)
-                )
-                / 2.0
+            np.arctan(
+                np.sin(2.0 * self.NU)
+                / (np.cos(2.0 * self.NU) + 0.0726184 / np.sin(self.I) ** 2)
+            )
+            / 2.0
         )
 
     @property

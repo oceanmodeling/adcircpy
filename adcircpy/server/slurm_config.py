@@ -10,22 +10,22 @@ class SlurmConfig(BaseServerConfig):
     """
 
     def __init__(
-            self,
-            account: str,
-            ntasks: int,
-            partition: str,
-            walltime: timedelta,
-            filename: str = 'slurm.job',
-            run_directory: str = '.',
-            run_name: str = None,
-            mail_type: str = None,
-            mail_user: str = None,
-            log_filename: str = None,
-            modules: [str] = None,
-            path_prefix: str = None,
-            extra_commands: [str] = None,
-            launcher: str = 'srun',
-            nodes: int = None,
+        self,
+        account: str,
+        ntasks: int,
+        partition: str,
+        walltime: timedelta,
+        filename: str = 'slurm.job',
+        run_directory: str = '.',
+        run_name: str = None,
+        mail_type: str = None,
+        mail_user: str = None,
+        log_filename: str = None,
+        modules: [str] = None,
+        path_prefix: str = None,
+        extra_commands: [str] = None,
+        launcher: str = 'srun',
+        nodes: int = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
