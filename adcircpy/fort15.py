@@ -327,7 +327,6 @@ class Fort15:
             f'{self.NCDATE:<63} ! Forcing start date / NCDATE',
         ])
         del self._outputs
-        del self._runtype
         return '\n'.join(f)
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
