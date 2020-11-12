@@ -327,6 +327,13 @@ class Fort15:
             f'{self.NCDATE:<63} ! Forcing start date / NCDATE',
         ])
         del self._outputs
+
+        for name, namelist in self.namelists.items():
+            f.append(f'&{name} ' +
+                     ', '.join([f'{key}={value}'
+                                for key, value in namelist.items()]) +
+                     ' \\')
+
         return '\n'.join(f)
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
@@ -337,6 +344,21 @@ class Fort15:
                             f'Pass `overwrite=True` to overwrite.')
         with open(fort15, 'w', newline='\n') as f:
             f.write(self.fort15(runtype))
+
+    @property
+    def namelists(self) -> {str: {str: str}}:
+        namelists = {}
+        if self.NRS in [1, 3, 4, 5]:
+            namelists['SWANOutputControl'] = {
+                'SWAN_OutputHS': 'False',
+                'SWAN_OutputDIR': 'False',
+                'SWAN_OutputTM01': 'False',
+                'SWAN_OutputTPS': 'False',
+                'SWAN_OutputWIND': 'False',
+                'SWAN_OutputTM02': 'False',
+                'SWAN_OutputTMM10': 'False'
+            }
+        return namelists
 
     def set_time_weighting_factors_in_gcwe(self, A00, B00, C00):
         A00 = float(A00)

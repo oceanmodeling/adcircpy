@@ -23,13 +23,13 @@ from adcircpy.server.driver_file import DriverFile
 
 class AdcircRun(Fort15):
     def __init__(
-            self,
-            mesh: AdcircMesh,
-            start_date: datetime,
-            end_date: datetime,
-            spinup_time: timedelta = None,
-            netcdf: bool = True,
-            server_config: Union[int, SSHConfig, SlurmConfig] = None,
+        self,
+        mesh: AdcircMesh,
+        start_date: datetime,
+        end_date: datetime,
+        spinup_time: timedelta = None,
+        netcdf: bool = True,
+        server_config: Union[int, SSHConfig, SlurmConfig] = None,
     ):
         super().__init__(mesh)
         self._start_date = start_date
@@ -39,10 +39,10 @@ class AdcircRun(Fort15):
         self._server_config = server_config
 
     def add_elevation_output_station(
-            self,
-            station_name: str,
-            vertices: np.array
-            # TODO: Is there a way to be more concise about this? (e.g. specify dimentionality?)
+        self,
+        station_name: str,
+        vertices: np.array
+        # TODO: Is there a way to be more concise about this? (e.g. specify dimentionality?)
     ):
         self._certify_station('elevation', station_name, vertices)
         self._elevation_stations[station_name] = vertices
@@ -63,15 +63,15 @@ class AdcircRun(Fort15):
         self._concentration_stations[station_name] = vertices
 
     def set_elevation_stations_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -97,15 +97,15 @@ class AdcircRun(Fort15):
         )
 
     def set_velocity_stations_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -131,15 +131,15 @@ class AdcircRun(Fort15):
         )
 
     def set_meteorological_stations_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -165,15 +165,15 @@ class AdcircRun(Fort15):
         )
 
     def set_concentration_stations_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -199,15 +199,15 @@ class AdcircRun(Fort15):
         )
 
     def set_elevation_surface_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -233,15 +233,15 @@ class AdcircRun(Fort15):
         )
 
     def set_velocity_surface_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -267,15 +267,15 @@ class AdcircRun(Fort15):
         )
 
     def set_meteorological_surface_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -301,15 +301,15 @@ class AdcircRun(Fort15):
         )
 
     def set_concentration_surface_output(
-            self,
-            sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
-            spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
-            netcdf: bool = True,
-            harmonic_analysis: bool = False,
+        self,
+        sampling_rate: timedelta,
+        start: Union[timedelta, int] = None,
+        end: Union[timedelta, int] = None,
+        spinup: Union[timedelta, int] = None,
+        spinup_start: Union[timedelta, int] = None,
+        spinup_end: Union[timedelta, int] = None,
+        netcdf: bool = True,
+        harmonic_analysis: bool = False,
     ):
         self._certify_output_request(
             sampling_rate,
@@ -347,16 +347,16 @@ class AdcircRun(Fort15):
         self._concentration_stations.pop(station_name)
 
     def write(
-            self,
-            output_directory: str,
-            overwrite: bool = False,
-            fort14: str = 'fort.14',
-            fort13: str = 'fort.13',
-            fort22: str = 'fort.22',
-            fort15: str = 'fort.15',
-            coldstart: str = 'fort.15.coldstart',
-            hotstart: str = 'fort.15.hotstart',
-            driver: str = 'driver.sh',
+        self,
+        output_directory: str,
+        overwrite: bool = False,
+        fort14: str = 'fort.14',
+        fort13: str = 'fort.13',
+        fort22: str = 'fort.22',
+        fort15: str = 'fort.15',
+        coldstart: str = 'fort.15.coldstart',
+        hotstart: str = 'fort.15.hotstart',
+        driver: str = 'driver.sh',
     ):
         output_directory = pathlib.Path(output_directory)
         output_directory.mkdir(parents=True, exist_ok=overwrite)
@@ -407,6 +407,7 @@ class AdcircRun(Fort15):
                               overwrite)
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
+
         if driver is not None:
             DriverFile(self).write(output_directory / driver, overwrite)
 
@@ -425,13 +426,13 @@ class AdcircRun(Fort15):
                     self.add_concentration_output_station(name, vertices)
 
     def run(
-            self,
-            outdir=None,
-            nproc=-1,
-            overwrite=False,
-            coldstart=True,
-            hotstart=True,
-            server_config=None,
+        self,
+        outdir=None,
+        nproc=-1,
+        overwrite=False,
+        coldstart=True,
+        hotstart=True,
+        server_config=None,
     ):
 
         if outdir is None:
@@ -743,15 +744,15 @@ class AdcircRun(Fort15):
         plt.show()
 
     def _certify_output_request(
-            self,
-            sampling_rate: timedelta,
-            start,
-            end,
-            spinup,
-            spinup_start,
-            spinup_end,
-            netcdf,
-            harmonic_analysis,
+        self,
+        sampling_rate: timedelta,
+        start,
+        end,
+        spinup,
+        spinup_start,
+        spinup_end,
+        netcdf,
+        harmonic_analysis,
     ):
         self._certify_sampling_rate(sampling_rate)
         self._certify__OUT__('start', start)
