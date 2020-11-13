@@ -1,4 +1,4 @@
-created on 2020-11-11 12:31                                     ! RUNDES
+created on 2020-11-13 14:09                                     ! RUNDES
  Shinacock Inlet Coarse Grid                                    ! RUNID
 1                                                               ! NFOVER
 1                                                               ! NABOUT
@@ -55,3 +55,4 @@ created on 2020-11-11 12:31                                     ! RUNDES
                                                                 ! NCONV
                                                                 ! NCCONT
 2015-12-14 00:00                                                ! Forcing start date / NCDATE
+&SWANOutputControl SWAN_OutputHS=False, SWAN_OutputDIR=False, SWAN_OutputTM01=False, SWAN_OutputTPS=False, SWAN_OutputWIND=False, SWAN_OutputTM02=False, SWAN_OutputTMM10=False \
