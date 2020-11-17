@@ -1,5 +1,7 @@
 from pandas import read_csv
 
+from .base import WindForcing
+
 
 def atcf_id(storm_id: str):
     url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'

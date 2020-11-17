@@ -3,10 +3,10 @@ from os import PathLike
 from adcircpy.forcing.base import Forcing
 
 
-class WindForcing(Forcing):
-    def __init__(self, nws: int, interval_seconds: int):
-        self.NWS = nws
-        self.WTIMINC = interval_seconds
+class WaveForcing(Forcing):
+    def __init__(self, nrs: int, interval_seconds: int):
+        self.NRS = nrs
+        self.RSTIMINC = interval_seconds
 
     def write(self, directory: PathLike, overwrite: bool = False):
         # TODO implement this

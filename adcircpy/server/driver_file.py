@@ -26,7 +26,7 @@ class DriverFile:
                  '\nset -e\n'
 
         if self._executable.startswith('p') and \
-                isinstance(self._server_config, int):
+            isinstance(self._server_config, int):
             if self._server_config > 1:
                 f += f"\nNPROCS={self._nprocs}\n"
 
@@ -149,12 +149,12 @@ class DriverFile:
             f += 'ln -sf ../coldstart/fort.67\n'
 
         if self._driver.wind_forcing is not None:
-            if self._driver.wind_forcing.NWS in [19, 20]:
+            if self._driver.NWS in [17, 19, 20]:
                 f += 'ln -sf ../fort.22 ./fort.22\n' \
                      'aswip\n' \
-                     f'mv NWS_{self._driver.wind_forcing.NWS}_fort.22 fort.22\n'
+                     f'mv NWS_{self._driver.NWS}_fort.22 fort.22\n'
             else:
-                msg = f'unsupported NWS value {self._driver.wind_forcing.NWS}'
+                msg = f'unsupported NWS value {self._driver.NWS}'
                 raise NotImplementedError(msg)
 
         if self._executable.startswith('p'):
@@ -236,10 +236,10 @@ class DriverFile:
 
 
 def bash_if_statement(
-        if_condition: str,
-        if_block: str,
-        else_blocks: [str] = None,
-        indent_string: str = '  '
+    if_condition: str,
+    if_block: str,
+    else_blocks: [str] = None,
+    indent_string: str = '  '
 ) -> str:
     output = f'if {if_condition}; then\n' + \
              indent(if_block, indent_string) + '\n'
@@ -261,9 +261,9 @@ def bash_if_statement(
 
 
 def bash_function(
-        name: str,
-        function_block: str,
-        indent_string: str = '  '
+    name: str,
+    function_block: str,
+    indent_string: str = '  '
 ) -> str:
     return f'{name}() {{\n' + \
            indent(function_block, indent_string) + '\n' + \
