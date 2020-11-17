@@ -12,6 +12,8 @@ import numpy as np
 from psutil import cpu_count
 
 from adcircpy.forcing import Tides  # , Winds
+from adcircpy.forcing.waves.base import WaveForcing
+from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
@@ -29,7 +31,7 @@ class AdcircRun(Fort15):
         netcdf: bool = True,
         server_config: Union[int, SSHConfig, SlurmConfig] = None,
     ):
-        self._mesh = mesh
+        super().__init__(mesh)
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
@@ -405,6 +407,7 @@ class AdcircRun(Fort15):
                               overwrite)
         if isinstance(self._server_config, SlurmConfig):
             driver = self._server_config._filename
+
         if driver is not None:
             DriverFile(self).write(output_directory / driver, overwrite)
 
@@ -485,8 +488,28 @@ class AdcircRun(Fort15):
 
     @property
     def wind_forcing(self):
-        return self.mesh._surface_forcing['imetype']
+        if self.mesh is not None and self.mesh._surface_forcing is not None:
+            self.__wind_forcing = self.mesh._surface_forcing['imetype']
+        return self.__wind_forcing
         # if isinstance(elevbc, WindForcing):
+
+    @wind_forcing.setter
+    def wind_forcing(self, wind_forcing: WindForcing):
+        if self.mesh is not None and self.mesh._surface_forcing is not None:
+            self.mesh._surface_forcing['imetype'] = wind_forcing
+        self.__wind_forcing = wind_forcing
+
+    @property
+    def wave_forcing(self):
+        if self.mesh is not None and self.mesh._boundary_forcing is not None:
+            self.__wave_forcing = self.mesh._boundary_forcing['iwrtype']['obj']
+        return self.__wave_forcing
+
+    @wave_forcing.setter
+    def wave_forcing(self, wave_forcing: WaveForcing):
+        if self.mesh is not None and self.mesh._boundary_forcing is not None:
+            self.mesh._boundary_forcing['iwrtype']['obj'] = wave_forcing
+        self.__wave_forcing = wave_forcing
 
     @property
     def spinup_time(self):
@@ -586,10 +609,6 @@ class AdcircRun(Fort15):
     @property
     def output_collection(self):
         return self._output_collection
-
-    @property
-    def wave_forcing(self):
-        return self.mesh._boundary_forcing['iwrtype']['obj']
 
     def _load_outdir(self, outdir):
 
