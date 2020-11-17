@@ -108,11 +108,10 @@ class TestAdcircRun(unittest.TestCase):
 
         for reference_filename in reference_directory.iterdir():
             generated_filename = output_directory / reference_filename.name
-            with open(generated_filename) as generated_file:
-                with open(reference_filename) as reference_file:
-                    generated_lines = generated_file.readlines()[1:]
-                    reference_lines = reference_file.readlines()[1:]
-                    assert generated_lines == reference_lines
+            with open(generated_filename) as generated_file, \
+                open(reference_filename) as reference_file:
+                assert generated_file.readlines()[1:] == \
+                       reference_file.readlines()[1:]
 
 
 if __name__ == '__main__':
