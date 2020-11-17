@@ -55,14 +55,14 @@ class TestAdcircRun(unittest.TestCase):
             mail_user='example@email.gov',
             log_filename='example_3.log',
             modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-            path_prefix='$HOME/adcirc/build'
+            path_prefix='$HOME/adcirc/build',
         )
         driver = AdcircRun(
             mesh=mesh,
             start_date=datetime.now(),
             end_date=timedelta(days=7),
             spinup_time=timedelta(days=5),
-            server_config=slurm
+            server_config=slurm,
         )
         DriverFile(driver).write(output_directory / 'slurm.job',
                                  overwrite=True)
@@ -97,21 +97,17 @@ class TestAdcircRun(unittest.TestCase):
         mesh.add_forcing(wave_forcing)
 
         # instantiate AdcircRun object.
-        driver = AdcircRun(
-            mesh,
-            start_date,
-            end_date,
-            spinup_time,
-        )
+        driver = AdcircRun(mesh, start_date, end_date, spinup_time, )
 
         driver.write(output_directory, overwrite=True)
 
         for reference_filename in reference_directory.iterdir():
             generated_filename = output_directory / reference_filename.name
-            with open(generated_filename) as generated_file, \
-                open(reference_filename) as reference_file:
-                assert generated_file.readlines()[1:] == \
-                       reference_file.readlines()[1:]
+            with open(generated_filename) as generated_file, open(
+                reference_filename
+            ) as reference_file:
+                assert generated_file.readlines()[
+                       1:] == reference_file.readlines()[1:]
 
 
 if __name__ == '__main__':

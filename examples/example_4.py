@@ -12,7 +12,7 @@ from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.server import SlurmConfig
 
 PARENT = pathlib.Path(__file__).parent.absolute()
-FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
+FORT14 = PARENT / 'data/NetCDF_Shinnecock_Inlet/fort.14'
 
 
 def main():
@@ -22,8 +22,8 @@ def main():
         tmpfile = tempfile.NamedTemporaryFile()
         with open(tmpfile.name, 'b+w') as f:
             f.write(g.read())
-        with tarfile.open(tmpfile.name, "r:bz2") as tar:
-            tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
+        with tarfile.open(tmpfile.name, 'r:bz2') as tar:
+            tar.extractall(PARENT / 'data/NetCDF_Shinnecock_Inlet/')
 
     mesh = AdcircMesh.open(FORT14, crs=4326)
 
@@ -47,7 +47,7 @@ def main():
         mail_user='example@email.gov',
         log_filename='example_3.log',
         modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-        path_prefix='$HOME/adcirc/build'
+        path_prefix='$HOME/adcirc/build',
     )
     driver = AdcircRun(
         mesh=mesh,
@@ -57,7 +57,7 @@ def main():
         server_config=slurm,
     )
 
-    driver.write(PARENT / "outputs/example_4", overwrite=True)
+    driver.write(PARENT / 'outputs/example_4', overwrite=True)
 
 
 if __name__ == '__main__':
