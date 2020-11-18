@@ -497,7 +497,7 @@ class Fort15:
         self._runtype = None
 
     @property
-    def mesh(self):
+    def mesh(self) -> AdcircMesh:
         return self._mesh
 
     def fort15(self, runtype: str):
@@ -841,7 +841,7 @@ class Fort15:
             }
         return namelists
 
-    def set_time_weighting_factors_in_gcwe(self, A00, B00, C00):
+    def set_time_weighting_factors_in_gcwe(self, A00: int, B00: int, C00: int):
         A00 = float(A00)
         B00 = float(B00)
         C00 = float(C00)
@@ -851,7 +851,7 @@ class Fort15:
         self.__C00 = C00
 
     @staticmethod
-    def parse_stations(path, station_type):
+    def parse_stations(path, station_type) -> {str: (float, float, float)}:
         stations = dict()
         with open(path, 'r') as f:
             for line in f:
@@ -901,37 +901,38 @@ class Fort15:
 
     @property
     @lru_cache(maxsize=None)
-    def TPXO(self):
+    def TPXO(self) -> TPXO:
         return TPXO()
 
     @property
-    def timestep(self):
+    def timestep(self) -> float:
         return np.abs(self.DTDP)
 
     @timestep.setter
-    def timestep(self, timestep):
+    def timestep(self, timestep: float):
         self.DTDP = timestep
 
     RUNDES = RUNDES()
     RUNID = DefaultedString(self.mesh.description)
 
+    _IHOT = IHOT()
+
     @property
-    def IHOT(self):
+    def IHOT(self) -> float:
         return self._IHOT
 
-    _IHOT = IHOT()
     NFOVER = EnumeratedInteger([0, 1], 1)
     WarnElev = WarnElev()
 
     @property
-    def iWarnElevDump(self):
+    def iWarnElevDump(self) -> int:
         try:
             return self.__iWarnElevDump
         except AttributeError:
             raise NotImplementedError
 
     @iWarnElevDump.setter
-    def iWarnElevDump(self, iWarnElevDump):
+    def iWarnElevDump(self, iWarnElevDump: int):
         if iWarnElevDump is not None:
             iWarnElevDump = int(iWarnElevDump)
             if iWarnElevDump not in [0, 1]:
@@ -943,14 +944,14 @@ class Fort15:
                     'Must set iWarnElevDump if WarnElev is not ' + 'None')
 
     @property
-    def WarnElevDumpLimit(self):
+    def WarnElevDumpLimit(self) -> int:
         try:
             return self.__WarnElevDumpLimit
         except AttributeError:
             raise NotImplementedError
 
     @WarnElevDumpLimit.setter
-    def WarnElevDumpLimit(self, WarnElevDumpLimit):
+    def WarnElevDumpLimit(self, WarnElevDumpLimit: int):
         if WarnElevDumpLimit is not None:
             assert isinstance(WarnElevDumpLimit, int)
             assert WarnElevDumpLimit > 0
@@ -961,14 +962,14 @@ class Fort15:
                     'Must set WarnElevDumpLimit if WarnElev is ' + 'not None')
 
     @property
-    def ErrorElev(self):
+    def ErrorElev(self) -> float:
         try:
             return self.__ErrorElev
         except AttributeError:
             raise NotImplementedError
 
     @ErrorElev.setter
-    def ErrorElev(self, ErrorElev):
+    def ErrorElev(self, ErrorElev: float):
         if ErrorElev is not None:
             self.__ErrorElev = float(ErrorElev)
         else:
@@ -1026,14 +1027,14 @@ class Fort15:
         return nrs
 
     @property
-    def ICS(self):
+    def ICS(self) -> int:
         if self.mesh.crs.is_geographic:
             return 2
         else:
             return 1
 
     @property
-    def IM(self):
+    def IM(self) -> int:
         if self.stress_based_3D:
             return 2
 
@@ -1142,12 +1143,12 @@ class Fort15:
                        f'{get_digit_6():d}')
 
     @property
-    def IDEN(self):
+    def IDEN(self) -> int:
         raise NotImplementedError('3D runs not yet supported.')
         # return self.__IDEN
 
     @IDEN.setter
-    def IDEN(self, IDEN):
+    def IDEN(self, IDEN: int):
         if IDEN is not None:
             raise NotImplementedError('3D runs not yet supported.')
 
@@ -1157,14 +1158,14 @@ class Fort15:
     NOLICAT = EnumeratedInteger([0, 1], 1)
 
     @property
-    def NWP(self):
+    def NWP(self) -> int:
         if self._runtype == 'coldstart':
             return len(self.mesh.get_coldstart_attributes())
         else:
             return len(self.mesh.get_hotstart_attributes())
 
     @property
-    def NRAMP(self):
+    def NRAMP(self) -> int:
         if self.spinup_time.total_seconds() == 0:
             return 1
         if self._runtype == 'coldstart':
@@ -1192,14 +1193,14 @@ class Fort15:
     REFTIM = DefaultedFloat(0)
 
     @property
-    def WTIMINC(self):
+    def WTIMINC(self) -> int:
         if self.NWS not in [0, 1, 9, 11]:
             return self.wind_forcing.WTIMINC
         else:
             return 0
 
     @property
-    def RSTIMINC(self):
+    def RSTIMINC(self) -> int:
         if self.NRS in [1, 3, 4, 5]:
             if self.wave_forcing is not None:
                 return self.wave_forcing.RSTIMINC
@@ -1209,7 +1210,7 @@ class Fort15:
             return 0
 
     @property
-    def RNDAY(self):
+    def RNDAY(self) -> float:
         if self._runtype == 'coldstart':
             if self.spinup_time.total_seconds() > 0.0:
                 RNDAY = self.start_date - self.forcing_start_date
@@ -1226,7 +1227,7 @@ class Fort15:
     DRAMPIntFlux = DefaultedFloat(0)
 
     @property
-    def DRAMPElev(self):
+    def DRAMPElev(self) -> float:
         try:
             return self.__DRAMPElev
         except AttributeError:
@@ -1236,11 +1237,11 @@ class Fort15:
             )
 
     @DRAMPElev.setter
-    def DRAMPElev(self, DRAMPElev):
+    def DRAMPElev(self, DRAMPElev: float):
         self.__DRAMPElev = float(DRAMPElev)
 
     @property
-    def DRAMPTip(self):
+    def DRAMPTip(self) -> float:
         try:
             return self.__DRAMPTip
         except AttributeError:
@@ -1250,14 +1251,14 @@ class Fort15:
             )
 
     @DRAMPTip.setter
-    def DRAMPTip(self, DRAMPTip):
+    def DRAMPTip(self, DRAMPTip: float):
         self.__DRAMPTip = float(DRAMPTip)
 
     DRAMPMete = DefaultedFloat(1)
     DRAMPWRad = DefaultedFloat(0)
 
     @property
-    def DUnRampMete(self):
+    def DUnRampMete(self) -> float:
         try:
             return self.__DUnRampMete
         except AttributeError:
@@ -1265,13 +1266,13 @@ class Fort15:
             return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
 
     @DUnRampMete.setter
-    def DUnRampMete(self, DUnRampMete):
+    def DUnRampMete(self, DUnRampMete: float):
         if DUnRampMete is None:
             DUnRampMete = self.DRAMP
         self.__DUnRampMete = float(DUnRampMete)
 
     @property
-    def A00(self):
+    def A00(self) -> int:
         try:
             return self.__A00
         except AttributeError:
@@ -1283,7 +1284,7 @@ class Fort15:
                 return 0.5
 
     @property
-    def B00(self):
+    def B00(self) -> int:
         try:
             return self.__B00
         except AttributeError:
@@ -1295,7 +1296,7 @@ class Fort15:
                 return 0.5
 
     @property
-    def C00(self):
+    def C00(self) -> int:
         try:
             return self.__C00
         except AttributeError:
@@ -1318,7 +1319,7 @@ class Fort15:
     CORI = CORI()
 
     @property
-    def NTIF(self):
+    def NTIF(self) -> int:
         NTIF = 0
         if self.tidal_forcing is not None:
             for constituent in self.tidal_forcing.get_active_constituents():
@@ -1327,7 +1328,7 @@ class Fort15:
         return NTIF
 
     @property
-    def NBFR(self):
+    def NBFR(self) -> int:
         if self.iettype in [3, 5]:
             return self.tidal_forcing.nbfr
         return 0
@@ -1407,7 +1408,7 @@ class Fort15:
         partial(Fort15._get_NSPOOL__, self, 'surface', 'concentration'))
 
     @property
-    def NFREQ(self):
+    def NFREQ(self) -> int:
         if self._runtype == 'coldstart':
             if np.any([_['spinup'] for _ in self._outputs]):
                 if np.any([_['sampling_rate'] for _ in self._outputs]):
@@ -1426,7 +1427,7 @@ class Fort15:
     FMV = FMV()
 
     @property
-    def NHASE(self):
+    def NHASE(self) -> int:
         try:
             return self.__NHASE
         except AttributeError:
@@ -1434,7 +1435,7 @@ class Fort15:
                 self.elevation_stations_output)
 
     @property
-    def NHASV(self):
+    def NHASV(self) -> int:
         try:
             return self.__NHASV
         except AttributeError:
@@ -1442,7 +1443,7 @@ class Fort15:
                 self.velocity_stations_output)
 
     @property
-    def NHAGE(self):
+    def NHAGE(self) -> int:
         try:
             return self.__NHAGE
         except AttributeError:
@@ -1450,7 +1451,7 @@ class Fort15:
                 self.elevation_surface_output)
 
     @property
-    def NHAGV(self):
+    def NHAGV(self) -> int:
         try:
             return self.__NHAGV
         except AttributeError:
@@ -1478,20 +1479,20 @@ class Fort15:
     NCCONT = DefaultedString('')
 
     @property
-    def NCDATE(self):
-        return self.forcing_start_date.strftime('%Y-%m-%d %H:%M')
+    def NCDATE(self) -> str:
+        return f'{self.forcing_start_date:%Y-%m-%d %H:%M}'
 
     @property
     def FortranNamelists(self):
         return self.__FortranNamelists
 
-    def _get_active_tidal_potential_constituents(self):
+    def _get_active_tidal_potential_constituents(self) -> [str]:
         if self.iettype in [3, 5]:
             return self.tidal_forcing.get_active_potential_constituents()
         else:
             return []
 
-    def _get_active_tidal_forcing_constituents(self):
+    def _get_active_tidal_forcing_constituents(self) -> [str]:
         if self.iettype in [3, 5]:
             return self.tidal_forcing.get_active_forcing_constituents()
         else:
@@ -1508,7 +1509,7 @@ class Fort15:
         else:
             return 0
 
-    def _get_NSTA_(self, physical_var):
+    def _get_NSTA_(self, physical_var) -> int:
         stations = self._container['stations'][physical_var]
         if self._runtype == 'coldstart':
             if stations['spinup'] is not None:
@@ -1521,7 +1522,7 @@ class Fort15:
             else:
                 return 0
 
-    def _get_NOUT__(self, output_type, physical_var):
+    def _get_NOUT__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         if self._runtype == 'coldstart':
             if output['spinup'] is not None:
@@ -1541,7 +1542,7 @@ class Fort15:
             else:
                 return 0
 
-    def _get_TOUTS__(self, output_type, physical_var):
+    def _get_TOUTS__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         # coldstart
         if self._runtype == 'coldstart':
@@ -1574,7 +1575,7 @@ class Fort15:
 
         return start.total_seconds() / (60.0 * 60.0 * 24.0)
 
-    def _get_TOUTF__(self, output_type, physical_var):
+    def _get_TOUTF__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         # coldstart
         if self._runtype == 'coldstart':
@@ -1617,7 +1618,7 @@ class Fort15:
             else:
                 return 0
 
-    def _get_NSPOOL__(self, output_type, physical_var):
+    def _get_NSPOOL__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         if self._runtype == 'coldstart':
             if output['spinup']:
@@ -1635,7 +1636,7 @@ class Fort15:
             else:
                 return 0
 
-    def _get_harmonic_analysis_state(self, output):
+    def _get_harmonic_analysis_state(self, output) -> int:
         state = 0
         if self._runtype == 'coldstart':
             if output['spinup'] and output['harmonic_analysis']:
