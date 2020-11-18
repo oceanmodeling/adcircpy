@@ -417,6 +417,12 @@ class Fort15:
             else:
                 return 'kolar_grey'
 
+    @lateral_stress_in_gwce.setter
+    def lateral_stress_in_gwce(self, lateral_stress_in_gwce):
+        assert lateral_stress_in_gwce in ['kolar-grey', 'velocity_based',
+                                          'flux_based']
+        self.__lateral_stress_in_gwce = lateral_stress_in_gwce
+
     @property
     def lateral_stress_in_gwce_is_symmetrical(self):
         """
@@ -430,6 +436,13 @@ class Fort15:
             else:
                 return False
 
+    @lateral_stress_in_gwce_is_symmetrical.setter
+    def lateral_stress_in_gwce_is_symmetrical(self,
+                                              lateral_stress_in_gwce_is_symmetrical):
+        self.__lateral_stress_in_gwce_is_symmetrical = bool(
+            lateral_stress_in_gwce_is_symmetrical
+        )
+
     @property
     def advection_in_gwce(self):
         """
@@ -439,6 +452,11 @@ class Fort15:
             return self.__advection_in_gwce
         except AttributeError:
             return 'non_conservative'
+
+    @advection_in_gwce.setter
+    def advection_in_gwce(self, advection_in_gwce):
+        assert advection_in_gwce in ['non_conservative', 'form_1', 'form_2']
+        self.__advection_in_gwce = advection_in_gwce
 
     @property
     def lateral_stress_in_momentum(self):
@@ -450,6 +468,11 @@ class Fort15:
         except AttributeError:
             return 'velocity_based'
 
+    @lateral_stress_in_momentum.setter
+    def lateral_stress_in_momentum(self, lateral_stress_in_momentum):
+        assert lateral_stress_in_momentum in ['velocity_based', 'flux_based']
+        self.__lateral_stress_in_momentum = lateral_stress_in_momentum
+
     @property
     def lateral_stress_in_momentum_is_symmetrical(self):
         """
@@ -459,6 +482,14 @@ class Fort15:
             return self.__lateral_stress_in_momentum_is_symmetrical
         except AttributeError:
             return False
+
+    @lateral_stress_in_momentum_is_symmetrical.setter
+    def lateral_stress_in_momentum_is_symmetrical(
+        self, lateral_stress_in_momentum_is_symmetrical
+    ):
+        self.__lateral_stress_in_momentum_is_symmetrical = bool(
+            lateral_stress_in_momentum_is_symmetrical
+        )
 
     @property
     def lateral_stress_in_momentum_method(self):
@@ -470,6 +501,13 @@ class Fort15:
         except AttributeError:
             return 'integration_by_parts'
 
+    @lateral_stress_in_momentum_method.setter
+    def lateral_stress_in_momentum_method(self,
+                                          lateral_stress_in_momentum_method):
+        assert lateral_stress_in_momentum_method in ['2_part',
+                                                     'integration_by_parts']
+        self.__lateral_stress_in_momentum_method = lateral_stress_in_momentum_method
+
     @property
     def advection_in_momentum(self):
         """
@@ -479,6 +517,12 @@ class Fort15:
             return self.__advection_in_momentum
         except AttributeError:
             return 'non_conservative'
+
+    @advection_in_momentum.setter
+    def advection_in_momentum(self, advection_in_momentum):
+        assert advection_in_momentum in ['non_conservative', 'form_1',
+                                         'form_2']
+        self.__advection_in_momentum = advection_in_momentum
 
     @property
     def area_integration_in_momentum(self):
@@ -490,6 +534,11 @@ class Fort15:
         except AttributeError:
             return 'corrected'
 
+    @area_integration_in_momentum.setter
+    def area_integration_in_momentum(self, area_integration_in_momentum):
+        assert area_integration_in_momentum in ['corrected', 'original']
+        self.__area_integration_in_momentum = area_integration_in_momentum
+
     @property
     def baroclinicity(self):
         """
@@ -499,6 +548,10 @@ class Fort15:
             return self.__baroclinicity
         except AttributeError:
             return False
+
+    @baroclinicity.setter
+    def baroclinicity(self, baroclinicity):
+        self.__baroclinicity = bool(baroclinicity)
 
     @property
     def smagorinsky(self):
@@ -510,12 +563,20 @@ class Fort15:
         except AttributeError:
             return True
 
+    @smagorinsky.setter
+    def smagorinsky(self, smagorinsky):
+        self.__smagorinsky = bool(smagorinsky)
+
     @property
     def smagorinsky_coefficient(self):
         try:
             return self.__smagorinsky_coefficient
         except AttributeError:
             return 0.2
+
+    @smagorinsky_coefficient.setter
+    def smagorinsky_coefficient(self, smagorinsky_coefficient):
+        self.__smagorinsky_coefficient = np.abs(float(smagorinsky_coefficient))
 
     @property
     def gwce_solution_scheme(self):
@@ -527,12 +588,22 @@ class Fort15:
         except AttributeError:
             return 'semi-implicit'
 
+    @gwce_solution_scheme.setter
+    def gwce_solution_scheme(self, gwce_solution_scheme):
+        assert gwce_solution_scheme in ['semi-implicit', 'explicit']
+        self.__gwce_solution_scheme = gwce_solution_scheme
+
     @property
     def horizontal_mixing_coefficient(self):
         try:
             return self.__horizontal_mixing_coefficient
         except AttributeError:
             return 10.0
+
+    @horizontal_mixing_coefficient.setter
+    def horizontal_mixing_coefficient(self, horizontal_mixing_coefficient):
+        self.__horizontal_mixing_coefficient = np.abs(
+            float(horizontal_mixing_coefficient))
 
     @property
     def passive_scalar_transport(self):
@@ -544,6 +615,10 @@ class Fort15:
         except AttributeError:
             return False
 
+    @passive_scalar_transport.setter
+    def passive_scalar_transport(self, passive_scalar_transport):
+        self.__passive_scalar_transport = bool(passive_scalar_transport)
+
     @property
     def stress_based_3D(self):
         try:
@@ -551,12 +626,21 @@ class Fort15:
         except AttributeError:
             return False
 
+    @stress_based_3D.setter
+    def stress_based_3D(self, stress_based_3D):
+        self.__stress_based_3D = bool(stress_based_3D)
+
     @property
     def predictor_corrector(self):
         try:
             return self.__predictor_corrector
         except AttributeError:
             return True
+
+    @predictor_corrector.setter
+    def predictor_corrector(self, predictor_corrector):
+        assert isinstance(predictor_corrector, bool)
+        self.__predictor_corrector = predictor_corrector
 
     @property
     @lru_cache(maxsize=None)
@@ -567,6 +651,10 @@ class Fort15:
     def timestep(self):
         return np.abs(self.DTDP)
 
+    @timestep.setter
+    def timestep(self, timestep):
+        self.DTDP = timestep
+
     @property
     def RUNDES(self):
         try:
@@ -574,12 +662,20 @@ class Fort15:
         except AttributeError:
             return datetime.now().strftime('created on %Y-%m-%d %H:%M')
 
+    @RUNDES.setter
+    def RUNDES(self, RUNDES):
+        self.__RUNDES = str(RUNDES)
+
     @property
     def RUNID(self):
         try:
             self.__RUNID
         except AttributeError:
             return self.mesh.description
+
+    @RUNID.setter
+    def RUNID(self, RUNID):
+        self.__RUNID = str(RUNID)
 
     @property
     def IHOT(self):
@@ -595,12 +691,22 @@ class Fort15:
             elif self._runtype == 'hotstart':
                 return 567
 
+    @_IHOT.setter
+    def _IHOT(self, IHOT):
+        assert IHOT in [0, 567, 568]
+        self.__IHOT = IHOT
+
     @property
     def NFOVER(self):
         try:
             self.__NFOVER
         except AttributeError:
             return 1
+
+    @NFOVER.setter
+    def NFOVER(self, NFOVER):
+        assert NFOVER in [0, 1]
+        self.__NFOVER = NFOVER
 
     @property
     def WarnElev(self):
@@ -609,12 +715,31 @@ class Fort15:
         except AttributeError:
             raise NotImplementedError
 
+    @WarnElev.setter
+    def WarnElev(self, WarnElev):
+        if WarnElev is not None:
+            self.__WarnElev = float(WarnElev)
+        else:
+            self.__WarnElev = None
+
     @property
     def iWarnElevDump(self):
         try:
             return self.__iWarnElevDump
         except AttributeError:
             raise NotImplementedError
+
+    @iWarnElevDump.setter
+    def iWarnElevDump(self, iWarnElevDump):
+        if iWarnElevDump is not None:
+            iWarnElevDump = int(iWarnElevDump)
+            if iWarnElevDump not in [0, 1]:
+                raise TypeError('iWarnElevDump must be 0 or 1')
+            self.__iWarnElevDump = int(iWarnElevDump)
+        else:
+            if self.WarnElev is not None:
+                raise RuntimeError(
+                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
 
     @property
     def WarnElevDumpLimit(self):
@@ -623,12 +748,32 @@ class Fort15:
         except AttributeError:
             raise NotImplementedError
 
+    @WarnElevDumpLimit.setter
+    def WarnElevDumpLimit(self, WarnElevDumpLimit):
+        if WarnElevDumpLimit is not None:
+            assert isinstance(WarnElevDumpLimit, int)
+            assert WarnElevDumpLimit > 0
+            self.__WarnElevDumpLimit = WarnElevDumpLimit
+        else:
+            if self.WarnElev is not None:
+                raise RuntimeError(
+                    'Must set WarnElevDumpLimit if WarnElev is ' + 'not None')
+
     @property
     def ErrorElev(self):
         try:
             return self.__ErrorElev
         except AttributeError:
             raise NotImplementedError
+
+    @ErrorElev.setter
+    def ErrorElev(self, ErrorElev):
+        if ErrorElev is not None:
+            self.__ErrorElev = float(ErrorElev)
+        else:
+            if self.WarnElev is not None:
+                raise RuntimeError(
+                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
 
     @property
     def NABOUT(self):
@@ -637,12 +782,23 @@ class Fort15:
         except AttributeError:
             return 1
 
+    @NABOUT.setter
+    def NABOUT(self, NABOUT):
+        assert isinstance(NABOUT, int)
+        assert NABOUT in [-1, 0, 1, 2, 3]
+        self.__NABOUT = NABOUT
+
     @property
     def NSCREEN(self):
         try:
             return self.__NSCREEN
         except AttributeError:
             return 100
+
+    @NSCREEN.setter
+    def NSCREEN(self, NSCREEN):
+        assert isinstance(NSCREEN, int)
+        self.__NSCREEN = NSCREEN
 
     @property
     def NWS(self) -> int:
@@ -812,6 +968,11 @@ class Fort15:
         raise NotImplementedError
         return self.__IDEN
 
+    @IDEN.setter
+    def IDEN(self, IDEN):
+        if IDEN is not None:
+            raise NotImplementedError('3D runs not yet supported.')
+
     @property
     def NOLIBF(self):
         try:
@@ -834,12 +995,23 @@ class Fort15:
                             NOLIBF = 1
             return NOLIBF
 
+    @NOLIBF.setter
+    def NOLIBF(self, NOLIBF):
+        assert NOLIBF in [0, 1, 2]
+        self.__NOLIBF = NOLIBF
+
     @property
     def NOLIFA(self):
         try:
             return self.__NOLIFA
         except AttributeError:
             return 2
+
+    @NOLIFA.setter
+    def NOLIFA(self, NOLIFA):
+        NOLIFA = int(NOLIFA)
+        assert NOLIFA in [0, 1, 2]
+        self.__NOLIFA = NOLIFA
 
     @property
     def NOLICA(self):
@@ -848,12 +1020,24 @@ class Fort15:
         except AttributeError:
             return 1
 
+    @NOLICA.setter
+    def NOLICA(self, NOLICA):
+        NOLICA = int(NOLICA)
+        assert NOLICA in [0, 1]
+        self.__NOLICA = NOLICA
+
     @property
     def NOLICAT(self):
         try:
             return self.__NOLICAT
         except AttributeError:
             return 1
+
+    @NOLICAT.setter
+    def NOLICAT(self, NOLICAT):
+        NOLICAT = int(NOLICAT)
+        assert NOLICAT in [0, 1]
+        self.__NOLICAT = NOLICAT
 
     @property
     def NWP(self):
@@ -878,6 +1062,11 @@ class Fort15:
         except AttributeError:
             return 1
 
+    @NCOR.setter
+    def NCOR(self, NCOR):
+        assert NCOR in [0, 1]
+        self.__NCOR = NCOR
+
     @property
     def NTIP(self):
         try:
@@ -891,6 +1080,12 @@ class Fort15:
         except AttributeError:
             return 1
 
+    @NTIP.setter
+    def NTIP(self, NTIP):
+        NTIP = int(NTIP)
+        assert NTIP in [0, 1, 2]
+        self.__NTIP = NTIP
+
     @property
     def CFL(self):
         try:
@@ -898,12 +1093,20 @@ class Fort15:
         except AttributeError:
             return 0.7
 
+    @CFL.setter
+    def CFL(self, CFL):
+        self.__CFL = float(CFL)
+
     @property
     def G(self):
         try:
             return self.__G
         except AttributeError:
             return 9.81
+
+    @G.setter
+    def G(self, G):
+        self.__G = float(G)
 
     @property
     def DTDP(self):
@@ -915,6 +1118,12 @@ class Fort15:
                 DTDP = -DTDP
             self.__DTDP = DTDP
             return self.__DTDP
+
+    @DTDP.setter
+    def DTDP(self, DTDP):
+        DTDP = np.abs(float(DTDP))
+        assert DTDP != 0.0
+        self.__DTDP = DTDP
 
     @property
     def TAU0(self):
@@ -930,6 +1139,10 @@ class Fort15:
             else:
                 return 0.005
 
+    @TAU0.setter
+    def TAU0(self, TAU0):
+        self.__TAU0 = float(TAU0)
+
     @property
     def FFACTOR(self):
         try:
@@ -944,12 +1157,21 @@ class Fort15:
             else:
                 return FFACTOR
 
+    @FFACTOR.setter
+    def FFACTOR(self, FFACTOR):
+        self.__FFACTOR = float(FFACTOR)
+
     @property
     def CF(self):
         try:
             return self.__CF
         except AttributeError:
             return 0.0025
+
+    @CF.setter
+    def CF(self, CF):
+        # CF is an alias for FFACTOR
+        self.__FFACTOR = float(CF)
 
     @property
     def ESLM(self):
@@ -960,6 +1182,14 @@ class Fort15:
                 return -self.smagorinsky_coefficient
             else:
                 return self.horizontal_mixing_coefficient
+
+    @ESLM.setter
+    def ESLM(self, ESLM):
+        self.__ESLM = float(ESLM)
+
+    @ESLM.setter
+    def ESLM(self, ESLM):
+        self.__ESLM = float(np.abs(ESLM))
 
     @property
     def STATIM(self):
@@ -977,12 +1207,20 @@ class Fort15:
                 #     / (60.*60.*24))
                 return 0
 
+    @STATIM.setter
+    def STATIM(self, STATIM):
+        self.__STATIM = float(STATIM)
+
     @property
     def REFTIM(self):
         try:
             return self.__REFTIM
         except AttributeError:
             return 0.0
+
+    @REFTIM.setter
+    def REFTIM(self, REFTIM):
+        self.__REFTIM = float(REFTIM)
 
     @property
     def WTIMINC(self):
@@ -1040,12 +1278,20 @@ class Fort15:
                 DRAMP += '{:<.3f} '.format(self.DUnRampMete)
                 return DRAMP
 
+    @DRAMP.setter
+    def DRAMP(self, DRAMP):
+        self.__DRAMP = float(DRAMP)
+
     @property
     def DRAMPExtFlux(self):
         try:
             return self.__DRAMPExtFlux
         except AttributeError:
             return 0.0
+
+    @DRAMPExtFlux.setter
+    def DRAMPExtFlux(self, DRAMPExtFlux):
+        self.__DRAMPExtFlux = float(DRAMPExtFlux)
 
     @property
     def FluxSettlingTime(self):
@@ -1054,12 +1300,20 @@ class Fort15:
         except AttributeError:
             return 0.0
 
+    @FluxSettlingTime.setter
+    def FluxSettlingTime(self, FluxSettlingTime):
+        self.__FluxSettlingTime = float(FluxSettlingTime)
+
     @property
     def DRAMPIntFlux(self):
         try:
             return self.__DRAMPIntFlux
         except AttributeError:
             return 0.0
+
+    @DRAMPIntFlux.setter
+    def DRAMPIntFlux(self, DRAMPIntFlux):
+        self.__DRAMPIntFlux = float(DRAMPIntFlux)
 
     @property
     def DRAMPElev(self):
@@ -1071,6 +1325,10 @@ class Fort15:
                 / (60.0 * 60.0 * 24.0)
             )
 
+    @DRAMPElev.setter
+    def DRAMPElev(self, DRAMPElev):
+        self.__DRAMPElev = float(DRAMPElev)
+
     @property
     def DRAMPTip(self):
         try:
@@ -1081,12 +1339,20 @@ class Fort15:
                 / (60.0 * 60.0 * 24.0)
             )
 
+    @DRAMPTip.setter
+    def DRAMPTip(self, DRAMPTip):
+        self.__DRAMPTip = float(DRAMPTip)
+
     @property
     def DRAMPMete(self):
         try:
             return self.__DRAMPMete
         except AttributeError:
             return 1.0
+
+    @DRAMPMete.setter
+    def DRAMPMete(self, DRAMPMete):
+        self.__DRAMPMete = float(DRAMPMete)
 
     @property
     def DRAMPWRad(self):
@@ -1095,6 +1361,10 @@ class Fort15:
         except AttributeError:
             return 0.0
 
+    @DRAMPWRad.setter
+    def DRAMPWRad(self, DRAMPWRad):
+        self.__DRAMPWRad = float(DRAMPWRad)
+
     @property
     def DUnRampMete(self):
         try:
@@ -1102,6 +1372,12 @@ class Fort15:
         except AttributeError:
             dt = self.start_date - self.forcing_start_date
             return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
+
+    @DUnRampMete.setter
+    def DUnRampMete(self, DUnRampMete):
+        if DUnRampMete is None:
+            DUnRampMete = self.DRAMP
+        self.__DUnRampMete = float(DUnRampMete)
 
     @property
     def A00(self):
@@ -1146,12 +1422,20 @@ class Fort15:
         except AttributeError:
             return 0.01
 
+    @H0.setter
+    def H0(self, H0):
+        self.__H0 = float(H0)
+
     @property
     def NODEDRYMIN(self):
         try:
             return self.__NODEDRYMIN
         except AttributeError:
             return 0
+
+    @NODEDRYMIN.setter
+    def NODEDRYMIN(self, NODEDRYMIN):
+        self.__NODEDRYMIN = int(NODEDRYMIN)
 
     @property
     def NODEWETRMP(self):
@@ -1160,12 +1444,20 @@ class Fort15:
         except AttributeError:
             return 0
 
+    @NODEWETRMP.setter
+    def NODEWETRMP(self, NODEWETRMP):
+        self.__NODEWETRMP = int(NODEWETRMP)
+
     @property
     def VELMIN(self):
         try:
             return self.__VELMIN
         except AttributeError:
             return 0.01
+
+    @VELMIN.setter
+    def VELMIN(self, VELMIN):
+        self.__VELMIN = float(VELMIN)
 
     @property
     def SLAM0(self):
@@ -1174,12 +1466,20 @@ class Fort15:
         except AttributeError:
             return np.median(self.mesh.x)
 
+    @SLAM0.setter
+    def SLAM0(self, SLAM0):
+        self.__SLAM0 = float(SLAM0)
+
     @property
     def SFEA0(self):
         try:
             return self.__SFEA0
         except AttributeError:
             return np.median(self.mesh.y)
+
+    @SFEA0.setter
+    def SFEA0(self, SFEA0):
+        self.__SFEA0 = float(SFEA0)
 
     @property
     def HBREAK(self):
@@ -1188,6 +1488,10 @@ class Fort15:
         except AttributeError:
             return 1.0
 
+    @HBREAK.setter
+    def HBREAK(self, HBREAK):
+        self.__HBREAK = float(HBREAK)
+
     @property
     def FTHETA(self):
         try:
@@ -1195,12 +1499,20 @@ class Fort15:
         except AttributeError:
             return 10.0
 
+    @FTHETA.setter
+    def FTHETA(self, FTHETA):
+        self.__FTHETA = float(FTHETA)
+
     @property
     def FGAMMA(self):
         try:
             return self.__FGAMMA
         except AttributeError:
             return 1.0 / 3.0
+
+    @FGAMMA.setter
+    def FGAMMA(self, FGAMMA):
+        self.__FGAMMA = float(FGAMMA)
 
     @property
     def CORI(self):
@@ -1211,6 +1523,17 @@ class Fort15:
                 raise NotImplementedError
             else:
                 return 0.0
+
+    @CORI.setter
+    def CORI(self, CORI):
+        if CORI is None:
+            if self.NCOR == 0:
+                raise Exception('Must pass CORI when NCOR=0')
+            else:
+                CORI = 0.0
+        else:
+            CORI = float(CORI)
+        self.__CORI = CORI
 
     @property
     def NTIF(self):
@@ -1233,6 +1556,10 @@ class Fort15:
             return self.__ANGINN
         except AttributeError:
             return 110.0
+
+    @ANGINN.setter
+    def ANGINN(self, ANGINN):
+        self.__ANGINN = float(ANGINN)
 
     @property
     def NOUTE(self):
@@ -1381,12 +1708,20 @@ class Fort15:
         except AttributeError:
             return self._get_NOUT__('surface', 'elevation')
 
+    @NOUTGE.setter
+    def NOUTGE(self, NOUTGE):
+        self.__NOUTGE = NOUTGE
+
     @property
     def TOUTSGE(self):
         try:
             return self.__TOUTSGE
         except AttributeError:
             return self._get_TOUTS__('surface', 'elevation')
+
+    @TOUTSGE.setter
+    def TOUTSGE(self, TOUTSGE):
+        self.__TOUTSGE = float(np.abs(TOUTSGE))
 
     @property
     def TOUTFGE(self):
@@ -1395,12 +1730,20 @@ class Fort15:
         except AttributeError:
             return self._get_TOUTF__('surface', 'elevation')
 
+    @TOUTFGE.setter
+    def TOUTFGE(self, TOUTFGE):
+        self.__TOUTFGE = float(np.abs(TOUTFGE))
+
     @property
     def NSPOOLGE(self):
         try:
             return self.__NSPOOLGE
         except AttributeError:
             return self._get_NSPOOL__('surface', 'elevation')
+
+    @NSPOOLGE.setter
+    def NSPOOLGE(self, NSPOOLGE):
+        self.__NSPOOLGE = int(np.abs(NSPOOLGE))
 
     @property
     def NOUTGV(self):
@@ -1409,12 +1752,20 @@ class Fort15:
         except AttributeError:
             return self._get_NOUT__('surface', 'velocity')
 
+    @NOUTGV.setter
+    def NOUTGV(self, NOUTGV):
+        self.__NOUTGV = NOUTGV
+
     @property
     def TOUTSGV(self):
         try:
             return self.__TOUTSGV
         except AttributeError:
             return self._get_TOUTS__('surface', 'velocity')
+
+    @TOUTSGV.setter
+    def TOUTSGV(self, TOUTSGV):
+        self.__TOUTSGV = float(np.abs(TOUTSGV))
 
     @property
     def TOUTFGV(self):
@@ -1423,12 +1774,20 @@ class Fort15:
         except AttributeError:
             return self._get_TOUTF__('surface', 'velocity')
 
+    @TOUTFGV.setter
+    def TOUTFGV(self, TOUTFGV):
+        self.__TOUTFGV = float(np.abs(TOUTFGV))
+
     @property
     def NSPOOLGV(self):
         try:
             return self.__NSPOOLGV
         except AttributeError:
             return self._get_NSPOOL__('surface', 'velocity')
+
+    @NSPOOLGV.setter
+    def NSPOOLGV(self, NSPOOLGV):
+        self.__NSPOOLGV = int(np.abs(NSPOOLGV))
 
     @property
     def NOUTGM(self):
@@ -1437,12 +1796,20 @@ class Fort15:
         except AttributeError:
             return self._get_NOUT__('surface', 'meteorological')
 
+    @NOUTGM.setter
+    def NOUTGM(self, NOUTGM):
+        self.__NOUTGM = NOUTGM
+
     @property
     def TOUTSGM(self):
         try:
             return self.__TOUTSGM
         except AttributeError:
             return self._get_TOUTS__('surface', 'meteorological')
+
+    @TOUTSGM.setter
+    def TOUTSGM(self, TOUTSGM):
+        self.__TOUTSGM = float(np.abs(TOUTSGM))
 
     @property
     def TOUTFGM(self):
@@ -1451,12 +1818,20 @@ class Fort15:
         except AttributeError:
             return self._get_TOUTF__('surface', 'meteorological')
 
+    @TOUTFGM.setter
+    def TOUTFGM(self, TOUTFGM):
+        self.__TOUTFGM = float(np.abs(TOUTFGM))
+
     @property
     def NSPOOLGM(self):
         try:
             return self.__NSPOOLGM
         except AttributeError:
             return self._get_NSPOOL__('surface', 'meteorological')
+
+    @NSPOOLGM.setter
+    def NSPOOLGM(self, NSPOOLGM):
+        self.__NSPOOLGM = int(np.abs(NSPOOLGM))
 
     @property
     def NOUTGC(self):
@@ -1465,12 +1840,20 @@ class Fort15:
         except AttributeError:
             return self._get_NOUT__('surface', 'concentration')
 
+    @NOUTGC.setter
+    def NOUTGC(self, NOUTGC):
+        self.__NOUTGC = NOUTGC
+
     @property
     def TOUTSGC(self):
         try:
             return self.__TOUTSGC
         except AttributeError:
             return self._get_TOUTS__('surface', 'concentration')
+
+    @TOUTSGC.setter
+    def TOUTSGC(self, TOUTSGC):
+        self.__TOUTSGC = float(np.abs(TOUTSGC))
 
     @property
     def TOUTFGC(self):
@@ -1479,12 +1862,20 @@ class Fort15:
         except AttributeError:
             return self._get_TOUTF__('surface', 'concentration')
 
+    @TOUTFGC.setter
+    def TOUTFGC(self, TOUTFGC):
+        self.__TOUTFGC = float(np.abs(TOUTFGC))
+
     @property
     def NSPOOLGC(self):
         try:
             return self.__NSPOOLGC
         except AttributeError:
             return self._get_NSPOOL__('surface', 'concentration')
+
+    @NSPOOLGC.setter
+    def NSPOOLGC(self, NSPOOLGC):
+        self.__NSPOOLGC = int(np.abs(NSPOOLGC))
 
     @property
     def NFREQ(self):
@@ -1519,6 +1910,12 @@ class Fort15:
             else:
                 return 0
 
+    @THAS.setter
+    def THAS(self, THAS):
+        THAS = float(THAS)
+        assert THAS >= 0.0
+        self.__THAS = THAS
+
     @property
     def THAF(self):
         try:
@@ -1537,6 +1934,12 @@ class Fort15:
                 dt = self.start_date - self.forcing_start_date
                 return (self.STATIM + dt.total_seconds()) / (
                     24.0 * 60.0 * 60.0)
+
+    @THAF.setter
+    def THAF(self, THAF):
+        THAF = float(THAF)
+        assert THAF >= 0.0
+        self.__THAF = THAF
 
     @property
     def NHAINC(self):
@@ -1557,12 +1960,24 @@ class Fort15:
                 NHAINC = 0
             return int(NHAINC / self.DTDP)
 
+    @NHAINC.setter
+    def NHAINC(self, NHAINC):
+        NHAINC = int(NHAINC)
+        assert NHAINC >= 0
+        self.__NHAINC = NHAINC
+
     @property
     def FMV(self):
         try:
             return self.__FMV
         except AttributeError:
             return 0
+
+    @FMV.setter
+    def FMV(self, FMV):
+        FMV = float(FMV)
+        assert FMV >= 0.0 and FMV <= 1.0
+        self.__FMV = FMV
 
     @property
     def NHASE(self):
@@ -1611,6 +2026,11 @@ class Fort15:
             else:
                 return 0
 
+    @NHSTAR.setter
+    def NHSTAR(self, NHSTAR):
+        assert NHSTAR in [0, 1, 2, 3, 5]
+        self.__NHSTAR = NHSTAR
+
     @property
     def NHSINC(self):
         try:
@@ -1626,6 +2046,10 @@ class Fort15:
                 else:
                     return int(dt.total_seconds() / np.around(self.DTDP, 6))
 
+    @NHSINC.setter
+    def NHSINC(self, NHSINC):
+        self.__NHSINC = int(NHSINC)
+
     @property
     def ITITER(self):
         try:
@@ -1633,12 +2057,24 @@ class Fort15:
         except AttributeError:
             return 1
 
+    @ITITER.setter
+    def ITITER(self, ITITER):
+        ITITER = int(ITITER)
+        assert ITITER in [1, -1]
+        self.__ITITER = ITITER
+
     @property
     def ISLDIA(self):
         try:
             return self.__ISLDIA
         except AttributeError:
             return 0
+
+    @ISLDIA.setter
+    def ISLDIA(self, ISLDIA):
+        ISLDIA = int(ISLDIA)
+        assert ISLDIA in [0, 1, 2, 3, 4, 5]
+        self.__ISLDIA = ISLDIA
 
     @property
     def CONVCR(self):
@@ -1649,12 +2085,20 @@ class Fort15:
             # return 500*(7./3 - 4./3 - 1)
             return 1.0e-8
 
+    @CONVCR.setter
+    def CONVCR(self, CONVCR):
+        self.__CONVCR = float(CONVCR)
+
     @property
     def ITMAX(self):
         try:
             return self.__ITMAX
         except AttributeError:
             return 25
+
+    @ITMAX.setter
+    def ITMAX(self, ITMAX):
+        self.__ITMAX = int(ITMAX)
 
     @property
     def NCPROJ(self):
@@ -1663,12 +2107,20 @@ class Fort15:
         except AttributeError:
             return ""
 
+    @NCPROJ.setter
+    def NCPROJ(self, NCPROJ):
+        self.__NCPROJ = str(NCPROJ)
+
     @property
     def NCINST(self):
         try:
             return self.__NCINST
         except AttributeError:
             return ""
+
+    @NCINST.setter
+    def NCINST(self, NCINST):
+        self.__NCINST = str(NCINST)
 
     @property
     def NCSOUR(self):
@@ -1677,12 +2129,20 @@ class Fort15:
         except AttributeError:
             return ""
 
+    @NCSOUR.setter
+    def NCSOUR(self, NCSOUR):
+        self.__NCSOUR = str(NCSOUR)
+
     @property
     def NCHIST(self):
         try:
             return self.__NCHIST
         except AttributeError:
             return ""
+
+    @NCHIST.setter
+    def NCHIST(self, NCHIST):
+        self.__NCHIST = str(NCHIST)
 
     @property
     def NCREF(self):
@@ -1691,12 +2151,20 @@ class Fort15:
         except AttributeError:
             return ""
 
+    @NCREF.setter
+    def NCREF(self, NCREF):
+        self.__NCREF = str(NCREF)
+
     @property
     def NCCOM(self):
         try:
             return self.__NCCOM
         except AttributeError:
             return ""
+
+    @NCCOM.setter
+    def NCCOM(self, NCCOM):
+        self.__NCCOM = str(NCCOM)
 
     @property
     def NCHOST(self):
@@ -1705,12 +2173,20 @@ class Fort15:
         except AttributeError:
             return ""
 
+    @NCHOST.setter
+    def NCHOST(self, NCHOST):
+        self.__NCHOST = str(NCHOST)
+
     @property
     def NCCONV(self):
         try:
             return self.__NCCONV
         except AttributeError:
             return ""
+
+    @NCCONV.setter
+    def NCCONV(self, NCCONV):
+        self.__NCCONV = str(NCCONV)
 
     @property
     def NCCONT(self):
@@ -1719,6 +2195,10 @@ class Fort15:
         except AttributeError:
             return ""
 
+    @NCCONT.setter
+    def NCCONT(self, NCCONT):
+        self.__NCCONT = str(NCCONT)
+
     @property
     def NCDATE(self):
         return self.forcing_start_date.strftime('%Y-%m-%d %H:%M')
@@ -1726,491 +2206,6 @@ class Fort15:
     @property
     def FortranNamelists(self):
         return self.__FortranNamelists
-
-    @predictor_corrector.setter
-    def predictor_corrector(self, predictor_corrector):
-        assert isinstance(predictor_corrector, bool)
-        self.__predictor_corrector = predictor_corrector
-
-    @RUNDES.setter
-    def RUNDES(self, RUNDES):
-        self.__RUNDES = str(RUNDES)
-
-    @_IHOT.setter
-    def _IHOT(self, IHOT):
-        assert IHOT in [0, 567, 568]
-        self.__IHOT = IHOT
-
-    @RUNID.setter
-    def RUNID(self, RUNID):
-        self.__RUNID = str(RUNID)
-
-    @NFOVER.setter
-    def NFOVER(self, NFOVER):
-        assert NFOVER in [0, 1]
-        self.__NFOVER = NFOVER
-
-    @WarnElev.setter
-    def WarnElev(self, WarnElev):
-        if WarnElev is not None:
-            self.__WarnElev = float(WarnElev)
-        else:
-            self.__WarnElev = None
-
-    @iWarnElevDump.setter
-    def iWarnElevDump(self, iWarnElevDump):
-        if iWarnElevDump is not None:
-            iWarnElevDump = int(iWarnElevDump)
-            if iWarnElevDump not in [0, 1]:
-                raise TypeError('iWarnElevDump must be 0 or 1')
-            self.__iWarnElevDump = int(iWarnElevDump)
-        else:
-            if self.WarnElev is not None:
-                raise RuntimeError(
-                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
-
-    @WarnElevDumpLimit.setter
-    def WarnElevDumpLimit(self, WarnElevDumpLimit):
-        if WarnElevDumpLimit is not None:
-            assert isinstance(WarnElevDumpLimit, int)
-            assert WarnElevDumpLimit > 0
-            self.__WarnElevDumpLimit = WarnElevDumpLimit
-        else:
-            if self.WarnElev is not None:
-                raise RuntimeError(
-                    'Must set WarnElevDumpLimit if WarnElev is ' + 'not None')
-
-    @ErrorElev.setter
-    def ErrorElev(self, ErrorElev):
-        if ErrorElev is not None:
-            self.__ErrorElev = float(ErrorElev)
-        else:
-            if self.WarnElev is not None:
-                raise RuntimeError(
-                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
-
-    @NABOUT.setter
-    def NABOUT(self, NABOUT):
-        assert isinstance(NABOUT, int)
-        assert NABOUT in [-1, 0, 1, 2, 3]
-        self.__NABOUT = NABOUT
-
-    @NSCREEN.setter
-    def NSCREEN(self, NSCREEN):
-        assert isinstance(NSCREEN, int)
-        self.__NSCREEN = NSCREEN
-
-    @IDEN.setter
-    def IDEN(self, IDEN):
-        if IDEN is not None:
-            raise NotImplementedError('3D runs not yet supported.')
-
-    @NOLIBF.setter
-    def NOLIBF(self, NOLIBF):
-        assert NOLIBF in [0, 1, 2]
-        self.__NOLIBF = NOLIBF
-
-    @NOLIFA.setter
-    def NOLIFA(self, NOLIFA):
-        NOLIFA = int(NOLIFA)
-        assert NOLIFA in [0, 1, 2]
-        self.__NOLIFA = NOLIFA
-
-    @NOLICA.setter
-    def NOLICA(self, NOLICA):
-        NOLICA = int(NOLICA)
-        assert NOLICA in [0, 1]
-        self.__NOLICA = NOLICA
-
-    @NOLICAT.setter
-    def NOLICAT(self, NOLICAT):
-        NOLICAT = int(NOLICAT)
-        assert NOLICAT in [0, 1]
-        self.__NOLICAT = NOLICAT
-
-    @NCOR.setter
-    def NCOR(self, NCOR):
-        assert NCOR in [0, 1]
-        self.__NCOR = NCOR
-
-    @NTIP.setter
-    def NTIP(self, NTIP):
-        NTIP = int(NTIP)
-        assert NTIP in [0, 1, 2]
-        self.__NTIP = NTIP
-
-    @G.setter
-    def G(self, G):
-        self.__G = float(G)
-
-    @TAU0.setter
-    def TAU0(self, TAU0):
-        self.__TAU0 = float(TAU0)
-
-    @DTDP.setter
-    def DTDP(self, DTDP):
-        DTDP = np.abs(float(DTDP))
-        assert DTDP != 0.0
-        self.__DTDP = DTDP
-
-    @STATIM.setter
-    def STATIM(self, STATIM):
-        self.__STATIM = float(STATIM)
-
-    @REFTIM.setter
-    def REFTIM(self, REFTIM):
-        self.__REFTIM = float(REFTIM)
-
-    @DRAMP.setter
-    def DRAMP(self, DRAMP):
-        self.__DRAMP = float(DRAMP)
-
-    @DRAMPExtFlux.setter
-    def DRAMPExtFlux(self, DRAMPExtFlux):
-        self.__DRAMPExtFlux = float(DRAMPExtFlux)
-
-    @FluxSettlingTime.setter
-    def FluxSettlingTime(self, FluxSettlingTime):
-        self.__FluxSettlingTime = float(FluxSettlingTime)
-
-    @DRAMPIntFlux.setter
-    def DRAMPIntFlux(self, DRAMPIntFlux):
-        self.__DRAMPIntFlux = float(DRAMPIntFlux)
-
-    @DRAMPElev.setter
-    def DRAMPElev(self, DRAMPElev):
-        self.__DRAMPElev = float(DRAMPElev)
-
-    @DRAMPTip.setter
-    def DRAMPTip(self, DRAMPTip):
-        self.__DRAMPTip = float(DRAMPTip)
-
-    @DRAMPMete.setter
-    def DRAMPMete(self, DRAMPMete):
-        self.__DRAMPMete = float(DRAMPMete)
-
-    @DRAMPWRad.setter
-    def DRAMPWRad(self, DRAMPWRad):
-        self.__DRAMPWRad = float(DRAMPWRad)
-
-    @DUnRampMete.setter
-    def DUnRampMete(self, DUnRampMete):
-        if DUnRampMete is None:
-            DUnRampMete = self.DRAMP
-        self.__DUnRampMete = float(DUnRampMete)
-
-    @H0.setter
-    def H0(self, H0):
-        self.__H0 = float(H0)
-
-    @NODEDRYMIN.setter
-    def NODEDRYMIN(self, NODEDRYMIN):
-        self.__NODEDRYMIN = int(NODEDRYMIN)
-
-    @NODEWETRMP.setter
-    def NODEWETRMP(self, NODEWETRMP):
-        self.__NODEWETRMP = int(NODEWETRMP)
-
-    @VELMIN.setter
-    def VELMIN(self, VELMIN):
-        self.__VELMIN = float(VELMIN)
-
-    @SLAM0.setter
-    def SLAM0(self, SLAM0):
-        self.__SLAM0 = float(SLAM0)
-
-    @SFEA0.setter
-    def SFEA0(self, SFEA0):
-        self.__SFEA0 = float(SFEA0)
-
-    @FFACTOR.setter
-    def FFACTOR(self, FFACTOR):
-        self.__FFACTOR = float(FFACTOR)
-
-    @CF.setter
-    def CF(self, CF):
-        # CF is an alias for FFACTOR
-        self.__FFACTOR = float(CF)
-
-    @ESLM.setter
-    def ESLM(self, ESLM):
-        self.__ESLM = float(ESLM)
-
-    @HBREAK.setter
-    def HBREAK(self, HBREAK):
-        self.__HBREAK = float(HBREAK)
-
-    @FTHETA.setter
-    def FTHETA(self, FTHETA):
-        self.__FTHETA = float(FTHETA)
-
-    @FGAMMA.setter
-    def FGAMMA(self, FGAMMA):
-        self.__FGAMMA = float(FGAMMA)
-
-    @ESLM.setter
-    def ESLM(self, ESLM):
-        self.__ESLM = float(np.abs(ESLM))
-
-    @NOUTGE.setter
-    def NOUTGE(self, NOUTGE):
-        self.__NOUTGE = NOUTGE
-
-    @TOUTSGE.setter
-    def TOUTSGE(self, TOUTSGE):
-        self.__TOUTSGE = float(np.abs(TOUTSGE))
-
-    @TOUTFGE.setter
-    def TOUTFGE(self, TOUTFGE):
-        self.__TOUTFGE = float(np.abs(TOUTFGE))
-
-    @NSPOOLGE.setter
-    def NSPOOLGE(self, NSPOOLGE):
-        self.__NSPOOLGE = int(np.abs(NSPOOLGE))
-
-    @NOUTGV.setter
-    def NOUTGV(self, NOUTGV):
-        self.__NOUTGV = NOUTGV
-
-    @TOUTSGV.setter
-    def TOUTSGV(self, TOUTSGV):
-        self.__TOUTSGV = float(np.abs(TOUTSGV))
-
-    @TOUTFGV.setter
-    def TOUTFGV(self, TOUTFGV):
-        self.__TOUTFGV = float(np.abs(TOUTFGV))
-
-    @NSPOOLGV.setter
-    def NSPOOLGV(self, NSPOOLGV):
-        self.__NSPOOLGV = int(np.abs(NSPOOLGV))
-
-    @NOUTGM.setter
-    def NOUTGM(self, NOUTGM):
-        self.__NOUTGM = NOUTGM
-
-    @TOUTSGM.setter
-    def TOUTSGM(self, TOUTSGM):
-        self.__TOUTSGM = float(np.abs(TOUTSGM))
-
-    @TOUTFGM.setter
-    def TOUTFGM(self, TOUTFGM):
-        self.__TOUTFGM = float(np.abs(TOUTFGM))
-
-    @NSPOOLGM.setter
-    def NSPOOLGM(self, NSPOOLGM):
-        self.__NSPOOLGM = int(np.abs(NSPOOLGM))
-
-    @NOUTGC.setter
-    def NOUTGC(self, NOUTGC):
-        self.__NOUTGC = NOUTGC
-
-    @TOUTSGC.setter
-    def TOUTSGC(self, TOUTSGC):
-        self.__TOUTSGC = float(np.abs(TOUTSGC))
-
-    @TOUTFGC.setter
-    def TOUTFGC(self, TOUTFGC):
-        self.__TOUTFGC = float(np.abs(TOUTFGC))
-
-    @NSPOOLGC.setter
-    def NSPOOLGC(self, NSPOOLGC):
-        self.__NSPOOLGC = int(np.abs(NSPOOLGC))
-
-    @CORI.setter
-    def CORI(self, CORI):
-        if CORI is None:
-            if self.NCOR == 0:
-                raise Exception('Must pass CORI when NCOR=0')
-            else:
-                CORI = 0.0
-        else:
-            CORI = float(CORI)
-        self.__CORI = CORI
-
-    @ANGINN.setter
-    def ANGINN(self, ANGINN):
-        self.__ANGINN = float(ANGINN)
-
-    @THAS.setter
-    def THAS(self, THAS):
-        THAS = float(THAS)
-        assert THAS >= 0.0
-        self.__THAS = THAS
-
-    @THAF.setter
-    def THAF(self, THAF):
-        THAF = float(THAF)
-        assert THAF >= 0.0
-        self.__THAF = THAF
-
-    @NHAINC.setter
-    def NHAINC(self, NHAINC):
-        NHAINC = int(NHAINC)
-        assert NHAINC >= 0
-        self.__NHAINC = NHAINC
-
-    @FMV.setter
-    def FMV(self, FMV):
-        FMV = float(FMV)
-        assert FMV >= 0.0 and FMV <= 1.0
-        self.__FMV = FMV
-
-    @NHSTAR.setter
-    def NHSTAR(self, NHSTAR):
-        assert NHSTAR in [0, 1, 2, 3, 5]
-        self.__NHSTAR = NHSTAR
-
-    @NHSINC.setter
-    def NHSINC(self, NHSINC):
-        self.__NHSINC = int(NHSINC)
-
-    @ITITER.setter
-    def ITITER(self, ITITER):
-        ITITER = int(ITITER)
-        assert ITITER in [1, -1]
-        self.__ITITER = ITITER
-
-    @ISLDIA.setter
-    def ISLDIA(self, ISLDIA):
-        ISLDIA = int(ISLDIA)
-        assert ISLDIA in [0, 1, 2, 3, 4, 5]
-        self.__ISLDIA = ISLDIA
-
-    @CONVCR.setter
-    def CONVCR(self, CONVCR):
-        self.__CONVCR = float(CONVCR)
-
-    @ITMAX.setter
-    def ITMAX(self, ITMAX):
-        self.__ITMAX = int(ITMAX)
-
-    @NCPROJ.setter
-    def NCPROJ(self, NCPROJ):
-        self.__NCPROJ = str(NCPROJ)
-
-    @NCINST.setter
-    def NCINST(self, NCINST):
-        self.__NCINST = str(NCINST)
-
-    @NCSOUR.setter
-    def NCSOUR(self, NCSOUR):
-        self.__NCSOUR = str(NCSOUR)
-
-    @NCHIST.setter
-    def NCHIST(self, NCHIST):
-        self.__NCHIST = str(NCHIST)
-
-    @NCREF.setter
-    def NCREF(self, NCREF):
-        self.__NCREF = str(NCREF)
-
-    @NCCOM.setter
-    def NCCOM(self, NCCOM):
-        self.__NCCOM = str(NCCOM)
-
-    @NCHOST.setter
-    def NCHOST(self, NCHOST):
-        self.__NCHOST = str(NCHOST)
-
-    @NCCONV.setter
-    def NCCONV(self, NCCONV):
-        self.__NCCONV = str(NCCONV)
-
-    @NCCONT.setter
-    def NCCONT(self, NCCONT):
-        self.__NCCONT = str(NCCONT)
-
-    @vertical_mode.setter
-    def vertical_mode(self, vertical_mode):
-        assert vertical_mode in ['2D', '3D']
-        self.__vertical_mode = vertical_mode
-
-    @timestep.setter
-    def timestep(self, timestep):
-        self.DTDP = timestep
-
-    @lateral_stress_in_gwce.setter
-    def lateral_stress_in_gwce(self, lateral_stress_in_gwce):
-        assert lateral_stress_in_gwce in ['kolar-grey', 'velocity_based',
-                                          'flux_based']
-        self.__lateral_stress_in_gwce = lateral_stress_in_gwce
-
-    @lateral_stress_in_gwce_is_symmetrical.setter
-    def lateral_stress_in_gwce_is_symmetrical(self,
-                                              lateral_stress_in_gwce_is_symmetrical):
-        self.__lateral_stress_in_gwce_is_symmetrical = bool(
-            lateral_stress_in_gwce_is_symmetrical
-        )
-
-    @advection_in_gwce.setter
-    def advection_in_gwce(self, advection_in_gwce):
-        assert advection_in_gwce in ['non_conservative', 'form_1', 'form_2']
-        self.__advection_in_gwce = advection_in_gwce
-
-    @lateral_stress_in_momentum.setter
-    def lateral_stress_in_momentum(self, lateral_stress_in_momentum):
-        assert lateral_stress_in_momentum in ['velocity_based', 'flux_based']
-        self.__lateral_stress_in_momentum = lateral_stress_in_momentum
-
-    @lateral_stress_in_momentum_is_symmetrical.setter
-    def lateral_stress_in_momentum_is_symmetrical(
-        self, lateral_stress_in_momentum_is_symmetrical
-    ):
-        self.__lateral_stress_in_momentum_is_symmetrical = bool(
-            lateral_stress_in_momentum_is_symmetrical
-        )
-
-    @lateral_stress_in_momentum_method.setter
-    def lateral_stress_in_momentum_method(self,
-                                          lateral_stress_in_momentum_method):
-        assert lateral_stress_in_momentum_method in ['2_part',
-                                                     'integration_by_parts']
-        self.__lateral_stress_in_momentum_method = lateral_stress_in_momentum_method
-
-    @advection_in_momentum.setter
-    def advection_in_momentum(self, advection_in_momentum):
-        assert advection_in_momentum in ['non_conservative', 'form_1',
-                                         'form_2']
-        self.__advection_in_momentum = advection_in_momentum
-
-    @area_integration_in_momentum.setter
-    def area_integration_in_momentum(self, area_integration_in_momentum):
-        assert area_integration_in_momentum in ['corrected', 'original']
-        self.__area_integration_in_momentum = area_integration_in_momentum
-
-    @baroclinicity.setter
-    def baroclinicity(self, baroclinicity):
-        self.__baroclinicity = bool(baroclinicity)
-
-    @gwce_solution_scheme.setter
-    def gwce_solution_scheme(self, gwce_solution_scheme):
-        assert gwce_solution_scheme in ['semi-implicit', 'explicit']
-        self.__gwce_solution_scheme = gwce_solution_scheme
-
-    @passive_scalar_transport.setter
-    def passive_scalar_transport(self, passive_scalar_transport):
-        self.__passive_scalar_transport = bool(passive_scalar_transport)
-
-    @stress_based_3D.setter
-    def stress_based_3D(self, stress_based_3D):
-        self.__stress_based_3D = bool(stress_based_3D)
-
-    @smagorinsky.setter
-    def smagorinsky(self, smagorinsky):
-        self.__smagorinsky = bool(smagorinsky)
-
-    @smagorinsky_coefficient.setter
-    def smagorinsky_coefficient(self, smagorinsky_coefficient):
-        self.__smagorinsky_coefficient = np.abs(float(smagorinsky_coefficient))
-
-    @horizontal_mixing_coefficient.setter
-    def horizontal_mixing_coefficient(self, horizontal_mixing_coefficient):
-        self.__horizontal_mixing_coefficient = np.abs(
-            float(horizontal_mixing_coefficient))
-
-    @CFL.setter
-    def CFL(self, CFL):
-        self.__CFL = float(CFL)
 
     def _get_active_tidal_potential_constituents(self):
         if self.iettype in [3, 5]:
