@@ -955,13 +955,12 @@ class Fort15:
                 #       self.gwce_solution_scheme == 'explicit'):
                 #     return 4
 
-            IM = '{:d}'.format(get_digit_1())
-            IM += '{:d}'.format(get_digit_2())
-            IM += '{:d}'.format(get_digit_3())
-            IM += '{:d}'.format(get_digit_4())
-            IM += '{:d}'.format(get_digit_5())
-            IM += '{:d}'.format(get_digit_6())
-            return int(IM)
+            return int(f'{get_digit_1():d}' \
+                       f'{get_digit_2():d}' \
+                       f'{get_digit_3():d}' \
+                       f'{get_digit_4():d}' \
+                       f'{get_digit_5():d}' \
+                       f'{get_digit_6():d}')
 
     @property
     def IDEN(self):
