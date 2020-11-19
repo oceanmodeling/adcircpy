@@ -1,11 +1,11 @@
-created on 2020-11-17 08:16                                     ! RUNDES
+created on 2020-11-19 15:04                                     ! RUNDES
  Shinacock Inlet Coarse Grid                                    ! RUNID
 1                                                               ! NFOVER
 1                                                               ! NABOUT
 100                                                             ! NSCREEN
 567                                                             ! IHOT
 2                                                               ! ICS
-511113                                                          ! IM
+2                                                               ! IM
 2                                                               ! NOLIBF
 2                                                               ! NOLIFA
 1                                                               ! NOLICA
@@ -16,17 +16,17 @@ created on 2020-11-17 08:16                                     ! RUNDES
 517                                                             ! NWS
 8                                                               ! NRAMP
 9.81                                                            ! gravitational acceleration
-0.005                                                           ! TAU0
+0.0025                                                          ! TAU0
 2.510781                                                        ! DTDP
 0                                                               ! STATIM
 0                                                               ! REFTIM
 3600 3600                                                       ! WTIMINC - meteorological data time increment, RSTIMINC wave forcing increment
 5                                                               ! RNDAY
 2.000 0.000 0.000 0.000 2.000 2.000 1.000 0.000 2.000           ! DRAMP
-0.5 0.5 0                                                       ! A00 B00 C00
+0 0 0                                                           ! A00 B00 C00
 0.01 0 0 0.01                                                   ! H0 ? ? VELMIN
 -72.4759 40.7602                                                ! SLAM0 SFEA0
-0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA
+0.0025                                                          ! FFACTOR
 -0.2                                                            ! smagorinsky coefficient
 0                                                               ! CORI
 0                                                               ! NTIF
@@ -41,9 +41,9 @@ created on 2020-11-17 08:16                                     ! RUNDES
 0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV
 0 0.000000 0.000000 0                                           ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM
 0                                                               ! NFREQ
-0 0 0 0                                                         ! THAS THAF NHAINC FMV
+0 0 0 0.0                                                       ! THAS THAF NHAINC FMV
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV
-0 0                                                             ! NHSTAR NHSINC
+0 68823                                                         ! NHSTAR NHSINC
 1 0 1E-08 25                                                    ! ITITER ISLDIA CONVCR ITMAX
                                                                 ! NCPROJ
                                                                 ! NCINST
