@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
-from functools import lru_cache
+from functools import lru_cache, partial
 import math
 from os import PathLike
 import pathlib
+from typing import Callable
 
 import numpy as np
 
@@ -11,8 +12,9 @@ from adcircpy.mesh.mesh import AdcircMesh
 
 
 class EnumeratedValue:
-    def __init__(self, values: []):
+    def __init__(self, values: [], instance=None):
         self.values = values
+        self.instance = instance
         self.value = None
 
     def __set__(self, instance, value):
@@ -22,8 +24,9 @@ class EnumeratedValue:
 
 
 class DefaultedValue:
-    def __init__(self, default=None):
+    def __init__(self, default=None, instance=None):
         self.default = default
+        self.instance = instance
         self.value = None
 
     def __get__(self, instance, owner):
@@ -37,13 +40,44 @@ class DefaultedValue:
     def __set__(self, instance, value):
         self.value = value
 
+    def __format__(self, format_spec) -> str:
+        return format(self.__get__(self.instance, None), format_spec)
 
-class DefaultedTypedValue:
-    def __init__(self, value_type: type, default=None):
+    def __str__(self) -> str:
+        return str(self.__get__(self.instance, None))
+
+    def __repr__(self) -> str:
+        return repr(self.__get__(self.instance, None))
+
+    def __mul__(self, other):
+        return self.__get__(self.instance, None) * other
+
+    def __truediv__(self, other):
+        return self.__get__(self.instance, None) / other
+
+    def __add__(self, other):
+        return self.__get__(self.instance, None) + other
+
+    def __sub__(self, other):
+        return self.__get__(self.instance, None) - other
+
+    def __mod__(self, other):
+        return self.__get__(self.instance, None) % other
+
+    def __neg__(self):
+        return -self.__get__(self.instance, None)
+
+
+class DefaultedTypedValue(DefaultedValue):
+    def __init__(self, value_type: type, default=None, **kwargs):
         self.type = value_type
-        if default is not None and not isinstance(default, self.type):
-            default = self.type(default)
-        super().__init__(default)
+        super().__init__(default, **kwargs)
+
+    def __get__(self, instance, owner):
+        value = super().__get__(instance, owner)
+        if value is not None and not isinstance(value, self.type):
+            value = self.type(value)
+        return value
 
     def __set__(self, instance, value):
         if value is not None and not isinstance(value, self.type):
@@ -52,8 +86,8 @@ class DefaultedTypedValue:
 
 
 class DefaultedString(DefaultedTypedValue):
-    def __init__(self, default: str = None):
-        super().__init__(str, default)
+    def __init__(self, default: str = None, **kwargs):
+        super().__init__(str, default, **kwargs)
 
     def __get__(self, instance, owner) -> str:
         return super().__get__(instance, owner)
@@ -63,8 +97,8 @@ class DefaultedString(DefaultedTypedValue):
 
 
 class DefaultedBoolean(DefaultedTypedValue):
-    def __init__(self, default: bool = False):
-        super().__init__(bool, default)
+    def __init__(self, default: bool = False, **kwargs):
+        super().__init__(bool, default, **kwargs)
 
     def __get__(self, instance, owner) -> bool:
         return super().__get__(instance, owner)
@@ -74,8 +108,8 @@ class DefaultedBoolean(DefaultedTypedValue):
 
 
 class DefaultedInteger(DefaultedTypedValue):
-    def __init__(self, default: int = None):
-        super().__init__(int, default)
+    def __init__(self, default: int = None, **kwargs):
+        super().__init__(int, default, **kwargs)
 
     def __get__(self, instance, owner) -> int:
         return super().__get__(instance, owner)
@@ -85,8 +119,8 @@ class DefaultedInteger(DefaultedTypedValue):
 
 
 class DefaultedFloat(DefaultedTypedValue):
-    def __init__(self, default: float = None):
-        super().__init__(float, default)
+    def __init__(self, default: float = None, **kwargs):
+        super().__init__(float, default, **kwargs)
 
     def __get__(self, instance, owner) -> float:
         return super().__get__(instance, owner)
@@ -96,8 +130,8 @@ class DefaultedFloat(DefaultedTypedValue):
 
 
 class AbsoluteDefaultedFloat(DefaultedFloat):
-    def __get__(self, instance, owner) -> float:
-        return abs(super().__get__(instance, owner))
+    def __set__(self, instance, value: float):
+        self.__set__(instance, abs(value))
 
 
 class AbsoluteDefaultedInteger(DefaultedInteger):
@@ -106,10 +140,10 @@ class AbsoluteDefaultedInteger(DefaultedInteger):
 
 
 class EnumeratedString(EnumeratedValue, DefaultedString):
-    def __init__(self, values: [str], default: str = None):
+    def __init__(self, values: [str], default: str = None, **kwargs):
         self.values = values
         EnumeratedValue.__init__(self, values)
-        DefaultedString.__init__(self, default)
+        DefaultedString.__init__(self, default, **kwargs)
 
     def __set__(self, instance, value: str):
         EnumeratedValue.__set__(self, instance, value)
@@ -117,10 +151,10 @@ class EnumeratedString(EnumeratedValue, DefaultedString):
 
 
 class EnumeratedFloat(EnumeratedValue, DefaultedFloat):
-    def __init__(self, values: [float], default: float = None):
+    def __init__(self, values: [float], default: float = None, **kwargs):
         self.values = values
         EnumeratedValue.__init__(self, values)
-        DefaultedFloat.__init__(self, default)
+        DefaultedFloat.__init__(self, default, **kwargs)
 
     def __set__(self, instance, value: float):
         EnumeratedValue.__set__(self, instance, value)
@@ -128,12 +162,12 @@ class EnumeratedFloat(EnumeratedValue, DefaultedFloat):
 
 
 class EnumeratedInteger(EnumeratedValue, DefaultedInteger):
-    def __init__(self, values: [int], default: int = None):
+    def __init__(self, values: [int], default: int = None, **kwargs):
         if not isinstance(values, list):
             values = list(values)
         self.values = values
         EnumeratedValue.__init__(self, values)
-        DefaultedInteger.__init__(self, default)
+        DefaultedInteger.__init__(self, default, **kwargs)
 
     def __set__(self, instance, value: int):
         EnumeratedValue.__set__(self, instance, value)
@@ -141,13 +175,16 @@ class EnumeratedInteger(EnumeratedValue, DefaultedInteger):
 
 
 class LateralStressGWCE(EnumeratedString):
-    def __init__(self, values: [str], default: str = None):
-        super().__init__(values, default)
+    def __init__(self, **kwargs):
+        super().__init__(['kolar-grey', 'velocity_based', 'flux_based'],
+                         'kolar-grey', **kwargs)
 
     def __get__(self, instance, owner):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if not instance.smagorinsky:
                 return 'kolar_grey'
             else:
@@ -159,6 +196,8 @@ class LateralStressGWCEisSymmetric(DefaultedBoolean):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if not instance.smagorinsky:
                 return False
             else:
@@ -166,24 +205,41 @@ class LateralStressGWCEisSymmetric(DefaultedBoolean):
 
 
 class RUNDES(DefaultedString):
-    @property
-    def default(self):
-        return f'created on {datetime.now():%Y-%m-%d %H:%M}'
+    def __get__(self, instance, owner) -> str:
+        self.default = f'created on {datetime.now():%Y-%m-%d %H:%M}'
+        return super().__get__(instance, owner)
+
+    def __format__(self, format_spec) -> str:
+        return format(self.__get__(None, None), format_spec)
+
+
+class RUNID(DefaultedString):
+    def __get__(self, instance, owner) -> str:
+        if instance is None:
+            instance = self.instance
+        self.default = instance.mesh.description
+        return super().__get__(instance, owner)
+
+    def __format__(self, format_spec) -> str:
+        return format(self.__get__(None, None), format_spec)
 
 
 class IHOT(EnumeratedFloat):
-    def __init__(self):
-        super().__init__([0, 567, 568], 0)
+    def __init__(self, **kwargs):
+        super().__init__([0, 567, 568], 0, **kwargs)
 
     def __get__(self, instance, owner) -> float:
         if self.value is not None:
             return super().__get__(instance, owner)
-        elif self._runtype == 'coldstart':
-            return 0
-        elif self._runtype == 'hotstart':
-            return 567
         else:
-            return self.default
+            if instance is None:
+                instance = self.instance
+            if instance._runtype == 'coldstart':
+                return 0
+            elif instance._runtype == 'hotstart':
+                return 567
+            else:
+                return self.default
 
 
 class WarnElev(DefaultedFloat):
@@ -195,22 +251,24 @@ class WarnElev(DefaultedFloat):
 
 
 class NOLIBF(EnumeratedInteger):
-    def __init__(self):
-        super().__init__([0, 1, 2], 2)
+    def __init__(self, **kwargs):
+        super().__init__([0, 1, 2], 2, **kwargs)
 
     def __get__(self, instance, owner) -> int:
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
-            mesh_attributes = self.mesh.get_nodal_attribute_names()
+            if instance is None:
+                instance = self.instance
+            mesh_attributes = instance.mesh.get_nodal_attribute_names()
             for attribute in [
                 'quadratic_friction_coefficient_at_sea_floor',
                 'mannings_n_at_sea_floor',
                 'chezy_friction_coefficient_at_sea_floor',
             ]:
                 if attribute in mesh_attributes:
-                    attr = self.mesh.get_nodal_attribute(attribute)
-                    if self._runtype == 'coldstart':
+                    attr = instance.mesh.get_nodal_attribute(attribute)
+                    if instance._runtype == 'coldstart':
                         if attr['coldstart'] is True:
                             return 1
                     else:
@@ -221,10 +279,12 @@ class NOLIBF(EnumeratedInteger):
 
 
 class NTIP(EnumeratedInteger):
-    def __init__(self):
-        super().__init__([0, 1, 2], 1)
+    def __init__(self, **kwargs):
+        super().__init__([0, 1, 2], 1, **kwargs)
 
     def __get__(self, instance, owner) -> int:
+        if instance is None:
+            instance = self.instance
         value = super().__get__(instance, owner)
         if value == 2:
             try:
@@ -239,7 +299,9 @@ class DTDP(AbsoluteDefaultedFloat):
         if self.value is not None:
             value = super().__get__(instance, owner)
         else:
-            value = self.mesh.critical_timestep(instance.CFL)
+            if instance is None:
+                instance = self.instance
+            value = instance.mesh.critical_timestep(instance.CFL)
             if not instance.predictor_corrector:
                 value = -value
             self.value = value
@@ -256,6 +318,8 @@ class TAUO(DefaultedFloat):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.mesh.has_nodal_attribute(
                 'primitive_weighting_in_continuity_equation',
                 instance._runtype):
@@ -271,6 +335,8 @@ class FFACTOR(DefaultedString):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             value = f'{instance.CF:G}'
             if instance.NOLIBF == 2:
                 value += f' {instance.HBREAK:G} {instance.FTHETA:G} {instance.FGAMMA:G}'
@@ -284,20 +350,13 @@ class FFACTOR(DefaultedString):
         super().__set__(instance, value)
 
 
-class CF(FFACTOR):
-    def __init__(self):
-        super().__init__(0.0025)
-
-    def __set__(self, instance, value: str):
-        instance.FFACTOR = value
-        super().__set__(instance, value)
-
-
 class ESLM(AbsoluteDefaultedFloat):
     def __get__(self, instance, owner) -> float:
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.smagorinsky:
                 return -instance.smagorinsky_coefficient
             else:
@@ -309,11 +368,13 @@ class DRAMP(DefaultedString):
         if self.value is not None:
             return f'{self.value:<.16G}{10 * " "}'
         else:
+            if instance is None:
+                instance = self.instance
             DRAMP = instance.spinup_factor * \
                     ((instance.start_date -
                       instance.forcing_start_date).total_seconds()
                      / (60.0 * 60.0 * 24.0))
-            if self.NRAMP in [0, 1]:
+            if instance.NRAMP in [0, 1]:
                 return f'{DRAMP:<.16G}{10 * " "}'
             else:
                 return f'{DRAMP:<.3f} ' \
@@ -336,17 +397,21 @@ class DRAMP(DefaultedString):
 
 class SLAM0(DefaultedFloat):
     def __get__(self, instance, owner) -> float:
-        try:
+        if self.value is not None:
             return super().__get__(instance, owner)
-        except AttributeError:
+        else:
+            if instance is None:
+                instance = self.instance
             return np.median(instance.mesh.x)
 
 
 class SFEA0(DefaultedFloat):
     def __get__(self, instance, owner) -> float:
-        try:
+        if self.value is not None:
             return super().__get__(instance, owner)
-        except AttributeError:
+        else:
+            if instance is None:
+                instance = self.instance
             return np.median(instance.mesh.y)
 
 
@@ -355,6 +420,8 @@ class CORI(DefaultedFloat):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.NCOR == 0:
                 raise NotImplementedError('CORI without NCOR not implemented')
             else:
@@ -362,6 +429,8 @@ class CORI(DefaultedFloat):
 
     def __set__(self, instance, value):
         if value is None:
+            if instance is None:
+                instance = self.instance
             if instance.NCOR == 0:
                 raise RuntimeError('Must pass CORI when NCOR=0')
             else:
@@ -370,13 +439,15 @@ class CORI(DefaultedFloat):
 
 
 class NHSTAR(EnumeratedInteger):
-    def __init__(self):
-        super().__init__([0, 1, 2, 3, 5])
+    def __init__(self, **kwargs):
+        super().__init__([0, 1, 2, 3, 5], **kwargs)
 
     def __get__(self, instance, owner):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.forcing_start_date == instance.start_date:
                 return 0
             if instance._runtype == 'coldstart':
@@ -393,6 +464,8 @@ class NHSINC(DefaultedInteger):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.NHSTAR == 0:
                 return 0
             else:
@@ -400,10 +473,12 @@ class NHSINC(DefaultedInteger):
                 if dt.total_seconds() == 0:
                     dt = instance.end_date - instance.forcing_start_date
                     return int(
-                        dt.total_seconds() / np.around(instance.DTDP, 6))
+                        dt.total_seconds() / np.around(
+                            instance.DTDP.__get__(instance, owner), 6))
                 else:
                     return int(
-                        dt.total_seconds() / np.around(instance.DTDP, 6))
+                        dt.total_seconds() / np.around(
+                            instance.DTDP.__get__(instance, owner), 6))
 
 
 class THAS(DefaultedFloat):
@@ -411,6 +486,8 @@ class THAS(DefaultedFloat):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.NFREQ > 0:
                 try:
                     if instance._runtype == 'coldstart':
@@ -420,7 +497,7 @@ class THAS(DefaultedFloat):
                         return (instance.STATIM + dt.total_seconds()) / (
                             24.0 * 60.0 * 60.0)
                 except TypeError:
-                    #  if self.DRAMP is not castable to float()
+                    #  if instance.DRAMP is not castable to float()
                     raise
             else:
                 return 0
@@ -436,6 +513,8 @@ class THAF(DefaultedFloat):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             if instance.NFREQ == 0:
                 return 0
             dt = instance.start_date - instance.forcing_start_date
@@ -461,6 +540,8 @@ class NHAINC(DefaultedInteger):
         if self.value is not None:
             return super().__get__(instance, owner)
         else:
+            if instance is None:
+                instance = self.instance
             value = float('inf')
             for _output in instance._outputs:
                 if _output['harmonic_analysis']:
@@ -473,7 +554,7 @@ class NHAINC(DefaultedInteger):
                         value = np.min([value, fs.total_seconds()])
             if value == float('inf'):
                 value = 0
-            return int(value / instance.DTDP)
+            return int(value / instance.DTDP.__get__(instance, owner))
 
     def __set__(self, instance, value):
         if value < 0:
@@ -482,8 +563,8 @@ class NHAINC(DefaultedInteger):
 
 
 class FMV(DefaultedFloat):
-    def __init__(self):
-        super().__init__(0)
+    def __init__(self, **kwargs):
+        super().__init__(0, **kwargs)
 
     def __set__(self, instance, value: float):
         if value < 0 or value > 1:
@@ -491,10 +572,271 @@ class FMV(DefaultedFloat):
         super().__set__(instance, value)
 
 
+class A00(DefaultedFloat):
+    def __get__(self, instance, owner) -> int:
+        if self.value is not None:
+            return super().__get__(instance, owner)
+        else:
+            if instance is None:
+                instance = self.instance
+            value = 0
+            if instance.gwce_solution_scheme == 'explicit':
+                value = 0
+            elif instance.gwce_solution_scheme == 'semi-implicit-legacy':
+                value = 0.35
+            elif instance.gwce_solution_scheme == 'semi-implicit':
+                value = 0.5
+            return value
+
+
+class B00(DefaultedFloat):
+    def __get__(self, instance, owner) -> int:
+        if self.value is not None:
+            return super().__get__(instance, owner)
+        else:
+            if instance is None:
+                instance = self.instance
+            value = 0
+            if instance.gwce_solution_scheme == 'explicit':
+                value = 0
+            elif instance.gwce_solution_scheme == 'semi-implicit-legacy':
+                value = 0.30
+            elif instance.gwce_solution_scheme == 'semi-implicit':
+                value = 0.5
+            return value
+
+
+class C00(DefaultedFloat):
+    def __get__(self, instance, owner) -> int:
+        if self.value is not None:
+            return super().__get__(instance, owner)
+        else:
+            if instance is None:
+                instance = self.instance
+            value = 0
+            if instance.gwce_solution_scheme == 'explicit':
+                value = 0
+            elif instance.gwce_solution_scheme == 'semi-implicit-legacy':
+                value = 0.35
+            elif instance.gwce_solution_scheme == 'semi-implicit':
+                value = 0
+            return value
+
+
 class Fort15:
     def __init__(self, mesh: AdcircMesh = None):
         self._mesh = mesh
         self._runtype = None
+
+        self.vertical_mode = EnumeratedString(['2D', '3D'], '2D')
+        self.lateral_stress_in_gwce = LateralStressGWCE()
+        self.lateral_stress_in_gwce_is_symmetrical = LateralStressGWCEisSymmetric()
+        self.advection_in_gwce = EnumeratedString(
+            ['non_conservative', 'form_1', 'form_2'], 'non_conservative')
+        self.lateral_stress_in_momentum = EnumeratedString(
+            ['velocity_based', 'flux_based'], 'velocity_based')
+        self.lateral_stress_in_momentum_is_symmetrical = DefaultedBoolean()
+        self.lateral_stress_in_momentum_method = EnumeratedString(
+            ['2_part', 'integration_by_parts'], 'integration_by_parts')
+        self.advection_in_momentum = EnumeratedString(
+            ['non_conservative', 'form_1', 'form_2'], 'non_conservative')
+        self.area_integration_in_momentum = EnumeratedString(
+            ['corrected', 'original'], 'corrected')
+        self.baroclinicity = DefaultedBoolean()
+        self.smagorinsky = DefaultedBoolean()
+        self.smagorinsky_coefficient = AbsoluteDefaultedFloat(0.2)
+        self.gwce_solution_scheme = EnumeratedString(
+            ['semi-implicit', 'explicit'], 'semi-implicit')
+        self.horizontal_mixing_coefficient = AbsoluteDefaultedFloat(10)
+        self.passive_scalar_transport = DefaultedBoolean()
+        self.stress_based_3D = DefaultedBoolean()
+        self.predictor_corrector = DefaultedBoolean(True)
+
+        self.RUNDES = RUNDES()
+        self.RUNID = RUNID(instance=self)
+
+        self._IHOT = IHOT(instance=self)
+
+        self.NFOVER = EnumeratedInteger([0, 1], 1)
+        self.WarnElev = WarnElev()
+
+        self.NABOUT = EnumeratedInteger(range(-1, 4), 1)
+        self.NSCREEN = DefaultedInteger(100)
+
+        self.NOLIBF = NOLIBF(instance=self)
+        self.NOLIFA = EnumeratedInteger([0, 1, 2], 2)
+        self.NOLICA = EnumeratedInteger([0, 1], 1)
+        self.NOLICAT = EnumeratedInteger([0, 1], 1)
+
+        self.NCOR = EnumeratedInteger([0, 1], 1)
+        self.NTIP = NTIP()
+        self.CFL = DefaultedFloat(0.7)
+        self.G = DefaultedFloat(9.81)
+        self.DTDP = DTDP(instance=self)
+        self.TAU0 = TAUO(instance=self)
+        self.FFACTOR = FFACTOR(instance=self)
+        self.CF = DefaultedFloat(0.0025)
+        self.ESLM = ESLM(instance=self)
+
+        # Looks like this has always to be zero!
+        # the following makes adcirc crash with not enough time
+        # in meteorological inputs.
+        # return (
+        #     (self.start_date - self.forcing_start_date).total_seconds()
+        #     / (60.*60.*24))
+        self.STATIM = DefaultedFloat(0)
+        self.REFTIM = DefaultedFloat(0)
+        self.DRAMP = DRAMP(instance=self)
+        self.DRAMPExtFlux = DefaultedFloat(0)
+        self.FluxSettlingTime = DefaultedFloat(0)
+        self.DRAMPIntFlux = DefaultedFloat(0)
+        self.DRAMPMete = DefaultedFloat(1)
+        self.DRAMPWRad = DefaultedFloat(0)
+
+        self.H0 = DefaultedFloat(0.01)
+        self.NODEDRYMIN = DefaultedInteger(0)
+        self.NODEWETRMP = DefaultedInteger(0)
+        self.VELMIN = DefaultedFloat(0.01)
+        self.SLAM0 = SLAM0(instance=self)
+        self.SFEA0 = SFEA0(instance=self)
+        self.HBREAK = DefaultedFloat(1)
+        self.FTHETA = DefaultedFloat(10)
+        self.FGAMMA = DefaultedFloat(1 / 3)
+
+        self.CORI = CORI(instance=self)
+        self.ANGINN = DefaultedFloat(110)
+
+        self.A00 = A00(instance=self)
+        self.B00 = B00(instance=self)
+        self.C00 = C00(instance=self)
+
+        self.NOUTE = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='stations',
+                    physical_var='elevation'))
+        self.TOUTSE = DefaultedInteger(
+            partial(self._get_TOUTS__, output_type='stations',
+                    physical_var='elevation'))
+        self.TOUTFE = DefaultedInteger(
+            partial(self._get_TOUTF__, output_type='stations',
+                    physical_var='elevation'))
+        self.NSPOOLE = DefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='stations',
+                    physical_var='elevation'))
+        self.NSTAE = DefaultedInteger(
+            partial(self._get_NSTA_, physical_var='elevation'))
+        self.NOUTV = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='stations',
+                    physical_var='velocity'))
+        self.TOUTSV = DefaultedInteger(
+            partial(self._get_TOUTS__, output_type='stations',
+                    physical_var='velocity'))
+        self.TOUTFV = DefaultedInteger(
+            partial(self._get_TOUTF__, output_type='stations',
+                    physical_var='velocity'))
+        self.NSPOOLV = DefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='stations',
+                    physical_var='velocity'))
+        self.NSTAV = DefaultedInteger(
+            partial(self._get_NSTA_, physical_var='velocity'))
+        self.NOUTM = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='stations',
+                    physical_var='meteorological'))
+        self.TOUTSM = DefaultedInteger(
+            partial(self._get_TOUTS__, output_type='stations',
+                    physical_var='meteorological'))
+        self.TOUTFM = DefaultedInteger(
+            partial(self._get_TOUTF__, output_type='stations',
+                    physical_var='meteorological'))
+        self.NSPOOLM = DefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='stations',
+                    physical_var='meteorological'))
+        self.NSTAM = DefaultedInteger(
+            partial(self._get_NSTA_, physical_var='meteorological'))
+        self.NOUTC = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='stations',
+                    physical_var='concentration'))
+        self.TOUTSC = DefaultedInteger(
+            partial(self._get_TOUTS__, output_type='stations',
+                    physical_var='concentration'))
+        self.TOUTFC = DefaultedInteger(
+            partial(self._get_TOUTF__, output_type='stations',
+                    physical_var='concentration'))
+        self.NSPOOLC = DefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='stations',
+                    physical_var='concentration'))
+        self.NSTAC = DefaultedInteger(
+            partial(self._get_NSTA_, physical_var='concentration'))
+        self.NOUTGE = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='surface',
+                    physical_var='elevation'))
+        self.TOUTSGE = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTS__, output_type='surface',
+                    physical_var='elevation'))
+        self.TOUTFGE = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTF__, output_type='surface',
+                    physical_var='elevation'))
+        self.NSPOOLGE = AbsoluteDefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='surface',
+                    physical_var='elevation'))
+        self.NOUTGV = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='surface',
+                    physical_var='velocity'))
+        self.TOUTSGV = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTS__, output_type='surface',
+                    physical_var='velocity'))
+        self.TOUTFGV = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTF__, output_type='surface',
+                    physical_var='velocity'))
+        self.NSPOOLGV = AbsoluteDefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='surface',
+                    physical_var='velocity'))
+        self.NOUTGM = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='surface',
+                    physical_var='meteorological'))
+        self.TOUTSGM = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTS__, output_type='surface',
+                    physical_var='meteorological'))
+        self.TOUTFGM = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTF__, output_type='surface',
+                    physical_var='meteorological'))
+        self.NSPOOLGM = AbsoluteDefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='surface',
+                    physical_var='meteorological'))
+        self.NOUTGC = DefaultedInteger(
+            partial(self._get_NOUT__, output_type='surface',
+                    physical_var='concentration'))
+        self.TOUTSGC = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTS__, output_type='surface',
+                    physical_var='concentration'))
+        self.TOUTFGC = AbsoluteDefaultedFloat(
+            partial(self._get_TOUTF__, output_type='surface',
+                    physical_var='concentration'))
+        self.NSPOOLGC = AbsoluteDefaultedInteger(
+            partial(self._get_NSPOOL__, output_type='surface',
+                    physical_var='concentration'))
+        self.THAS = THAS(instance=self)
+        self.THAF = THAF(instance=self)
+        self.NHAINC = NHAINC(instance=self)
+        self.FMV = FMV()
+        self.NHSTAR = NHSTAR(instance=self)
+        self.NHSINC = NHSINC(instance=self)
+        self.ITITER = EnumeratedInteger([-1, 1], 1)
+        self.ISLDIA = EnumeratedInteger(range(6), 0)
+
+        # https://stackoverflow.com/questions/19141432/python-numpy-machine-epsilon
+        # return 500*(7./3 - 4./3 - 1)
+        self.CONVCR = DefaultedFloat(1.0e-8)
+
+        self.ITMAX = DefaultedInteger(25)
+        self.NCPROJ = DefaultedString('')
+        self.NCINST = DefaultedString('')
+        self.NCSOUR = DefaultedString('')
+        self.NCHIST = DefaultedString('')
+        self.NCREF = DefaultedString('')
+        self.NCCOM = DefaultedString('')
+        self.NCHOST = DefaultedString('')
+        self.NCCONV = DefaultedString('')
+        self.NCCONT = DefaultedString('')
 
     @property
     def mesh(self) -> AdcircMesh:
@@ -846,9 +1188,9 @@ class Fort15:
         B00 = float(B00)
         C00 = float(C00)
         assert A00 + B00 + C00 == 1.0, '"A00 + B00 + C00" must equal 1'
-        self.__A00 = A00
-        self.__B00 = B00
-        self.__C00 = C00
+        self.A00 = A00
+        self.B00 = B00
+        self.C00 = C00
 
     @staticmethod
     def parse_stations(path, station_type) -> {str: (float, float, float)}:
@@ -875,30 +1217,6 @@ class Fort15:
                             stations[station_name] = (x, y)
         return stations
 
-    vertical_mode = EnumeratedString(['2D', '3D'], '2D')
-    lateral_stress_in_gwce = LateralStressGWCE()
-    lateral_stress_in_gwce_is_symmetrical = LateralStressGWCEisSymmetric()
-    advection_in_gwce = EnumeratedString(
-        ['non_conservative', 'form_1', 'form_2'], 'non_conservative')
-    lateral_stress_in_momentum = EnumeratedString(
-        ['velocity_based', 'flux_based'], 'velocity_based')
-    lateral_stress_in_momentum_is_symmetrical = DefaultedBoolean()
-    lateral_stress_in_momentum_method = EnumeratedString(
-        ['2_part', 'integration_by_parts'], 'integration_by_parts')
-    advection_in_momentum = EnumeratedString(
-        ['non_conservative', 'form_1', 'form_2'], 'non_conservative')
-    area_integration_in_momentum = EnumeratedString(
-        ['corrected', 'original'], 'corrected')
-    baroclinicity = DefaultedBoolean()
-    smagorinsky = DefaultedBoolean()
-    smagorinsky_coefficient = AbsoluteDefaultedFloat(0.2)
-    gwce_solution_scheme = EnumeratedString(
-        ['semi-implicit', 'explicit'], 'semi-implicit')
-    horizontal_mixing_coefficient = AbsoluteDefaultedFloat(10)
-    passive_scalar_transport = DefaultedBoolean()
-    stress_based_3D = DefaultedBoolean()
-    predictor_corrector = DefaultedBoolean(True)
-
     @property
     @lru_cache(maxsize=None)
     def TPXO(self) -> TPXO:
@@ -912,17 +1230,9 @@ class Fort15:
     def timestep(self, timestep: float):
         self.DTDP = timestep
 
-    RUNDES = RUNDES()
-    RUNID = DefaultedString(self.mesh.description)
-
-    _IHOT = IHOT()
-
     @property
     def IHOT(self) -> float:
         return self._IHOT
-
-    NFOVER = EnumeratedInteger([0, 1], 1)
-    WarnElev = WarnElev()
 
     @property
     def iWarnElevDump(self) -> int:
@@ -976,9 +1286,6 @@ class Fort15:
             if self.WarnElev is not None:
                 raise RuntimeError(
                     'Must set iWarnElevDump if WarnElev is not ' + 'None')
-
-    NABOUT = EnumeratedInteger(range(-1, 4), 1)
-    NSCREEN = DefaultedInteger(100)
 
     @property
     def NWS(self) -> int:
@@ -1152,11 +1459,6 @@ class Fort15:
         if IDEN is not None:
             raise NotImplementedError('3D runs not yet supported.')
 
-    NOLIBF = NOLIBF()
-    NOLIFA = EnumeratedInteger([0, 1, 2], 2)
-    NOLICA = EnumeratedInteger([0, 1], 1)
-    NOLICAT = EnumeratedInteger([0, 1], 1)
-
     @property
     def NWP(self) -> int:
         if self._runtype == 'coldstart':
@@ -1172,25 +1474,6 @@ class Fort15:
             return 1
         else:
             return 8
-
-    NCOR = EnumeratedInteger([0, 1], 1)
-    NTIP = NTIP()
-    CFL = DefaultedFloat(0.7)
-    G = DefaultedFloat(9.81)
-    DTDP = DTDP()
-    TAU0 = TAUO()
-    FFACTOR = FFACTOR()
-    CF = CF()
-    ESLM = ESLM()
-
-    # Looks like this has always to be zero!
-    # the following makes adcirc crash with not enough time
-    # in meteorological inputs.
-    # return (
-    #     (self.start_date - self.forcing_start_date).total_seconds()
-    #     / (60.*60.*24))
-    STATIM = DefaultedFloat(0)
-    REFTIM = DefaultedFloat(0)
 
     @property
     def WTIMINC(self) -> int:
@@ -1221,11 +1504,6 @@ class Fort15:
             RNDAY = self.end_date - self.forcing_start_date
             return RNDAY.total_seconds() / (60.0 * 60.0 * 24.0)
 
-    DRAMP = DRAMP()
-    DRAMPExtFlux = DefaultedFloat(0)
-    FluxSettlingTime = DefaultedFloat(0)
-    DRAMPIntFlux = DefaultedFloat(0)
-
     @property
     def DRAMPElev(self) -> float:
         try:
@@ -1254,9 +1532,6 @@ class Fort15:
     def DRAMPTip(self, DRAMPTip: float):
         self.__DRAMPTip = float(DRAMPTip)
 
-    DRAMPMete = DefaultedFloat(1)
-    DRAMPWRad = DefaultedFloat(0)
-
     @property
     def DUnRampMete(self) -> float:
         try:
@@ -1270,53 +1545,6 @@ class Fort15:
         if DUnRampMete is None:
             DUnRampMete = self.DRAMP
         self.__DUnRampMete = float(DUnRampMete)
-
-    @property
-    def A00(self) -> int:
-        try:
-            return self.__A00
-        except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
-                return 0
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
-                return 0.35
-            if self.gwce_solution_scheme == 'semi-implicit':
-                return 0.5
-
-    @property
-    def B00(self) -> int:
-        try:
-            return self.__B00
-        except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
-                return 0
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
-                return 0.30
-            if self.gwce_solution_scheme == 'semi-implicit':
-                return 0.5
-
-    @property
-    def C00(self) -> int:
-        try:
-            return self.__C00
-        except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
-                return 0
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
-                return 0.35
-            if self.gwce_solution_scheme == 'semi-implicit':
-                return 0
-
-    H0 = DefaultedFloat(0.01)
-    NODEDRYMIN = DefaultedInteger(0)
-    NODEWETRMP = DefaultedInteger(0)
-    VELMIN = DefaultedFloat(0.01)
-    SLAM0 = SLAM0()
-    SFEA0 = SFEA0()
-    HBREAK = DefaultedFloat(1)
-    FTHETA = DefaultedFloat(10)
-    FGAMMA = DefaultedFloat(1 / 3)
-    CORI = CORI()
 
     @property
     def NTIF(self) -> int:
@@ -1333,80 +1561,6 @@ class Fort15:
             return self.tidal_forcing.nbfr
         return 0
 
-    ANGINN = DefaultedFloat(110)
-    NOUTE = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'stations', 'elevation'))
-    TOUTSE = DefaultedInteger(
-        partial(Fort15._get_TOUTS__, self, 'stations', 'elevation'))
-    TOUTFE = DefaultedInteger(
-        partial(Fort15._get_TOUTF__, self, 'stations', 'elevation'))
-    NSPOOLE = DefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'stations', 'elevation'))
-    NSTAE = DefaultedInteger(
-        partial(Fort15._get_NSTA_, self, 'elevation'))
-    NOUTV = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'stations', 'velocity'))
-    TOUTSV = DefaultedInteger(
-        partial(Fort15._get_TOUTS__, self, 'stations', 'velocity'))
-    TOUTFV = DefaultedInteger(
-        partial(Fort15._get_TOUTF__, self, 'stations', 'velocity'))
-    NSPOOLV = DefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'stations', 'velocity'))
-    NSTAV = DefaultedInteger(
-        partial(Fort15._get_NSTA_, self, 'velocity'))
-    NOUTM = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'stations', 'meteorological'))
-    TOUTSM = DefaultedInteger(
-        partial(Fort15._get_TOUTS__, self, 'stations', 'meteorological'))
-    TOUTFM = DefaultedInteger(
-        partial(Fort15._get_TOUTF__, self, 'stations', 'meteorological'))
-    NSPOOLM = DefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'stations', 'meteorological'))
-    NSTAM = DefaultedInteger(
-        partial(Fort15._get_NSTA_, self, 'meteorological'))
-    NOUTC = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'stations', 'concentration'))
-    TOUTSC = DefaultedInteger(
-        partial(Fort15._get_TOUTS__, self, 'stations', 'concentration'))
-    TOUTFC = DefaultedInteger(
-        partial(Fort15._get_TOUTF__, self, 'stations', 'concentration'))
-    NSPOOLC = DefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'stations', 'concentration'))
-    NSTAC = DefaultedInteger(
-        partial(Fort15._get_NSTA__, self, 'concentration'))
-    NOUTGE = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'surface', 'elevation'))
-    TOUTSGE = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTS__, self, 'surface', 'elevation'))
-    TOUTFGE = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTF__, self, 'surface', 'elevation'))
-    NSPOOLGE = AbsoluteDefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'surface', 'elevation'))
-    NOUTGV = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'surface', 'velocity'))
-    TOUTSGV = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTS__, self, 'surface', 'velocity'))
-    TOUTFGV = AbsoluteDefaultedFloat(
-        partial(self._get_TOUTF__, self, 'surface', 'velocity'))
-    NSPOOLGV = AbsoluteDefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'surface', 'velocity'))
-    NOUTGM = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'surface', 'meteorological'))
-    TOUTSGM = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTS__, self, 'surface', 'meteorological'))
-    TOUTFGM = AbsoluteDefaultedFloat(
-        partial(self._get_TOUTF__, self, 'surface', 'meteorological'))
-    NSPOOLGM = AbsoluteDefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'surface', 'meteorological'))
-    NOUTGC = DefaultedInteger(
-        partial(Fort15._get_NOUT__, self, 'surface', 'concentration'))
-    TOUTSGC = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTS__, self, 'surface', 'concentration'))
-    TOUTFGC = AbsoluteDefaultedFloat(
-        partial(Fort15._get_TOUTF__, self, 'surface', 'concentration'))
-    NSPOOLGC = AbsoluteDefaultedInteger(
-        partial(Fort15._get_NSPOOL__, self, 'surface', 'concentration'))
-
     @property
     def NFREQ(self) -> int:
         if self._runtype == 'coldstart':
@@ -1420,11 +1574,6 @@ class Fort15:
                 if np.any([_['harmonic_analysis'] for _ in self._outputs]):
                     return len(self.tidal_forcing.get_active_constituents())
         return 0
-
-    THAS = THAS()
-    THAF = THAF()
-    NHAINC = NHAINC()
-    FMV = FMV()
 
     @property
     def NHASE(self) -> int:
@@ -1457,26 +1606,6 @@ class Fort15:
         except AttributeError:
             return self._get_harmonic_analysis_state(
                 self.velocity_surface_output)
-
-    NHSTAR = NHSTAR()
-    NHSINC = NHSINC()
-    ITITER = EnumeratedInteger([-1, 1], 1)
-    ISLDIA = EnumeratedInteger(range(6), 0)
-
-    # https://stackoverflow.com/questions/19141432/python-numpy-machine-epsilon
-    # return 500*(7./3 - 4./3 - 1)
-    CONVCR = DefaultedFloat(1.0e-8)
-
-    ITMAX = DefaultedInteger(25)
-    NCPROJ = DefaultedString('')
-    NCINST = DefaultedString('')
-    NCSOUR = DefaultedString('')
-    NCHIST = DefaultedString('')
-    NCREF = DefaultedString('')
-    NCCOM = DefaultedString('')
-    NCHOST = DefaultedString('')
-    NCCONV = DefaultedString('')
-    NCCONT = DefaultedString('')
 
     @property
     def NCDATE(self) -> str:
