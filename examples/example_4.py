@@ -12,7 +12,7 @@ from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.server import SlurmConfig
 
 PARENT = pathlib.Path(__file__).parent.absolute()
-FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
+FORT14 = PARENT / "data/HSOFS/fort.14"
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
     slurm = SlurmConfig(
         account='account',
         ntasks=1000,
-        run_name='AdcircPy/examples/example_3.py',
+        run_name='AdcircPy/examples/example_4.py',
         partition='partition',
         walltime=timedelta(hours=8),
         mail_type='all',
