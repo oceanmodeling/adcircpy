@@ -15,7 +15,7 @@ from adcircpy.server.driver_file import DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'shinnecock_inlet'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
 FORT14_FILENAME = INPUT_DIRECTORY / 'fort.14'
 
