@@ -1005,7 +1005,7 @@ class Fort15:
         f.extend([
             (f'{self.NOUTV:G} {self.TOUTSV:G} '
              + f'{self.TOUTFV:G} {self.NSPOOLV:G}').ljust(63)
-            + ' ! NOUTV TOUTSV TOUTFV NSPOOLV'
+            + ' ! NOUTV TOUTSV TOUTFV NSPOOLV',
               f'{self.NSTAV:<63G} ! NSTAV'
         ])
         stations = self.velocity_stations_output
