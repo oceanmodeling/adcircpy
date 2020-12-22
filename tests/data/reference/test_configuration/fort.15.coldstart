@@ -33,7 +33,8 @@ created on 2020-11-17 08:16                                     ! RUNDES
 110                                                             ! ANGINN
 0 0 0 0                                                         ! NOUTE TOUTSE TOUTFE NSPOOLE
 0                                                               ! NSTAE
-0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV0                                                               ! NSTAV
+0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV
+0                                                               ! NSTAV
 0 0.000000 0.000000 0                                           ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE
 0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV
 0                                                               ! NFREQ
