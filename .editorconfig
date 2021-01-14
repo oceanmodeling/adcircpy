@@ -33,7 +33,6 @@ ij_shell_switch_cases_indented = false
 
 [{*.py, *.pyw, soundings}]
 max_line_length = 79
-ij_continuation_indent_size = 4
 ij_python_align_collections_and_comprehensions = true
 ij_python_align_multiline_imports = true
 ij_python_align_multiline_parameters = true
@@ -94,8 +93,8 @@ ij_python_spaces_within_braces = false
 ij_python_spaces_within_brackets = false
 ij_python_spaces_within_method_call_parentheses = false
 ij_python_spaces_within_method_parentheses = false
-ij_python_use_continuation_indent_for_arguments = false
-ij_python_use_continuation_indent_for_collection_and_comprehensions = false
+ij_python_use_continuation_indent_for_arguments = true
+ij_python_use_continuation_indent_for_collection_and_comprehensions = true
 ij_python_wrap_long_lines = false
 
 [{*.yaml, *.yml}]
