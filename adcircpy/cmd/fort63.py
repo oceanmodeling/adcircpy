@@ -44,7 +44,7 @@ def animation(fort63, args):
         fps=args.fps,
         figsize=args.figsize,
         elements=args.plot_elements,
-        )
+    )
 
 
 def export(fort63, args):

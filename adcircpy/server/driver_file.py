@@ -86,20 +86,20 @@ class DriverFile:
             f'run_coldstart_phase\n'
 
         f += bash_if_statement(
-            if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-            if_block='duration=$SECONDS\n' \
-                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
-                     f'exit {error_exit_code}',
-            else_blocks=[
-                'run_hotstart_phase\n'
-                'duration=$SECONDS\n' + \
-                bash_if_statement(
-                    if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
-                             f'exit {error_exit_code}').strip('\n')
-            ]
+                if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
+                if_block='duration=$SECONDS\n' \
+                         'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                         'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+                         f'exit {error_exit_code}',
+                else_blocks=[
+                    'run_hotstart_phase\n'
+                    'duration=$SECONDS\n' + \
+                    bash_if_statement(
+                            if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
+                            if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+                                     f'exit {error_exit_code}').strip('\n')
+                ]
         )
 
         f += 'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."'
@@ -149,12 +149,12 @@ class DriverFile:
             f += 'ln -sf ../coldstart/fort.67\n'
 
         if self._driver.wind_forcing is not None:
-            if self._driver.wind_forcing.NWS in [19, 20]:
+            if self._driver.NWS in [17, 19, 20]:
                 f += 'ln -sf ../fort.22 ./fort.22\n' \
                      'aswip\n' \
-                     f'mv NWS_{self._driver.wind_forcing.NWS}_fort.22 fort.22\n'
+                     f'mv NWS_{self._driver.NWS}_fort.22 fort.22\n'
             else:
-                msg = f'unsupported NWS value {self._driver.wind_forcing.NWS}'
+                msg = f'unsupported NWS value {self._driver.NWS}'
                 raise NotImplementedError(msg)
 
         if self._executable.startswith('p'):
