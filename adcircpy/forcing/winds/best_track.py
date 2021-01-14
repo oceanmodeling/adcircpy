@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 import gzip
 import io
@@ -44,55 +44,51 @@ class BestTrackForcing(WindForcing):
         record_number = self._generate_record_numbers()
         fort22 = ''
         for i, (_, row) in enumerate(self.df.iterrows()):
-            fort22 += "{:<2},".format(row["basin"])
-            fort22 += "{:>3},".format(row["storm_number"])
-            fort22 += "{:>11},".format(row["datetime"].strftime('%Y%m%d%H'))
-            fort22 += "{:3},".format("")
-            fort22 += "{:>5},".format(row["record_type"])
-            fort22 += "{:>4},".format(int((row["datetime"] - self.start_date)
-                                          .total_seconds() / 3600))
+            fort22 += f'{row["basin"]:<2},{row["storm_number"]:>3},' \
+                      f'{row["datetime"]:%Y%m%d%H>11},' \
+                      f'{"":3},{row["record_type"]:>5},' \
+                      f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4},'
             if row["latitude"] >= 0:
-                fort22 += "{:>4}N,".format(int(row["latitude"] / .1))
+                fort22 += f'{int(row["latitude"] / .1):>4}N,'
             else:
-                fort22 += "{:>4}S,".format(int(row["latitude"] / -.1))
+                fort22 += f'{int(row["latitude"] / -.1):>4}S,'
             if row["longitude"] >= 0:
-                fort22 += "{:>5}E,".format(int(row["longitude"] / .1))
+                fort22 += f'{int(row["longitude"] / .1):>5}E,'
             else:
-                fort22 += "{:>5}W,".format(int(row["longitude"] / -.1))
-            fort22 += "{:>4},".format(int(row["max_sustained_wind_speed"]))
-            fort22 += "{:>5},".format(int(row["central_pressure"]))
-            fort22 += "{:>3},".format(row["development_level"])
-            fort22 += "{:>4},".format(int(row["isotach"]))
-            fort22 += "{:>4},".format(row["quadrant"])
-            fort22 += "{:>5},".format(int(row["radius_for_NEQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_SEQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_SWQ"]))
-            fort22 += "{:>5},".format(int(row["radius_for_NWQ"]))
+                fort22 += f'{int(row["longitude"] / -.1):>5}W,'
+            fort22 += f'{int(row["max_sustained_wind_speed"]):>4},' \
+                      f'{int(row["central_pressure"]):>5},' \
+                      f'{row["development_level"]:>3},' \
+                      f'{int(row["isotach"]):>4},' \
+                      f'{row["quadrant"]:>4},' \
+                      f'{int(row["radius_for_NEQ"]):>5},' \
+                      f'{int(row["radius_for_SEQ"]):>5},' \
+                      f'{int(row["radius_for_SWQ"]):>5},' \
+                      f'{int(row["radius_for_NWQ"]):>5},'
             if row["background_pressure"] is None:
                 row["background_pressure"] = \
                     self.df["background_pressure"].iloc[i - 1]
             if (row["background_pressure"] <= row["central_pressure"]
                     and 1013 > row["central_pressure"]):
-                fort22 += "{:>5},".format(1013)
+                fort22 += f'{1013:>5},'
             elif (row["background_pressure"] <= row["central_pressure"]
                   and 1013 <= row["central_pressure"]):
-                fort22 += "{:>5},".format(int(row["central_pressure"] + 1))
+                fort22 += f'{int(row["central_pressure"] + 1):>5},'
             else:
-                fort22 += "{:>5},".format(int(row["background_pressure"]))
-            fort22 += "{:>5},".format(int(
-                    row["radius_of_last_closed_isobar"]))
-            fort22 += "{:>4},".format(int(row["radius_of_maximum_winds"]))
-            fort22 += "{:>5},".format('')  # gust
-            fort22 += "{:>4},".format('')  # eye
-            fort22 += "{:>4},".format('')  # subregion
-            fort22 += "{:>4},".format('')  # maxseas
-            fort22 += "{:>4},".format('')  # initials
-            fort22 += "{:>3},".format(row["direction"])
-            fort22 += "{:>4},".format(row["speed"])
-            fort22 += "{:^12},".format(row["name"])
+                fort22 += f'{int(row["background_pressure"]):>5},'
+            fort22 += f'{int(row["radius_of_last_closed_isobar"]):>5},' \
+                      f'{int(row["radius_of_maximum_winds"]):>4},'
+            fort22 += f'{"":>5},'  # gust
+            fort22 += f'{"":>4},'  # eye
+            fort22 += f'{"":>4},'  # subregion
+            fort22 += f'{"":>4},'  # maxseas
+            fort22 += f'{"":>4},'  # initials
+            fort22 += f'{row["direction"]:>3},' \
+                      f'{row["speed"]:>4},' \
+                      f'{row["name"]:^12},'
             # from this point forwards it's all aswip
-            fort22 += "{:>4},".format(record_number[i])
-            fort22 += "\n"
+            fort22 += f'{record_number[i]:>4},' \
+                      f'\n'
         return fort22
 
     @property
