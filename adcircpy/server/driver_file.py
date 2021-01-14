@@ -26,7 +26,7 @@ class DriverFile:
                  '\nset -e\n'
 
         if self._executable.startswith('p') and \
-            isinstance(self._server_config, int):
+                isinstance(self._server_config, int):
             if self._server_config > 1:
                 f += f"\nNPROCS={self._nprocs}\n"
 
@@ -86,20 +86,20 @@ class DriverFile:
             f'run_coldstart_phase\n'
 
         f += bash_if_statement(
-            if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-            if_block='duration=$SECONDS\n' \
-                     'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
-                     f'exit {error_exit_code}',
-            else_blocks=[
-                'run_hotstart_phase\n'
-                'duration=$SECONDS\n' + \
-                bash_if_statement(
-                    if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
-                    if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
-                             'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
-                             f'exit {error_exit_code}').strip('\n')
-            ]
+                if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
+                if_block='duration=$SECONDS\n' \
+                         'echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                         'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+                         f'exit {error_exit_code}',
+                else_blocks=[
+                    'run_hotstart_phase\n'
+                    'duration=$SECONDS\n' + \
+                    bash_if_statement(
+                            if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
+                            if_block='echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."\n' \
+                                     'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."\n' \
+                                     f'exit {error_exit_code}').strip('\n')
+                ]
         )
 
         f += 'echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."'
@@ -236,10 +236,10 @@ class DriverFile:
 
 
 def bash_if_statement(
-    if_condition: str,
-    if_block: str,
-    else_blocks: [str] = None,
-    indent_string: str = '  '
+        if_condition: str,
+        if_block: str,
+        else_blocks: [str] = None,
+        indent_string: str = '  '
 ) -> str:
     output = f'if {if_condition}; then\n' + \
              indent(if_block, indent_string) + '\n'
@@ -261,9 +261,9 @@ def bash_if_statement(
 
 
 def bash_function(
-    name: str,
-    function_block: str,
-    indent_string: str = '  '
+        name: str,
+        function_block: str,
+        indent_string: str = '  '
 ) -> str:
     return f'{name}() {{\n' + \
            indent(function_block, indent_string) + '\n' + \

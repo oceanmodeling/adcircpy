@@ -94,7 +94,7 @@ ij_python_spaces_within_brackets = false
 ij_python_spaces_within_method_call_parentheses = false
 ij_python_spaces_within_method_parentheses = false
 ij_python_use_continuation_indent_for_arguments = true
-ij_python_use_continuation_indent_for_collection_and_comprehensions = true
+ij_python_use_continuation_indent_for_collection_and_comprehensions = false
 ij_python_wrap_long_lines = false
 
 [{*.yaml, *.yml}]
