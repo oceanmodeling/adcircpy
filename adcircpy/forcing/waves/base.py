@@ -10,4 +10,5 @@ class WaveForcing(Forcing):
 
     def write(self, directory: PathLike, overwrite: bool = False):
         # TODO implement this
-        pass
+        raise NotImplementedError(
+            'writing wave forcing to file is not yet implemented')
