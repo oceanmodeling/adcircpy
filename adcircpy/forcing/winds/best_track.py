@@ -17,17 +17,59 @@ from pyproj import Proj
 from shapely.geometry import Point, Polygon
 
 from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.fort15 import EnumeratedInteger
+
+
+class StormID:
+    def __get__(self, instance, owner) -> str:
+        return f'{instance.basin}{instance.storm_number}{instance.year}'
+
+    def __set__(self, instance, storm_id: str):
+        digits = 0
+        for character in storm_id:
+            if character.isdigit():
+                digits += 1
+
+        if digits == 4:
+            _atcf_id = atcf_id(storm_id)
+            if _atcf_id is None:
+                msg = f'No storm with id: {storm_id}'
+                raise Exception(msg)
+            storm_id = _atcf_id
+
+        url = f'ftp://ftp.nhc.noaa.gov/atcf/archive/{storm_id[4:]}/' \
+              f'b{storm_id[:2].lower()}{storm_id[2:]}.dat.gz'
+
+        try:
+            response = urllib.request.urlopen(url)
+        except urllib.error.URLError as e:
+            if '550' in e.reason:
+                raise NameError(f'Did not find storm with id {storm_id}. '
+                                + f'Submitted URL was {url}.')
+            else:
+                @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
+                def make_request():
+                    return urllib.request.urlopen(url)
+
+                response = make_request()
+
+        instance.__atcf = io.BytesIO(response.read())
 
 
 class BestTrackForcing(WindForcing):
     def __init__(self, storm_id, nws: int = 20, interval_seconds: int = 3600,
                  start_date=None, end_date=None, dst_crs=None):
+        self._storm_id = StormID()
+
         assert nws in [19, 20]
         super().__init__(nws, interval_seconds)
+
         self._storm_id = storm_id
         self._start_date = start_date
         self._end_date = end_date
         self._dst_crs = dst_crs
+
+        self.NWS = EnumeratedInteger([19, 20], 20)
 
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
@@ -92,18 +134,6 @@ class BestTrackForcing(WindForcing):
         return fort22
 
     @property
-    def NWS(self) -> int:
-        try:
-            return self.__NWS
-        except AttributeError:
-            return 20
-
-    @NWS.setter
-    def NWS(self, NWS: int):
-        assert NWS in [19, 20]
-        self.__NWS = int(NWS)
-
-    @property
     def WTIMINC(self) -> str:
         return f'{self.start_date:%Y %m %d %H} ' \
                f'{self.df["storm_number"].iloc[0]} ' \
@@ -139,48 +169,6 @@ class BestTrackForcing(WindForcing):
     @property
     def storm_id(self) -> str:
         return self._storm_id
-
-    @property
-    def _storm_id(self) -> str:
-        return f'{self.basin}{self.storm_number}{self.year}'
-
-    @_storm_id.setter
-    def _storm_id(self, storm_id):
-        chars = 0
-        for char in storm_id:
-            if char.isdigit():
-                chars += 1
-
-        if chars == 4:
-
-            _atcf_id = atcf_id(storm_id)
-            if _atcf_id is None:
-                msg = f'No storm with id: {storm_id}'
-                raise Exception(msg)
-            storm_id = _atcf_id
-
-        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/'
-        url += storm_id[4:]
-        url += '/b'
-        url += storm_id[0:2].lower()
-        url += storm_id[2:]
-        url += '.dat.gz'
-
-        try:
-            response = urllib.request.urlopen(url)
-        except urllib.error.URLError as e:
-            if '550' in e.reason:
-                raise NameError(
-                        f'Did not find storm with id {storm_id}. '
-                        + f'Submitted URL was {url}.')
-            else:
-                @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
-                def make_request():
-                    return urllib.request.urlopen(url)
-
-                response = make_request()
-
-        self.__atcf = io.BytesIO(response.read())
 
     @property
     def start_date(self) -> datetime:
