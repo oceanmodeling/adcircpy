@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import pathlib
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.forcing.waves.base import WaveForcing
-from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
+from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.server import SlurmConfig
 
 PARENT = pathlib.Path(__file__).parent.absolute()
@@ -21,8 +21,8 @@ def main():
     tidal_forcing = Tides()
     tidal_forcing.use_all()
 
-    wind_forcing = WindForcing(17, 3600)
-    wave_forcing = WaveForcing(5, 3600)
+    wind_forcing = AtmosphericMeshForcing(17, 3600)
+    wave_forcing = WaveWatch3DataForcing(5, 3600)
 
     mesh.add_forcing(tidal_forcing)
     mesh.add_forcing(wind_forcing)
