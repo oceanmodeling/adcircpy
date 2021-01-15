@@ -142,7 +142,7 @@ class BestTrackForcing(WindForcing):
 
     @property
     def _storm_id(self) -> str:
-        return f"{self.basin}{self.storm_number}{self.year}"
+        return f'{self.basin}{self.storm_number}{self.year}'
 
     @_storm_id.setter
     def _storm_id(self, storm_id):
