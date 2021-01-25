@@ -21,8 +21,9 @@ try:
     ).serialize()
 except RuntimeError as error:
     logging.exception(error)
-    logging.warning(f'using dummy version 0.0.0')
     version = '0.0.0'
+
+logging.info(f'using version {version}')
 
 metadata = setuptools.config.read_configuration(
         pathlib.Path(__file__).parent.absolute() / 'setup.cfg')['metadata']
