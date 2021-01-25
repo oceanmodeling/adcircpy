@@ -1,0 +1,67 @@
+name: build
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build_wheels:
+    name: build wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: [ 3.8 ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Restore cached dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ matrix.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
+          restore-keys: ${{ matrix.os }}-pip-${{ matrix.python-version }}-
+      - name: Install dependencies
+        run: pip install --upgrade pip setuptools wheel
+      - name: Build wheel
+        run: python setup.py bdist_wheel
+      - name: Save wheel
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./dist/*.whl
+  build_sdist:
+    name: package source
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Package source
+        run: python setup.py sdist
+      - name: Save source package
+        uses: actions/upload-artifact@v2
+        with:
+          path: ./dist/*.tar.gz
+  upload_pypi:
+    name: publish wheel to PyPI
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve wheel
+        uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+      - name: Upload wheel
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
