@@ -5,21 +5,23 @@ import pathlib
 import setuptools
 
 try:
-    from dunamai import Version
-except ImportError:
-    import sys
-    import subprocess
+    try:
+        from dunamai import Version
+    except ImportError:
+        import sys
+        import subprocess
 
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
-    from dunamai import Version
+        subprocess.check_call(
+                [sys.executable, '-m', 'pip', 'install', 'dunamai']
+        )
+        from dunamai import Version
 
-try:
     version = Version.from_any_vcs(
             pattern='^(?P<base>\d+\.\d+\.\d+)(-?((?P<stage>[a-zA-Z]+)\.?(?P<revision>\d+)?))?$'
     ).serialize()
-except:
-    logging.warning(f'no VCS found in the build directory; '
-                    f'using dummy version 0.0.0')
+except RuntimeError as error:
+    logging.exception(error)
+    logging.warning(f'using dummy version 0.0.0')
     version = '0.0.0'
 
 metadata = setuptools.config.read_configuration(
