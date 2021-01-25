@@ -1,17 +1,8 @@
 #!/usr/bin/env python
-import json
+import logging
 import pathlib
 
 import setuptools
-
-try:
-    import requests
-except ImportError:
-    import sys
-    import subprocess
-
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
-    import requests
 
 try:
     from dunamai import Version
@@ -23,48 +14,26 @@ except ImportError:
     from dunamai import Version
 
 try:
-    from packaging.version import parse as package_parse
-except ImportError:
-    from pip._vendor.packaging.version import parse as package_parse
-
-
-def latest_pypi_version(package: str, prerelease: bool = False) -> str:
-    """ https://stackoverflow.com/a/34366589 """
-    response = requests.get(f'https://pypi.python.org/pypi/{package}/json')
-
-    if response.status_code == requests.codes.ok:
-        releases = json.loads(response.text).get('releases', [])
-        versions = list(sorted(package_parse(release) for release in releases))
-        if not prerelease:
-            versions = [version for version in versions
-                        if not version.is_prerelease]
-        version = str(max(versions))
-    else:
-        version = None
-    return version
-
-
-PARENT = pathlib.Path(__file__).parent.absolute()
-conf = setuptools.config.read_configuration(PARENT / 'setup.cfg')
-meta = conf['metadata']
-
-try:
     version = Version.from_any_vcs(
             pattern='^(?P<base>\d+\.\d+\.\d+)(-?((?P<stage>[a-zA-Z]+)\.?(?P<revision>\d+)?))?$'
     ).serialize()
 except:
-    # TODO: this only retrieves the latest version from PyPI; the user might have requested a different version
-    version = latest_pypi_version('adcircpy')
+    logging.warning(f'no VCS found in the build directory; '
+                    f'using dummy version 0.0.0')
+    version = '0.0.0'
+
+metadata = setuptools.config.read_configuration(
+        pathlib.Path(__file__).parent.absolute() / 'setup.cfg')['metadata']
 
 setuptools.setup(
-        name=meta['name'],
+        name=metadata['name'],
         version=version,
-        author=meta['author'],
-        author_email=meta['author_email'],
-        description=meta['description'],
-        long_description=meta['long_description'],
+        author=metadata['author'],
+        author_email=metadata['author_email'],
+        description=metadata['description'],
+        long_description=metadata['long_description'],
         long_description_content_type='text/markdown',
-        url=meta['url'],
+        url=metadata['url'],
         packages=setuptools.find_packages(),
         python_requires='>=3.6',
         setup_requires=['dunamai', 'requests', 'setuptools>=41.2'],
