@@ -29,13 +29,14 @@ jobs:
       - name: Run setup.py on Windows
         if: contains(matrix.os, 'windows')
         run: python setup.py install
+      - name: Install netCDF4 library on Linux
+        if: contains(matrix.os, 'windows')
+        run: sudo apt-get update -y && sudo apt-get install -y libnetcdf-dev libnetcdff-dev
       - name: Install dependencies
         run: |
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
           pip install -e .[development]
-          sudo apt-get update -y
-          sudo apt-get install -y libnetcdf-dev libnetcdff-dev libgeos-dev
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
