@@ -30,7 +30,7 @@ jobs:
         if: contains(matrix.os, 'windows')
         run: python setup.py install
       - name: Install netCDF4 library on Linux
-        if: !contains(matrix.os, 'windows')
+        if: contains(matrix.os, 'ubuntu')
         run: sudo apt-get update -y && sudo apt-get install -y libnetcdf-dev libnetcdff-dev
       - name: Install dependencies
         run: |
