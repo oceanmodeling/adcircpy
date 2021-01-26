@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_wheels:
-    name: Python ${{ matrix.python-version }} wheel on ${{ runner.os }}
+    name: Python ${{ matrix.python-version }} wheel on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
