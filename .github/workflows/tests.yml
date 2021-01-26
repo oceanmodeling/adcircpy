@@ -30,7 +30,8 @@ jobs:
           pip install wheel
           python setup.py install
           pip install -e .[development]
-          sudo apt-get update -y && apt-get install -y libnetcdf-dev libnetcdff-dev
+          sudo apt-get update -y
+          sudo apt-get install -y libnetcdf-dev libnetcdff-dev
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
