@@ -31,7 +31,7 @@ jobs:
           python setup.py install
           pip install -e .[development]
           sudo apt-get update -y
-          sudo apt-get install -y libnetcdf-dev libnetcdff-dev libgeos
+          sudo apt-get install -y libnetcdf-dev libnetcdff-dev libgeos-dev
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
