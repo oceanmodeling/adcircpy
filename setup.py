@@ -1,8 +1,31 @@
 #!/usr/bin/env python
 import logging
+import os
 import pathlib
 
 import setuptools
+
+if os.name == 'nt':
+    import subprocess
+    import sys
+
+    try:
+        import pipwin
+    except ImportError:
+        subprocess.check_call(
+                [sys.executable, '-m', 'pip', 'install', 'pipwin'])
+
+    try:
+        import gdal
+    except ImportError:
+        subprocess.check_call(
+                [sys.executable, '-m', 'pipwin', 'install', 'gdal==3.1.4'])
+
+    try:
+        import fiona
+    except ImportError:
+        subprocess.check_call(
+                [sys.executable, '-m', 'pipwin', 'install', 'fiona'])
 
 try:
     try:

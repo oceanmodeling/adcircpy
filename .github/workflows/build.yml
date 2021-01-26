@@ -7,7 +7,7 @@ on:
 
 jobs:
   build_wheels:
-    name: build wheel on ${{ matrix.os }}
+    name: Python ${{ matrix.python-version }} wheel on ${{ runner.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ matrix.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
           restore-keys: ${{ matrix.os }}-pip-${{ matrix.python-version }}-
       - name: Install dependencies
         run: pip install --upgrade pip setuptools wheel
@@ -51,16 +51,16 @@ jobs:
         with:
           path: ./dist/*.tar.gz
   upload_pypi:
-    name: publish wheel to PyPI
+    name: publish to PyPI
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve wheel
+      - name: Retrieve wheel(s) and source
         uses: actions/download-artifact@v2
         with:
           name: artifact
           path: dist
-      - name: Upload wheel
+      - name: Upload wheel(s) and source
         uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
