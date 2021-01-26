@@ -24,11 +24,15 @@ jobs:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
           restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
+      - name: Install wheel
+        run: pip install wheel
+      - name: Run setup.py on Windows
+        if: contains(matrix.os, 'windows')
+        run: python setup.py install
       - name: Install dependencies
         run: |
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
-          python setup.py install
           pip install -e .[development]
           sudo apt-get update -y
           sudo apt-get install -y libnetcdf-dev libnetcdff-dev libgeos-dev
