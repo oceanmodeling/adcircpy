@@ -43,7 +43,8 @@ def main():
     if args.save_path is not None:
         with open(Path(args.save_path), 'w') as output_file:
             output_file.write(bt.fort22)
-            print(f'wrote `fort.22` to "{args.save_path}"')
+            if not args.quiet:
+                print(f'wrote `fort.22` to "{args.save_path}"')
 
 
 if __name__ == '__main__':
