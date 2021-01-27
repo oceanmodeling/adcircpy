@@ -20,10 +20,10 @@ from adcircpy.forcing.winds.base import WindForcing
 
 
 class BestTrackForcing(WindForcing):
-    def __init__(self, storm_id, nws: int = 20, interval_seconds: int = 3600,
+    def __init__(self, storm_id, nws: int = 20,
                  start_date=None, end_date=None, dst_crs=None):
         assert nws in [19, 20]
-        super().__init__(nws, interval_seconds)
+        super().__init__(nws, 3600)
         self._storm_id = storm_id
         self._start_date = start_date
         self._end_date = end_date
@@ -45,7 +45,7 @@ class BestTrackForcing(WindForcing):
         fort22 = ''
         for i, (_, row) in enumerate(self.df.iterrows()):
             fort22 += f'{row["basin"]:<2},{row["storm_number"]:>3},' \
-                      f'{row["datetime"]:%Y%m%d%H>11},' \
+                      f' {row["datetime"]:%Y%m%d%H},' \
                       f'{"":3},{row["record_type"]:>5},' \
                       f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4},'
             if row["latitude"] >= 0:
@@ -424,10 +424,11 @@ class BestTrackForcing(WindForcing):
             ax.quiver(
                     self.longitude.iloc[i], self.latitude.iloc[i], U, V,
                     **kwargs)
-            ax.annotate(
-                    self.df['datetime'].iloc[i],
-                    (self.longitude.iloc[i], self.latitude.iloc[i])
-            )
+            if i % 6 == 0:
+                ax.annotate(
+                        self.df['datetime'].iloc[i],
+                        (self.longitude.iloc[i], self.latitude.iloc[i])
+                )
         if show:
             ax.axis('scaled')
             plt.show()
@@ -448,7 +449,7 @@ class BestTrackForcing(WindForcing):
     def _file_end_date(self):
         unique_dates = np.unique(self._df['datetime'])
         for date in unique_dates:
-            if date >= self.end_date:
+            if date >= np.datetime64(self.end_date):
                 return date
 
     @staticmethod
@@ -571,9 +572,9 @@ def atcf_id(storm_id):
             StringIO("".join([_.decode('utf-8') for _ in res])),
             header=None,
     )
-    name = f"{storm_id[:-4].upper():>10}"
-    year = f"{storm_id[-4:]:>5}"
-    entry = df[(df[0].isin([name]) & df[8].isin([year]))]
+    name = storm_id[:-4]
+    year = storm_id[-4:]
+    entry = df.loc[(df[0] == name.upper().rjust(10)) & (df[8] == int(year))]
     if len(entry) == 0:
         return None
     else:

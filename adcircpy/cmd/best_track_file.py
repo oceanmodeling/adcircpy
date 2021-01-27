@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 from adcircpy.forcing.winds.best_track import BestTrackForcing
@@ -11,8 +12,8 @@ def parse_args():
     parser.add_argument('storm_id',
                         help='storm id from HURDAT2 table: ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table')
     parser.add_argument('--save-path', help='path to which to write fort.22')
-    parser.add_argument('--start-date', help='format is %Y%m%d%H')
-    parser.add_argument('--end-date', help='format is %Y%m%d%H')
+    parser.add_argument('--start-date', help='format is %%Y%%m%%d%%H')
+    parser.add_argument('--end-date', help='format is %%Y%%m%%d%%H')
     parser.add_argument('--quiet', '-q', action='store_true', default=False,
                         help='suppress console output')
     parser.add_argument('--plot-track', action='store_true', default=False,
@@ -22,14 +23,13 @@ def parse_args():
 
 def main():
     args = parse_args()
-    bt = BestTrackForcing(args.storm_id)
-
-    # set custom start date
-    if args.start_date is not None:
-        bt.start_date = args.start_date
-    # set custom end date
-    if args.end_date is not None:
-        bt.end_date = args.end_date
+    bt = BestTrackForcing(
+        args.storm_id,
+        start_date=datetime.strptime(args.start_date, '%Y%m%d%H')
+        if args.start_date is not None else None,
+        end_date=datetime.strptime(args.end_date, '%Y%m%d%H')
+        if args.end_date is not None else None,
+        )
 
     # print fort22
     if not args.quiet:
@@ -37,7 +37,7 @@ def main():
 
     # show cheap plot
     if args.plot_track:
-        bt.plot_trajectory()
+        bt.plot_trajectory(show=True)
 
     # save fort22
     if args.save_path is not None:
