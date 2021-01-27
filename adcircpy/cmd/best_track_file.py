@@ -10,7 +10,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
             description='generate `fort.22` information from HURDAT2 data')
     parser.add_argument('storm_id',
-                        help='storm id from HURDAT2 table: ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table')
+                        help='Can be StormYYYY (eg. Sandy2012) or '
+                        'storm id from HURDAT2 table: ftp://ftp.nhc.noaa.gov/'
+                        'atcf/archive/storm.table')
     parser.add_argument('--save-path', help='path to which to write fort.22')
     parser.add_argument('--start-date', help='format is %%Y%%m%%d%%H')
     parser.add_argument('--end-date', help='format is %%Y%%m%%d%%H')
