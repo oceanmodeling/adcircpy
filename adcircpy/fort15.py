@@ -987,7 +987,7 @@ class Fort15:
     @property
     def WTIMINC(self):
         if self.NWS not in [0, 1, 9, 11]:
-            return self.wind_forcing.WTIMINC
+            return int(self.wind_forcing.interval / timedelta(seconds=1))
         else:
             return 0
 
@@ -995,7 +995,7 @@ class Fort15:
     def RSTIMINC(self):
         if self.NRS in [1, 3, 4, 5]:
             if self.wave_forcing is not None:
-                return self.wave_forcing.RSTIMINC
+                return int(self.wave_forcing.interval / timedelta(seconds=1))
             else:
                 return self.WTIMINC
         else:
