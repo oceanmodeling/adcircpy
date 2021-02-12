@@ -405,10 +405,10 @@ class AdcircRun(Fort15):
             if hotstart:
                 super().write('hotstart', output_directory / hotstart,
                               overwrite)
-        if isinstance(self._server_config, SlurmConfig):
-            driver = self._server_config._filename
 
         if driver is not None:
+            if isinstance(self._server_config, SlurmConfig):
+                driver = self._server_config._filename
             DriverFile(self).write(output_directory / driver, overwrite)
 
     def import_stations(self, fort15):
