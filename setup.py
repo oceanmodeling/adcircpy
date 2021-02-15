@@ -76,21 +76,14 @@ setuptools.setup(
         },
         entry_points={
             'console_scripts': [
-                # runtime commands
                 'tidal_run=adcircpy.cmd.tidal_run:main',
                 'best_track_run=adcircpy.cmd.best_track_run:main',
-                # hack-a-mesh tools
-                'iter_smooth=adcircpy.cmd.iter_smooth:main',
-                # Generators
-                # 'generate_hindcast=adcircpy._cmd.generate_hindcast:main',
                 'best_track_file=adcircpy.cmd.best_track_file:main',
-                # Plotters
                 'plot_mesh=adcircpy.cmd.plot_mesh:main',
                 'plot_maxele=adcircpy.cmd.plot_maxele:main',
                 'plot_fort61=adcircpy.cmd.plot_fort61:main',
                 'fort63=adcircpy.cmd.fort63:main',
-                # tpxo_install
-                'tpxo_install=adcircpy.forcing.tides.tpxo:install',
+
             ]
         },
         test_suite='nose.collector',
