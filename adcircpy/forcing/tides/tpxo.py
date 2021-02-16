@@ -27,8 +27,6 @@ class TPXO:
             file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
 
         if isinstance(file, pathlib.Path):
-            if not file.is_file():
-                self._fetch_tpxo_file(prefix, file)
             self._nc = Dataset(file)
             return
 
@@ -116,75 +114,6 @@ class TPXO:
         msg = "vertices must be of shape M x 2"
         assert vertices.shape[1] == 2, msg
 
-    @staticmethod
-    def _fetch_tpxo_file(prefix: str, file: str):
-        url = "https://www.dropbox.com/s/uc44cbo5s2x4n93/"
-        url += "h_tpxo9.v1.tar.gz?dl=1"
-
-        def query_yes_no(question: str, default: str = "yes") -> bool:
-            """
-            Ask a yes/no question via raw_input() and return their answer.
-
-            :param question: string presented to the user
-            :param default: presumed answer if the user just hits <Enter>; must be "yes" (the default), "no", or None (meaning an answer is required of the user)
-            :returns: whether 'yes' or 'no' was selected by the user
-            """
-
-            valid = {
-                "yes": True,
-                "y": True,
-                "ye": True,
-                "no": False,
-                "n": False
-            }
-            if default is None:
-                prompt = " [y/n] "
-            elif default == "yes":
-                prompt = " [Y/n] "
-            elif default == "no":
-                prompt = " [y/N] "
-            else:
-                raise ValueError("invalid default answer: '%s'" % default)
-
-            while 1:
-                sys.stdout.write(question + prompt)
-                choice = input().lower()
-                if default is not None and choice == '':
-                    return valid[default]
-                elif choice in valid.keys():
-                    return valid[choice]
-                else:
-                    sys.stdout.write(
-                        "Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
-
-        q = "******* PLEASE READ *******\n"
-        q += "A function that is being invoked requires the TPXO file.\n"
-        q += 'This software can automatically fetch the TPXO file for you usin'
-        q += 'g your internet connection.\n'
-        q += 'You may also cancel this operation and provide the path to the '
-        q += 'h_tpxo9.v1.nc file using the TPXO_NCFILE environment variable.\n'
-        q += "By downloading this file and using this software, you are "
-        q += "accepting the licensing agreement for the TPXO file found here:"
-        q += "\nhttps://drive.google.com/file/d/1f00WojHqu7_VE5Hg9OdiVBjymH76d"
-        q += "FCy/view\n"
-        q += 'If you accept the agreement, you may also download the TPXO '
-        q += f"file from: {url}\n"
-        q += "Would you like this software to fetch and stage the TPXO file "
-        q += "from the internet now?\n"
-        a = query_yes_no(q)
-        if a is False:
-            raise RuntimeError('No TPXO database found.')
-        else:
-            msg = f'Downloading TPXO database to {str(file)}'
-            msg += ' please wait... \n'
-            msg += 'The h_tpxo.v1.nc file will occupy about 1.2G.'
-            print(msg)
-            tmpdir = tempfile.TemporaryDirectory()
-            _tmpdir = pathlib.Path(tmpdir.name)
-            wget.download(url, out=str(_tmpdir / "h_tpxo9.v1.tar.gz"))
-            with tarfile.open(_tmpdir / "h_tpxo9.v1.tar.gz") as f:
-                f.extract('h_tpxo9.v1.nc', path=prefix + '/lib')
-
     @property
     def _nc(self):
         return self.__nc
@@ -192,9 +121,3 @@ class TPXO:
     @_nc.setter
     def _nc(self, nc):
         self.__nc = nc
-
-
-def install():
-    prefix = "/".join(sys.executable.split('/')[:-2])
-    file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
-    TPXO._fetch_tpxo_file(prefix, file)
