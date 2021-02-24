@@ -1,19 +1,13 @@
 import os
 import pathlib
 import sys
-import tarfile
-import tempfile
 
 from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
-import wget
 
 
 class TPXO:
-    """
-    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204  # noqa:E501
-    """
 
     def __init__(self):
 
@@ -30,14 +24,16 @@ class TPXO:
             self._nc = Dataset(file)
             return
 
-        msg = "No TPXO file found. You need to register and request a "
-        msg += "copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc)"
-        msg += " from the authors at https://www.tpxo.net. Once you obtain"
-        msg += " this copy, set the environment variable TPXO_NCFILE "
-        msg += "to point to the path of the h_tpxo9.v1.nc file. \n"
-        msg += "You may also install this file manually by placing it on "
-        msg += f"the {str(file)} path."
-        raise FileNotFoundError(msg)
+        raise FileNotFoundError(
+            'No TPXO file found.\nNew users will need to register and request '
+            'a copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc) '
+            'from the authors at https://www.tpxo.net. Once you obtain'
+            'this copy, you can set the environment variable TPXO_NCFILE '
+            'to point to the path of the h_tpxo9.v1.nc file or you may '
+            f'symlink this file manually to {str(file)} path. New packages '
+            'are being developed in order to provide this information as open '
+            'source in the future. Thanks for your patience and understanding '
+            'while we work on these new developments.')
 
     def __call__(self, constituent, vertices):
         """
