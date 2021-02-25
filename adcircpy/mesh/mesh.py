@@ -383,112 +383,17 @@ class AdcircMesh(EuclideanMesh2D):
         else:
             print(self.fort13)
 
-    def critical_timestep(self, cfl, maxvel=5., g=9.8, method='simple'):
+    def critical_timestep(self, cfl, maxvel=5., g=9.8):
         """
         http://swash.sourceforge.net/online_doc/swashuse/node47.html
         """
-        msg = "method keyword must be 'simple' or 'conservative'"
-        assert method in ['simple', 'conservative'], msg
         dxdy = len(self.values) * [None]
         for k, v in self.node_distances_meters.items():
             _dxdy = []
             for idx in v:
                 _dxdy.append(self.node_distances_meters[k][idx])
             dxdy[k] = np.min(_dxdy)
-        if method == 'simple':
-            return cfl * np.min(dxdy) / np.abs(maxvel)
-        elif method == 'conservative':
-            n = cfl * np.asarray(dxdy)
-            d = np.sqrt(g * np.abs(self.values)) + np.abs(maxvel)
-            return np.min(np.divide(n, d))
-
-    def limgrad(self, dfdx, imax=100, ftol=None, verbose=False, minimize=True):
-        if not self.crs.is_geographic:
-            original_crs = self.crs
-            self.transform_to("EPSG:3395")
-        ffun = self.values.copy()
-        edges = self.triangulation.edges
-        if ftol is None:
-            ftol = np.min(ffun) * np.sqrt(np.finfo(float).eps)
-        ftol = float(ftol)
-
-        # precompute distances
-        distances = np.sqrt(
-                (self.x[edges[:, 0]] - self.x[edges[:, 1]]) ** 2
-                +
-                (self.y[edges[:, 0]] - self.y[edges[:, 1]]) ** 2
-        )
-        dz = np.abs(ffun[edges[:, 0]] - ffun[edges[:, 1]])
-
-        def get_active_edges_wetdry():
-            idxs = np.where(np.sum(np.sign(self.values[edges]), axis=1) == 0)
-            _active_eges = np.zeros(edges.shape[0], dtype=bool)
-            _active_eges[idxs] = True
-            active_edges = edges[np.where(
-                    np.logical_and(
-                            np.divide(dz, distances) > dfdx,
-                            _active_eges
-                    ))]
-            return active_edges
-
-        def get_active_edges_traditional():
-            return edges[np.divide(dz, distances) > dfdx]
-
-        active_edges = get_active_edges_traditional()
-        # active_edges = get_active_edges_wetdry
-        cnt = 0
-        cnt_table = [len(active_edges)]
-        if verbose:
-            print(f"iteration: {cnt}, "
-                  f"remaining points: {len(active_edges)}")
-        _iter = False
-        while len(active_edges) > 0:
-            cnt += 1
-            active_distances = np.sqrt(
-                    (self.x[active_edges[:, 0]] - self.x[
-                        active_edges[:, 1]]) ** 2
-                    +
-                    (self.y[active_edges[:, 0]] - self.y[
-                        active_edges[:, 1]]) ** 2
-            )
-            for i, (p0, p1) in enumerate(active_edges):
-                z0, z1 = ffun[p0], ffun[p1]
-                # push down method
-                # if z0 > z1:
-                #     ffun[p0] = z0 - dfdx*active_distances[i]
-                # elif z0 < z1:
-                #     ffun[p1] = z0 - dfdx*active_distances[i]
-
-                # traditional method
-                z0, z1 = ffun[p0], ffun[p1]
-                if z0 < z1:
-                    ffun[p1] = z0 + dfdx * active_distances[i]
-                elif z0 > z1:
-                    ffun[p1] = z0 - dfdx * active_distances[i]
-
-            dz = np.abs(ffun[edges[:, 0]] - ffun[edges[:, 1]])
-            active_edges = get_active_edges_traditional()
-            # active_edges = get_active_edges_wetdry()
-            cnt_table.append(len(active_edges))
-            if verbose:
-                print(f"iteration: {cnt}, "
-                      f"remaining points: {len(active_edges)}")
-            if imax == cnt:
-                break
-        if cnt == imax:
-            if minimize:
-                idx = cnt_table.index(min(cnt_table))
-                if idx > 0:
-                    self.limgrad(
-                            dfdx,
-                            idx,
-                            verbose=verbose,
-                            minimize=False
-                    )
-
-        if 'original_crs' in locals():
-            self.transform_to(original_crs)
-        self._values = ffun
+        return cfl * np.min(dxdy) / np.abs(maxvel)
 
     # plotting functions
     @fig._figure
