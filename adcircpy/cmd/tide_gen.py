@@ -33,7 +33,10 @@ def main():
     mesh = AdcircMesh.open(args.mesh, crs=args.mesh_crs)
     mesh.add_forcing(tides)
     fort15 = Fort15(mesh)
-    print(fort15.get_tidal_forcing())
+    if args.output_file is not None:
+        open(args.output_file, 'w').write(fort15.get_tidal_forcing())
+    else:
+        print(fort15.get_tidal_forcing())
 
 
 if __name__ == '__main__':
