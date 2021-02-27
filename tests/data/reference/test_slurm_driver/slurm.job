@@ -45,7 +45,8 @@ run_coldstart_phase() {
   ln -sf ../fort.15.coldstart ./fort.15
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  srun padcirc clean_directory
+  srun padcirc
+  clean_directory
   cd ..
 }
 
@@ -59,7 +60,8 @@ run_hotstart_phase() {
   ln -sf ../coldstart/fort.67.nc
   adcprep --np $SLURM_NTASKS --partmesh
   adcprep --np $SLURM_NTASKS --prepall
-  srun padcirc clean_directory
+  srun padcirc
+  clean_directory
   cd ..
 }
 
