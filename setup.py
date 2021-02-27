@@ -83,6 +83,7 @@ setuptools.setup(
                 'plot_maxele=adcircpy.cmd.plot_maxele:main',
                 'plot_fort61=adcircpy.cmd.plot_fort61:main',
                 'fort63=adcircpy.cmd.fort63:main',
+                'tide_gen=adcircpy.cmd.tide_gen:main'
 
             ]
         },

@@ -13,8 +13,10 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 import numpy as np
 from pandas import DataFrame, read_csv
-from pyproj import Proj
+from pyproj import Proj, CRS, Transformer
+from shapely import ops
 from shapely.geometry import Point, Polygon
+import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 
@@ -32,12 +34,11 @@ class BestTrackForcing(WindForcing):
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
-        if path.exists() or overwrite:
-            with open(path, 'w') as f:
-                f.write(self.fort22)
-        else:
-            raise Exception('Files exist, '
-                            'set overwrite=True to allow overwrite.')
+        if path.exists() and overwrite is False:
+            raise Exception(
+                'File exist, set overwrite=True to allow overwrite.')
+        with open(path, 'w') as f:
+            f.write(self.fort22)
 
     @property
     def fort22(self):
@@ -372,10 +373,7 @@ class BestTrackForcing(WindForcing):
             self.__df = DataFrame(data=data)
             return self.__df
 
-    def clip_to_bbox(self, bbox):
-        """
-        Important: bbox must be expressed in Mercator projection (EPSG:3395)
-        """
+    def clip_to_bbox(self, bbox, bbox_crs):
         msg = f"bbox must be a {Bbox} instance."
         assert isinstance(bbox, Bbox), msg
         bbox_pol = Polygon(
@@ -387,24 +385,39 @@ class BestTrackForcing(WindForcing):
                  ])
         _switch = True
         unique_dates = np.unique(self._df['datetime'])
+        _found_start_date = False
         for _datetime in unique_dates:
             records = self._df[self._df['datetime'] == _datetime]
             radii = records['radius_of_last_closed_isobar'].iloc[0]
             radii = 1852. * radii  # convert to meters
-            merc = Proj("EPSG:3395")
-            x, y = merc(
-                    records['longitude'].iloc[0],
-                    records['latitude'].iloc[0])
-            p = Point(x, y)
+            lon = records['longitude'].iloc[0]
+            lat = records['latitude'].iloc[0]
+            _, _, number, letter = utm.from_latlon(lat, lon)
+            df_crs = CRS.from_epsg(4326)
+            utm_crs = CRS(
+                    proj='utm',
+                    zone=f'{number}{letter}',
+                    ellps={
+                        'GRS 1980': 'GRS80',
+                        'WGS 84': 'WGS84'
+                        }[df_crs.ellipsoid.name]
+                )
+            transformer = Transformer.from_crs(
+                df_crs, utm_crs, always_xy=True)
+            p = Point(*transformer.transform(lon, lat))
             pol = p.buffer(radii)
-            if _switch:
+            transformer = Transformer.from_crs(
+                utm_crs, bbox_crs, always_xy=True)
+            pol = ops.transform(transformer.transform, pol)
+            if _switch is True:
                 if not pol.intersects(bbox_pol):
                     continue
                 else:
                     self.start_date = records['datetime'].iloc[0]
+                    _found_start_date = True
                     _switch = False
                     continue
-                    # self.start_date =
+
             else:
                 if pol.intersects(bbox_pol):
                     continue
@@ -412,25 +425,28 @@ class BestTrackForcing(WindForcing):
                     self.end_date = records['datetime'].iloc[0]
                     break
 
-    def plot_trajectory(self, ax=None, show=False, color='k', **kwargs):
+        if _found_start_date is False:
+            raise Exception('No storm data within mesh bounding box.')
+
+    def plot_track(self, axes=None, show=False, color='k', **kwargs):
         kwargs.update({'color': color})
-        if ax is None:
+        if axes is None:
             fig = plt.figure()
-            ax = fig.add_subplot(111)
+            axes = fig.add_subplot(111)
         for i in range(len(self.speed)):
             # when dealing with nautical degrees, U is sine and V is cosine.
             U = self.speed.iloc[i] * np.sin(np.deg2rad(self.direction.iloc[i]))
             V = self.speed.iloc[i] * np.cos(np.deg2rad(self.direction.iloc[i]))
-            ax.quiver(
+            axes.quiver(
                     self.longitude.iloc[i], self.latitude.iloc[i], U, V,
                     **kwargs)
             if i % 6 == 0:
-                ax.annotate(
+                axes.annotate(
                         self.df['datetime'].iloc[i],
                         (self.longitude.iloc[i], self.latitude.iloc[i])
                 )
         if show:
-            ax.axis('scaled')
+            axes.axis('scaled')
             plt.show()
 
     def _generate_record_numbers(self):

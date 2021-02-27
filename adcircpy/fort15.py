@@ -1,13 +1,12 @@
 from datetime import datetime, timedelta
-from functools import lru_cache
 import math
 from os import PathLike
 import pathlib
 
 import numpy as np
 
-from adcircpy.forcing.tides.tpxo import TPXO
 from adcircpy.mesh.mesh import AdcircMesh
+from adcircpy.forcing.tides import Tides
 
 
 class Fort15:
@@ -89,40 +88,7 @@ class Fort15:
         # ----------------
         # tidal forcings
         # ----------------
-        f.append(f'{self.NTIF:<63d} ! NTIF')
-        active = self._get_active_tidal_potential_constituents()
-        for constituent in active:
-            forcing = self.tidal_forcing(constituent)
-            f.extend([
-                f'{constituent}',
-                f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
-            ])
-        f.append(f'{self.NBFR:d}')
-        active = self._get_active_tidal_forcing_constituents()
-        for constituent in active:
-            forcing = self.tidal_forcing(constituent)
-            f.extend(
-                [
-                    f'{constituent}',
-                    f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
-                    # f'{len(self.mesh.open_boundaries)}',
-                ]
-            )
-        for id, bnd in self.mesh.open_boundaries.items():
-            # f.append(f'{bnd["neta"]}')
-            # elevation
-            if bnd['iettype'] in [0, 1, 4]:
-                pass
-            elif bnd['iettype'] in [3, 5]:
-                for constituent in self.tidal_forcing.get_active_constituents():
-                    f.append(f'{constituent}')
-                    vertices = self.mesh.get_xy(crs='EPSG:4326')[
-                               bnd['indexes'], :]
-                    amp, phase = self.tidal_forcing.tpxo(constituent, vertices)
-                    f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
-                             range(len(vertices)))
-            elif bnd['iettype'] in 2:
-                bnd['iettype']['obj'].ethconst
+        f.append(self.get_tidal_forcing())
         f.append(f'{self.ANGINN:<63G} ! ANGINN')
         # ----------------
         # other boundary forcings go here.
@@ -345,6 +311,45 @@ class Fort15:
         with open(fort15, 'w', newline='\n') as f:
             f.write(self.fort15(runtype))
 
+    def get_tidal_forcing(self):
+        f = []
+        f.append(f'{self.NTIF:<63d} ! NTIF')
+        active = self._get_active_tidal_potential_constituents()
+        for constituent in active:
+            forcing = self.tidal_forcing(constituent)
+            f.extend([
+                f'{constituent}',
+                f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
+            ])
+        f.append(f'{self.NBFR:d}')
+        active = self._get_active_tidal_forcing_constituents()
+        for constituent in active:
+            forcing = self.tidal_forcing(constituent)
+            f.extend(
+                [
+                    f'{constituent}',
+                    f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
+                    # f'{len(self.mesh.open_boundaries)}',
+                ]
+            )
+        for id, bnd in self.mesh.open_boundaries.items():
+            # f.append(f'{bnd["neta"]}')
+            # elevation
+            if bnd['iettype'] in [0, 1, 4]:
+                pass
+            elif bnd['iettype'] in [3, 5]:
+                for constituent in self.tidal_forcing.get_active_constituents():
+                    f.append(f'{constituent}')
+                    vertices = self.mesh.get_xy(crs='EPSG:4326')[
+                               bnd['indexes'], :]
+                    amp, phase = self.tidal_forcing.tidal_database(
+                        constituent, vertices)
+                    f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
+                             range(len(vertices)))
+            elif bnd['iettype'] in 2:
+                bnd['iettype']['obj'].ethconst
+        return '\n'.join(f)
+
     @property
     def namelists(self) -> {str: {str: str}}:
         namelists = {}
@@ -559,11 +564,6 @@ class Fort15:
             return True
 
     @property
-    @lru_cache(maxsize=None)
-    def TPXO(self):
-        return TPXO()
-
-    @property
     def timestep(self):
         return np.abs(self.DTDP)
 
@@ -658,6 +658,8 @@ class Fort15:
             if wind_forcing is not None:
                 # check for wave forcing here as well.
                 nws = int(wind_forcing.NWS % 100)
+            else:
+                nws = 0
         else:
             nws = 0
 
@@ -1211,6 +1213,13 @@ class Fort15:
                 raise NotImplementedError
             else:
                 return 0.0
+
+    @property
+    def tidal_forcing(self):
+        if not hasattr(self, '_tidal_forcing'):
+            self._tidal_forcing = self.mesh._boundary_forcing['iettype'].get(
+                'obj')
+        return self._tidal_forcing
 
     @property
     def NTIF(self):

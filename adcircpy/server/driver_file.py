@@ -37,8 +37,7 @@ class DriverFile:
         else:
             f += self._dual_phase_run + '\n'
 
-        f += self._clean_directory + '\n' + \
-             'main\n'
+        f += self._clean_directory + '\n' + 'main\n'
 
         return f
 
@@ -82,8 +81,8 @@ class DriverFile:
     def _bash_main_dual_phase(self):
         error_exit_code = -1
 
-        f = f'SECONDS=0\n' \
-            f'run_coldstart_phase\n'
+        f = 'SECONDS=0\n' \
+            'run_coldstart_phase\n'
 
         f += bash_if_statement(
                 if_condition=f'grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." {self._logfile}',
@@ -129,7 +128,7 @@ class DriverFile:
         if not isinstance(self._server_config, SlurmConfig):
             f += f'2>&1 | tee ../{self._logfile}'
 
-        f += 'clean_directory\n' \
+        f += '\nclean_directory\n' \
              'cd ..'
 
         return bash_function('run_coldstart_phase', f)
@@ -170,7 +169,7 @@ class DriverFile:
 
         if not isinstance(self._server_config, SlurmConfig):
             f += f'2>&1 | tee -a ../{self._logfile}'
-        f += 'clean_directory\n' \
+        f += '\nclean_directory\n' \
              'cd ..'
 
         return bash_function('run_hotstart_phase', f)

@@ -4,6 +4,7 @@ from functools import lru_cache
 import pathlib
 
 from adcircpy import AdcircMesh, AdcircRun, Tides, server
+from adcircpy.forcing.tides import TPXO, HAMTIDE
 
 
 class AdcircCommand:
@@ -68,7 +69,7 @@ class AdcircCommand:
     @property
     @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        tidal_forcing = Tides()
+        tidal_forcing = Tides(database=self._args.tidal_database)
         for constituent in self.constituents:
             tidal_forcing.use_constituent(constituent)
         return tidal_forcing
@@ -97,9 +98,12 @@ class AdcircCommand:
         try:
             return self.__constituents
         except AttributeError:
-            # might be better to get these from Tides()
+            # TODO: might be better to get these from Tides()
             _major = ('Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2')
-            _all = (*_major, 'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1')
+            if self._args.tidal_database == 'tpxo':
+                _all = (*_major, 'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1')
+            elif self._args.tidal_database == 'hamtide':
+                _all = _major
             if ('all' in self._args.constituents
                     and len(self._args.constituents) > 1):
                 msg = 'When using all, must only pass one'

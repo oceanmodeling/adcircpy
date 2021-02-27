@@ -30,10 +30,7 @@ class TPXO:
             'from the authors at https://www.tpxo.net. Once you obtain'
             'this copy, you can set the environment variable TPXO_NCFILE '
             'to point to the path of the h_tpxo9.v1.nc file or you may '
-            f'symlink this file manually to {str(file)} path. New packages '
-            'are being developed in order to provide this information as open '
-            'source in the future. Thanks for your patience and understanding '
-            'while we work on these new developments.')
+            f'symlink this file manually to {str(file)} path.')
 
     def __call__(self, constituent, vertices):
         """

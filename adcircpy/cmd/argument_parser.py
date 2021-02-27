@@ -127,6 +127,11 @@ def tidal_constituents(parser):
         default=[],
         help=msg
     )
+    parser.add_argument(
+        "--tidal-database",
+        choices=["hamtide", "tpxo"],
+        default='hamtide'
+    )
 
 
 def timestep(parser):

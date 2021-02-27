@@ -17,6 +17,7 @@ import urllib.request
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.server import SlurmConfig
+from adcircpy.forcing.winds import BestTrackForcing
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
@@ -43,6 +44,10 @@ def main():
 
     mesh.add_forcing(tidal_forcing)
 
+    # Add wind forcing to model
+    wind_forcing = BestTrackForcing('Sandy2012')
+    mesh.add_forcing(wind_forcing)
+
     # instantiate AdcircRun object.
     slurm = SlurmConfig(
         account='account',
@@ -57,12 +62,12 @@ def main():
         path_prefix='$HOME/adcirc/build'
     )
     driver = AdcircRun(
-        mesh=mesh,
-        start_date=datetime.now(),
-        end_date=timedelta(days=7),
-        spinup_time=timedelta(days=5),
+        mesh,
+        spinup_time=timedelta(days=15),
         server_config=slurm
     )
+
+    # Write driver state to file.
     driver.write(PARENT / "outputs/example_3", overwrite=True)
 
 

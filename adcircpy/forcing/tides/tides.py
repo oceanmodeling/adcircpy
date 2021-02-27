@@ -5,10 +5,32 @@ from functools import lru_cache
 import numpy as np
 
 from adcircpy.forcing import bctypes
-from adcircpy.forcing.tides.tpxo import TPXO
+from adcircpy.forcing.tides import TPXO, HAMTIDE
+
+
+class TidalDatabase:
+
+    def __set__(self, obj, val):
+        if val.lower() not in ['hamtide', 'tpxo']:
+            raise ValueError(
+                'Argument tidal_database must be "hamtide" or "tpxo"')
+        if val.lower() == 'hamtide':
+            val = HAMTIDE()
+        elif val.lower() == 'tpxo':
+            val = TPXO()
+
+        obj.__dict__['tidal_database'] = val
+
+    def __get__(self, obj, val):
+        return obj.__dict__['tidal_database']
 
 
 class Tides(bctypes.EtaBc):
+
+    _tidal_database = TidalDatabase()
+
+    def __init__(self, database='hamtide'):
+        self._tidal_database = database
 
     def __call__(self, constituent):
         return self.get_tidal_constituent(constituent)
@@ -405,15 +427,18 @@ class Tides(bctypes.EtaBc):
 
     @property
     def constituents(self):
-        return (
-            *self.major_constituents,
-            'Mm',
-            'Mf',
-            'M4',
-            'MN4',
-            'MS4',
-            '2N2',
-            'S1')
+        if isinstance(self._tidal_database, TPXO):
+            return (
+                *self.major_constituents,
+                'Mm',
+                'Mf',
+                'M4',
+                'MN4',
+                'MS4',
+                '2N2',
+                'S1')
+        elif isinstance(self._tidal_database, HAMTIDE):
+            return self.major_constituents
 
     @property
     def orbital_frequencies(self):
@@ -579,8 +604,8 @@ class Tides(bctypes.EtaBc):
     @property
     def R(self):
         return (np.arctan(np.sin(2. * self.PC)
-                          / ((1. / 6.) * (
-                1. / np.tan(.5 * self.I)) ** 2 - np.cos(2. * self.PC))))
+                / ((1. / 6.) * (1. / np.tan(.5 * self.I)) ** 2
+                    - np.cos(2. * self.PC))))
 
     @property
     def DR(self):
@@ -588,9 +613,8 @@ class Tides(bctypes.EtaBc):
 
     @property
     def NUP2(self):
-        return (np.arctan(np.sin(2. * self.NU)
-                          / (np.cos(2. * self.NU) + .0726184 / np.sin(
-            self.I) ** 2)) / 2.)
+        return (np.arctan(np.sin(2. * self.NU) / (np.cos(2. * self.NU)
+                + .0726184 / np.sin(self.I) ** 2)) / 2.)
 
     @property
     def DNUP2(self):
@@ -623,9 +647,8 @@ class Tides(bctypes.EtaBc):
         return len(self.get_active_forcing_constituents())
 
     @property
-    @lru_cache(maxsize=None)
-    def tpxo(self):
-        return TPXO()
+    def tidal_database(self):
+        return self._tidal_database
 
     @start_date.setter
     def start_date(self, start_date):

@@ -26,6 +26,7 @@ See the [examples](examples) directory for usage examples.
 
 ### Command Line:
 This program exposes a few commands available from the command line interface. You may pass the `-h` flag to any of this commands to explore their functionality. 
+* `tide_gen`
 * `plot_mesh`
 * `tidal_run`
 * `best_track_run`
@@ -35,6 +36,19 @@ This program exposes a few commands available from the command line interface. Y
 * `fort63`
 
 #### Command line examples:
+
+##### Generate tidal constituent template from command line
+You can quickly create a tidal component table for your your mesh by executing the `tide_gen` command and by passing a mesh, a start date and number of run days as arguments.
+This functions sources data from the [HAMTIDE](https://icdc.cen.uni-hamburg.de/en/hamtide.html) database by default.
+```bash
+tide_gen \
+    /path/to/your/fort.14 \
+    2021-02-26T00:00:00 \
+    15 \
+    --mesh-crs='epsg:4326'
+```
+
+
 ##### Hurricane Sandy (AL182012)
 To create the ADCIRC input files includes both tides and storm data for Hurricane Sandy:
 ```bash

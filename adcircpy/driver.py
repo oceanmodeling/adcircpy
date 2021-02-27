@@ -14,6 +14,7 @@ from psutil import cpu_count
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.forcing.waves.base import WaveForcing
 from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
@@ -25,8 +26,8 @@ class AdcircRun(Fort15):
     def __init__(
             self,
             mesh: AdcircMesh,
-            start_date: datetime,
-            end_date: datetime,
+            start_date: datetime = None,
+            end_date: datetime = None,
             spinup_time: timedelta = None,
             netcdf: bool = True,
             server_config: Union[int, SSHConfig, SlurmConfig] = None,
@@ -359,7 +360,7 @@ class AdcircRun(Fort15):
             driver: str = 'driver.sh',
     ):
         output_directory = pathlib.Path(output_directory)
-        output_directory.mkdir(parents=True, exist_ok=overwrite)
+        output_directory.mkdir(parents=True, exist_ok=True)
 
         # write fort.14
         if fort14:
@@ -388,6 +389,10 @@ class AdcircRun(Fort15):
             self._IHOT = 0
             # and call the hotstart writer,
             super().write('hotstart', output_directory / fort15, overwrite)
+            if self.wind_forcing is not None:
+                if fort22:
+                    self.wind_forcing.write(output_directory / fort22,
+                                            overwrite)
 
         # CASE 2:
         # This is a run that the user specified some ramping time.
@@ -877,6 +882,9 @@ class AdcircRun(Fort15):
 
     @_start_date.setter
     def _start_date(self, start_date):
+        if start_date is None:
+            if isinstance(self.wind_forcing, BestTrackForcing):
+                start_date = self.wind_forcing.start_date
         assert isinstance(start_date, datetime)
         self.__start_date = start_date
 
@@ -886,6 +894,9 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
+        if end_date is None:
+            if isinstance(self.wind_forcing, BestTrackForcing):
+                end_date = self.wind_forcing.end_date
         if isinstance(end_date, timedelta):
             end_date = self._start_date + end_date
         assert isinstance(end_date, datetime)
