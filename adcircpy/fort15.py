@@ -525,7 +525,7 @@ class Fort15:
     @property
     def gwce_solution_scheme(self):
         """
-        'semi-implicit' (default) | 'explicit'
+        'semi-implicit' (default) | 'explicit | 'semi-implicit-legacy'
         """
         try:
             return self.__gwce_solution_scheme
@@ -1123,7 +1123,7 @@ class Fort15:
             return self.__B00
         except AttributeError:
             if self.gwce_solution_scheme == 'explicit':
-                return 0
+                return 1
             if self.gwce_solution_scheme == 'semi-implicit-legacy':
                 return 0.30
             if self.gwce_solution_scheme == 'semi-implicit':
@@ -2193,7 +2193,8 @@ class Fort15:
 
     @gwce_solution_scheme.setter
     def gwce_solution_scheme(self, gwce_solution_scheme):
-        assert gwce_solution_scheme in ['semi-implicit', 'explicit']
+        assert gwce_solution_scheme in ['semi-implicit', 'explicit',
+                                        'semi-implicit-legacy']
         self.__gwce_solution_scheme = gwce_solution_scheme
 
     @passive_scalar_transport.setter
