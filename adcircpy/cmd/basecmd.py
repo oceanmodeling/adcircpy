@@ -148,7 +148,7 @@ class AdcircCommand:
                 "mail_user": self._args.mail_user,
                 "log_filename": self._args.log_filename,
                 "modules": self._args.modules,
-                "path_prefix": self._args.path_prefix,
+                "path_prefix": self._args.binaries_prefix,
                 "extra_commands": self._args.extra_commands,
                 "launcher": self._args.slurm_launcher,
                 "nodes": self._args.slurm_nodes

@@ -96,7 +96,6 @@ def server(parser):
     parser.add_argument('--mail-type')
     parser.add_argument('--mail-user')
     parser.add_argument('--log-filename')
-    parser.add_argument('--path-prefix')
     parser.add_argument('--slurm-nodes')
     parser.add_argument('--slurm-launcher', default='srun')
     parser.add_argument('--extra-commands', action='append')
