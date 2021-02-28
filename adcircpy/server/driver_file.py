@@ -25,6 +25,10 @@ class DriverFile:
             f += '\nulimit -s unlimited\n' \
                  '\nset -e\n'
 
+        if not isinstance(self._server_config, int):
+            if self._server_config._path_prefix is not None:
+                f += f'\nPATH={self._server_config._path_prefix}:$PATH\n'
+
         if self._executable.startswith('p') and \
                 isinstance(self._server_config, int):
             if self._server_config > 1:

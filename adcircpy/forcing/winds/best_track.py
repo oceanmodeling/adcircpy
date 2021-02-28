@@ -426,7 +426,8 @@ class BestTrackForcing(WindForcing):
                     break
 
         if _found_start_date is False:
-            raise Exception('No storm data within mesh bounding box.')
+            raise Exception(
+                f'No data within mesh bounding box for storm {self.storm_id}.')
 
     def plot_track(self, axes=None, show=False, color='k', **kwargs):
         kwargs.update({'color': color})
