@@ -751,18 +751,18 @@ class AdcircRun(Fort15):
     def _certify_output_request(
             self,
             sampling_rate: timedelta,
-            start,
-            end,
-            spinup,
-            spinup_start,
-            spinup_end,
-            netcdf,
-            harmonic_analysis,
+            start: datetime,
+            end: datetime,
+            spinup: Union[timedelta, int],
+            spinup_start: datetime,
+            spinup_end: datetime,
+            netcdf: bool,
+            harmonic_analysis: bool,
     ):
         self._validate_argument(sampling_rate, timedelta, 'sampling_rate')
         self._validate_argument(start, datetime, 'start')
         self._validate_argument(end, datetime, 'end')
-        self._validate_argument(spinup, timedelta, 'spinup')
+        self._validate_argument(spinup, [timedelta, int], 'spinup')
         self._validate_argument(spinup_start, datetime, 'spinup_start')
         self._validate_argument(spinup_end, datetime, 'spinup_end')
         self._validate_argument(netcdf, bool, 'netcdf', include_none=False)
