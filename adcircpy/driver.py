@@ -5,7 +5,7 @@ import pathlib
 import shutil
 import subprocess
 import tempfile
-from typing import Union
+from typing import Any, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,11 +66,11 @@ class AdcircRun(Fort15):
     def set_elevation_stations_output(
             self,
             sampling_rate: timedelta,
-            start: Union[timedelta, int] = None,
-            end: Union[timedelta, int] = None,
+            start: datetime = None,
+            end: datetime = None,
             spinup: Union[timedelta, int] = None,
-            spinup_start: Union[timedelta, int] = None,
-            spinup_end: Union[timedelta, int] = None,
+            spinup_start: datetime = None,
+            spinup_end: datetime = None,
             netcdf: bool = True,
             harmonic_analysis: bool = False,
     ):
@@ -751,61 +751,38 @@ class AdcircRun(Fort15):
     def _certify_output_request(
             self,
             sampling_rate: timedelta,
-            start,
-            end,
-            spinup,
-            spinup_start,
-            spinup_end,
-            netcdf,
-            harmonic_analysis,
+            start: datetime,
+            end: datetime,
+            spinup: Union[timedelta, int],
+            spinup_start: datetime,
+            spinup_end: datetime,
+            netcdf: bool,
+            harmonic_analysis: bool,
     ):
-        self._certify_sampling_rate(sampling_rate)
-        self._certify__OUT__('start', start)
-        self._certify__OUT__('end', end)
-        self._certify_spinup(spinup)
-        self._certify__OUT__('spinup_start', spinup_start)
-        self._certify__OUT__('spinup_end', spinup_end)
-        self._certify_netcdf(netcdf)
-        self._certify_harmonic_analysis(harmonic_analysis)
+        self._validate_argument(sampling_rate, timedelta, 'sampling_rate')
+        self._validate_argument(start, datetime, 'start')
+        self._validate_argument(end, datetime, 'end')
+        self._validate_argument(spinup, [timedelta, int], 'spinup')
+        self._validate_argument(spinup_start, datetime, 'spinup_start')
+        self._validate_argument(spinup_end, datetime, 'spinup_end')
+        self._validate_argument(netcdf, bool, 'netcdf', include_none=False)
+        self._validate_argument(harmonic_analysis, bool, 'harmonic_analysis',
+                                include_none=False)
 
     def _write_bash_driver(self, destination):
         source = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
         shutil.copyfile(source, destination)
 
     @staticmethod
-    def _certify_sampling_rate(sampling_rate):
-        msg = 'Error: sampling_rate argument must be either None, '
-        msg += f'or an instance of type {timedelta}.'
-        if sampling_rate is not None:
-            assert isinstance(sampling_rate, timedelta), msg
-        return sampling_rate
-
-    @staticmethod
-    def _certify_spinup(spinup):
-        msg = 'Error: spinup argument must be either None '
-        msg += f'or an instance of type {timedelta}.'
-        if spinup is not None:
-            assert isinstance(spinup, timedelta), msg
-        return spinup
-
-    @staticmethod
-    def _certify__OUT__(name, var):
-        # certifies TOUTS* and TOUTF*
-        msg = f'Error: {name} argument must be either {None}, '
-        msg += f'{int} or an instance of type {timedelta}.'
-        assert isinstance(var, (type(None), timedelta, int)), msg
-
-    @staticmethod
-    def _certify_netcdf(netcdf):
-        # certify netcdf ouptut request
-        msg = f'Error: netcdf must be of type {bool}.'
-        assert isinstance(netcdf, bool), msg
-
-    @staticmethod
-    def _certify_harmonic_analysis(harmonic_analysis):
-        # certify harmonic_analysis
-        msg = f'Error: harmonic_analysis must be of type {bool}.'
-        assert isinstance(harmonic_analysis, bool), msg
+    def _validate_argument(value: Any, types: [type], name: str = None,
+                           include_none: bool = True):
+        if isinstance(types, type):
+            types = [types]
+        name = f'"{name}"' if name is not None else 'value'
+        if include_none:
+            types.append(type(None))
+        if not isinstance(value, types):
+            raise ValueError(f'{name} is not of type(s) {types}')
 
     @staticmethod
     def _launch_command(cmd, rundir):
