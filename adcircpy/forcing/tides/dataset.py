@@ -8,7 +8,7 @@ class TidalDataset(ABC):
     CONSTITUENTS: [str] = NotImplementedError
 
     def __init__(self, path: PathLike = None):
-        self.path = str(path)
+        self.path = str(path) if path is not None else None
 
     @abstractmethod
     def __call__(

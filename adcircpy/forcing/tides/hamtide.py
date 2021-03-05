@@ -9,8 +9,6 @@ from scipy.interpolate import griddata
 # https://icdc.cen.uni-hamburg.de/en/hamtide.html
 from adcircpy.forcing.tides.dataset import TidalDataset
 
-OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
-
 
 class HAMTIDE(TidalDataset):
     '''
@@ -18,6 +16,7 @@ class HAMTIDE(TidalDataset):
     '''
 
     CONSTITUENTS = ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
+    OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
     def __init__(self, path: PathLike = None):
         if path is not None:
@@ -25,7 +24,7 @@ class HAMTIDE(TidalDataset):
             if len(list(path.glob('*.nc'))) == 0:
                 raise FileNotFoundError(f'no NetCDF files found at "{path}"')
         else:
-            path = OPENDAP_URL
+            path = self.OPENDAP_URL
 
         super().__init__(path)
 
@@ -139,7 +138,9 @@ class HAMTIDE(TidalDataset):
         ) * 0.01
 
     def _prepend_path(self, filename: str) -> str:
-        if isinstance(self.path, Path):
+        if self.path is None:
+            path = self.path
+        elif isinstance(self.path, Path):
             path = self.path / filename
         else:
             path = self.path + filename
