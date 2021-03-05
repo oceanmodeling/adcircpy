@@ -7,7 +7,8 @@ from os import PathLike
 import numpy as np
 
 from adcircpy.forcing import bctypes
-from adcircpy.forcing.tides import HAMTIDE, TPXO
+from adcircpy.forcing.tides.hamtide import HAMTIDE
+from adcircpy.forcing.tides.tpxo import TPXO
 
 
 class TidalSource(Enum):
