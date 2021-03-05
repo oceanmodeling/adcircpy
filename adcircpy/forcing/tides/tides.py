@@ -1,45 +1,48 @@
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from enum import Enum
 from functools import lru_cache
+from os import PathLike
 
 import numpy as np
 
 from adcircpy.forcing import bctypes
-from adcircpy.forcing.tides import TPXO, HAMTIDE
+from adcircpy.forcing.tides.hamtide import HAMTIDE
+from adcircpy.forcing.tides.tpxo import TPXO
 
 
-class TidalDatabase:
-
-    def __set__(self, obj, val):
-        if val.lower() not in ['hamtide', 'tpxo']:
-            raise ValueError(
-                'Argument tidal_database must be "hamtide" or "tpxo"')
-        if val.lower() == 'hamtide':
-            val = HAMTIDE()
-        elif val.lower() == 'tpxo':
-            val = TPXO()
-
-        obj.__dict__['tidal_database'] = val
-
-    def __get__(self, obj, val):
-        return obj.__dict__['tidal_database']
+class TidalSource(Enum):
+    HAMTIDE = 'HAMTIDE'
+    TPXO = 'TPXO'
 
 
 class Tides(bctypes.EtaBc):
+    def __init__(self, tidal_source: TidalSource = TidalSource.HAMTIDE,
+                 resource: PathLike = None):
+        if isinstance(tidal_source, str):
+            try:
+                tidal_source = TidalSource[tidal_source.upper()]
+            except:
+                raise NotImplementedError(
+                        f'tidal source {tidal_source} not recognized; '
+                        f'must be one of {[entry.value for entry in TidalSource]}'
+                )
 
-    _tidal_database = TidalDatabase()
+        self.tidal_source = tidal_source
 
-    def __init__(self, database='hamtide'):
-        self._tidal_database = database
+        if self.tidal_source == TidalSource.HAMTIDE:
+            self.tidal_dataset = HAMTIDE(resource)
+        elif self.tidal_source == TidalSource.TPXO:
+            self.tidal_dataset = TPXO(resource)
 
-    def __call__(self, constituent):
+    def __call__(self, constituent: str) -> ():
         return self.get_tidal_constituent(constituent)
 
     def __iter__(self):
         for constituent in self.active_constituents:
-            yield (constituent, self.get_tidal_constituent(constituent))
+            yield constituent, self.get_tidal_constituent(constituent)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.active_constituents)
 
     def use_all(self, potential=True, forcing=True):
@@ -102,11 +105,13 @@ class Tides(bctypes.EtaBc):
         return self.orbital_frequencies[constituent]
 
     def get_tidal_constituent(self, constituent):
-        return (self.get_tidal_potential_amplitude(constituent),
-                self.get_orbital_frequency(constituent),
-                self.get_earth_tidal_potential(constituent),
-                self.get_nodal_factor(constituent),
-                self.get_greenwich_factor(constituent))
+        return (
+            self.get_tidal_potential_amplitude(constituent),
+            self.get_orbital_frequency(constituent),
+            self.get_earth_tidal_potential(constituent),
+            self.get_nodal_factor(constituent),
+            self.get_greenwich_factor(constituent)
+        )
 
     def get_earth_tidal_potential(self, constituent):
         try:
@@ -300,24 +305,34 @@ class Tides(bctypes.EtaBc):
             raise TypeError(msg)
 
     def get_lunar_node(self):
-        return (259.1560564 - 19.328185764 * self.DYR - .0529539336 * self.DDAY
-                - .0022064139 * self.hour_middle)
+        return 259.1560564 \
+               - 19.328185764 * self.DYR \
+               - .0529539336 * self.DDAY \
+               - .0022064139 * self.hour_middle
 
     def get_lunar_perigee(self):
-        return (334.3837214 + 40.66246584 * self.DYR + .111404016 * self.DDAY
-                + .004641834 * self.hour_middle)
+        return 334.3837214 \
+               + 40.66246584 * self.DYR \
+               + .111404016 * self.DDAY \
+               + .004641834 * self.hour_middle
 
     def get_lunar_mean_longitude(self):
-        return (277.0256206 + 129.38482032 * self.DYR + 13.176396768
-                * self.DDAY + .549016532 * self.forcing_start_date.hour)
+        return 277.0256206 \
+               + 129.38482032 * self.DYR \
+               + 13.176396768 * self.DDAY \
+               + .549016532 * self.forcing_start_date.hour
 
     def get_solar_perigee(self):
-        return (281.2208569 + .01717836 * self.DYR + .000047064 * self.DDAY
-                + .000001961 * self.start_date.hour)
+        return 281.2208569 \
+               + .01717836 * self.DYR \
+               + .000047064 * self.DDAY \
+               + .000001961 * self.start_date.hour
 
     def get_solar_mean_longitude(self):
-        return (280.1895014 - .238724988 * self.DYR + .9856473288 * self.DDAY
-                + .0410686387 * self.start_date.hour)
+        return 280.1895014 \
+               - .238724988 * self.DYR \
+               + .9856473288 * self.DDAY \
+               + .0410686387 * self.start_date.hour
 
     @property
     def EQ73(self):
@@ -368,8 +383,10 @@ class Tides(bctypes.EtaBc):
     def EQ213(self):
         """ """
         return np.sqrt(
-            1. - 12. * np.tan(self.I / 2.) ** 2 * np.cos(2. * self.P)
-            + 36. * np.tan(self.I / 2.) ** 4)
+                1.
+                - 12. * np.tan(self.I / 2.) ** 2 * np.cos(2. * self.P)
+                + 36. * np.tan(self.I / 2.) ** 4
+        )
 
     @property
     def EQ215(self):
@@ -378,20 +395,22 @@ class Tides(bctypes.EtaBc):
 
     @property
     def EQ227(self):
-        """ """
         return np.sqrt(
-            .8965 * np.sin(2. * self.I) ** 2 + .6001 * np.sin(2. * self.I)
-            * np.cos(self.NU) + .1006)
+                .8965 * np.sin(2. * self.I) ** 2
+                + .6001 * np.sin(2. * self.I) * np.cos(self.NU)
+                + .1006
+        )
 
     @property
-    def EQ235(self):
-        """ """
+    def EQ235(self) -> float:
         return .001 + np.sqrt(
-            19.0444 * np.sin(self.I) ** 4 + 2.7702 * np.sin(self.I) ** 2
-            * np.cos(2. * self.NU) + .0981)
+                19.0444 * np.sin(self.I) ** 4
+                + 2.7702 * np.sin(self.I) ** 2 * np.cos(2. * self.NU)
+                + .0981
+        )
 
     @property
-    def start_date(self):
+    def start_date(self) -> datetime:
         try:
             return self.__start_date
         except AttributeError:
@@ -399,7 +418,7 @@ class Tides(bctypes.EtaBc):
             raise AttributeError(msg)
 
     @property
-    def end_date(self):
+    def end_date(self) -> datetime:
         try:
             return self.__end_date
         except AttributeError:
@@ -407,41 +426,41 @@ class Tides(bctypes.EtaBc):
             raise AttributeError(msg)
 
     @property
-    def forcing_start_date(self):
+    def forcing_start_date(self) -> datetime:
         return self.start_date - self.spinup_time
 
     @property
-    def spinup_time(self):
+    def spinup_time(self) -> timedelta:
         try:
             return self.__spinup_time
         except AttributeError:
             return timedelta(0.)
 
     @property
-    def active_constituents(self):
+    def active_constituents(self) -> [str]:
         return self._active_constituents.copy()
 
     @property
-    def major_constituents(self):
-        return ('Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2')
+    def major_constituents(self) -> [str]:
+        return ['Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2']
 
     @property
-    def constituents(self):
-        if isinstance(self._tidal_database, TPXO):
-            return (
-                *self.major_constituents,
+    def constituents(self) -> [str]:
+        constituents = self.major_constituents
+        if self.tidal_source == TidalSource.TPXO:
+            constituents.extend([
                 'Mm',
                 'Mf',
                 'M4',
                 'MN4',
                 'MS4',
                 '2N2',
-                'S1')
-        elif isinstance(self._tidal_database, HAMTIDE):
-            return self.major_constituents
+                'S1'
+            ])
+        return constituents
 
     @property
-    def orbital_frequencies(self):
+    def orbital_frequencies(self) -> {str: float}:
         return {
             'M4': 0.0002810378050173,
             'M6': 0.0004215567080107,
@@ -479,10 +498,11 @@ class Tides(bctypes.EtaBc):
             'Ssa': 0.0000003982128677,
             'Sa': 0.0000001991061914,
             'Msf': 0.0000049252018242,
-            'Mf': 0.0000053234146919}
+            'Mf': 0.0000053234146919
+        }
 
     @property
-    def tidal_potential_amplitudes(self):
+    def tidal_potential_amplitudes(self) -> {str: float}:
         return {
             'M2': 0.242334,
             'S2': 0.112841,
@@ -491,10 +511,11 @@ class Tides(bctypes.EtaBc):
             'K1': 0.141565,
             'O1': 0.100514,
             'P1': 0.046843,
-            'Q1': 0.019256}
+            'Q1': 0.019256
+        }
 
     @property
-    def tidal_species_type(self):
+    def tidal_species_type(self) -> {str: float}:
         return {
             'M2': 2,
             'S2': 2,
@@ -503,10 +524,11 @@ class Tides(bctypes.EtaBc):
             'K1': 1,
             'O1': 1,
             'P1': 1,
-            'Q1': 1}
+            'Q1': 1
+        }
 
     @property
-    def earth_tidal_potentials(self):
+    def earth_tidal_potentials(self) -> {str: float}:
         return {
             'M2': 0.693,
             'S2': 0.693,
@@ -515,7 +537,8 @@ class Tides(bctypes.EtaBc):
             'K1': 0.736,
             'O1': 0.695,
             'P1': 0.706,
-            'Q1': 0.695}
+            'Q1': 0.695
+        }
 
     @property
     def hour_middle(self):
@@ -604,8 +627,8 @@ class Tides(bctypes.EtaBc):
     @property
     def R(self):
         return (np.arctan(np.sin(2. * self.PC)
-                / ((1. / 6.) * (1. / np.tan(.5 * self.I)) ** 2
-                    - np.cos(2. * self.PC))))
+                          / ((1. / 6.) * (1. / np.tan(.5 * self.I)) ** 2
+                             - np.cos(2. * self.PC))))
 
     @property
     def DR(self):
@@ -614,7 +637,8 @@ class Tides(bctypes.EtaBc):
     @property
     def NUP2(self):
         return (np.arctan(np.sin(2. * self.NU) / (np.cos(2. * self.NU)
-                + .0726184 / np.sin(self.I) ** 2)) / 2.)
+                                                  + .0726184 / np.sin(
+                        self.I) ** 2)) / 2.)
 
     @property
     def DNUP2(self):
@@ -645,10 +669,6 @@ class Tides(bctypes.EtaBc):
     @property
     def nbfr(self):
         return len(self.get_active_forcing_constituents())
-
-    @property
-    def tidal_database(self):
-        return self._tidal_database
 
     @start_date.setter
     def start_date(self, start_date):

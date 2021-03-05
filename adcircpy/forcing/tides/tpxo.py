@@ -1,91 +1,91 @@
 import os
-import pathlib
-import sys
+from os import PathLike
+from pathlib import Path
 
+import appdirs
 from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
 
+from adcircpy.forcing.tides.dataset import TidalDataset
 
-class TPXO:
 
-    def __init__(self):
+class TPXO(TidalDataset):
+    CONSTITUENTS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
+                    'M4', 'MN4', 'MS4', '2N2', 'S1']
+    DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
 
-        file = os.getenv('TPXO_NCFILE')
-        if file is not None:
-            self._nc = Dataset(file)
-            return
+    def __init__(self, tpxo_dataset_filename: PathLike = None):
+        if tpxo_dataset_filename is None:
+            environment_variable = os.getenv('TPXO_NCFILE')
+            if environment_variable is not None:
+                tpxo_dataset_filename = environment_variable
+            else:
+                tpxo_dataset_filename = self.DEFAULT_PATH
 
+        super().__init__(tpxo_dataset_filename)
+
+        if self.path is not None:
+            self.dataset = Dataset(self.path)
         else:
-            prefix = os.path.dirname(os.path.dirname(sys.executable))
-            file = pathlib.Path(prefix) / 'lib/h_tpxo9.v1.nc'
+            raise FileNotFoundError(
+                    'No TPXO file found.\n'
+                    'New users will need to register and request a copy of '
+                    'the TPXO9 NetCDF file (specifically `h_tpxo9.v1.nc`) '
+                    'from the authors at https://www.tpxo.net.\n'
+                    'Once you obtain this copy, you can set '
+                    'the environment variable `TPXO_NCFILE` to point to '
+                    'the path of the `h_tpxo9.v1.nc` file. '
+                    f'Alternatively, you can symlink this file manually to '
+                    f'"{self.DEFAULT_PATH}"'
+            )
 
-        if isinstance(file, pathlib.Path):
-            self._nc = Dataset(file)
-            return
-
-        raise FileNotFoundError(
-            'No TPXO file found.\nNew users will need to register and request '
-            'a copy of the TPXO9 netcdf file (specifically h_tpxo9.v1.nc) '
-            'from the authors at https://www.tpxo.net. Once you obtain'
-            'this copy, you can set the environment variable TPXO_NCFILE '
-            'to point to the path of the h_tpxo9.v1.nc file or you may '
-            f'symlink this file manually to {str(file)} path.')
-
-    def __call__(self, constituent, vertices):
-        """
-        "method" can be 'spline' or any string accepted by griddata()'s method
-        kwarg.
-        """
-        amp = self.get_amplitude(constituent, vertices)
-        phase = self.get_phase(constituent, vertices)
-        return (amp, phase)
-
-    def get_amplitude(self, constituent, vertices):
-        """
-        "method" can be 'spline' or any string accepted by griddata()'s method
-        kwarg.
-        """
-        vertices = np.asarray(vertices)
+    def get_amplitude(
+            self,
+            constituent: str,
+            vertices: np.ndarray
+    ) -> np.ndarray:
+        if not isinstance(vertices, np.ndarray):
+            vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
         return self._get_interpolation(self.ha, constituent, vertices)
 
-    def get_phase(self, constituent, vertices):
-        vertices = np.asarray(vertices)
+    def get_phase(
+            self,
+            constituent: str,
+            vertices: np.ndarray
+    ) -> np.ndarray:
+        if not isinstance(vertices, np.ndarray):
+            vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
         return self._get_interpolation(self.hp, constituent, vertices)
 
     @property
-    def x(self):
-        return self.nc['lon_z'][:, 0].data
+    def x(self) -> np.ndarray:
+        return self.dataset['lon_z'][:, 0].data
 
     @property
-    def y(self):
-        return self.nc['lat_z'][0, :].data
+    def y(self) -> np.ndarray:
+        return self.dataset['lat_z'][0, :].data
 
     @property
-    def ha(self):
-        return self.nc['ha'][:]
+    def ha(self) -> np.ndarray:
+        return self.dataset['ha'][:]
 
     @property
-    def hp(self):
-        return self.nc['hp'][:]
+    def hp(self) -> np.ndarray:
+        return self.dataset['hp'][:]
 
-    @property
-    def nc(self):
-        return self._nc
-
-    @property
-    def tpxo_constituents(self):
-        return ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
-                'M4', 'MN4', 'MS4', '2N2', 'S1']
-
-    def _get_interpolation(self, tpxo_array, constituent, vertices):
+    def _get_interpolation(self, tpxo_array: np.ndarray, constituent: str,
+                           vertices: np.ndarray):
         """
-        tpxo_index_key is either 'ha' or 'hp' based on the keys used internally
-        on the TPXO netcdf file.
+        `tpxo_index_key` is either `ha` or `hp` based on the keys used
+        internally in the TPXO NetCDF file.
         """
-        constituent = self.tpxo_constituents.index(constituent)
+
+        self._assert_vertices(vertices)
+
+        constituent = self.CONSTITUENTS.index(constituent)
         array = tpxo_array[constituent, :, :].flatten()
         _x = np.asarray([x + 360. for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()
@@ -94,23 +94,25 @@ class TPXO:
         y = y.flatten()
         dx = np.mean(np.diff(self.x))
         dy = np.mean(np.diff(self.y))
+
+        # buffer the bbox by 2 difference units
         _idx = np.where(
-            np.logical_and(  # buffer the bbox by 2 difference units
-                np.logical_and(x >= np.min(_x) - 2 * dx,
-                               x <= np.max(_x) + 2 * dx),
-                np.logical_and(y >= np.min(_y) - 2 * dy,
-                               y <= np.max(_y) + 2 * dy)))
+                np.logical_and(
+                        np.logical_and(
+                                x >= np.min(_x) - 2 * dx,
+                                x <= np.max(_x) + 2 * dx
+                        ),
+                        np.logical_and(
+                                y >= np.min(_y) - 2 * dy,
+                                y <= np.max(_y) + 2 * dy
+                        )
+                )
+        )
+
+        # "method" can be 'spline' or any string accepted by griddata()'s method kwarg.
         return griddata(
-            (x[_idx], y[_idx]), array[_idx], (_x, _y), method='nearest')
-
-    def _assert_vertices(self, vertices):
-        msg = "vertices must be of shape M x 2"
-        assert vertices.shape[1] == 2, msg
-
-    @property
-    def _nc(self):
-        return self.__nc
-
-    @_nc.setter
-    def _nc(self, nc):
-        self.__nc = nc
+                (x[_idx], y[_idx]),
+                array[_idx],
+                (_x, _y),
+                method='nearest'
+        )

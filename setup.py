@@ -41,6 +41,7 @@ setuptools.setup(
         python_requires='>=3.6',
         setup_requires=['dunamai', 'requests', 'setuptools>=41.2'],
         install_requires=[
+            'appdirs',
             'bs4',
             'eventlet',
             'fiona',
