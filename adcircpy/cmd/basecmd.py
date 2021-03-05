@@ -4,7 +4,6 @@ from functools import lru_cache
 import pathlib
 
 from adcircpy import AdcircMesh, AdcircRun, Tides, server
-from adcircpy.forcing.tides import TPXO, HAMTIDE
 
 
 class AdcircCommand:
@@ -17,16 +16,16 @@ class AdcircCommand:
         # write and exit if generate only
         if self._args.generate_only:
             self.driver.write(
-                self._args.output_directory,
-                overwrite=self._args.overwrite
+                    self._args.output_directory,
+                    overwrite=self._args.overwrite
             )
             return
 
         outputs = self.driver.run(
-            outdir=self.output_directory,
-            nproc=self._args.nproc,
-            overwrite=self._args.overwrite,
-            server_config=self.server_config,
+                outdir=self.output_directory,
+                nproc=self._args.nproc,
+                overwrite=self._args.overwrite,
+                server_config=self.server_config,
         )
         self._output_collection = outputs
 
@@ -34,11 +33,11 @@ class AdcircCommand:
     @lru_cache(maxsize=None)
     def driver(self):
         driver = AdcircRun(
-            self.mesh,
-            self.start_date,
-            self.end_date,
-            self.spinup_time,
-            server_config=self.server_config
+                self.mesh,
+                self.start_date,
+                self.end_date,
+                self.spinup_time,
+                server_config=self.server_config
         )
         self._enable_outputs(driver)
         if self._args.timestep:
@@ -69,7 +68,7 @@ class AdcircCommand:
     @property
     @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        tidal_forcing = Tides(database=self._args.tidal_database)
+        tidal_forcing = Tides(tidal_source=self._args.tidal_database)
         for constituent in self.constituents:
             tidal_forcing.use_constituent(constituent)
         return tidal_forcing
@@ -130,12 +129,12 @@ class AdcircCommand:
                     not self._args.use_torque or
                     not self._args.use_pbs):
                 return server.ServerConfig(
-                    hostname=self._args.hostname,
-                    nprocs=self._args.nproc,
-                    wdir=self._args.wdir,
-                    binaries_prefix=self._args.binaries_prefix,
-                    source_script=self._args.source_script,
-                    additional_mpi_options=self._args.additional_mpi_options,
+                        hostname=self._args.hostname,
+                        nprocs=self._args.nproc,
+                        wdir=self._args.wdir,
+                        binaries_prefix=self._args.binaries_prefix,
+                        source_script=self._args.source_script,
+                        additional_mpi_options=self._args.additional_mpi_options,
                 )
 
         if self._args.use_slurm:
@@ -182,16 +181,16 @@ class AdcircCommand:
         ha = getattr(self._args, f"{name}_{_type}_harmonic_analysis")
         # has = getattr(self._args, f"{name}_{_type}_harmonic_analysis_spinup")
         getattr(driver, f"set_{name}_{_type}_output")(
-            sampling_rate=fs,
-            harmonic_analysis=ha,
-            spinup=fss,
-            netcdf=self._args.netcdf,
+                sampling_rate=fs,
+                harmonic_analysis=ha,
+                spinup=fss,
+                netcdf=self._args.netcdf,
         )
 
     def _init_output_stations(self, driver):
         if self._args.stations_file is not None:
             driver.import_stations(
-                pathlib.Path(self._args.stations_file).resolve())
+                    pathlib.Path(self._args.stations_file).resolve())
             self._enable_output(driver, 'elevation', 'stations')
             self._enable_output(driver, 'velocity', 'stations')
             self._enable_output(driver, 'meteorological', 'stations')
@@ -201,21 +200,21 @@ class AdcircCommand:
     @lru_cache(maxsize=None)
     def _mesh(self):
         mesh = AdcircMesh.open(
-            self._args.mesh,
-            self._args.crs
+                self._args.mesh,
+                self._args.crs
         )
 
         if self._args.generate_boundaries:
             mesh.generate_boundaries(
-                threshold=self._args.boundaries_threshold,
-                land_ibtype=self._args.land_ibtype,
-                interior_ibtype=self._args.island_ibtype,
+                    threshold=self._args.boundaries_threshold,
+                    land_ibtype=self._args.land_ibtype,
+                    interior_ibtype=self._args.island_ibtype,
             )
 
         # set nodal attributes
         if self._args.fort13 is not None:
             mesh.import_nodal_attributes(
-                pathlib.Path(self._args.fort13).resolve()
+                    pathlib.Path(self._args.fort13).resolve()
             )
 
         if 'all' in self._args.coldstart_attributes:

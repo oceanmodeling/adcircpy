@@ -778,11 +778,14 @@ class AdcircRun(Fort15):
                            include_none: bool = True):
         if isinstance(types, type):
             types = [types]
-        name = f'"{name}"' if name is not None else 'value'
         if include_none:
             types.append(type(None))
+        types = tuple(types)
+
+        name = f'"{name}"' if name is not None else 'value'
+
         if not isinstance(value, types):
-            raise ValueError(f'{name} is not of type(s) {types}')
+            raise TypeError(f'{name} is not of type(s) {types}')
 
     @staticmethod
     def _launch_command(cmd, rundir):
