@@ -15,7 +15,6 @@ class TidalDataset(ABC):
 
         self.path = str(path) if path is not None else None
 
-    @abstractmethod
     def __call__(
             self,
             constituent: str,
