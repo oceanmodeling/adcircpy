@@ -1,8 +1,8 @@
 import os
 from os import PathLike
 from pathlib import Path
-import sys
 
+import appdirs
 from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
@@ -13,7 +13,7 @@ from adcircpy.forcing.tides.dataset import TidalDataset
 class TPXO(TidalDataset):
     CONSTITUENTS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
                     'M4', 'MN4', 'MS4', '2N2', 'S1']
-    DEFAULT_PATH = Path(sys.executable).parent.parent / 'lib' / 'h_tpxo9.v1.nc'
+    DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
 
     def __init__(self, tpxo_dataset_filename: PathLike = None):
         if tpxo_dataset_filename is None:
@@ -39,7 +39,6 @@ class TPXO(TidalDataset):
                     f'Alternatively, you can symlink this file manually to '
                     f'"{self.DEFAULT_PATH}"'
             )
-
 
     def get_amplitude(
             self,
