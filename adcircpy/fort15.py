@@ -6,7 +6,6 @@ import pathlib
 import numpy as np
 
 from adcircpy.mesh.mesh import AdcircMesh
-from adcircpy.forcing.tides import Tides
 
 
 class Fort15:
@@ -342,8 +341,8 @@ class Fort15:
                     f.append(f'{constituent}')
                     vertices = self.mesh.get_xy(crs='EPSG:4326')[
                                bnd['indexes'], :]
-                    amp, phase = self.tidal_forcing.tidal_database(
-                        constituent, vertices)
+                    amp, phase = self.tidal_forcing.tidal_dataset(
+                            constituent, vertices)
                     f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
                              range(len(vertices)))
             elif bnd['iettype'] in 2:
