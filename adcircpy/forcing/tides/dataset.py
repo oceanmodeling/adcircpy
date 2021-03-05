@@ -8,6 +8,11 @@ class TidalDataset(ABC):
     CONSTITUENTS: [str] = NotImplementedError
 
     def __init__(self, path: PathLike = None):
+        """
+        create a new tidal dataset object
+        :param path: file path or URL pointing to dataset location
+        """
+
         self.path = str(path) if path is not None else None
 
     @abstractmethod
@@ -24,6 +29,12 @@ class TidalDataset(ABC):
             constituent: str,
             vertices: np.ndarray
     ) -> np.ndarray:
+        """
+        generate tidal ampltidue
+        :param constituent: tidal constituent
+        :param vertices: XY locations at which to sample (Mx2)
+        :return: amplitude at given locations
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -32,21 +43,35 @@ class TidalDataset(ABC):
             constituent: str,
             vertices: np.ndarray
     ) -> np.ndarray:
+        """
+        generate tidal phase
+        :param constituent: tidal constituent
+        :param vertices: XY locations at which to sample (Mx2)
+        :return: phase at given locations
+        """
         raise NotImplementedError
 
     @property
     @abstractmethod
     def x(self) -> np.ndarray:
-        """ 1xN array of X values """
+        """
+        :return: 1D array of X values of vertices
+        """
         raise NotImplementedError
 
     @property
     @abstractmethod
     def y(self) -> np.ndarray:
-        """ 1xN array of Y values """
+        """
+        :return: 1D array of Y values of vertices
+        """
         raise NotImplementedError
 
     @staticmethod
     def _assert_vertices(vertices: np.ndarray):
+        """
+        :param vertices: list of XY locations
+        :return: whether vertices are in XY format (Mx2)
+        """
         assert len(vertices.shape) == 2 and vertices.shape[1] == 2, \
             'vertices must be of shape Mx2'

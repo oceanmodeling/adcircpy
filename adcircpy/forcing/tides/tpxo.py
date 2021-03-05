@@ -15,15 +15,15 @@ class TPXO(TidalDataset):
                     'M4', 'MN4', 'MS4', '2N2', 'S1']
     DEFAULT_PATH = Path(sys.executable).parent.parent / 'lib' / 'h_tpxo9.v1.nc'
 
-    def __init__(self, path: PathLike = None):
-        if path is None:
+    def __init__(self, tpxo_dataset_filename: PathLike = None):
+        if tpxo_dataset_filename is None:
             environment_variable = os.getenv('TPXO_NCFILE')
             if environment_variable is not None:
-                path = environment_variable
+                tpxo_dataset_filename = environment_variable
             else:
-                path = self.DEFAULT_PATH
+                tpxo_dataset_filename = self.DEFAULT_PATH
 
-        super().__init__(path)
+        super().__init__(tpxo_dataset_filename)
 
         if self.path is not None:
             self.dataset = Dataset(self.path)

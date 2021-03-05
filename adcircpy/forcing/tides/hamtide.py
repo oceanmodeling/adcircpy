@@ -18,15 +18,16 @@ class HAMTIDE(TidalDataset):
     CONSTITUENTS = ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
     OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
-    def __init__(self, path: PathLike = None):
-        if path is not None:
-            path = Path(path)
-            if len(list(path.glob('*.nc'))) == 0:
-                raise FileNotFoundError(f'no NetCDF files found at "{path}"')
+    def __init__(self, hamtide_dataset_directory: PathLike = None):
+        if hamtide_dataset_directory is not None:
+            hamtide_dataset_directory = Path(hamtide_dataset_directory)
+            if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
+                raise FileNotFoundError(
+                        f'no NetCDF files found at "{hamtide_dataset_directory}"')
         else:
-            path = self.OPENDAP_URL
+            hamtide_dataset_directory = self.OPENDAP_URL
 
-        super().__init__(path)
+        super().__init__(hamtide_dataset_directory)
 
         datasets = {'elevation': {}, 'velocity': {}}
         for variable in datasets.keys():
