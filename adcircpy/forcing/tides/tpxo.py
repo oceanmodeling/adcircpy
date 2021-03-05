@@ -9,17 +9,20 @@ from scipy.interpolate import griddata
 
 from adcircpy.forcing.tides.dataset import TidalDataset
 
+TPXO_ENVIRONMENT_VARIABLE = 'TPXO_NCFILE'
+TPXO_FILENAME = 'h_tpxo9.v1.nc'
+
 
 class TPXO(TidalDataset):
     CONSTITUENTS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
                     'M4', 'MN4', 'MS4', '2N2', 'S1']
-    DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / 'h_tpxo9.v1.nc'
+    DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / TPXO_FILENAME
 
     def __init__(self, tpxo_dataset_filename: PathLike = None):
         if tpxo_dataset_filename is None:
-            environment_variable = os.getenv('TPXO_NCFILE')
-            if environment_variable is not None:
-                tpxo_dataset_filename = environment_variable
+            tpxo_environment_variable = os.getenv(TPXO_ENVIRONMENT_VARIABLE)
+            if tpxo_environment_variable is not None:
+                tpxo_dataset_filename = tpxo_environment_variable
             else:
                 tpxo_dataset_filename = self.DEFAULT_PATH
 
@@ -28,17 +31,15 @@ class TPXO(TidalDataset):
         if self.path is not None:
             self.dataset = Dataset(self.path)
         else:
-            raise FileNotFoundError(
-                    'No TPXO file found.\n'
-                    'New users will need to register and request a copy of '
-                    'the TPXO9 NetCDF file (specifically `h_tpxo9.v1.nc`) '
-                    'from the authors at https://www.tpxo.net.\n'
-                    'Once you obtain this copy, you can set '
-                    'the environment variable `TPXO_NCFILE` to point to '
-                    'the path of the `h_tpxo9.v1.nc` file. '
-                    f'Alternatively, you can symlink this file manually to '
-                    f'"{self.DEFAULT_PATH}"'
-            )
+            raise FileNotFoundError('\n'.join([
+                f'No TPXO file found at "{self.path}".',
+                'New users will need to register and request a copy of '
+                f'the TPXO9 NetCDF file (specifically `{TPXO_FILENAME}`) '
+                'from the authors at https://www.tpxo.net.',
+                'Once you obtain `h_tpxo9.v1.nc`, you can follow one of the following options: ',
+                f'1) copy or symlink the file to "{self.path}"',
+                f'2) set the environment variable `{TPXO_ENVIRONMENT_VARIABLE}` to point to the file',
+            ]))
 
     def get_amplitude(
             self,
