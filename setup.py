@@ -19,7 +19,7 @@ if os.name == 'nt':
         import gdal
     except ImportError:
         subprocess.check_call(
-                [sys.executable, '-m', 'pipwin', 'install', 'gdal==3.1.4'])
+                [sys.executable, '-m', 'pipwin', 'install', 'gdal'])
 
     try:
         import fiona
