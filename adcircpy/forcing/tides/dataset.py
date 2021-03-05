@@ -21,7 +21,14 @@ class TidalDataset(ABC):
             constituent: str,
             vertices: np.ndarray
     ) -> (np.ndarray, np.ndarray):
-        raise NotImplementedError
+        """
+        get tidal ampltidue and phase
+        :param constituent: tidal constituent
+        :param vertices: XY locations at which to sample (Mx2)
+        :return: amplitude and phase arrays at given locations
+        """
+        return self.get_amplitude(constituent, vertices), \
+               self.get_phase(constituent, vertices)
 
     @abstractmethod
     def get_amplitude(

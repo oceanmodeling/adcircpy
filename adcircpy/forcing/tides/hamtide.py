@@ -40,13 +40,6 @@ class HAMTIDE(TidalDataset):
 
         self.datasets = datasets
 
-    def __call__(
-            self,
-            constituent: str,
-            vertices: np.ndarray
-    ) -> (np.ndarray, np.ndarray):
-        return self.get_amplitude(constituent, vertices), \
-               self.get_phase(constituent, vertices)
 
     def get_amplitude(
             self,

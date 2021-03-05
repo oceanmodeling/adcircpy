@@ -40,13 +40,6 @@ class TPXO(TidalDataset):
                     f'"{self.DEFAULT_PATH}"'
             )
 
-    def __call__(self, constituent: str, vertices) -> (np.ndarray, np.ndarray):
-        """
-        "method" can be 'spline' or any string accepted by griddata()'s method
-        kwarg.
-        """
-        return self.get_amplitude(constituent, vertices), \
-               self.get_phase(constituent, vertices)
 
     def get_amplitude(
             self,
