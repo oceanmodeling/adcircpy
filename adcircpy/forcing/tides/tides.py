@@ -21,7 +21,7 @@ class Tides(bctypes.EtaBc):
                  resource: PathLike = None):
         if isinstance(tidal_source, str):
             try:
-                tidal_source = TidalSource[tidal_source]
+                tidal_source = TidalSource[tidal_source.upper()]
             except:
                 raise NotImplementedError(
                         f'tidal source {tidal_source} not recognized; '
