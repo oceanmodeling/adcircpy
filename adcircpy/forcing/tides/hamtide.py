@@ -40,7 +40,6 @@ class HAMTIDE(TidalDataset):
 
         self.datasets = datasets
 
-
     def get_amplitude(
             self,
             constituent: str,
@@ -137,5 +136,5 @@ class HAMTIDE(TidalDataset):
         elif isinstance(self.path, Path):
             path = self.path / filename
         else:
-            path = self.path + filename
+            path = f'{self.path}/{filename}'
         return path
