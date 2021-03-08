@@ -12,28 +12,26 @@ from adcircpy.forcing.tides.tpxo import TPXO
 
 
 class TidalSource(Enum):
-    HAMTIDE = 'HAMTIDE'
-    TPXO = 'TPXO'
+    HAMTIDE = HAMTIDE
+    TPXO = TPXO
 
 
 class Tides(bctypes.EtaBc):
-    def __init__(self, tidal_source: TidalSource = TidalSource.HAMTIDE,
+    def __init__(self, tidal_source: TidalSource = None,
                  resource: PathLike = None):
-        if isinstance(tidal_source, str):
+        if tidal_source is None:
+            tidal_source = TidalSource.HAMTIDE
+        elif isinstance(tidal_source, str):
             try:
                 tidal_source = TidalSource[tidal_source.upper()]
             except:
                 raise NotImplementedError(
                         f'tidal source {tidal_source} not recognized; '
-                        f'must be one of {[entry.value for entry in TidalSource]}'
+                        f'must be one of {[entry.__name__ for entry in TidalSource]}'
                 )
 
         self.tidal_source = tidal_source
-
-        if self.tidal_source == TidalSource.HAMTIDE:
-            self.tidal_dataset = HAMTIDE(resource)
-        elif self.tidal_source == TidalSource.TPXO:
-            self.tidal_dataset = TPXO(resource)
+        self.tidal_dataset = tidal_source.value(resource)
 
     def __call__(self, constituent: str) -> ():
         return self.get_tidal_constituent(constituent)
