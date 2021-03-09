@@ -1,31 +1,59 @@
 #!/usr/bin/env python
+import importlib
 import logging
 import os
-import pathlib
+from pathlib import Path
+import subprocess
+import sys
 
 import setuptools
 
+CONDA_PACKAGES = {
+    'fiona': ['gdal'],
+    'matplotlib': [],
+    'netCDF4': [],
+    'numpy': [],
+    'pyproj': ['proj'],
+    'scipy': []
+}
+is_conda = (Path(sys.prefix) / 'conda-meta').exists()
+
+if is_conda:
+    packages = []
+    for required_package in CONDA_PACKAGES:
+        try:
+            importlib.import_module(required_package)
+        except:
+            packages.append(required_package)
+    if len(packages) > 0:
+        subprocess.check_call(['conda', 'install', '-y', *packages])
+
 if os.name == 'nt':
-    import subprocess
-    import sys
+    for required_package, dependencies in CONDA_PACKAGES.items():
+        try:
+            importlib.import_module(required_package)
+        except:
+            try:
+                import pipwin
+            except:
+                subprocess.check_call(
+                        [sys.executable, '-m', 'pip', 'install', 'pipwin'])
 
-    try:
-        import pipwin
-    except ImportError:
-        subprocess.check_call(
-                [sys.executable, '-m', 'pip', 'install', 'pipwin'])
+            failed_packages = []
+            for package in dependencies + [required_package]:
+                try:
+                    subprocess.check_call(
+                            [sys.executable, '-m', 'pipwin', 'install',
+                             package.lower()])
+                except subprocess.CalledProcessError:
+                    failed_packages.append(package)
 
-    try:
-        import gdal
-    except ImportError:
-        subprocess.check_call(
-                [sys.executable, '-m', 'pipwin', 'install', 'gdal'])
-
-    try:
-        import fiona
-    except ImportError:
-        subprocess.check_call(
-                [sys.executable, '-m', 'pipwin', 'install', 'fiona'])
+            if len(failed_packages) > 0:
+                raise RuntimeError(
+                        f'failed to download or install non-conda Windows build(s) of {" and ".join(failed_packages)}; you can either\n'
+                        '1) install within an Anaconda environment, or\n'
+                        f'2) `pip install <file>.whl`, with `<file>.whl` downloaded from {" and ".join("https://www.lfd.uci.edu/~gohlke/pythonlibs/#" + value.lower() for value in failed_packages)} for your Python version'
+                )
 
 try:
     try:
@@ -47,7 +75,7 @@ except RuntimeError as error:
 logging.info(f'using version {version}')
 
 metadata = setuptools.config.read_configuration(
-        pathlib.Path(__file__).parent.absolute() / 'setup.cfg')['metadata']
+        Path(__file__).parent.absolute() / 'setup.cfg')['metadata']
 
 setuptools.setup(
         name=metadata['name'],
