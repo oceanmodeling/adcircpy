@@ -14,7 +14,7 @@ CONDA_PACKAGES = {
     'netCDF4': [],
     'numpy': [],
     'pyproj': ['proj'],
-    'scipy': []
+    'scipy': [],
 }
 is_conda = (Path(sys.prefix) / 'conda-meta').exists()
 
