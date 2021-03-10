@@ -1,0 +1,3 @@
+[submodule "docs/NOAATechnicalReport2021"]
+	path = docs/NOAATechnicalReport2021
+	url = git@github.com:jreniel/ADCIRCpyNOAATechReport.git
