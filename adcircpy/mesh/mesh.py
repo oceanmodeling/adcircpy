@@ -2,8 +2,10 @@ from collections import defaultdict
 from functools import lru_cache
 import logging
 import pathlib
+from typing import Tuple
 
 import fiona
+from matplotlib import rcParams
 from matplotlib import pyplot
 from matplotlib.cm import ScalarMappable
 import matplotlib.pyplot as plt
@@ -14,7 +16,7 @@ from shapely.geometry import LineString, mapping
 from adcircpy.forcing.bctypes import BoundaryCondition
 from adcircpy.forcing.waves import WaveForcing
 from adcircpy.forcing.winds.base import WindForcing
-from adcircpy.mesh import figures as fig, grd, sms2dm
+from adcircpy.mesh import figures, grd, sms2dm
 from adcircpy.mesh.base import EuclideanMesh2D
 
 
@@ -396,7 +398,7 @@ class AdcircMesh(EuclideanMesh2D):
         return cfl * np.min(dxdy) / np.abs(maxvel)
 
     # plotting functions
-    @fig._figure
+    @figures.figure
     def make_plot(
             self,
             axes=None,
@@ -404,46 +406,41 @@ class AdcircMesh(EuclideanMesh2D):
             vmax: float = None,
             show: bool = False,
             title: str = None,
-            # figsize=rcParams["figure.figsize"],
-            extent: (float, float, float, float) = None,
+            figsize=rcParams["figure.figsize"],
+            extent: Tuple[float, float, float, float] = None,
             cbar_label: str = None,
             **kwargs
     ):
         if axes is None:
-            _fig = plt.figure()
-            axes = _fig.add_subplot(111)
-        if vmin is None:
-            vmin = np.min(self.values)
-        if vmax is None:
-            vmax = np.max(self.values)
-        kwargs.update(**fig.get_topobathy_kwargs(self.values, vmin, vmax))
-        kwargs.pop('col_val')
-        levels = kwargs.pop('levels')
-        if vmin != vmax:
-            self.tricontourf(
-                    axes=axes,
-                    levels=levels,
-                    vmin=vmin,
-                    vmax=vmax,
-                    **kwargs
-            )
-        else:
-            self.tripcolor(axes=axes, **kwargs)
-        self.quadface(axes=axes, **kwargs)
-        axes.axis('scaled')
+            fig = plt.figure(figsize=figsize)
+            axes = fig.add_subplot(111)
+        vmin = np.min(self.values) if vmin is None else float(vmin)
+        vmax = np.max(self.values) if vmax is None else float(vmax)
+        cmap = kwargs.get('cmap', 'topobathy')
+        if cmap == 'topobathy':
+            kwargs.update(
+                **figures.get_topobathy_kwargs(self.values, vmin, vmax))
+            kwargs.pop('col_val')
+            cmap = kwargs['cmap']
+        self.tricontourf(
+                axes=axes,
+                vmin=vmin,
+                vmax=vmax,
+                **kwargs
+        )
         if extent is not None:
             axes.axis(extent)
         if title is not None:
             axes.set_title(title)
-        mappable = ScalarMappable(cmap=kwargs['cmap'])
+        mappable = ScalarMappable(cmap=cmap)
         mappable.set_array([])
         mappable.set_clim(vmin, vmax)
         divider = make_axes_locatable(axes)
         cax = divider.append_axes("bottom", size="2%", pad=0.5)
         cbar = plt.colorbar(
-                mappable,
-                cax=cax,
-                orientation='horizontal'
+            mappable,
+            cax=cax,
+            orientation='horizontal'
         )
         cbar.set_ticks([vmin, vmax])
         cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
@@ -451,7 +448,7 @@ class AdcircMesh(EuclideanMesh2D):
             cbar.set_label(cbar_label)
         return axes
 
-    @fig._figure
+    @figures.figure
     def plot_boundary(
             self,
             ibtype: str,
@@ -479,7 +476,7 @@ class AdcircMesh(EuclideanMesh2D):
             pyplot.show()
         return axes
 
-    @fig._figure
+    @figures.figure
     def plot_boundaries(
             self,
             axes: pyplot.Axes = None,

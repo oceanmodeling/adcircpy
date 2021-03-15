@@ -17,7 +17,7 @@ from pyproj import CRS, Proj, Transformer
 from shapely.geometry import Polygon
 
 from adcircpy.mesh import grd, sms2dm
-from adcircpy.mesh.figures import _figure as _fig
+from adcircpy.mesh import figures
 
 
 class EuclideanMesh2D:
@@ -186,19 +186,19 @@ class EuclideanMesh2D:
             self._crs = dst_crs
 
     # plotting functions
-    @_fig
+    @figures.figure
     def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.tria3) > 0:
             axes.tricontourf(self.triangulation, self.values, **kwargs)
         return axes
 
-    @_fig
+    @figures.figure
     def tripcolor(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.tria3) > 0:
             axes.tripcolor(self.triangulation, self.values, **kwargs)
         return axes
 
-    @_fig
+    @figures.figure
     def triplot(
             self,
             axes=None,
@@ -216,7 +216,7 @@ class EuclideanMesh2D:
             pyplot.show()
         return axes
 
-    @_fig
+    @figures.figure
     def quadplot(
             self,
             axes=None,
@@ -239,7 +239,7 @@ class EuclideanMesh2D:
             pyplot.show()
         return axes
 
-    @_fig
+    @figures.figure
     def quadface(
             self,
             axes=None,
@@ -259,7 +259,7 @@ class EuclideanMesh2D:
             pyplot.show()
         return axes
 
-    @_fig
+    @figures.figure
     def plot_wireframe(self, axes=None, show=False, **kwargs):
         axes = self.triplot(axes=axes, **kwargs)
         axes = self.quadplot(axes=axes, **kwargs)
