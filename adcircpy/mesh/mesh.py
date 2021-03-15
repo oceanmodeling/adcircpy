@@ -422,12 +422,17 @@ class AdcircMesh(EuclideanMesh2D):
                 **figures.get_topobathy_kwargs(self.values, vmin, vmax))
             kwargs.pop('col_val')
             cmap = kwargs['cmap']
-        self.tricontourf(
-                axes=axes,
-                vmin=vmin,
-                vmax=vmax,
-                **kwargs
-        )
+
+        if vmin != vmax:
+            self.tricontourf(
+                    axes=axes,
+                    vmin=vmin,
+                    vmax=vmax,
+                    **kwargs
+            )
+        else:
+            self.tripcolor(axes=axes, **kwargs)
+
         if extent is not None:
             axes.axis(extent)
         if title is not None:
