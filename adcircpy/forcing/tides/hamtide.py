@@ -6,13 +6,13 @@ from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
 
-# https://icdc.cen.uni-hamburg.de/en/hamtide.html
 from adcircpy.forcing.tides.dataset import TidalDataset
 
 
 class HAMTIDE(TidalDataset):
     '''
-    Taguchi, E., D. Stammer and W. Zahel (2010), Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model (to be submitted to J. Geophys. Res.). 
+    Taguchi, E., D. Stammer and W. Zahel (2010), Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model (to be submitted to J. Geophys. Res.).
+    https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
     CONSTITUENTS = ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
@@ -39,7 +39,6 @@ class HAMTIDE(TidalDataset):
             )
 
         self.datasets = datasets
-
 
     def get_amplitude(
             self,
@@ -137,5 +136,5 @@ class HAMTIDE(TidalDataset):
         elif isinstance(self.path, Path):
             path = self.path / filename
         else:
-            path = self.path + filename
+            path = f'{self.path}/{filename}'
         return path
