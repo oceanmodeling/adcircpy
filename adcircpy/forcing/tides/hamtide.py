@@ -1,4 +1,3 @@
-from functools import lru_cache
 from os import PathLike
 from pathlib import Path
 
@@ -63,14 +62,28 @@ class HAMTIDE(TidalDataset):
                                        vertices)
 
     @property
-    @lru_cache(maxsize=1)
     def x(self) -> np.ndarray:
-        return Dataset(self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+        if not hasattr(self, '_x'):
+            self._x = Dataset(
+                self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+        return self._x
 
     @property
-    @lru_cache(maxsize=1)
     def y(self) -> np.ndarray:
-        return Dataset(self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+        if not hasattr(self, '_y'):
+            self._y = Dataset(
+                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+        return self._y
+
+    @property
+    def constituents(self):
+        if not hasattr(self, '_constituents'):
+            nc = Dataset(
+                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+            self._constituents = [
+                c.capitalize() for c in nc['con'][:].astype(
+                    '|S1').tostring().decode('utf-8').split()]
+        return self._constituents
 
     def _get_dataset(self, variable: str, constituent: str) -> Dataset:
         data = self.datasets[variable][constituent]

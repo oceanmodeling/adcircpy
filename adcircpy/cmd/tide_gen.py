@@ -26,7 +26,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    tides = Tides()
+    tides = Tides(tidal_source=args.tidal_database)
     tides.use_all()
     tides.start_date = args.start_date
     tides.end_date = tides.start_date + timedelta(days=args.run_days)

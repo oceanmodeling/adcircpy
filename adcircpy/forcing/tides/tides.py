@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from functools import lru_cache
 from os import PathLike
+from typing import Union
 
 import numpy as np
 
@@ -17,7 +18,7 @@ class TidalSource(Enum):
 
 
 class Tides(bctypes.EtaBc):
-    def __init__(self, tidal_source: TidalSource = None,
+    def __init__(self, tidal_source: Union[str, TidalSource] = None,
                  resource: PathLike = None):
         if tidal_source is None:
             tidal_source = TidalSource.HAMTIDE
