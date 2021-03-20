@@ -92,7 +92,8 @@ class TPXO(TidalDataset):
         """
 
         self._assert_vertices(vertices)
-        constituent = self.constituents.index(constituent)
+        constituents = list(map(lambda x: x.lower(), self.constituents))
+        constituent = constituents.index(constituent.lower())
         array = tpxo_array[constituent, :, :].flatten()
         _x = np.asarray([x + 360. for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()

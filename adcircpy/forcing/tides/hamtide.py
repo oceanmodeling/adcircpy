@@ -14,7 +14,6 @@ class HAMTIDE(TidalDataset):
     https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
-    CONSTITUENTS = ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
     OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
     def __init__(self, hamtide_dataset_directory: PathLike = None):
@@ -32,8 +31,8 @@ class HAMTIDE(TidalDataset):
         for variable in datasets.keys():
             datasets[variable].update(
                     {
-                        constituent: {'path': None, 'dataset': None}
-                        for constituent in self.CONSTITUENTS
+                        constituent.lower(): {'path': None, 'dataset': None}
+                        for constituent in self.constituents
                     }
             )
 
@@ -77,16 +76,10 @@ class HAMTIDE(TidalDataset):
 
     @property
     def constituents(self):
-        if not hasattr(self, '_constituents'):
-            nc = Dataset(
-                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
-            self._constituents = [
-                c.capitalize() for c in nc['con'][:].astype(
-                    '|S1').tostring().decode('utf-8').split()]
-        return self._constituents
+        return ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
 
     def _get_dataset(self, variable: str, constituent: str) -> Dataset:
-        data = self.datasets[variable][constituent]
+        data = self.datasets[variable][constituent.lower()]
 
         dataset = data['dataset']
         if dataset is None:
