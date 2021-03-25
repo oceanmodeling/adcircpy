@@ -14,6 +14,11 @@ TPXO_FILENAME = 'h_tpxo9.v1.nc'
 
 
 class TPXO(TidalDataset):
+    """
+    https://www.tpxo.net/global
+    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204.
+    https://doi.org/10.1175/1520-0426(2002)019%3C0183:EIMOBO%3E2.0.CO;2
+    """
     CONSTITUENTS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
                     'M4', 'MN4', 'MS4', '2N2', 'S1']
     DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / TPXO_FILENAME

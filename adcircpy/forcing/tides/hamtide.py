@@ -11,7 +11,7 @@ from adcircpy.forcing.tides.dataset import TidalDataset
 
 class HAMTIDE(TidalDataset):
     '''
-    Taguchi, E., D. Stammer and W. Zahel (2010), Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model (to be submitted to J. Geophys. Res.).
+    Taguchi, E., Stammer, D., & Zahel, W. (2010). Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model. J. geophys. Res.
     https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
