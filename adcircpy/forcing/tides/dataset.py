@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from os import PathLike
+from typing import Tuple, List
 
 import numpy as np
 
 
 class TidalDataset(ABC):
-    CONSTITUENTS: [str] = NotImplementedError
 
     def __init__(self, path: PathLike = None):
         """
@@ -19,7 +19,7 @@ class TidalDataset(ABC):
             self,
             constituent: str,
             vertices: np.ndarray
-    ) -> (np.ndarray, np.ndarray):
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """
         get tidal ampltidue and phase
         :param constituent: tidal constituent
@@ -27,7 +27,7 @@ class TidalDataset(ABC):
         :return: amplitude and phase arrays at given locations
         """
         return self.get_amplitude(constituent, vertices), \
-               self.get_phase(constituent, vertices)
+            self.get_phase(constituent, vertices)
 
     @abstractmethod
     def get_amplitude(
@@ -70,6 +70,14 @@ class TidalDataset(ABC):
     def y(self) -> np.ndarray:
         """
         :return: 1D array of Y values of vertices
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def constituents(self) -> List[str]:
+        """
+        :return: list of constituents available on the data source.
         """
         raise NotImplementedError
 

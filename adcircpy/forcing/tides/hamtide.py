@@ -1,4 +1,3 @@
-from functools import lru_cache
 from os import PathLike
 from pathlib import Path
 
@@ -15,7 +14,6 @@ class HAMTIDE(TidalDataset):
     https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
-    CONSTITUENTS = ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
     OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
     def __init__(self, hamtide_dataset_directory: PathLike = None):
@@ -33,8 +31,8 @@ class HAMTIDE(TidalDataset):
         for variable in datasets.keys():
             datasets[variable].update(
                     {
-                        constituent: {'path': None, 'dataset': None}
-                        for constituent in self.CONSTITUENTS
+                        constituent.lower(): {'path': None, 'dataset': None}
+                        for constituent in self.constituents
                     }
             )
 
@@ -63,17 +61,25 @@ class HAMTIDE(TidalDataset):
                                        vertices)
 
     @property
-    @lru_cache(maxsize=1)
     def x(self) -> np.ndarray:
-        return Dataset(self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+        if not hasattr(self, '_x'):
+            self._x = Dataset(
+                self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+        return self._x
 
     @property
-    @lru_cache(maxsize=1)
     def y(self) -> np.ndarray:
-        return Dataset(self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+        if not hasattr(self, '_y'):
+            self._y = Dataset(
+                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+        return self._y
+
+    @property
+    def constituents(self):
+        return ['S2', 'Q1', 'P1', 'O1', 'N2', 'M2', 'K2', 'K1']
 
     def _get_dataset(self, variable: str, constituent: str) -> Dataset:
-        data = self.datasets[variable][constituent]
+        data = self.datasets[variable][constituent.lower()]
 
         dataset = data['dataset']
         if dataset is None:

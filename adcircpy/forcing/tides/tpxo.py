@@ -14,13 +14,7 @@ TPXO_FILENAME = 'h_tpxo9.v1.nc'
 
 
 class TPXO(TidalDataset):
-    """
-    https://www.tpxo.net/global
-    Egbert, Gary D., and Svetlana Y. Erofeeva. "Efficient inverse modeling of barotropic ocean tides." Journal of Atmospheric and Oceanic Technology 19.2 (2002): 183-204.
-    https://doi.org/10.1175/1520-0426(2002)019%3C0183:EIMOBO%3E2.0.CO;2
-    """
-    CONSTITUENTS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1', 'P1', 'Q1', 'Mm', 'Mf',
-                    'M4', 'MN4', 'MS4', '2N2', 'S1']
+
     DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / TPXO_FILENAME
 
     def __init__(self, tpxo_dataset_filename: PathLike = None):
@@ -82,6 +76,14 @@ class TPXO(TidalDataset):
     def hp(self) -> np.ndarray:
         return self.dataset['hp'][:]
 
+    @property
+    def constituents(self):
+        if not hasattr(self, '_constituents'):
+            self._constituents = [
+                c.capitalize() for c in self.dataset['con'][:].astype(
+                    '|S1').tostring().decode('utf-8').split()]
+        return self._constituents
+
     def _get_interpolation(self, tpxo_array: np.ndarray, constituent: str,
                            vertices: np.ndarray):
         """
@@ -90,8 +92,8 @@ class TPXO(TidalDataset):
         """
 
         self._assert_vertices(vertices)
-
-        constituent = self.CONSTITUENTS.index(constituent)
+        constituents = list(map(lambda x: x.lower(), self.constituents))
+        constituent = constituents.index(constituent.lower())
         array = tpxo_array[constituent, :, :].flatten()
         _x = np.asarray([x + 360. for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()
