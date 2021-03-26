@@ -66,10 +66,11 @@ def main():
     # matches the original Shinnecock test case options
     driver.timestep = 6.
     driver.DRAMP = 2.
-    driver.smagorinsky = False
-    driver.horizontal_mixing_coefficient = 5.
     driver.TOUTGE = 3.8
     driver.TOUTGV = 3.8
+    driver.smagorinsky = False
+    driver.horizontal_mixing_coefficient = 5.
+    driver.gwce_solution_scheme = 'semi-implicit-legacy'  
 
     # run parallel ADCIRC if binary is installed
     if shutil.which('padcirc') is not None:
