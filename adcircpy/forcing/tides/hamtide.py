@@ -10,20 +10,21 @@ from adcircpy.forcing.tides.dataset import TidalDataset
 
 class HAMTIDE(TidalDataset):
     '''
-    Taguchi, E., D. Stammer and W. Zahel (2010), Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model (to be submitted to J. Geophys. Res.).
+    Taguchi, E., Stammer, D., & Zahel, W. (2010). Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model. J. geophys. Res.
     https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
     OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
     def __init__(self, hamtide_dataset_directory: PathLike = None):
-        if hamtide_dataset_directory is not None:
+        if hamtide_dataset_directory is None:
+            hamtide_dataset_directory = self.OPENDAP_URL
+
+        if Path(hamtide_dataset_directory).exists():
             hamtide_dataset_directory = Path(hamtide_dataset_directory)
             if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
-                raise FileNotFoundError(
-                        f'no NetCDF files found at "{hamtide_dataset_directory}"')
-        else:
-            hamtide_dataset_directory = self.OPENDAP_URL
+                raise FileNotFoundError(f'no NetCDF files found at '
+                                        f'"{hamtide_dataset_directory}"')
 
         super().__init__(hamtide_dataset_directory)
 
@@ -64,14 +65,14 @@ class HAMTIDE(TidalDataset):
     def x(self) -> np.ndarray:
         if not hasattr(self, '_x'):
             self._x = Dataset(
-                self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+                    self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
         return self._x
 
     @property
     def y(self) -> np.ndarray:
         if not hasattr(self, '_y'):
             self._y = Dataset(
-                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+                    self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
         return self._y
 
     @property

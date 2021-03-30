@@ -90,8 +90,16 @@ class TestAdcircRun(unittest.TestCase):
         start_date = datetime(2015, 12, 14) + spinup_time
         end_date = start_date + timedelta(days=3)
 
-        wind_forcing = AtmosphericMeshForcing(17, 3600)
-        wave_forcing = WaveWatch3DataForcing(5, 3600)
+        wind_forcing = AtmosphericMeshForcing(
+                filename='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+                nws=17,
+                interval_seconds=3600,
+        )
+        wave_forcing = WaveWatch3DataForcing(
+                filename='ww3.HWRF.NOV2018.2012_sxy.nc',
+                nrs=5,
+                interval_seconds=3600,
+        )
 
         mesh.add_forcing(wind_forcing)
         mesh.add_forcing(wave_forcing)
