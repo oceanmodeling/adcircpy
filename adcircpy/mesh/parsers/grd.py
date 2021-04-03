@@ -145,15 +145,16 @@ def to_string(description, nodes, elements, boundaries=None, crs=None):
 
     # ocean boundaries
     if boundaries is not None:
-        out.append(f"{len(boundaries[None]):d} "
+        ocean_boundaries = boundaries.get(None, {})
+        out.append(f"{len(ocean_boundaries):d} "
                    "! total number of ocean boundaries")
         # count total number of ocean boundaries
         _sum = 0
-        for bnd in boundaries[None].values():
+        for bnd in ocean_boundaries.values():
             _sum += len(bnd['node_id'])
         out.append(f"{int(_sum):d} ! total number of ocean boundary nodes")
         # write ocean boundary indexes
-        for i, boundary in boundaries[None].items():
+        for i, boundary in ocean_boundaries.items():
             out.append(f"{len(boundary['node_id']):d}"
                        f" ! number of nodes for ocean_boundary_{i}")
             for idx in boundary['node_id']:

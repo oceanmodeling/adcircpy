@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-import numpy
 
 from adcircpy import AdcircMesh
 
@@ -126,13 +125,13 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements)
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
-        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', fmt='2dm')
-        self.assertRaises(IOError, h.write,
+        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', format='2dm')
+        self.assertRaises(Exception, h.write,
                           pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
-                          fmt='2dm')
-        self.assertRaises(IOError, h.write,
+                          format='2dm')
+        self.assertRaises(ValueError, h.write,
                           pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
-                          fmt='txt')
+                          format='txt')
 
     def test_triplot(self):
         h = AdcircMesh(self.nodes, self.elements, self.boundaries)

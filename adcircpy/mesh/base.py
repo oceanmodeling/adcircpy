@@ -433,7 +433,7 @@ class Grd(ABC):
         if format in ['gr3', 'grd']:
             grd.write(self.to_dict(), path, overwrite)
         elif format in ['sms', '2dm', 'sms2dm']:
-            sms2dm.writer({
+            sms2dm.write({
                 'ND': {i+1: (coord, -self.values[i] if not
                              np.isnan(self.values[i]) else -99999)
                        for i, coord in enumerate(self.coords)},

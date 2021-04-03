@@ -487,7 +487,7 @@ class AdcircRun(Fort15):
     @property
     def tidal_forcing(self):
         if not hasattr(self, '_tidal_forcing'):
-            self._tidal_forcing = self.mesh.forcings.tidal_forcing
+            self._tidal_forcing = self.mesh.forcings.tides
             if isinstance(self._tidal_forcing, Tides):
                 self._tidal_forcing.start_date = self.start_date
                 self._tidal_forcing.end_date = self.end_date

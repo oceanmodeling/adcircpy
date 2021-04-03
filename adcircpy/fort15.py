@@ -298,7 +298,7 @@ class Fort15:
                      ', '.join([f'{key}={value}'
                                 for key, value in namelist.items()]) +
                      ' \\')
-
+        f.append('')
         return '\n'.join(f)
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
@@ -313,32 +313,34 @@ class Fort15:
     def get_tidal_forcing(self):
         f = []
         f.append(f'{self.NTIF:<63d} ! NTIF')
-        active = self.mesh.forcings.tides.get_active_potential_constituents()
-        for constituent in active:
-            forcing = self.mesh.forcings.tides(constituent)
-            f.extend([
-                f'{constituent}',
-                f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
-            ])
-        f.append(f'{self.NBFR:d}')
-        active = self.mesh.forcings.tides.get_active_forcing_constituents()
-        for constituent in active:
-            forcing = self.mesh.forcings.tides(constituent)
-            f.extend(
-                [
+        if self.NTIF > 0:
+            active = self.mesh.forcings.tides.get_active_potential_constituents()
+            for constituent in active:
+                forcing = self.mesh.forcings.tides(constituent)
+                f.extend([
                     f'{constituent}',
-                    f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
-                    # f'{len(self.mesh.open_boundaries)}',
-                ]
-            )
-        for row in self.mesh.boundaries.ocean.gdf.itertuples():
-            for constituent in self.mesh.forcings.tides.get_active_constituents():
-                f.append(f'{constituent}')
-                vertices = self.mesh.get_xy(crs='EPSG:4326')[row.indexes, :]
-                amp, phase = self.mesh.forcings.tides.tidal_dataset(
-                        constituent, vertices)
-                f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
-                         range(len(vertices)))
+                    f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
+                ])
+        f.append(f'{self.NBFR:d}')
+        if self.NBFR > 0:
+            active = self.mesh.forcings.tides.get_active_forcing_constituents()
+            for constituent in active:
+                forcing = self.mesh.forcings.tides(constituent)
+                f.extend(
+                    [
+                        f'{constituent}',
+                        f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
+                        # f'{len(self.mesh.open_boundaries)}',
+                    ]
+                )
+            for row in self.mesh.boundaries.ocean.gdf.itertuples():
+                for constituent in self.mesh.forcings.tides.get_active_constituents():
+                    f.append(f'{constituent}')
+                    vertices = self.mesh.get_xy(crs='EPSG:4326')[row.indexes, :]
+                    amp, phase = self.mesh.forcings.tides.tidal_dataset(
+                            constituent, vertices)
+                    f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
+                             range(len(vertices)))
 
         return '\n'.join(f)
 
