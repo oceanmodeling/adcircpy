@@ -39,7 +39,13 @@ jobs:
         run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m && coverage-badge -f -o .github/badges/badge.svg
       - name: Generate coverage report
         run: coverage report -m
-
+  badge:
+    name: Python 3.8 badging
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ 3.8 ]
+    steps:
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
