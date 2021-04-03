@@ -36,6 +36,34 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with coverage
-        run: coverage run --source adcircpy -m nose --nologcapture --verbose
+        run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m && coverage-badge -f -o .github/badges/badge.svg
       - name: Generate coverage report
         run: coverage report -m
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+      - name: Create badges dir if necessary
+        run: mkdir -p .github/badges
+      # - name: Generate the badge SVG image
+      #   uses: emibcn/badge-action@v1
+      #   with:
+      #     label: 'Test coverage'
+      #     status: ${{ steps.coverage.outputs.lines }}
+      #     color: 'blue,555,daf'
+      #     path: .github/badges/badge.svg
+      - name: Commit badge
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/badges/badge.svg
+          git commit -m "Add/Update badge"
+      - name: Push badge commit
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.extract_branch.outputs.branch }}
+
+# https://stackoverflow.com/questions/59203704/how-create-a-badge-with-test-coverage-jacoco-on-github-actions
+# 

@@ -105,11 +105,6 @@ class AdcircMeshTestCase(unittest.TestCase):
         )
         self.assertIsInstance(h, AdcircMesh)
 
-    def test_plot_boundary(self):
-        h = AdcircMesh(**self.grd)
-        h.plot_boundary(None, 0)
-        self.assertIsInstance(h, AdcircMesh)
-
     @patch('matplotlib.pyplot.show')
     def test_make_plot_wet_only(self, mock):
         nodes = {
@@ -139,80 +134,6 @@ class AdcircMeshTestCase(unittest.TestCase):
                           pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
                           fmt='txt')
 
-    def test_add_attribute(self):
-        attributes = {
-            'test_attribute_1': {'test_1': 'a', 'test_2': 2},
-            'test_attribute_2': {'test_1': 'b', 'test_2': 3}
-        }
-        mesh = AdcircMesh(self.nodes, self.elements)
-
-        self.assertRaises(AttributeError, mesh.get_attribute,
-                          list(attributes)[0])
-
-        for name, properties in attributes.items():
-            mesh.add_attribute(name, **properties)
-            self.assertEquals(
-                {'values': None, 'properties': None, **properties},
-                mesh.get_attribute(name))
-
-        self.assertRaises(AttributeError, mesh.add_attribute,
-                          list(attributes)[0])
-
-    def test_add_custom_boundary_custom(self):
-        h = AdcircMesh(self.nodes, self.elements)
-        h.add_boundary_type('ibtype')
-        indexes = [('2', '7'), ('3', '8'), ('4', '9')]
-        props = {'flow': [1, 2, 3]}
-        h.set_boundary_data('ibtype', 0, indexes, properties=props)
-
-    def test_add_boundary_custom_raise(self):
-        h = AdcircMesh(self.nodes, self.elements)
-        h.add_boundary_type('ibtype')
-        indexes = [('2', '7'), ('3', '10000'), ('4', '9')]
-        props = {'flow': [1, 2, 3]}
-        self.assertRaises(
-            AssertionError,
-            h.set_boundary_data,
-            'ibtype',
-            0,
-            indexes,
-            **props
-        )
-
-    def test_add_boundary(self):
-        h = AdcircMesh(self.nodes, self.elements)
-        h.add_boundary_type('ibtype')
-        indexes = ['1']
-        h.set_boundary_data('ibtype', 0, indexes)
-
-    def test_add_boundary_raise(self):
-        h = AdcircMesh(self.nodes, self.elements)
-        h.add_boundary_type('ibtype')
-        indexes = ['10000']
-        self.assertRaises(
-            AssertionError,
-            h.set_boundary_data,
-            'ibtype',
-            0,
-            indexes,
-        )
-
-    def test_delete_boundary_type(self):
-        msh = AdcircMesh(self.nodes, self.elements)
-        msh.delete_boundary_type(None)
-
-    def test_delete_boundary_data(self):
-        msh = AdcircMesh(self.nodes, self.elements, boundaries=self.boundaries)
-        msh.delete_boundary_data(None, 0)
-
-    def test_add_existing_boundary_type_raises(self):
-        msh = AdcircMesh(self.nodes, self.elements)
-        self.assertRaises(Exception, msh.add_boundary_type, None)
-
-    def test_plot_boundaries(self):
-        h = AdcircMesh(self.nodes, self.elements, self.boundaries)
-        h.plot_boundaries()
-
     def test_triplot(self):
         h = AdcircMesh(self.nodes, self.elements, self.boundaries)
         h.triplot()
@@ -222,46 +143,6 @@ class AdcircMeshTestCase(unittest.TestCase):
         nodes = {id: (coord, 0.) for id, (coord, _) in self.nodes.items()}
         h = AdcircMesh(nodes, self.elements, self.boundaries)
         h.make_plot()
-
-    def test_write_boundaries(self):
-        tmpdir = tempfile.TemporaryDirectory()
-        shp = pathlib.Path(tmpdir.name).absolute()
-        msh = AdcircMesh(
-            self.nodes,
-            self.elements,
-            crs="EPSG:3395",
-            boundaries=self.boundaries)
-        msh.write_boundaries(shp, overwrite=True)
-
-    def test_write_boundaries_raises(self):
-        tmpdir = tempfile.TemporaryDirectory()
-        shp = pathlib.Path(tmpdir.name).absolute()
-        msh = AdcircMesh(
-            self.nodes,
-            self.elements,
-            crs="EPSG:3395",
-            boundaries=self.boundaries)
-        msh._logger.debug('coverage')
-        self.assertRaises(IOError, msh.write_boundaries, shp)
-
-    def test_sms2dm(self):
-        self.boundaries[None][0].update({'properties': {}})
-        msh = AdcircMesh(
-            self.nodes,
-            self.elements,
-            crs="EPSG:3395",
-            boundaries=self.boundaries)
-        self.assertIsInstance(msh.sms2dm, str)
-
-    def test_nan_boundaries_raises(self):
-        self.boundaries[None][0].update({'properties': {}})
-        self.nodes['1'] = ((0., 0.), numpy.nan)
-        msh = AdcircMesh(
-            self.nodes,
-            self.elements,
-            crs="EPSG:3395",
-            boundaries=self.boundaries)
-        self.assertRaises(Exception, msh.generate_boundaries)
 
 
 if __name__ == '__main__':

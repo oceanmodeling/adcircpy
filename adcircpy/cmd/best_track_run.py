@@ -56,4 +56,4 @@ def main():
         tz=timezone('UTC')).timetuple()
     # if len(args.constituents) == 0:
     #     args.constituents = ['all']
-    exit(BestTrackRunCommand(args).run())
+    BestTrackRunCommand(args).run()

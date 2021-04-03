@@ -56,8 +56,8 @@ def server(parser):
     parser.add_argument("--additional-mpi-options")
 
     # make nproc required when using ssh
-    args = parser.parse_known_args()[0]
-    if args.hostname is not None:
+    # args = parser.parse_known_args()[0]
+    if '--hostname' in sys.argv:
         parser.add_argument("--nproc", "--ncpu", type=int, required=True)
     else:
         parser.add_argument("--nproc", "--ncpu", type=int, default=-1)
