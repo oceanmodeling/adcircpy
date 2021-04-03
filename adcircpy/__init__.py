@@ -3,7 +3,7 @@ from importlib import util
 import matplotlib as mpl
 from pandas.plotting import register_matplotlib_converters
 
-from adcircpy.driver import AdcircRun
+from adcircpy.driver.driver import AdcircRun
 from adcircpy.forcing import Tides
 from adcircpy.mesh import AdcircMesh
 from adcircpy.fort15 import Fort15
