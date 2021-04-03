@@ -35,7 +35,7 @@ def main():
 
     # print fort22
     if not args.quiet:
-        print(bt.fort22)
+        print(str(bt))
 
     # show cheap plot
     if args.plot_track:
@@ -44,9 +44,7 @@ def main():
     # save fort22
     if args.save_path is not None:
         with open(Path(args.save_path), 'w') as output_file:
-            output_file.write(bt.fort22)
-            if not args.quiet:
-                print(f'wrote `fort.22` to "{args.save_path}"')
+            output_file.write(str(bt))
 
 
 if __name__ == '__main__':

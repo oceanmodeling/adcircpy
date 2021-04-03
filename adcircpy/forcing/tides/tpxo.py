@@ -122,5 +122,5 @@ class TPXO(TidalDataset):
                 (x[_idx], y[_idx]),
                 array[_idx],
                 (_x, _y),
-                method='nearest'
+                method='linear'
         )

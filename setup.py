@@ -53,6 +53,7 @@ setuptools.setup(
             'psutil',
             # 'pygrib', # TODO: make separate install
             'pyproj>=2.6',
+            'geopandas',
             'requests',
             'scipy',
             'seaborn',

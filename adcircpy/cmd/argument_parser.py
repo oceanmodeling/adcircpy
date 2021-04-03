@@ -1,5 +1,4 @@
 import argparse
-import logging
 import sys
 
 
@@ -36,22 +35,11 @@ def generate_only(parser):
 
 
 def log_level(parser):
-    log_level = parser.add_mutually_exclusive_group()
-    log_level.add_argument(
-        '--log-level-info',
-        nargs='?',
-        const=logging.INFO,
-        dest="log_level")
-    log_level.add_argument(
-        '--log-level-debug',
-        nargs='?',
-        const=logging.DEBUG,
-        dest="log_level")
-    log_level.add_argument(
-        '--log-level-warning',
-        nargs='?',
-        const=logging.WARNING,
-        dest="log_level")
+    parser.add_argument(
+        "--log-level",
+        choices=['info', 'warning', 'debug'],
+        default='warning'
+    )
 
 
 def server(parser):
@@ -169,7 +157,7 @@ def best_track(parser):
     msg += " Examples: AL132012 for Sandy2012 or AL152017 for Maria2017."
     parser.add_argument('storm_id', help=msg)
     parser.add_argument('--start-date')
-    parser.add_argument('--end-date')
+    parser.add_argument('--run-days', type=float)
     parser.add_argument('--spinup-days', type=float, required=True)
 
 

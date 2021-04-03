@@ -1,7 +1,7 @@
 import pathlib
 
 
-def reader(path):
+def read(path):
     sms2dm = dict()
     with open(pathlib.Path(path), 'r') as f:
         f.readline()
@@ -14,19 +14,19 @@ def reader(path):
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: line[2:]
-                })
+                    })
             if line[0] == 'ND':
                 if line[0] not in sms2dm:
                     sms2dm[line[0]] = {}
                 sms2dm[line[0]].update({
                     line[1]: (
                         list(map(float, line[2:-1])), float(line[-1])
-                    )
-                })
+                        )
+                    })
     return sms2dm
 
 
-def writer(sms2dm, path, overwrite=False):
+def write(sms2dm, path, overwrite=False):
     path = pathlib.Path(path)
     if path.is_file() and not overwrite:
         msg = 'File exists, pass overwrite=True to allow overwrite.'
@@ -45,10 +45,8 @@ def string(sms2dm):
 def graph(sms2dm):
     f = "MESH2D\n"
     # TODO: Make faster using np.array2string
-    if 'E3T' in sms2dm:
-        f += triangular_elements(sms2dm)
-    if 'E4Q' in sms2dm:
-        f += quadrilateral_elements(sms2dm)
+    f += triangular_elements(sms2dm)
+    f += quadrilateral_elements(sms2dm)
     f += nodes(sms2dm)
     return f
 
