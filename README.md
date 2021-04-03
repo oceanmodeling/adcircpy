@@ -2,7 +2,7 @@
 ## Python library for automating ADCIRC model runs.
 [![tests](https://github.com/JaimeCalzadaNOAA/adcircpy/workflows/tests/badge.svg)](https://github.com/JaimeCalzadaNOAA/adcircpy/actions?query=workflow%3Atests)
 [![build](https://github.com/JaimeCalzadaNOAA/adcircpy/workflows/build/badge.svg)](https://github.com/JaimeCalzadaNOAA/adcircpy/actions?query=workflow%3Abuild)
-[![coverage](.github/badges/coverage.svg)](https://github.com/JaimeCalzadaNOAA/adcircpy/actions)
+![coverage](.github/badges/coverage.svg)
 [![version](https://img.shields.io/pypi/v/adcircpy)](https://pypi.org/project/adcircpy)
 [![license](https://img.shields.io/github/license/JaimeCalzadaNOAA/adcircpy)](https://opensource.org/licenses/gpl-license)
 
