@@ -36,17 +36,10 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with coverage
-        run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m && coverage-badge -f -o .github/badges/badge.svg
+        run: coverage run --source adcircpy -m nose --nologcapture --verbose && coverage report -m && coverage-badge -f -o .github/badges/badge.svg && rm -rf .coverage
       - name: Generate coverage report
         run: coverage report -m
-  badge:
-    needs: tests
-    name: Python 3.8 badging
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ 3.8 ]
-    steps:
+
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
@@ -64,6 +57,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git pull
           git add .github/badges/badge.svg
           git commit -m "Add/Update badge"
       - name: Push badge commit
