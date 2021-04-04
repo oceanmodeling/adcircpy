@@ -85,8 +85,8 @@ def figure(f):
             )
         kwargs.update({'axes': axes})
         axes = f(*argv, **kwargs)
+        axes.axis('scaled')
         if kwargs.get('show', False):
-            axes.axis('scaled')
             plt.show()
         return axes
     return decorator

@@ -9,48 +9,22 @@ from adcircpy import AdcircMesh
 
 class PlotMeshCommand:
 
-    def __init__(self, args):
-        self._args = args
+    def __init__(self, args: argparse.Namespace):
+        self.args = args
 
     def run(self):
-        self._make_plot()
-        self._make_triplot()
-        self._make_boundary_plot()
-        plt.gca().axis('scaled')
-        plt.show()
-        return 0
-
-    def _make_plot(self):
+        mesh = AdcircMesh.open(self.args.mesh, crs=self.args.crs)
+        ax = None
         if not self.args.no_topobathy:
-            self.mesh.make_plot(
-                axes=self.ax,
-                vmin=self.args.vmin,
-                vmax=self.args.vmax,
-                # levels=self.args.levels
-            )
-        if self.args.diagnose is not None:
-            elmax, speedmax, index = diagnose(self.args.diagnose)
-            self.ax.scatter(
-                self.mesh.x[index],
-                self.mesh.y[index],
-                # c=elmax,
-                marker='o',
-                edgecolor='r',
-                facecolor='none'
-            )
-
-    def _make_triplot(self):
+            ax = mesh.make_plot(
+                    vmin=self.args.vmin,
+                    vmax=self.args.vmax,
+                )
         if self.args.show_elements:
-            self.ax.triplot(self.mesh.triangulation, color='k', linewidth=0.07)
+            ax = mesh.triplot(axes=ax)
 
-    def _make_boundary_plot(self):
         if self.args.plot_boundaries:
-            # self.mesh.plot_ocean_boundaries(axes=self.ax)
-            self.mesh.boundaries.plot(ax=self.ax)
-
-    @property
-    def args(self):
-        return self._args
+            self.mesh.boundaries.gdf.plot(ax=self.ax)
 
     @property
     def mesh(self):
@@ -75,14 +49,6 @@ class PlotMeshCommand:
         except AttributeError:
             self.__ax = self.fig.add_subplot(111)
             return self.__ax
-
-    @property
-    def _args(self):
-        return self.__args
-
-    @_args.setter
-    def _args(self, args):
-        self.__args = args
 
 
 def diagnose(logfile):
@@ -110,6 +76,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Program to see a quick plot of an ADCIRC mesh.")
     parser.add_argument("mesh", help="ADCIRC mesh file path.")
+    parser.add_argument("--crs", help="ADCIRC mesh crs.")
     parser.add_argument("--show-elements", action="store_true",
                         default=False)
     parser.add_argument("--no-topobathy", action="store_true",
