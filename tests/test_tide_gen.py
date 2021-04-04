@@ -10,7 +10,7 @@ import urllib.request
 from adcircpy.cmd import tide_gen
 
 
-DATA_DIRECTORY = pathlib.Path(__file__).parent.parent.absolute() / 'data'
+DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 FORT14 = DATA_DIRECTORY / "NetCDF_Shinnecock_Inlet/fort.14"
 
 

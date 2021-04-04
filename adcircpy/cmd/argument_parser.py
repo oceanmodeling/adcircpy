@@ -170,7 +170,7 @@ def tidal_run(parser):
     msg += "with or without the quotes)."
     parser.add_argument('start_date', help=msg)
     # end_date
-    parser.add_argument('end_date')
+    parser.add_argument('run_days', type=float)
     # spinup_days
     parser.add_argument('--spinup-days', type=float, required=True)
 

@@ -359,7 +359,7 @@ class Fort15:
             }
         return namelists
 
-    def set_time_weighting_factors_in_gcwe(self, A00, B00, C00):
+    def set_time_weighting_factors_in_gwce(self, A00, B00, C00):
         A00 = float(A00)
         B00 = float(B00)
         C00 = float(C00)

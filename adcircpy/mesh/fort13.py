@@ -40,7 +40,9 @@ class NodalAttributes:
             ])
             for i, values in enumerate(
                     attribute['values'][attribute['non_default_indexes'], :]):
-                line = [f'{attribute["non_default_indexes"][i] + 1:d}']
+                node_id = self._fort14.nodes.get_id_by_index(
+                    attribute["non_default_indexes"][i])
+                line = [f'{node_id}']
                 for value in values:
                     line.append(f'{value}')
                 fort13.append(' '.join(line))
@@ -156,6 +158,14 @@ class NodalAttributes:
                 'coldstart': coldstart,
                 'hotstart': hotstart
             })
+
+    def add_patch(self, name, patch, value):
+        if name not in self.get_attribute_names():
+            raise AttributeError(
+                f'Cannot add patch to nodal attribute with name {name}: '
+                'attribute has not been added yet.')
+        idxs = [row.Index for row in self._fort14.nodes.gdf.geometry.within(patch).itertuples()]
+        self._attributes[name]['values'][idxs] = value
 
     def import_fort13(self, fort13):
         fort13 = parse_fort13(fort13)

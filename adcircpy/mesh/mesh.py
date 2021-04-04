@@ -124,6 +124,9 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
     def get_nodal_attribute(self, name):
         return self.nodal_attributes.get_attribute(name)
 
+    def add_nodal_attribute_patch(self, name, patch, value):
+        self.nodal_attributes.add_patch(name, patch, value)
+
     def has_nodal_attribute(self, name, runtype=None):
         return self.nodal_attributes.has_attribute(name, runtype)
 
