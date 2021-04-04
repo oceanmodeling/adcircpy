@@ -204,6 +204,12 @@ def tau0(parser):
     parser.add_argument("--FFACTOR", type=float, default=0.02, help=msg)
 
 
+def mannings(parser):
+    mannings = parser.add_mutually_exclusive_group()
+    mannings.add_argument('--generate-linear-mannings', action='store_true')
+    mannings.add_argument('--generate-constant-mannings', type=float)
+
+
 def nodal_attributes(parser):
     parser.add_argument("--fort13")
     # attributes
@@ -382,6 +388,7 @@ def get_parser(runtype=None, description=None):
     nodal_attributes(parser)
     timezone(parser)
     tau0(parser)
+    mannings(parser)
     tidal_constituents(parser)
     timestep(parser)
     gwce_solution_scheme(parser)

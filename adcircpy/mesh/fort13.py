@@ -51,7 +51,7 @@ class NodalAttributes:
             raise AttributeError(f'Cannot add nodal attribute with name '
                                  f'{name}: attribute already exists.')
         self._attributes.setdefault(name, {}).update({
-            'units': '' if units is None else str(units),
+            'units': 'unitless' if units is None else str(units),
             'values': None,
             'coldstart': False,
             'hotstart': False,

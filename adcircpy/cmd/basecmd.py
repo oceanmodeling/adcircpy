@@ -252,6 +252,12 @@ class AdcircCommand:
         if self.args.generate_tau0:
             mesh.generate_tau0()
 
+        if self.args.generate_linear_mannings is True:
+            mesh.generate_linear_mannings_n()
+        elif self.args.generate_constant_mannings is not None:
+            mesh.generate_constant_mannings_n(
+                self.args.generate_constant_mannings)
+
         if self.tidal_forcing is not None:
             mesh.add_forcing(self.tidal_forcing)
 
