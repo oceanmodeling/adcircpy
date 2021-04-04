@@ -5,7 +5,6 @@ import tarfile
 import tempfile
 import unittest
 
-import numpy
 import requests
 
 from adcircpy import AdcircMesh, AdcircRun
@@ -80,12 +79,6 @@ class TestAdcircRun(unittest.TestCase):
         # open mesh file
         mesh = AdcircMesh.open(FORT14_FILENAME, crs=4326)
 
-        # let's generate the tau0 factor
-        mesh.generate_tau0()
-
-        # let's also add a mannings to the domain (constant for this example)
-        mesh.mannings_n_at_sea_floor = numpy.full(mesh.values.shape, 0.025)
-
         # set simulation dates
         spinup_time = timedelta(days=2)
         start_date = datetime(2015, 12, 14) + spinup_time
@@ -119,7 +112,6 @@ class TestAdcircRun(unittest.TestCase):
             generated_filename = output_directory / reference_filename.name
             with open(generated_filename) as generated_file, \
                     open(reference_filename) as reference_file:
-                print(generated_file, reference_file)
                 self.assertEqual(generated_file.readlines()[1:],
                                  reference_file.readlines()[1:])
 
