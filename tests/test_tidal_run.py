@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pathlib
 import sys
+import shutil
 import tarfile
 import tempfile
 import unittest
@@ -40,6 +41,8 @@ class TidalRunCliTestCase(unittest.TestCase):
                 '--overwrite',
                 '--timestep=10.',
             ]
+        if shutil.which('padcirc') is None:
+            cmd.append('--skip-run')
         with patch.object(sys, 'argv', cmd):
             tidal_run.main()
 
