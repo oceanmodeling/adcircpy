@@ -41,10 +41,14 @@ jobs:
         id: extract_branch
       - name: Commit badge
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .github/badges/badge.svg
-          git commit -m "Add/Update badge"
+          git diff --exit-code .github/badges/badge.svg
+          if ! [ $? -eq 0 ]
+          then
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git add .github/badges/badge.svg
+              git commit -m "Add/Update badge"
+          fi
       - name: Push badge commit
         uses: ad-m/github-push-action@master
         with:
