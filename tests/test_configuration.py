@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import os
 import pathlib
 import tarfile
+import tempfile
 import unittest
 
 import numpy
@@ -15,12 +16,12 @@ from adcircpy.server.driver_file import DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet'
 FORT14_FILENAME = INPUT_DIRECTORY / 'fort.14'
+TEMPORARY_DIRECTORY = tempfile.TemporaryDirectory()
+OUTPUT_DIRECTORY = pathlib.Path(TEMPORARY_DIRECTORY.name)
 
-os.makedirs(INPUT_DIRECTORY, exist_ok=True)
-os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
+INPUT_DIRECTORY.mkdir(exist_ok=True)
 
 
 class TestAdcircRun(unittest.TestCase):
@@ -118,8 +119,9 @@ class TestAdcircRun(unittest.TestCase):
             generated_filename = output_directory / reference_filename.name
             with open(generated_filename) as generated_file, \
                     open(reference_filename) as reference_file:
-                assert generated_file.readlines()[1:] == \
-                       reference_file.readlines()[1:]
+                print(generated_file, reference_file)
+                self.assertEqual(generated_file.readlines()[1:],
+                                 reference_file.readlines()[1:])
 
 
 if __name__ == '__main__':

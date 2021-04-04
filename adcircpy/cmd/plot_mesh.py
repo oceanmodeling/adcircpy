@@ -45,7 +45,8 @@ class PlotMeshCommand:
 
     def _make_boundary_plot(self):
         if self.args.plot_boundaries:
-            self.mesh.plot_ocean_boundaries(axes=self.ax)
+            # self.mesh.plot_ocean_boundaries(axes=self.ax)
+            self.mesh.boundaries.plot(ax=self.ax)
 
     @property
     def args(self):

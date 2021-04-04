@@ -3,6 +3,7 @@ from functools import wraps
 import gzip
 import io
 from io import StringIO
+import logging
 from os import PathLike
 import pathlib
 import time
@@ -20,28 +21,19 @@ import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 
+logger = logging.getLogger(__name__)
+
 
 class BestTrackForcing(WindForcing):
     def __init__(self, storm_id, nws: int = 20,
                  start_date=None, end_date=None, dst_crs=None):
-        assert nws in [19, 20]
-        super().__init__(nws, 3600)
+        assert nws in [8, 19, 20]
         self._storm_id = storm_id
         self._start_date = start_date
         self._end_date = end_date
         self._dst_crs = dst_crs
 
-    def write(self, path: PathLike, overwrite: bool = False):
-        if not isinstance(path, pathlib.Path):
-            path = pathlib.Path(path)
-        if path.exists() and overwrite is False:
-            raise Exception(
-                'File exist, set overwrite=True to allow overwrite.')
-        with open(path, 'w') as f:
-            f.write(self.fort22)
-
-    @property
-    def fort22(self):
+    def __str__(self):
         record_number = self._generate_record_numbers()
         fort22 = ''
         for i, (_, row) in enumerate(self.df.iterrows()):
@@ -91,6 +83,15 @@ class BestTrackForcing(WindForcing):
             fort22 += f'{record_number[i]:>4},' \
                       f'\n'
         return fort22
+
+    def write(self, path: PathLike, overwrite: bool = False):
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        if path.exists() and overwrite is False:
+            raise Exception(
+                'File exist, set overwrite=True to allow overwrite.')
+        with open(path, 'w') as f:
+            f.write(str(self))
 
     @property
     def NWS(self) -> int:
@@ -168,6 +169,7 @@ class BestTrackForcing(WindForcing):
         url += '.dat.gz'
 
         try:
+            logger.info(f'Downloading storm data from {url}')
             response = urllib.request.urlopen(url)
         except urllib.error.URLError as e:
             if '550' in e.reason:
@@ -177,6 +179,8 @@ class BestTrackForcing(WindForcing):
             else:
                 @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
                 def make_request():
+                    logger.info(f'Downloading storm data from {url} failed, '
+                                'retrying...')
                     return urllib.request.urlopen(url)
 
                 response = make_request()
@@ -582,6 +586,7 @@ def atcf_id(storm_id):
 
     @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
     def request_url():
+        logger.info(f'Querying storm name from: {url}')
         return urllib.request.urlopen(url)
 
     res = request_url()

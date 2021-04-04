@@ -48,7 +48,7 @@ class HAMTIDE(TidalDataset):
             vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
         return self._get_interpolation('elevation', 'AMPL', constituent,
-                                       vertices)
+                                       vertices) * 0.01
 
     def get_phase(
             self,
@@ -99,8 +99,8 @@ class HAMTIDE(TidalDataset):
             try:
                 dataset = Dataset(path)
                 if data['path'] is None:
-                    self.datasets[variable][constituent]['path'] = path
-                self.datasets[variable][constituent]['dataset'] = dataset
+                    self.datasets[variable][constituent.lower()]['path'] = path
+                self.datasets[variable][constituent.lower()]['dataset'] = dataset
             except FileNotFoundError:
                 raise FileNotFoundError(f'no dataset found for "{variable}" '
                                         f'"{constituent}" at "{path}"')
@@ -119,23 +119,28 @@ class HAMTIDE(TidalDataset):
         xq = np.asarray([x + 360. if x < 0. else x
                          for x in vertices[:, 0]]).flatten()
         yq = vertices[:, 1].flatten()
-
-        xidx = np.logical_and(self.x >= np.min(xq), self.x <= np.max(xq))
-        yidx = np.logical_and(self.y >= np.min(yq), self.y <= np.max(yq))
-
-        dataset = self._get_dataset(variable, constituent)
-
+        dx = (self.x[-1] - self.x[0]) / len(self.x)
+        xidx = np.logical_and(
+            self.x >= np.min(xq) - 2.*dx,
+            self.x <= np.max(xq) + 2.*dx
+        )
+        dy = (self.y[-1] - self.y[0]) / len(self.y)
+        yidx = np.logical_and(
+            self.y >= np.min(yq) - 2.*dy,
+            self.y <= np.max(yq) + 2.*dy
+        )
         xi, yi = np.meshgrid(self.x[xidx], self.y[yidx])
         xi = xi.flatten()
         yi = yi.flatten()
+        dataset = self._get_dataset(variable, constituent)
         zi = dataset[netcdf_variable][yidx, xidx].flatten()
 
         return griddata(
                 (xi[~zi.mask], yi[~zi.mask]),
                 zi[~zi.mask],
                 (xq, yq),
-                method='nearest'
-        ) * 0.01
+                method='linear'
+        )
 
     def _prepend_path(self, filename: str) -> str:
         if self.path is None:

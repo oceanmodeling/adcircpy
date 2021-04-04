@@ -9,8 +9,8 @@ from netCDF4 import Dataset
 import numpy as np
 from pyproj import CRS
 
-from adcircpy.mesh import sms2dm
-from adcircpy.mesh.figures import _figure
+from adcircpy.mesh.parsers import sms2dm
+from adcircpy.figures import figure
 
 
 # class OutputVariable(Enum):
@@ -46,7 +46,7 @@ class SurfaceOutput(metaclass=abc.ABCMeta):
         },
             path, overwrite)
 
-    @_figure
+    @figure
     def triplot(self, *args, axes=None, color='k', linewidth=0.1, **kwargs):
         plt.triplot(
             self.x,
@@ -57,7 +57,7 @@ class SurfaceOutput(metaclass=abc.ABCMeta):
         )
         return axes
 
-    @_figure
+    @figure
     def tricontourf(self, *args, axes=None, **kwargs):
         if np.any(self.values.mask):
             self.triangulation.set_mask(np.any(

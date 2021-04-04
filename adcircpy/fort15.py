@@ -43,9 +43,9 @@ class Fort15:
             f'{self.NWP:<63d} ! NWP',
         ])
         if self._runtype == 'coldstart':
-            attributes = self.mesh.get_coldstart_attributes()
+            attributes = self.mesh.get_coldstart_nodal_attributes()
         elif self._runtype == 'hotstart':
-            attributes = self.mesh.get_hotstart_attributes()
+            attributes = self.mesh.get_hotstart_nodal_attributes()
         f.extend(f'{attribute:<63}' for attribute in attributes)
         f.extend([
             f'{self.NCOR:<63d} ! NCOR',
@@ -93,32 +93,32 @@ class Fort15:
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
         # ----------------
-        for id, bnd in self.mesh.open_boundaries.items():
-            # f.append(f'{bnd["neta"]}')
-            # velocity
-            if bnd['ifltype'] in [0, 1, 4]:
-                pass
-            else:
-                raise NotImplementedError(f'bctides generation not implemented'
-                                          f' for "ifltype={bnd["ifltype"]}"')
-            # temperature
-            if bnd['itetype'] == 0:
-                pass
-            else:
-                raise NotImplementedError(f'bctides generation not implemented'
-                                          f' for "itetype={bnd["itetype"]}"')
-            # salinity
-            if bnd['isatype'] == 0:
-                pass
-            else:
-                raise NotImplementedError(f'bctides generation not implemented'
-                                          f' for "isatype={bnd["isatype"]}"')
-            # tracers
-            if bnd['itrtype'] == 0:
-                pass
-            else:
-                raise NotImplementedError(f'bctides generation not implemented'
-                                          f' for "itrtype={bnd["itrtype"]}"')
+        # for id, bnd in self.mesh.boundaries.items():
+        #     # f.append(f'{bnd["neta"]}')
+        #     # velocity
+        #     if bnd['ifltype'] in [0, 1, 4]:
+        #         pass
+        #     else:
+        #         raise NotImplementedError(f'bctides generation not implemented'
+        #                                   f' for "ifltype={bnd["ifltype"]}"')
+        #     # temperature
+        #     if bnd['itetype'] == 0:
+        #         pass
+        #     else:
+        #         raise NotImplementedError(f'bctides generation not implemented'
+        #                                   f' for "itetype={bnd["itetype"]}"')
+        #     # salinity
+        #     if bnd['isatype'] == 0:
+        #         pass
+        #     else:
+        #         raise NotImplementedError(f'bctides generation not implemented'
+        #                                   f' for "isatype={bnd["isatype"]}"')
+        #     # tracers
+        #     if bnd['itrtype'] == 0:
+        #         pass
+        #     else:
+        #         raise NotImplementedError(f'bctides generation not implemented'
+        #                                   f' for "itrtype={bnd["itrtype"]}"')
         # ----------------
         # output requests
         # ----------------
@@ -254,7 +254,7 @@ class Fort15:
                     break
         f.append(f'{self.NFREQ:<63d} ! NFREQ')
         if harmonic_analysis:
-            for constituent, forcing in self.tidal_forcing:
+            for constituent, forcing in self.mesh.forcings.tides:
                 f.extend([
                     f'{constituent:<63} ',
                     (f'{forcing[1]:<.16G} {forcing[3]:<.16G}'
@@ -298,7 +298,7 @@ class Fort15:
                      ', '.join([f'{key}={value}'
                                 for key, value in namelist.items()]) +
                      ' \\')
-
+        f.append('')
         return '\n'.join(f)
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
@@ -313,40 +313,35 @@ class Fort15:
     def get_tidal_forcing(self):
         f = []
         f.append(f'{self.NTIF:<63d} ! NTIF')
-        active = self._get_active_tidal_potential_constituents()
-        for constituent in active:
-            forcing = self.tidal_forcing(constituent)
-            f.extend([
-                f'{constituent}',
-                f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
-            ])
-        f.append(f'{self.NBFR:d}')
-        active = self._get_active_tidal_forcing_constituents()
-        for constituent in active:
-            forcing = self.tidal_forcing(constituent)
-            f.extend(
-                [
+        if self.NTIF > 0:
+            active = self.mesh.forcings.tides.get_active_potential_constituents()
+            for constituent in active:
+                forcing = self.mesh.forcings.tides(constituent)
+                f.extend([
                     f'{constituent}',
-                    f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
-                    # f'{len(self.mesh.open_boundaries)}',
-                ]
-            )
-        for id, bnd in self.mesh.open_boundaries.items():
-            # f.append(f'{bnd["neta"]}')
-            # elevation
-            if bnd['iettype'] in [0, 1, 4]:
-                pass
-            elif bnd['iettype'] in [3, 5]:
-                for constituent in self.tidal_forcing.get_active_constituents():
+                    f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}',
+                ])
+        f.append(f'{self.NBFR:d}')
+        if self.NBFR > 0:
+            active = self.mesh.forcings.tides.get_active_forcing_constituents()
+            for constituent in active:
+                forcing = self.mesh.forcings.tides(constituent)
+                f.extend(
+                    [
+                        f'{constituent}',
+                        f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
+                        # f'{len(self.mesh.open_boundaries)}',
+                    ]
+                )
+            for row in self.mesh.boundaries.ocean.gdf.itertuples():
+                for constituent in self.mesh.forcings.tides.get_active_constituents():
                     f.append(f'{constituent}')
-                    vertices = self.mesh.get_xy(crs='EPSG:4326')[
-                               bnd['indexes'], :]
-                    amp, phase = self.tidal_forcing.tidal_dataset(
+                    vertices = self.mesh.get_xy(crs='EPSG:4326')[row.indexes, :]
+                    amp, phase = self.mesh.forcings.tides.tidal_dataset(
                             constituent, vertices)
                     f.extend(f'{amp[i]:.8e} {phase[i]:.8e}' for i in
                              range(len(vertices)))
-            elif bnd['iettype'] in 2:
-                bnd['iettype']['obj'].ethconst
+
         return '\n'.join(f)
 
     @property
@@ -653,10 +648,9 @@ class Fort15:
         if self._runtype == 'coldstart':
             nws = 0
         elif self.mesh is not None:
-            wind_forcing = self.mesh._surface_forcing['imetype']
-            if wind_forcing is not None:
+            if self.mesh.forcings.wind is not None:
                 # check for wave forcing here as well.
-                nws = int(wind_forcing.NWS % 100)
+                nws = int(self.mesh.forcings.wind.NWS % 100)
             else:
                 nws = 0
         else:
@@ -678,12 +672,10 @@ class Fort15:
         if self._runtype == 'coldstart':
             nrs = 0
         elif self.mesh is not None:
-            wind_forcing = self.mesh._surface_forcing['imetype']
-            wave_forcing = self.mesh._surface_forcing['iwrtype']
-            if wave_forcing is not None:
-                nrs = wave_forcing.NRS
-            elif wind_forcing is not None:
-                nrs = int(math.floor(wind_forcing.NWS / 100))
+            if self.mesh.forcings.wave is not None:
+                nrs = self.mesh.forcings.wave.NRS
+            elif self.mesh.forcings.wind is not None:
+                nrs = int(math.floor(self.mesh.forcings.wind.NWS / 100))
             else:
                 nrs = 0
         else:
@@ -859,9 +851,9 @@ class Fort15:
     @property
     def NWP(self):
         if self._runtype == 'coldstart':
-            return len(self.mesh.get_coldstart_attributes())
+            return len(self.mesh.get_coldstart_nodal_attributes())
         else:
-            return len(self.mesh.get_hotstart_attributes())
+            return len(self.mesh.get_hotstart_nodal_attributes())
 
     @property
     def NRAMP(self):
@@ -987,7 +979,9 @@ class Fort15:
 
     @property
     def WTIMINC(self):
-        if self.NWS not in [0, 1, 9, 11]:
+        if self.NWS in [8, 19, 20]:
+            return self.wind_forcing.WTIMINC
+        elif self.NWS not in [0, 1, 9, 11]:
             return int(self.wind_forcing.interval / timedelta(seconds=1))
         else:
             return 0
@@ -1223,16 +1217,16 @@ class Fort15:
     @property
     def NTIF(self):
         NTIF = 0
-        if self.tidal_forcing is not None:
-            for constituent in self.tidal_forcing.get_active_constituents():
-                if constituent in self.tidal_forcing.major_constituents:
+        if self.mesh.forcings.tides is not None:
+            for constituent in self.mesh.forcings.tides.get_active_constituents():
+                if constituent in self.mesh.forcings.tides.major_constituents:
                     NTIF += 1
         return NTIF
 
     @property
     def NBFR(self):
-        if self.iettype in [3, 5]:
-            return self.tidal_forcing.nbfr
+        if self.mesh.forcings.tides is not None:
+            return self.mesh.forcings.tides.nbfr
         return 0
 
     @property
@@ -1501,11 +1495,11 @@ class Fort15:
                 if np.any([_['sampling_rate'] for _ in self._outputs]):
                     if np.any([_['harmonic_analysis'] for _ in self._outputs]):
                         return len(
-                            self.tidal_forcing.get_active_constituents())
+                            self.mesh.forcings.tides.get_active_constituents())
         else:
             if np.any([_['sampling_rate'] for _ in self._outputs]):
                 if np.any([_['harmonic_analysis'] for _ in self._outputs]):
-                    return len(self.tidal_forcing.get_active_constituents())
+                    return len(self.mesh.forcings.tides.get_active_constituents())
         return 0
 
     @property
@@ -2220,29 +2214,6 @@ class Fort15:
     @CFL.setter
     def CFL(self, CFL):
         self.__CFL = float(CFL)
-
-    def _get_active_tidal_potential_constituents(self):
-        if self.iettype in [3, 5]:
-            return self.tidal_forcing.get_active_potential_constituents()
-        else:
-            return []
-
-    def _get_active_tidal_forcing_constituents(self):
-        if self.iettype in [3, 5]:
-            return self.tidal_forcing.get_active_forcing_constituents()
-        else:
-            return []
-
-    @property
-    def elevbc(self):
-        return self.mesh._boundary_forcing['iettype']['obj']
-
-    @property
-    def iettype(self):
-        if self.elevbc is not None:
-            return self.elevbc.iettype
-        else:
-            return 0
 
     def _get_NSTA_(self, physical_var):
         stations = self._container['stations'][physical_var]
