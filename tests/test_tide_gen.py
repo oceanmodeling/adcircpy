@@ -7,7 +7,6 @@ import unittest
 from unittest.mock import patch
 import urllib.request
 
-from adcircpy.cmd.argument_parser import get_parser
 from adcircpy.cmd import tide_gen
 
 
