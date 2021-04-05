@@ -4,7 +4,7 @@ on: [ push ]
 
 jobs:
   coverage:
-    name: Python ${{ runner.python-version }}
+    name: Upload coverage to Codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
