@@ -118,9 +118,18 @@ class TPXO(TidalDataset):
         )
 
         # "method" can be 'spline' or any string accepted by griddata()'s method kwarg.
-        return griddata(
+        values = griddata(
                 (x[_idx], y[_idx]),
                 array[_idx],
                 (_x, _y),
-                method='nearest'
+                method='linear',
+                fill_value=np.nan,
         )
+        nan_idxs = np.where(np.isnan(values))
+        values[nan_idxs] = griddata(
+                (x[_idx], y[_idx]),
+                array[_idx],
+                (_x[nan_idxs], _y[nan_idxs]),
+                method='nearest',
+        )
+        return values
