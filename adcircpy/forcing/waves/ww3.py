@@ -1,7 +1,7 @@
 from os import PathLike
 from pathlib import Path
 
-from adcircpy.forcing.waves import WaveForcing
+from .base import WaveForcing
 
 
 class WaveWatch3DataForcing(WaveForcing):

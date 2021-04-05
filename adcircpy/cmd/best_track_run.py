@@ -4,8 +4,8 @@ import logging
 
 from pytz import timezone
 
-from adcircpy.cmd import argument_parser
-from adcircpy.cmd.basecmd import AdcircCommand
+from . import argument_parser
+from .basecmd import AdcircCommand
 from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 logger = logging.getLogger(__name__)

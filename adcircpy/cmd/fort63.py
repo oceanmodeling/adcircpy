@@ -3,7 +3,7 @@ from ast import literal_eval
 
 import matplotlib.pyplot as plt
 
-from adcircpy.cmd import diagnose
+from . import diagnose
 from adcircpy.outputs.fort63 import Fort63
 
 

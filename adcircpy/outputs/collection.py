@@ -2,7 +2,7 @@ from functools import lru_cache
 # from collections.abc import Mapping
 import pathlib
 
-from adcircpy.outputs.maxele import Maxele
+from .maxele import Maxele
 
 
 class OutputCollection(

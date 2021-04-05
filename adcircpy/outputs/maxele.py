@@ -1,4 +1,4 @@
-from adcircpy.outputs.base import SurfaceOutput
+from .base import SurfaceOutput
 
 
 class Maxele(SurfaceOutput):

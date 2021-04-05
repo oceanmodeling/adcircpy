@@ -5,7 +5,7 @@ from typing import Any
 
 import numpy as np
 
-from adcircpy.forcing.winds.base import WindForcing
+from .base import WindForcing
 
 
 class OwiForcing(WindForcing):

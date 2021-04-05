@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import logging
 import pathlib
 
-from adcircpy import AdcircMesh, Fort15
+from adcircpy import AdcircMesh
+from adcircpy.driver.driver import Fort15
 from adcircpy.forcing.tides import Tides
 
 

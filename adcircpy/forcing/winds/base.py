@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from os import PathLike
 
-from adcircpy.forcing.base import Forcing
+from ..base import Forcing
 
 
 class WindForcing(Forcing, ABC):

@@ -1,7 +1,7 @@
 from datetime import timedelta
 import uuid
 
-from adcircpy.server.base_config import BaseServerConfig
+from .base_config import BaseServerConfig
 
 
 class SlurmConfig(BaseServerConfig):

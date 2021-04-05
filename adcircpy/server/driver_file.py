@@ -1,7 +1,7 @@
 import os
 from textwrap import indent
 
-from adcircpy.server.slurm_config import SlurmConfig
+from .slurm_config import SlurmConfig
 
 
 class DriverFile:

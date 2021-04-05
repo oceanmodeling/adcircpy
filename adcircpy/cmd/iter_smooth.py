@@ -10,8 +10,8 @@ import pathlib
 
 import matplotlib.pyplot as plt
 
-from adcircpy.cmd import diagnose
 from adcircpy.mesh import AdcircMesh
+from . import diagnose
 
 
 def parse_args():

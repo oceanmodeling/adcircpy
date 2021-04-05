@@ -1,2 +1,2 @@
-from adcircpy.server.slurm_config import SlurmConfig
-from adcircpy.server.ssh_config import SSHConfig
+from .slurm_config import SlurmConfig
+from .ssh_config import SSHConfig

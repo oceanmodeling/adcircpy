@@ -5,7 +5,7 @@ from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
 
-from adcircpy.forcing.tides.dataset import TidalDataset
+from .dataset import TidalDataset
 
 
 class HAMTIDE(TidalDataset):

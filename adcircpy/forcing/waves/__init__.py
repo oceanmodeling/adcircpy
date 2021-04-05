@@ -1,2 +1,2 @@
-from adcircpy.forcing.waves.base import WaveForcing
-from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
+from .base import WaveForcing
+from .ww3 import WaveWatch3DataForcing

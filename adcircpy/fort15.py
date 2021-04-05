@@ -5,7 +5,7 @@ import pathlib
 
 import numpy as np
 
-from adcircpy.mesh.mesh import AdcircMesh
+from .mesh.mesh import AdcircMesh
 
 
 class Fort15:

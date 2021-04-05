@@ -23,8 +23,8 @@ from shapely.geometry import (
     Point,
 )
 
-from adcircpy.mesh.parsers import grd, sms2dm
-from adcircpy.figures import figure
+from .parsers import grd, sms2dm
+from ..figures import figure
 
 _logger = logging.getLogger(__name__)
 

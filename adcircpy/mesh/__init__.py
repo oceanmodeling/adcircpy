@@ -1,1 +1,1 @@
-from adcircpy.mesh.mesh import AdcircMesh
+from .mesh import AdcircMesh

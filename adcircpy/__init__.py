@@ -3,9 +3,9 @@ from importlib import util
 import matplotlib as mpl
 from pandas.plotting import register_matplotlib_converters
 
-from adcircpy.driver.driver import AdcircRun, Fort15
-from adcircpy.forcing import *
-from adcircpy.mesh.mesh import AdcircMesh
+from .driver import AdcircRun, Fort15
+from .forcing import *
+from .mesh import AdcircMesh
 
 mpl.rcParams['agg.path.chunksize'] = 10000
 register_matplotlib_converters()

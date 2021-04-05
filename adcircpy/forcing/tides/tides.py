@@ -7,9 +7,9 @@ from typing import Union
 
 import numpy as np
 
-from adcircpy.forcing import bctypes
-from adcircpy.forcing.tides.hamtide import HAMTIDE
-from adcircpy.forcing.tides.tpxo import TPXO
+from .. import bctypes
+from .hamtide import HAMTIDE
+from .tpxo import TPXO
 
 
 class TidalSource(Enum):

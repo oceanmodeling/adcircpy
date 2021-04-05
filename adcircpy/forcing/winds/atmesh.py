@@ -1,7 +1,7 @@
 from os import PathLike
 from pathlib import Path
 
-from adcircpy.forcing.winds.base import WindForcing
+from .base import WindForcing
 
 
 class AtmosphericMeshForcing(WindForcing):

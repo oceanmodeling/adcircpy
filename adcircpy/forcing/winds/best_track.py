@@ -19,7 +19,7 @@ from shapely import ops
 from shapely.geometry import Point, Polygon
 import utm
 
-from adcircpy.forcing.winds.base import WindForcing
+from .base import WindForcing
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ import uuid
 
 import paramiko
 
-from adcircpy.server.base_config import BaseServerConfig
+from .base_config import BaseServerConfig
 
 
 class SSHConfig(BaseServerConfig):

@@ -1,2 +1,2 @@
-# from adcircpy.validation.COOPS.HarmonicConstituents import HarmonicConstituents
-from adcircpy.validation.COOPS.TidalStations import TidalStations
+# from .HarmonicConstituents import HarmonicConstituents
+from .TidalStations import TidalStations

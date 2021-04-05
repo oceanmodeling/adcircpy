@@ -1,4 +1,4 @@
-from adcircpy.outputs.base import ScalarSurfaceOutputTimeseries
+from .base import ScalarSurfaceOutputTimeseries
 
 
 class Fort63(ScalarSurfaceOutputTimeseries):
