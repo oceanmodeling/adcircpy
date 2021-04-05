@@ -2271,6 +2271,8 @@ class Fort15:
                 start = start - self.forcing_start_date
             else:
                 start = start - self.start_date
+        elif isinstance(start, datetime):
+            start = self.start_date - start
 
         elif isinstance(start, type(None)):
             if self._runtype == 'hotstart':
@@ -2279,7 +2281,7 @@ class Fort15:
             else:
                 return 0
 
-        return start.total_seconds() / (60.0 * 60.0 * 24.0)
+        return start / timedelta(days=1)
 
     def _get_TOUTF__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
@@ -2298,7 +2300,7 @@ class Fort15:
                     else:
                         return 0
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError('specific spinup end time is not implemented')
             else:
                 return 0
 
