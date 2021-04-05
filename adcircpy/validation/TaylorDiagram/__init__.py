@@ -1,2 +1,1 @@
-# from AdcircPy.Validation.TaylorDiagram.TaylorDiagram import TaylorDiagram
-# __all__ = ["TaylorDiagram"]
+# from adcircpy.validation.TaylorDiagram.TaylorDiagram import TaylorDiagram
