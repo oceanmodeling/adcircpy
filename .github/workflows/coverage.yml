@@ -1,0 +1,33 @@
+name: coverage
+
+on: [ push ]
+
+jobs:
+  coverage:
+    name: Python ${{ runner.python-version }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+      - name: Restore cached dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ runner.python-version }}-${{ hashFiles('setup.py') }}
+          restore-keys: ${{ runner.os }}-pip-${{ runner.python-version }}-
+      - name: Install dependencies
+        run: |
+          apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
+          pip install wheel
+          pip install -e .[development]
+      - name: Test with coverage
+        run: coverage run --source adcircpy -m nose --nologcapture --verbose
+      - name: Generate coverage report
+        run: coverage report -m
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          flags: python${{ runner.python-version }}-${{ runner.os }}
+          fail_ci_if_error: true
