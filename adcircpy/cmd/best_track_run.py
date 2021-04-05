@@ -50,7 +50,7 @@ def main():
             'debug': logging.DEBUG,
         }[args.log_level],
         format='[%(asctime)s] %(name)s %(levelname)s: %(message)s',
-        force=True,
+        # force=True,
     )
     logging.Formatter.converter = lambda *args: datetime.now(
         tz=timezone('UTC')).timetuple()
