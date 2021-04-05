@@ -3,17 +3,17 @@ name: tests
 on: [ push ]
 
 jobs:
-  tests:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        python-version: [ 3.8 ]
+  coverage :
+    name : Python ${{ matrix.python-version }}
+    runs-on : ubuntu-latest
+    strategy :
+      fail-fast : true
+      matrix :
+        python-version : [ 3.8 ]
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    steps :
+      - name : Checkout repository
+        uses : actions/checkout@v2
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
@@ -31,8 +31,6 @@ jobs:
           pip install -e .[development]
       - name : Test with coverage
         run : coverage run --source adcircpy -m nose --nologcapture --verbose
-      - name : Generate coverage report
-        run : coverage report -m
       - name : Upload coverage to Codecov
         uses : codecov/codecov-action@v1
         with :
