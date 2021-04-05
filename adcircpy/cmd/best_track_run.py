@@ -54,6 +54,4 @@ def main():
     )
     logging.Formatter.converter = lambda *args: datetime.now(
         tz=timezone('UTC')).timetuple()
-    # if len(args.constituents) == 0:
-    #     args.constituents = ['all']
     BestTrackRunCommand(args).run()

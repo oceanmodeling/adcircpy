@@ -134,13 +134,21 @@ class HAMTIDE(TidalDataset):
         yi = yi.flatten()
         dataset = self._get_dataset(variable, constituent)
         zi = dataset[netcdf_variable][yidx, xidx].flatten()
-
-        return griddata(
+        values = griddata(
                 (xi[~zi.mask], yi[~zi.mask]),
                 zi[~zi.mask],
                 (xq, yq),
-                method='linear'
+                method='linear',
+                fill_value=np.nan
+            )
+        nan_idxs = np.where(np.isnan(values))
+        values[nan_idxs] = griddata(
+                (xi[~zi.mask], yi[~zi.mask]),
+                zi[~zi.mask],
+                (xq[nan_idxs], yq[nan_idxs]),
+                method='nearest',
         )
+        return values
 
     def _prepend_path(self, filename: str) -> str:
         if self.path is None:
