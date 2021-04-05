@@ -39,3 +39,9 @@ jobs:
         run: coverage run --source adcircpy -m nose --nologcapture --verbose
       - name: Generate coverage report
         run: coverage report -m
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          flags: test ${{ matrix.python-version }} on ${{ runner.os }}
+          fail_ci_if_error: true
+          verbose: true
