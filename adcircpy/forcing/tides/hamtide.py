@@ -19,12 +19,15 @@ class HAMTIDE(TidalDataset):
     def __init__(self, hamtide_dataset_directory: PathLike = None):
         if hamtide_dataset_directory is None:
             hamtide_dataset_directory = self.OPENDAP_URL
-
-        if Path(hamtide_dataset_directory).exists():
-            hamtide_dataset_directory = Path(hamtide_dataset_directory)
-            if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
-                raise FileNotFoundError(f'no NetCDF files found at '
-                                        f'"{hamtide_dataset_directory}"')
+        else:
+            try:
+                if Path(hamtide_dataset_directory).exists():
+                    hamtide_dataset_directory = Path(hamtide_dataset_directory)
+                    if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
+                        raise FileNotFoundError(f'no NetCDF files found at '
+                                                f'"{hamtide_dataset_directory}"')
+            except OSError:
+                raise ValueError('given resource must be a local path')
 
         super().__init__(hamtide_dataset_directory)
 
