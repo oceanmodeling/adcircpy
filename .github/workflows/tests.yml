@@ -38,26 +38,9 @@ jobs:
         run: coverage run --source adcircpy -m nose --nologcapture --verbose
       - name: Generate coverage report
         run: coverage report -m
-      - name: Save coverage
-        if: matrix.python-version == 3.9
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage
-          path: .coverage
-  coverage:
-    name: Upload coverage to Codecov
-    needs: [ tests ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Retrieve coverage
-        uses: actions/download-artifact@v2
-        with:
-          name: coverage
       - name: Upload coverage to Codecov
+        if: matrix.python-version == 3.9
         uses: codecov/codecov-action@v1
         with:
-          files: .coverage
           flags: python${{ matrix.python-version }}-${{ runner.os }}
           fail_ci_if_error: true
