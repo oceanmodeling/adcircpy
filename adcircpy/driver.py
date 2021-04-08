@@ -796,7 +796,9 @@ class AdcircRun(Fort15):
                 break
             print(line, end='')
         p.wait()
-        return p.stderr.readlines()
+        lines = p.stderr.readlines()
+        # p.close()
+        return lines
 
     @staticmethod
     def _get_nproc(nproc):
@@ -858,8 +860,13 @@ class AdcircRun(Fort15):
     @_start_date.setter
     def _start_date(self, start_date):
         if start_date is None:
-            if isinstance(self.wind_forcing, BestTrackForcing):
-                start_date = self.wind_forcing.start_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                start_date = self.mesh.forcings.wind.start_date
+        else:
+            if isinstance(self.mesh.forcings.tides, Tides):
+                self.mesh.forcings.tides.start_date = start_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                self.mesh.forcings.wind.start_date = start_date
         assert isinstance(start_date, datetime)
         self.__start_date = start_date
 
@@ -869,11 +876,17 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
+        if isinstance(end_date, timedelta):
+            end_date = self._start_date + end_date
         if end_date is None:
             if isinstance(self.wind_forcing, BestTrackForcing):
                 end_date = self.wind_forcing.end_date
-        if isinstance(end_date, timedelta):
-            end_date = self._start_date + end_date
+        else:
+            if isinstance(self.mesh.forcings.tides, Tides):
+                self.mesh.forcings.tides.end_date = end_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                self.mesh.forcings.wind.end_date = end_date
+
         assert isinstance(end_date, datetime)
         assert end_date > self.start_date
         self.__end_date = end_date

@@ -42,9 +42,10 @@ class TidalRunTestCase(unittest.TestCase):
         driver = AdcircRun(
             mesh,
             start_date=now,
-            end_date=now+timedelta(days=1),
-            spinup_time=timedelta(days=1),
+            end_date=now+timedelta(days=0.5),
+            spinup_time=timedelta(days=0.5),
         )
+        driver.timestep = 10.
         if shutil.which('padcirc') is None:
             tmpdir = tempfile.TemporaryDirectory()
             driver.write(tmpdir.name)
