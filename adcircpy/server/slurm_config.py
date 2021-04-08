@@ -13,8 +13,8 @@ class SlurmConfig(BaseServerConfig):
             self,
             account: str,
             ntasks: int,
-            partition: str,
             walltime: timedelta,
+            partition: str = None,
             filename: str = 'slurm.job',
             run_directory: str = '.',
             run_name: str = None,
@@ -135,11 +135,12 @@ class SlurmConfig(BaseServerConfig):
         if self._nodes is not None:
             f += f'#SBATCH -N {self._nodes}\n'
 
-        f += f'#SBATCH --time={self._walltime}\n' \
-             f'#SBATCH --partition={self._partition}\n' \
-             f'\n' \
-             f'ulimit -s unlimited\n' \
-             f'set -e\n'
+        f += f'#SBATCH --time={self._walltime}\n'
+
+        if self._partition is not None:
+            f += f'#SBATCH --partition={self._partition}\n'
+
+        f += '\nulimit -s unlimited\nset -e\n'
 
         if self._modules is not None:
             f += f'\n' \

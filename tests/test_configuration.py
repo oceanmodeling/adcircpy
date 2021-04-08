@@ -69,7 +69,10 @@ class TestAdcircRun(unittest.TestCase):
 
         with open(output_directory / 'slurm.job') as generated_file:
             with open(reference_directory / 'slurm.job') as reference_file:
-                assert generated_file.read() == reference_file.read()
+                self.assertMultiLineEqual(
+                    generated_file.read(),
+                    reference_file.read()
+                    )
 
     def test_configuration(self):
         output_directory = OUTPUT_DIRECTORY / 'test_configuration'
@@ -112,8 +115,9 @@ class TestAdcircRun(unittest.TestCase):
             generated_filename = output_directory / reference_filename.name
             with open(generated_filename) as generated_file, \
                     open(reference_filename) as reference_file:
-                self.assertEqual(generated_file.readlines()[1:],
-                                 reference_file.readlines()[1:])
+                self.assertMultiLineEqual(
+                    ''.join(generated_file.readlines()[1:]),
+                    ''.join(reference_file.readlines()[1:]))
 
 
 if __name__ == '__main__':
