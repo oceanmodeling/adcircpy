@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from datetime import datetime
 import pathlib
 import sys
 import shutil
@@ -32,7 +33,7 @@ class TidalRunCliTestCase(unittest.TestCase):
         cmd = [
                 'tidal_run',
                 f'{FORT14.resolve()}',
-                '2021-02-26T00:00:00',
+                f"{datetime.strftime(datetime.utcnow(), '%Y-%m-%dT%H:%M:%S')}",
                 '0.5',
                 '--spinup-days=0.5',
                 '--crs=EPSG:4326',

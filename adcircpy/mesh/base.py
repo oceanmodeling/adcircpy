@@ -10,6 +10,7 @@ from typing import Union, Sequence, Hashable, List, Dict
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
+import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 from matplotlib.transforms import Bbox
 import numpy as np
@@ -492,10 +493,13 @@ class Grd(ABC):
         return cls(**grd.read(pathlib.Path(file), boundaries=False))
 
     @figure
-    def tricontourf(self, axes=None, show=True, figsize=None, **kwargs):
+    def tricontourf(self, axes=None, show=True, figsize=None, cbar=False,
+                    **kwargs):
         if len(self.triangles) > 0:
-            axes.tricontourf(self.x, self.y, self.triangles, self.values,
-                             **kwargs)
+            ax = axes.tricontourf(self.x, self.y, self.triangles, self.values,
+                                  **kwargs)
+            if cbar is True:
+                plt.colorbar(ax)
         return axes
 
     @figure
