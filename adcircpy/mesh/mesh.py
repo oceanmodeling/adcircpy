@@ -131,12 +131,6 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
     def has_nodal_attribute(self, name, runtype=None):
         return self.nodal_attributes.has_attribute(name, runtype)
 
-    def add_nodal_attribute_patch(self, name: str,
-                                  patch: Union[Polygon, MultiPolygon],
-                                  value: float):
-        raise NotImplementedError(
-            f'{self.__class__.__name__}.add_nodal_attribute_patch()')
-
     def import_nodal_attributes(self, fort13):
         self.nodal_attributes.import_fort13(fort13)
 
