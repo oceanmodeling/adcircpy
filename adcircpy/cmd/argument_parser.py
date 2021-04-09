@@ -76,8 +76,8 @@ def server(parser):
     # resource manager specific options
     parser.add_argument('--account', required=_required)
     parser.add_argument('--slurm-ntasks', required=_required, type=int)
-    parser.add_argument('--partition', required=_required)
     parser.add_argument('--walltime', required=_required, type=float)
+    parser.add_argument('--partition')
     parser.add_argument('--slurm-filename')
     parser.add_argument('--slurm-rundir')
     parser.add_argument('--run-name')
