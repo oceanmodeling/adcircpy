@@ -2277,6 +2277,9 @@ class Fort15:
             else:
                 start = timedelta(seconds=0)
 
+        if start < timedelta(0):
+            start = timedelta(seconds=abs(start / timedelta(seconds=1)))
+
         return start / timedelta(days=1)
 
     def _get_TOUTF__(self, output_type, physical_var):
@@ -2311,6 +2314,10 @@ class Fort15:
                         'specific model end time is not implemented')
             else:
                 time = timedelta(seconds=0)
+
+        if time < timedelta(0):
+            time = timedelta(seconds=abs(time / timedelta(seconds=1)))
+
         return time / timedelta(days=1)
 
     def _get_NSPOOL__(self, output_type, physical_var):
