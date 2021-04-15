@@ -1248,14 +1248,16 @@ class Fort15:
         try:
             return self.__TOUTSE
         except AttributeError:
-            return self._get_TOUTS__('stations', 'elevation')
+            return min(self._get_TOUTS__('stations', 'elevation'),
+                       self._get_TOUTF__('stations', 'elevation'))
 
     @property
     def TOUTFE(self):
         try:
             return self.__TOUTFE
         except AttributeError:
-            return self._get_TOUTF__('stations', 'elevation')
+            return max(self._get_TOUTS__('stations', 'elevation'),
+                       self._get_TOUTF__('stations', 'elevation'))
 
     @property
     def NSPOOLE(self):
@@ -1283,14 +1285,16 @@ class Fort15:
         try:
             return self.__TOUTSV
         except AttributeError:
-            return self._get_TOUTS__('stations', 'velocity')
+            return min(self._get_TOUTS__('stations', 'velocity'),
+                       self._get_TOUTF__('stations', 'velocity'))
 
     @property
     def TOUTFV(self):
         try:
             return self.__TOUTFV
         except AttributeError:
-            return self._get_TOUTF__('stations', 'velocity')
+            return max(self._get_TOUTS__('stations', 'velocity'),
+                       self._get_TOUTF__('stations', 'velocity'))
 
     @property
     def NSPOOLV(self):
@@ -1318,14 +1322,16 @@ class Fort15:
         try:
             return self.__TOUTSM
         except AttributeError:
-            return self._get_TOUTS__('stations', 'meteorological')
+            return min(self._get_TOUTS__('stations', 'meteorological'),
+                       self._get_TOUTF__('stations', 'meteorological'))
 
     @property
     def TOUTFM(self):
         try:
             return self.__TOUTFM
         except AttributeError:
-            return self._get_TOUTF__('stations', 'meteorological')
+            return max(self._get_TOUTS__('stations', 'meteorological'),
+                       self._get_TOUTF__('stations', 'meteorological'))
 
     @property
     def NSPOOLM(self):
@@ -1353,14 +1359,16 @@ class Fort15:
         try:
             return self.__TOUTSC
         except AttributeError:
-            return self._get_TOUTS__('stations', 'concentration')
+            return min(self._get_TOUTS__('stations', 'concentration'),
+                       self._get_TOUTF__('stations', 'concentration'))
 
     @property
     def TOUTFC(self):
         try:
             return self.__TOUTFC
         except AttributeError:
-            return self._get_TOUTF__('stations', 'concentration')
+            return max(self._get_TOUTS__('stations', 'concentration'),
+                       self._get_TOUTF__('stations', 'concentration'))
 
     @property
     def NSPOOLC(self):
@@ -1388,14 +1396,16 @@ class Fort15:
         try:
             return self.__TOUTSGE
         except AttributeError:
-            return self._get_TOUTS__('surface', 'elevation')
+            return min(self._get_TOUTS__('surface', 'elevation'),
+                       self._get_TOUTF__('surface', 'elevation'))
 
     @property
     def TOUTFGE(self):
         try:
             return self.__TOUTFGE
         except AttributeError:
-            return self._get_TOUTF__('surface', 'elevation')
+            return max(self._get_TOUTS__('surface', 'elevation'),
+                       self._get_TOUTF__('surface', 'elevation'))
 
     @property
     def NSPOOLGE(self):
@@ -1416,7 +1426,8 @@ class Fort15:
         try:
             return self.__TOUTSGV
         except AttributeError:
-            return self._get_TOUTS__('surface', 'velocity')
+            return min(self._get_TOUTS__('surface', 'velocity'),
+                       self._get_TOUTF__('surface', 'velocity'))
 
     @property
     def TOUTFGV(self):
@@ -1444,14 +1455,16 @@ class Fort15:
         try:
             return self.__TOUTSGM
         except AttributeError:
-            return self._get_TOUTS__('surface', 'meteorological')
+            return min(self._get_TOUTS__('surface', 'meteorological'),
+                       self._get_TOUTF__('surface', 'meteorological'))
 
     @property
     def TOUTFGM(self):
         try:
             return self.__TOUTFGM
         except AttributeError:
-            return self._get_TOUTF__('surface', 'meteorological')
+            return max(self._get_TOUTS__('surface', 'meteorological'),
+                       self._get_TOUTF__('surface', 'meteorological'))
 
     @property
     def NSPOOLGM(self):
@@ -1472,14 +1485,16 @@ class Fort15:
         try:
             return self.__TOUTSGC
         except AttributeError:
-            return self._get_TOUTS__('surface', 'concentration')
+            return min(self._get_TOUTS__('surface', 'concentration'),
+                       self._get_TOUTF__('surface', 'concentration'))
 
     @property
     def TOUTFGC(self):
         try:
             return self.__TOUTFGC
         except AttributeError:
-            return self._get_TOUTF__('surface', 'concentration')
+            return max(self._get_TOUTS__('surface', 'concentration'),
+                       self._get_TOUTF__('surface', 'concentration'))
 
     @property
     def NSPOOLGC(self):
@@ -2250,81 +2265,75 @@ class Fort15:
 
     def _get_TOUTS__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        # coldstart
         if self._runtype == 'coldstart':
+            # coldstart
             if output['spinup'] is not None:
                 start = output['spinup_start']
             else:
-                return 0
-
-        # hotstart
+                start = self.start_date
+        elif output['sampling_rate'] is not None:
+            # hotstart
+            start = output['start']
         else:
-            if output['sampling_rate'] is not None:
-                start = output['start']
-            else:
-                return 0
+            start = self.start_date
 
         # typecast
         if isinstance(start, int):  # int interpreted as literal timestep
             start = timedelta(seconds=(start * self.timestep))
             if self._runtype == 'coldstart':
-                start = start - self.forcing_start_date
+                start -= self.forcing_start_date
             else:
-                start = start - self.start_date
+                start -= self.start_date
         elif isinstance(start, datetime):
-            start = self.start_date - start
-
+            start -= self.start_date
         elif isinstance(start, type(None)):
             if self._runtype == 'hotstart':
-                dt = self.start_date - self.forcing_start_date
-                return dt.total_seconds() / (60 * 60 * 24)
+                start = self.start_date - self.forcing_start_date
             else:
-                return 0
+                start = timedelta(seconds=0)
+
+        if start < timedelta(0):
+            start = timedelta(seconds=abs(start / timedelta(seconds=1)))
 
         return start / timedelta(days=1)
 
     def _get_TOUTF__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        # coldstart
         if self._runtype == 'coldstart':
+            # coldstart
             if output['spinup'] is not None:
-                if output['spinup_end'] is None:
+                if output['spinup_end'] is None or output['spinup_end'] == \
+                        output['start']:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds() / (
-                            60.0 * 60.0 * 24.0)
-                        if time > 0:
-                            return time
-                        else:
-                            dt = self.end_date - self.start_date
-                            return dt.total_seconds() / (60.0 * 60.0 * 24.0)
+                        time = output['spinup_end'] - self.start_date
                     else:
-                        return 0
+                        time = timedelta(seconds=0)
                 else:
                     raise NotImplementedError('specific spinup end time is not implemented')
             else:
-                return 0
-
-        # hotstart
+                time = timedelta(seconds=0)
         elif self._runtype == 'hotstart':
+            # hotstart
             if output['sampling_rate'] is not None:
-                if output['end'] is None:
+                if output['end'] is None or output['end'] == self.end_date:
                     if self._runtype == 'hotstart':
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60 * 60 * 24)
+                        time = self.end_date - self.forcing_start_date
                     # if self.NOUTGE != 0:
-                    #     time = self.spinup_time.total_seconds()/(60.*60.*24.)
-                    #     if time > 0:
-                    #         return time
-                    #     else:
-                    #         dt = self.end_date - self.forcing_start_date
-                    #         return dt.total_seconds()/(60.*60.*24.)
+                    #     time = self.spinup_time
+                    #     if time <= 0:
+                    #         time = self.end_date - self.forcing_start_date
                     else:
-                        dt = self.start_date - self.forcing_start_date
-                        return dt.total_seconds() / (60 * 60 * 24)
+                        time = self.start_date - self.forcing_start_date
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError(
+                        'specific model end time is not implemented')
             else:
-                return 0
+                time = timedelta(seconds=0)
+
+        if time < timedelta(0):
+            time = timedelta(seconds=abs(time / timedelta(seconds=1)))
+
+        return time / timedelta(days=1)
 
     def _get_NSPOOL__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
