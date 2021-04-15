@@ -1248,14 +1248,16 @@ class Fort15:
         try:
             return self.__TOUTSE
         except AttributeError:
-            return self._get_TOUTS__('stations', 'elevation')
+            return min(self._get_TOUTS__('stations', 'elevation'),
+                       self._get_TOUTF__('stations', 'elevation'))
 
     @property
     def TOUTFE(self):
         try:
             return self.__TOUTFE
         except AttributeError:
-            return self._get_TOUTF__('stations', 'elevation')
+            return max(self._get_TOUTS__('stations', 'elevation'),
+                       self._get_TOUTF__('stations', 'elevation'))
 
     @property
     def NSPOOLE(self):
@@ -1283,14 +1285,16 @@ class Fort15:
         try:
             return self.__TOUTSV
         except AttributeError:
-            return self._get_TOUTS__('stations', 'velocity')
+            return min(self._get_TOUTS__('stations', 'velocity'),
+                       self._get_TOUTF__('stations', 'velocity'))
 
     @property
     def TOUTFV(self):
         try:
             return self.__TOUTFV
         except AttributeError:
-            return self._get_TOUTF__('stations', 'velocity')
+            return max(self._get_TOUTS__('stations', 'velocity'),
+                       self._get_TOUTF__('stations', 'velocity'))
 
     @property
     def NSPOOLV(self):
@@ -1318,14 +1322,16 @@ class Fort15:
         try:
             return self.__TOUTSM
         except AttributeError:
-            return self._get_TOUTS__('stations', 'meteorological')
+            return min(self._get_TOUTS__('stations', 'meteorological'),
+                       self._get_TOUTF__('stations', 'meteorological'))
 
     @property
     def TOUTFM(self):
         try:
             return self.__TOUTFM
         except AttributeError:
-            return self._get_TOUTF__('stations', 'meteorological')
+            return max(self._get_TOUTS__('stations', 'meteorological'),
+                       self._get_TOUTF__('stations', 'meteorological'))
 
     @property
     def NSPOOLM(self):
@@ -1353,14 +1359,16 @@ class Fort15:
         try:
             return self.__TOUTSC
         except AttributeError:
-            return self._get_TOUTS__('stations', 'concentration')
+            return min(self._get_TOUTS__('stations', 'concentration'),
+                       self._get_TOUTF__('stations', 'concentration'))
 
     @property
     def TOUTFC(self):
         try:
             return self.__TOUTFC
         except AttributeError:
-            return self._get_TOUTF__('stations', 'concentration')
+            return max(self._get_TOUTS__('stations', 'concentration'),
+                       self._get_TOUTF__('stations', 'concentration'))
 
     @property
     def NSPOOLC(self):
@@ -1388,14 +1396,16 @@ class Fort15:
         try:
             return self.__TOUTSGE
         except AttributeError:
-            return self._get_TOUTS__('surface', 'elevation')
+            return min(self._get_TOUTS__('surface', 'elevation'),
+                       self._get_TOUTF__('surface', 'elevation'))
 
     @property
     def TOUTFGE(self):
         try:
             return self.__TOUTFGE
         except AttributeError:
-            return self._get_TOUTF__('surface', 'elevation')
+            return max(self._get_TOUTS__('surface', 'elevation'),
+                       self._get_TOUTF__('surface', 'elevation'))
 
     @property
     def NSPOOLGE(self):
@@ -1416,7 +1426,8 @@ class Fort15:
         try:
             return self.__TOUTSGV
         except AttributeError:
-            return self._get_TOUTS__('surface', 'velocity')
+            return min(self._get_TOUTS__('surface', 'velocity'),
+                       self._get_TOUTF__('surface', 'velocity'))
 
     @property
     def TOUTFGV(self):
@@ -1444,14 +1455,16 @@ class Fort15:
         try:
             return self.__TOUTSGM
         except AttributeError:
-            return self._get_TOUTS__('surface', 'meteorological')
+            return min(self._get_TOUTS__('surface', 'meteorological'),
+                       self._get_TOUTF__('surface', 'meteorological'))
 
     @property
     def TOUTFGM(self):
         try:
             return self.__TOUTFGM
         except AttributeError:
-            return self._get_TOUTF__('surface', 'meteorological')
+            return max(self._get_TOUTS__('surface', 'meteorological'),
+                       self._get_TOUTF__('surface', 'meteorological'))
 
     @property
     def NSPOOLGM(self):
@@ -1472,14 +1485,16 @@ class Fort15:
         try:
             return self.__TOUTSGC
         except AttributeError:
-            return self._get_TOUTS__('surface', 'concentration')
+            return min(self._get_TOUTS__('surface', 'concentration'),
+                       self._get_TOUTF__('surface', 'concentration'))
 
     @property
     def TOUTFGC(self):
         try:
             return self.__TOUTFGC
         except AttributeError:
-            return self._get_TOUTF__('surface', 'concentration')
+            return max(self._get_TOUTS__('surface', 'concentration'),
+                       self._get_TOUTF__('surface', 'concentration'))
 
     @property
     def NSPOOLGC(self):
