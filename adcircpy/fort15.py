@@ -2250,81 +2250,68 @@ class Fort15:
 
     def _get_TOUTS__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        # coldstart
         if self._runtype == 'coldstart':
+            # coldstart
             if output['spinup'] is not None:
                 start = output['spinup_start']
             else:
-                return 0
-
-        # hotstart
+                start = self.start_date
+        elif output['sampling_rate'] is not None:
+            # hotstart
+            start = output['start']
         else:
-            if output['sampling_rate'] is not None:
-                start = output['start']
-            else:
-                return 0
+            start = self.start_date
 
         # typecast
         if isinstance(start, int):  # int interpreted as literal timestep
             start = timedelta(seconds=(start * self.timestep))
             if self._runtype == 'coldstart':
-                start = start - self.forcing_start_date
+                start -= self.forcing_start_date
             else:
-                start = start - self.start_date
+                start -= self.start_date
         elif isinstance(start, datetime):
-            start = self.start_date - start
-
+            start -= self.start_date
         elif isinstance(start, type(None)):
             if self._runtype == 'hotstart':
-                dt = self.start_date - self.forcing_start_date
-                return dt.total_seconds() / (60 * 60 * 24)
+                start = self.start_date - self.forcing_start_date
             else:
-                return 0
+                start = timedelta(seconds=0)
 
         return start / timedelta(days=1)
 
     def _get_TOUTF__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        # coldstart
         if self._runtype == 'coldstart':
+            # coldstart
             if output['spinup'] is not None:
-                if output['spinup_end'] is None:
+                if output['spinup_end'] is None or output['spinup_end'] == \
+                        output['start']:
                     if self.NOUTGE != 0:
-                        time = self.spinup_time.total_seconds() / (
-                            60.0 * 60.0 * 24.0)
-                        if time > 0:
-                            return time
-                        else:
-                            dt = self.end_date - self.start_date
-                            return dt.total_seconds() / (60.0 * 60.0 * 24.0)
+                        time = output['spinup_end'] - self.start_date
                     else:
-                        return 0
+                        time = timedelta(seconds=0)
                 else:
                     raise NotImplementedError('specific spinup end time is not implemented')
             else:
-                return 0
-
-        # hotstart
+                time = timedelta(seconds=0)
         elif self._runtype == 'hotstart':
+            # hotstart
             if output['sampling_rate'] is not None:
-                if output['end'] is None:
+                if output['end'] is None or output['end'] == self.end_date:
                     if self._runtype == 'hotstart':
-                        dt = self.end_date - self.forcing_start_date
-                        return dt.total_seconds() / (60 * 60 * 24)
+                        time = self.end_date - self.forcing_start_date
                     # if self.NOUTGE != 0:
-                    #     time = self.spinup_time.total_seconds()/(60.*60.*24.)
-                    #     if time > 0:
-                    #         return time
-                    #     else:
-                    #         dt = self.end_date - self.forcing_start_date
-                    #         return dt.total_seconds()/(60.*60.*24.)
+                    #     time = self.spinup_time
+                    #     if time <= 0:
+                    #         time = self.end_date - self.forcing_start_date
                     else:
-                        dt = self.start_date - self.forcing_start_date
-                        return dt.total_seconds() / (60 * 60 * 24)
+                        time = self.start_date - self.forcing_start_date
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError(
+                        'specific model end time is not implemented')
             else:
-                return 0
+                time = timedelta(seconds=0)
+        return time / timedelta(days=1)
 
     def _get_NSPOOL__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
