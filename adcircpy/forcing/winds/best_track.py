@@ -35,54 +35,71 @@ class BestTrackForcing(WindForcing):
 
     def __str__(self):
         record_number = self._generate_record_numbers()
-        fort22 = ''
+        fort22 = []
         for i, (_, row) in enumerate(self.df.iterrows()):
-            fort22 += f'{row["basin"]:<2},{row["storm_number"]:>3},' \
-                      f' {row["datetime"]:%Y%m%d%H},' \
-                      f'{"":3},{row["record_type"]:>5},' \
-                      f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4},'
+            line = []
+
+            line.extend([
+                f'{row["basin"]:<2}',
+                f'{row["storm_number"]:>3}',
+                f'{row["datetime"]:%Y%m%d%H}',
+                f'{"":3},{row["record_type"]:>5}',
+                f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4}',
+            ])
+
             if row["latitude"] >= 0:
-                fort22 += f'{int(row["latitude"] / .1):>4}N,'
+                line.append(f'{int(row["latitude"] / .1):>4}N')
             else:
-                fort22 += f'{int(row["latitude"] / -.1):>4}S,'
+                line.append(f'{int(row["latitude"] / -.1):>4}S')
             if row["longitude"] >= 0:
-                fort22 += f'{int(row["longitude"] / .1):>5}E,'
+                line.append(f'{int(row["longitude"] / .1):>5}E')
             else:
-                fort22 += f'{int(row["longitude"] / -.1):>5}W,'
-            fort22 += f'{int(row["max_sustained_wind_speed"]):>4},' \
-                      f'{int(row["central_pressure"]):>5},' \
-                      f'{row["development_level"]:>3},' \
-                      f'{int(row["isotach"]):>4},' \
-                      f'{row["quadrant"]:>4},' \
-                      f'{int(row["radius_for_NEQ"]):>5},' \
-                      f'{int(row["radius_for_SEQ"]):>5},' \
-                      f'{int(row["radius_for_SWQ"]):>5},' \
-                      f'{int(row["radius_for_NWQ"]):>5},'
+                line.append(f'{int(row["longitude"] / -.1):>5}W')
+
+            line.extend([
+                f'{int(row["max_sustained_wind_speed"]):>4}',
+                f'{int(row["central_pressure"]):>5}',
+                f'{row["development_level"]:>3}',
+                f'{int(row["isotach"]):>4}',
+                f'{row["quadrant"]:>4}',
+                f'{int(row["radius_for_NEQ"]):>5}',
+                f'{int(row["radius_for_SEQ"]):>5}',
+                f'{int(row["radius_for_SWQ"]):>5}',
+                f'{int(row["radius_for_NWQ"]):>5}',
+            ])
+
             if row["background_pressure"] is None:
                 row["background_pressure"] = \
                     self.df["background_pressure"].iloc[i - 1]
             if (row["background_pressure"] <= row["central_pressure"]
                     and 1013 > row["central_pressure"]):
-                fort22 += f'{1013:>5},'
+                background_pressure = 1013
             elif (row["background_pressure"] <= row["central_pressure"]
                   and 1013 <= row["central_pressure"]):
-                fort22 += f'{int(row["central_pressure"] + 1):>5},'
+                background_pressure = int(row["central_pressure"] + 1)
             else:
-                fort22 += f'{int(row["background_pressure"]):>5},'
-            fort22 += f'{int(row["radius_of_last_closed_isobar"]):>5},' \
-                      f'{int(row["radius_of_maximum_winds"]):>4},'
-            fort22 += f'{"":>5},'  # gust
-            fort22 += f'{"":>4},'  # eye
-            fort22 += f'{"":>4},'  # subregion
-            fort22 += f'{"":>4},'  # maxseas
-            fort22 += f'{"":>4},'  # initials
-            fort22 += f'{row["direction"]:>3},' \
-                      f'{row["speed"]:>4},' \
-                      f'{row["name"]:^12},'
+                background_pressure = int(row["background_pressure"])
+            line.append(f'{background_pressure:>5}')
+
+            line.extend([
+                f'{int(row["radius_of_last_closed_isobar"]):>5}',
+                f'{int(row["radius_of_maximum_winds"]):>4}',
+                f'{"":>5}',  # gust
+                f'{"":>4}',  # eye
+                f'{"":>4}',  # subregion
+                f'{"":>4}',  # maxseas
+                f'{"":>4}',  # initials
+                f'{row["direction"]:>3}',
+                f'{row["speed"]:>4}',
+                f'{row["name"]:^12}',
+            ])
+
             # from this point forwards it's all aswip
-            fort22 += f'{record_number[i]:>4},' \
-                      f'\n'
-        return fort22
+            line.append(f'{record_number[i]:>4}')
+
+            fort22.append(','.join(line))
+
+        return '\n'.join(fort22)
 
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
