@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 import math
 from os import PathLike
 import pathlib
-
-import numpy as np
+from typing import Any
 
 from adcircpy.mesh.mesh import AdcircMesh
+import numpy as np
 
 
 class Fort15:
@@ -35,9 +35,9 @@ class Fort15:
             fort15_line(f'{self.NSCREEN:d}', 'NSCREEN',
                         'UNIT 6 OUTPUT OPTION PARAMETER'),
             fort15_line(f'{self.IHOT:d}', 'IHOT', 'HOT START PARAMETER'),
-            fort15_line(f'{self.ICS:d}''ICS',
+            fort15_line(f'{self.ICS:d}', 'ICS',
                         'COORDINATE SYSTEM SELECTION PARAMETER'),
-            fort15_line(f'{self.IM:d}''IM', 'MODEL SELECTION PARAMETER'),
+            fort15_line(f'{self.IM:d}', 'IM', 'MODEL SELECTION PARAMETER'),
         ])
         if self.IM in [21, 611113]:
             f.append(fort15_line(f'{self.IDEN:d}', 'IDEN'))
@@ -2430,9 +2430,12 @@ class Fort15:
 
 
 def fort15_line(value: Any, name: str = None, description: str = None) -> str:
-    if name is None:
-        name = ''
-    line = f'{value:<63} ! {name:<35}'
-    if description is not None:
-        line += f' - {description}'
+    line = f'{value}'
+    if name is not None or description is not None:
+        line = f'{line:<63}'
+        if name is None:
+            name = ''
+        line += f' ! {name:<35}'
+        if description is not None:
+            line += f' - {description}'
     return line
