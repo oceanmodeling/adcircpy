@@ -24,23 +24,23 @@ class Fort15:
         # ----------------
         f = []
         f.extend([
-            f'{self.RUNDES:<63} ! RUNDES',
-            f'{self.RUNID:<63} ! RUNID',
-            f'{self.NFOVER:<63d} ! NFOVER',
-            f'{self.NABOUT:<63d} ! NABOUT',
-            f'{self.NSCREEN:<63d} ! NSCREEN',
-            f'{self.IHOT:<63d} ! IHOT',
-            f'{self.ICS:<63d} ! ICS',
-            f'{self.IM:<63d} ! IM',
+            f'{self.RUNDES:<63} ! {"RUNDES":<35} - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION',
+            f'{self.RUNID:<63} ! {"RUNID":<35} - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION',
+            f'{self.NFOVER:<63d} ! {"NFOVER":<35} - NONFATAL ERROR OVERRIDE OPTION',
+            f'{self.NABOUT:<63d} ! {"NABOUT":<35} - ABREVIATED OUTPUT OPTION PARAMETER',
+            f'{self.NSCREEN:<63d} ! {"NSCREEN":<35} - UNIT 6 OUTPUT OPTION PARAMETER',
+            f'{self.IHOT:<63d} ! {"IHOT":<35} - HOT START PARAMETER',
+            f'{self.ICS:<63d} ! {"ICS":<35} - COORDINATE SYSTEM SELECTION PARAMETER',
+            f'{self.IM:<63d} ! {"IM":<35} - MODEL SELECTION PARAMETER',
         ])
         if self.IM in [21, 611113]:
-            f.append(f'{self.IDEN:<63d} ! IDEN')
+            f.append(f'{self.IDEN:<63d} ! {"IDEN":<35}')
         f.extend([
-            f'{self.NOLIBF:<63G} ! NOLIBF',
-            f'{self.NOLIFA:<63d} ! NOLIFA',
-            f'{self.NOLICA:<63d} ! NOLICA',
-            f'{self.NOLICAT:<63d} ! NOLICAT',
-            f'{self.NWP:<63d} ! NWP',
+            f'{self.NOLIBF:<63G} ! {"NOLIBF":<35} - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, "2" was used',
+            f'{self.NOLIFA:<63d} ! {"NOLIFA":<35} - FINITE AMPLITUDE TERM SELECTION PARAMETER',
+            f'{self.NOLICA:<63d} ! {"NOLICA":<35} - SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER',
+            f'{self.NOLICAT:<63d} ! {"NOLICAT":<35} - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER',
+            f'{self.NWP:<63d} ! {"NWP":<35} - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0',
         ])
         if self._runtype == 'coldstart':
             attributes = self.mesh.get_coldstart_nodal_attributes()
@@ -48,47 +48,54 @@ class Fort15:
             attributes = self.mesh.get_hotstart_nodal_attributes()
         f.extend(f'{attribute:<63}' for attribute in attributes)
         f.extend([
-            f'{self.NCOR:<63d} ! NCOR',
-            f'{self.NTIP:<63d} ! NTIP',
-            f'{int((self.NRS * 100) + self.NWS):<63d} ! NWS',
-            f'{self.NRAMP:<63d} ! NRAMP',
-            f'{self.G:<63G} ! gravitational acceleration',
-            f'{self.TAU0:<63G} ! TAU0',
+            f'{self.NCOR:<63d} ! {"NCOR":<35} - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER',
+            f'{self.NTIP:<63d} ! {"NTIP":<35} - TIDAL POTENTIAL OPTION PARAMETER',
+            f'{int((self.NRS * 100) + self.NWS):<63d} ! {"NWS":<35} - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER',
+            f'{self.NRAMP:<63d} ! {"NRAMP":<35} - RAMP FUNCTION OPTION',
+            f'{self.G:<63G} ! {"G":<35} - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS',
+            f'{self.TAU0:<63G} ! {"TAU0":<35} - WEIGHTING FACTOR IN GWCE; original, 0.005',
         ])
         if self.TAU0 == -5:
             f.append(
-                f'{self.Tau0FullDomainMin:G} '
-                f'{self.Tau0FullDomainMax:G}'.ljust(63)
-                + ' ! Tau0FullDomainMin Tau0FullDomainMax'
+                    f'{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}'.ljust(63)
+                    + ' ! {"Tau0FullDomainMin Tau0FullDomainMax":<35}'
             )
         f.extend([
-            f'{self.DTDP:<63.6f} ! DTDP',
-            f'{self.STATIM:<63G} ! STATIM',
-            f'{self.REFTIM:<63G} ! REFTIM',
+            f'{self.DTDP:<63.6f} ! {"DTDP":<35} - TIME STEP (IN SECONDS)',
+            f'{self.STATIM:<63G} ! {"STATIM":<35} - STARTING TIME (IN DAYS)',
+            f'{self.REFTIM:<63G} ! {"REFTIM":<35} - REFERENCE TIME (IN DAYS)',
         ])
         if self.NWS not in [0, 1, 9, 11]:
             interval = f'{self.WTIMINC}'
-            description = 'WTIMINC - meteorological data time increment'
+            description = {
+                'WTIMINC': 'meteorological data time increment',
+            }
             if self.NRS in [1, 3, 4, 5]:
                 interval += f' {self.RSTIMINC}'
-                description += ', RSTIMINC wave forcing increment'
-            f.append(f'{interval:<63} ! {description}')
+                description['RSTIMINC'] = 'wave forcing increment'
+            f.append(
+                    f'{interval:<63} ! {" ".join(description):<35} - {", ".join(description.values())}'
+            )
         f.extend([
-            f'{self.RNDAY:<63G} ! RNDAY',
-            f'{self.DRAMP:<63} ! DRAMP',
+            f'{self.RNDAY:<63G} ! {"RNDAY":<35} - TOTAL LENGTH OF SIMULATION (IN DAYS)',
+            f'{self.DRAMP:<63} ! {"DRAMP":<35} - DURATION OF RAMP FUNCTION (IN DAYS)',
             f'{self.A00:G} {self.B00:G} {self.C00:G}'.ljust(63)
-            + ' ! A00 B00 C00',
-            f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(63) + ' ! H0 ? ? VELMIN',
-            f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(63) + ' ! SLAM0 SFEA0',
-            f'{self.FFACTOR:<63} ! {"CF HBREAK FTHETA FGAMMA" if self.NOLIBF == 2 else "FFACTOR"}',
-            f'{self.ESLM:<63G} ! {"ESL - LATERAL EDDY VISCOSITY COEFFICIENT" if not self.smagorinsky else "smagorinsky coefficient"}',
-            f'{self.CORI:<63G} ! CORI',
+            + f' ! {"A00 B00 C00":<35} - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION',
+            f'{self.H0:G} 0 0 {self.VELMIN:G}'.ljust(63)
+            + f' ! {"H0 NODEDRYMIN NODEWETRMP VELMIN":<35}',
+            f'{self.SLAM0:G} {self.SFEA0:G}'.ljust(63)
+            + f' ! {"SLAM0 SFEA0":<35} - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)',
+            f'{self.FFACTOR:<63} ! {"CF HBREAK FTHETA FGAMMA" if self.NOLIBF == 2 else "FFACTOR":<35}',
+            f'{self.ESLM:<63G} ! {"smagorinsky coefficient" if not self.smagorinsky else "ESL":<35} - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1',
+            f'{self.CORI:<63G} ! {"CORI":<35} - CORIOLIS PARAMETER - IGNORED IF NCOR = 1',
         ])
         # ----------------
         # tidal forcings
         # ----------------
         f.append(self.get_tidal_forcing())
-        f.append(f'{self.ANGINN:<63G} ! ANGINN')
+        f.append(
+                f'{self.ANGINN:<63G} ! {"ANGINN":<35} - INNER ANGLE THRESHOLD'
+        )
         # ----------------
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
@@ -124,76 +131,74 @@ class Fort15:
         # ----------------
         # elevation out stations
         f.extend([
-            f'{self.NOUTE:G} {self.TOUTSE:G} '
-            f'{self.TOUTFE:G} {self.NSPOOLE:G}'.ljust(63)
-            + f' ! NOUTE TOUTSE TOUTFE NSPOOLE',
-            f'{self.NSTAE:<63d} ! NSTAE',
+            f'{self.NOUTE:G} {self.TOUTSE:G} {self.TOUTFE:G} {self.NSPOOLE:G}'.ljust(63)
+            + f' ! {"NOUTE TOUTSE TOUTFE NSPOOLE":<35} - ELEV STATION OUTPUT INFO (UNIT 61)',
+            f'{self.NSTAE:<63d} ! {"NSTAE":<35} - TOTAL NUMBER OF ELEVATION RECORDING STATIONS',
         ])
         stations = self.elevation_stations_output
         if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     f.extend(
-                        f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                        for station_id, (x, y) in
-                        stations['collection'].items()
+                            f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                            for station_id, (x, y) in
+                            stations['collection'].items()
                     )
             else:
                 f.extend(
-                    f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                    for station_id, (x, y) in stations['collection'].items()
+                        f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                        for station_id, (x, y) in
+                        stations['collection'].items()
                 )
         # velocity out stations
         f.extend([
-            (f'{self.NOUTV:G} {self.TOUTSV:G} '
-             + f'{self.TOUTFV:G} {self.NSPOOLV:G}').ljust(63)
-            + ' ! NOUTV TOUTSV TOUTFV NSPOOLV',
-              f'{self.NSTAV:<63G} ! NSTAV'
+            f'{self.NOUTV:G} {self.TOUTSV:G} {self.TOUTFV:G} {self.NSPOOLV:G}'.ljust(63)
+            + f' ! {"NOUTV TOUTSV TOUTFV NSPOOLV":<35} - VELOCITY STATION OUTPUT INFO (UNIT 62)',
+            f'{self.NSTAV:<63G} ! {"NSTAV":<35} - TOTAL NUMBER OF VELOCITY RECORDING STATIONS'
         ])
         stations = self.velocity_stations_output
         if stations['sampling_rate'] is not None:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     f.extend(
-                        f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                        for station_id, (x, y) in
-                        stations['collection'].items()
+                            f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                            for station_id, (x, y) in
+                            stations['collection'].items()
                     )
             else:
                 f.extend(
-                    f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                    for station_id, (x, y) in stations['collection'].items()
+                        f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                        for station_id, (x, y) in
+                        stations['collection'].items()
                 )
         if self.IM == 10:
             # concentration out stations
             f.extend([
-                (f'{self.NOUTC:G} {self.TOUTSC:G} '
-                 + f'{self.TOUTFC:G} {self.NSPOOLC:G}').ljust(63)
-                + ' ! NOUTC TOUTSC TOUTFC NSPOOLC\n',
-                f'{self.NSTAC:<63d} ! NSTAC\n',
+                f'{self.NOUTC:G} {self.TOUTSC:G} {self.TOUTFC:G} {self.NSPOOLC:G}'.ljust(63)
+                + f' ! {"NOUTC TOUTSC TOUTFC NSPOOLC":<35} - CONCENTRATION STATION OUTPUT INFO (UNIT 91)',
+                f'{self.NSTAC:<63d} ! {"NSTAC":<35} - TOTAL NUMBER OF CONCENTRATION RECORDING STATIONS',
             ])
             stations = self.concentration_stations_output
             if stations['sampling_rate'] is not None:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         f.extend(
-                            f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}\n'
-                            for station_id, (x, y) in
-                            stations['collection'].items()
+                                f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}\n'
+                                for station_id, (x, y) in
+                                stations['collection'].items()
                         )
                 else:
                     f.extend(
-                        f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                        for station_id, (x, y) in
-                        stations['collection'].items()
+                            f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                            for station_id, (x, y) in
+                            stations['collection'].items()
                     )
         if self.NWS > 0:
             # meteorological out stations
             f.extend([
-                (f'{self.NOUTM:G} {self.TOUTSM:G} '
-                 + f'{self.TOUTFM:G} {self.NSPOOLM:G}').ljust(63)
-                + ' ! NOUTM TOUTSM TOUTFM NSPOOLM',
-                f'{self.NSTAM:<63d} ! NSTAM',
+                f'{self.NOUTM:G} {self.TOUTSM:G} {self.TOUTFM:G} {self.NSPOOLM:G}'.ljust(63)
+                + f' ! {"NOUTM TOUTSM TOUTFM NSPOOLM":<35} - METEOROLOGICAL STATION OUTPUT INFO (UNITS 71/72)',
+                f'{self.NSTAM:<63d} ! {"NSTAM":<35} - TOTAL NUMBER OF METEOROLOGICAL RECORDING STATIONS',
             ])
             stations = self.meteorological_stations_output
             if stations['sampling_rate'] is not None:
@@ -201,39 +206,36 @@ class Fort15:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             f.extend(
-                                f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                                for station_id, (x, y) in
-                                stations['collection'].items()
+                                    f'{x:G} {y:G}'.ljust(63)
+                                    + f' ! {station_id}'
+                                    for station_id, (x, y) in
+                                    stations['collection'].items()
                             )
                     else:
                         f.extend(
-                            f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
-                            for station_id, (x, y) in
-                            stations['collection'].items()
+                                f'{x:G} {y:G}'.ljust(63) + f' ! {station_id}'
+                                for station_id, (x, y) in
+                                stations['collection'].items()
                         )
         # elevation global outputs
         f.append(
-            (f'{self.NOUTGE:d} {self.TOUTSGE:f} '
-             + f'{self.TOUTFGE:f} {self.NSPOOLGE:d}').ljust(63)
-            + ' ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE'
+                f'{self.NOUTGE:d} {self.TOUTSGE:f} {self.TOUTFGE:f} {self.NSPOOLGE:d}'.ljust(63)
+                + f' ! {"NOUTGE TOUTSGE TOUTFGE NSPOOLGE":<35} - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)'
         )
         # velocity global otuputs
         f.append(
-            (f'{self.NOUTGV:d} {self.TOUTSGV:f} '
-             + f'{self.TOUTFGV:f} {self.NSPOOLGV:d}').ljust(63)
-            + ' ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV'
+                f'{self.NOUTGV:d} {self.TOUTSGV:f} {self.TOUTFGV:f} {self.NSPOOLGV:d}'.ljust(63)
+                + f' ! {"NOUTGV TOUTSGV TOUTFGV NSPOOLGV":<35} - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)'
         )
         if self.IM == 10:
             f.append(
-                (f'{self.NOUTGC:d} {self.TOUTSGC:f} '
-                 + f'{self.TOUTFGC:f} {self.NSPOOLGC:d}').ljust(63)
-                + ' ! NOUTSGC TOUTGC TOUTFGC NSPOOLGC'
+                    f'{self.NOUTGC:d} {self.TOUTSGC:f} {self.TOUTFGC:f} {self.NSPOOLGC:d}'.ljust(63)
+                    + f' ! {"NOUTSGC TOUTGC TOUTFGC NSPOOLGC":<35} - GLOBAL CONCENTRATION OUTPUT INFO'
             )
         if self.NWS != 0:
             f.append(
-                (f'{self.NOUTGM:d} {self.TOUTSGM:f} '
-                 + f'{self.TOUTFGM:f} {self.NSPOOLGM:d}').ljust(63)
-                + ' ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM'
+                    f'{self.NOUTGM:d} {self.TOUTSGM:f} {self.TOUTFGM:f} {self.NSPOOLGM:d}'.ljust(63)
+                    + f' ! {"NOUTGM TOUTSGM TOUTFGM NSPOOLGM":<35} - GLOBAL METEOROLOGICAL OUTPUT INFO'
             )
         # harmonic analysis requests
         harmonic_analysis = False
@@ -252,52 +254,50 @@ class Fort15:
                 else:
                     harmonic_analysis = True
                     break
-        f.append(f'{self.NFREQ:<63d} ! NFREQ')
+        f.append(f'{self.NFREQ:<63d} ! {"NFREQ":<35}')
         if harmonic_analysis:
             for constituent, forcing in self.mesh.forcings.tides:
                 f.extend([
                     f'{constituent:<63} ',
-                    (f'{forcing[1]:<.16G} {forcing[3]:<.16G}'
-                     + f'{forcing[4]:<.16G}').ljust(63),
+                    f'{forcing[1]:<.16G} {forcing[3]:<.16G} {forcing[4]:<.16G}'.ljust(63),
                 ])
         f.extend([
-            (f'{self.THAS:G} {self.THAF:G} '
-             + f'{self.NHAINC} {self.FMV}').ljust(63)
-            + ' ! THAS THAF NHAINC FMV',
-            (f'{self.NHASE:G} {self.NHASV:G} '
-             + f'{self.NHAGE:G} {self.NHAGV:G}').ljust(63)
-            + ' ! NHASE NHASV NHAGE NHAGV',
+            (f'{self.THAS:G} {self.THAF:G} {self.NHAINC} {self.FMV}').ljust(63)
+            + f' ! {"THAS THAF NHAINC FMV":<35} - HARMONIC ANALYSIS PARAMETERS',
+            f'{self.NHASE:G} {self.NHASV:G} {self.NHAGE:G} {self.NHAGV:G}'.ljust(63)
+            + f' ! {"NHASE NHASV NHAGE NHAGV":<35} - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54',
         ])
         # ----------------
         # hostart file generation
         # ----------------
         f.extend([
-            f'{self.NHSTAR:d} {self.NHSINC:d}'.ljust(63) + ' ! NHSTAR NHSINC',
-            (f'{self.ITITER:<1d} {self.ISLDIA:<1d} '
-             + f'{self.CONVCR:<.15G} {self.ITMAX:<4d}').ljust(63)
-            + ' ! ITITER ISLDIA CONVCR ITMAX',
+            f'{self.NHSTAR:d} {self.NHSINC:d}'.ljust(63)
+            + f' ! {"NHSTAR NHSINC":<35} - HOT START FILE GENERATION PARAMETERS',
+            f'{self.ITITER:<1d} {self.ISLDIA:<1d} {self.CONVCR:<.15G} {self.ITMAX:<4d}'.ljust(63)
+            + f' ! {"ITITER ISLDIA CONVCR ITMAX":<35} - ALGEBRAIC SOLUTION PARAMETERS',
         ])
         if self.vertical_mode == '3D':
             raise NotImplementedError('3D runs not yet implemented')
         f.extend([
-            f'{self.NCPROJ:<63} ! NCPROJ',
-            f'{self.NCINST:<63} ! NCINST',
-            f'{self.NCSOUR:<63} ! NCSOUR',
-            f'{self.NCHIST:<63} ! NCHIST',
-            f'{self.NCREF:<63} ! NCREF',
-            f'{self.NCCOM:<63} ! NCCOM',
-            f'{self.NCHOST:<63} ! NCHOST',
-            f'{self.NCCONV:<63} ! NCONV',
-            f'{self.NCCONT:<63} ! NCCONT',
-            f'{self.NCDATE:<63} ! Forcing start date / NCDATE',
+            f'{self.NCPROJ:<63} ! {"NCPROJ":<35} - PROJECT TITLE',
+            f'{self.NCINST:<63} ! {"NCINST":<35} - PROJECT INSTITUTION',
+            f'{self.NCSOUR:<63} ! {"NCSOUR":<35} - PROJECT SOURCE',
+            f'{self.NCHIST:<63} ! {"NCHIST":<35} - PROJECT HISTORY',
+            f'{self.NCREF:<63} ! {"NCREF":<35} - PROJECT REFERENCES',
+            f'{self.NCCOM:<63} ! {"NCCOM":<35} - PROJECT COMMENTS',
+            f'{self.NCHOST:<63} ! {"NCHOST":<35} - PROJECT HOST',
+            f'{self.NCCONV:<63} ! {"NCONV":<35} - CONVENTIONS',
+            f'{self.NCCONT:<63} ! {"NCCONT":<35} - CONTACT INFORMATION',
+            f'{self.NCDATE:<63} ! {"NCDATE":<35} - forcing start date',
         ])
         del self._outputs
 
         for name, namelist in self.namelists.items():
             f.append(f'&{name} ' +
-                     ', '.join([f'{key}={value}'
-                                for key, value in namelist.items()]) +
-                     ' \\')
+                     ', '.join(
+                             [f'{key}={value}'
+                              for key, value in namelist.items()]
+                     ) + ' \\')
         f.append('')
         return '\n'.join(f)
 
@@ -312,7 +312,9 @@ class Fort15:
 
     def get_tidal_forcing(self):
         f = []
-        f.append(f'{self.NTIF:<63d} ! NTIF')
+        f.append(
+                f'{self.NTIF:<63d} ! {"NTIF":<35} - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300'
+        )
         if self.NTIF > 0:
             active = self.mesh.forcings.tides.get_active_potential_constituents()
             for constituent in active:
@@ -327,11 +329,11 @@ class Fort15:
             for constituent in active:
                 forcing = self.mesh.forcings.tides(constituent)
                 f.extend(
-                    [
-                        f'{constituent}',
-                        f'{forcing[1]:G} ' f'{forcing[3]:G} ' f'{forcing[4]:G}',
-                        # f'{len(self.mesh.open_boundaries)}',
-                    ]
+                        [
+                            f'{constituent}',
+                            f'{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}',
+                            # f'{len(self.mesh.open_boundaries)}',
+                        ]
                 )
             for row in self.mesh.boundaries.ocean.gdf.itertuples():
                 for constituent in self.mesh.forcings.tides.get_active_constituents():
