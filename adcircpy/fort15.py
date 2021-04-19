@@ -111,7 +111,7 @@ class Fort15:
             fort15_line(self.FFACTOR,
                         'CF HBREAK FTHETA FGAMMA' if self.NOLIBF == 2 else 'FFACTOR'),
             fort15_line(f'{self.ESLM:G}',
-                        'smagorinsky coefficient' if not self.smagorinsky else 'ESL',
+                        'smagorinsky coefficient' if self.smagorinsky else 'ESL',
                         'LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1'),
             fort15_line(f'{self.CORI:G}', 'CORI',
                         'CORIOLIS PARAMETER - IGNORED IF NCOR = 1'),
