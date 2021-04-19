@@ -12,3 +12,9 @@ class WindForcing(Forcing, ABC):
     @abstractmethod
     def write(self, directory: PathLike, overwrite: bool = False):
         raise NotImplementedError
+
+    @classmethod
+    def from_fort22(cls, fort22: PathLike, nws: int = None) -> 'WindForcing':
+        raise NotImplementedError(
+                f'reading `fort.22` is not implemented for {cls}'
+        )
