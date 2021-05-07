@@ -45,7 +45,7 @@ class BestTrackForcing(WindForcing):
             line.extend([
                 f'{row["basin"]:<2}',
                 f'{row["storm_number"]:>3}',
-                f'{row["datetime"]:%Y%m%d%H}',
+                f'{row["datetime"]:%Y%m%d%H}'.rjust(11),
                 f'{"":3}',
                 f'{row["record_type"]:>5}',
                 f'{convert_value((row["datetime"] - self.start_date) / timedelta(hours=1), int):>4}',
