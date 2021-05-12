@@ -50,22 +50,22 @@ class BestTrackForcing(WindForcing):
                       f'{"":3},{row["record_type"]:>5},' \
                       f'{int((row["datetime"] - self.start_date) / timedelta(hours=1)):>4},'
             if row["latitude"] >= 0:
-                fort22 += f'{int(row["latitude"] / .1):>4}N,'
+                fort22 += f'{round(row["latitude"] / .1):>4}N,'
             else:
-                fort22 += f'{int(row["latitude"] / -.1):>4}S,'
+                fort22 += f'{round(row["latitude"] / -.1):>4}S,'
             if row["longitude"] >= 0:
-                fort22 += f'{int(row["longitude"] / .1):>5}E,'
+                fort22 += f'{round(row["longitude"] / .1):>5}E,'
             else:
-                fort22 += f'{int(row["longitude"] / -.1):>5}W,'
-            fort22 += f'{int(row["max_sustained_wind_speed"]):>4},' \
-                      f'{int(row["central_pressure"]):>5},' \
+                fort22 += f'{round(row["longitude"] / -.1):>5}W,'
+            fort22 += f'{round(row["max_sustained_wind_speed"]):>4},' \
+                      f'{round(row["central_pressure"]):>5},' \
                       f'{row["development_level"]:>3},' \
-                      f'{int(row["isotach"]):>4},' \
+                      f'{round(row["isotach"]):>4},' \
                       f'{row["quadrant"]:>4},' \
-                      f'{int(row["radius_for_NEQ"]):>5},' \
-                      f'{int(row["radius_for_SEQ"]):>5},' \
-                      f'{int(row["radius_for_SWQ"]):>5},' \
-                      f'{int(row["radius_for_NWQ"]):>5},'
+                      f'{round(row["radius_for_NEQ"]):>5},' \
+                      f'{round(row["radius_for_SEQ"]):>5},' \
+                      f'{round(row["radius_for_SWQ"]):>5},' \
+                      f'{round(row["radius_for_NWQ"]):>5},'
             if row["background_pressure"] is None:
                 row["background_pressure"] = \
                     self.df["background_pressure"].iloc[i - 1]
@@ -74,11 +74,11 @@ class BestTrackForcing(WindForcing):
                 fort22 += f'{1013:>5},'
             elif (row["background_pressure"] <= row["central_pressure"]
                   and 1013 <= row["central_pressure"]):
-                fort22 += f'{int(row["central_pressure"] + 1):>5},'
+                fort22 += f'{round(row["central_pressure"] + 1):>5},'
             else:
-                fort22 += f'{int(row["background_pressure"]):>5},'
-            fort22 += f'{int(row["radius_of_last_closed_isobar"]):>5},' \
-                      f'{int(row["radius_of_maximum_winds"]):>4},'
+                fort22 += f'{round(row["background_pressure"]):>5},'
+            fort22 += f'{round(row["radius_of_last_closed_isobar"]):>5},' \
+                      f'{round(row["radius_of_maximum_winds"]):>4},'
             fort22 += f'{"":>5},'  # gust
             fort22 += f'{"":>4},'  # eye
             fort22 += f'{"":>4},'  # subregion
