@@ -10,20 +10,24 @@ from adcircpy.forcing.tides.dataset import TidalDataset
 
 class HAMTIDE(TidalDataset):
     '''
-    Taguchi, E., D. Stammer and W. Zahel (2010), Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model (to be submitted to J. Geophys. Res.).
+    Taguchi, E., Stammer, D., & Zahel, W. (2010). Estimation of deep ocean tidal energy dissipation based on the high-resolution data-assimilative HAMTIDE model. J. geophys. Res.
     https://icdc.cen.uni-hamburg.de/en/hamtide.html
     '''
 
     OPENDAP_URL = 'https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide/'
 
     def __init__(self, hamtide_dataset_directory: PathLike = None):
-        if hamtide_dataset_directory is not None:
-            hamtide_dataset_directory = Path(hamtide_dataset_directory)
-            if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
-                raise FileNotFoundError(
-                        f'no NetCDF files found at "{hamtide_dataset_directory}"')
-        else:
+        if hamtide_dataset_directory is None:
             hamtide_dataset_directory = self.OPENDAP_URL
+        else:
+            try:
+                if Path(hamtide_dataset_directory).exists():
+                    hamtide_dataset_directory = Path(hamtide_dataset_directory)
+                    if len(list(hamtide_dataset_directory.glob('*.nc'))) == 0:
+                        raise FileNotFoundError(f'no NetCDF files found at '
+                                                f'"{hamtide_dataset_directory}"')
+            except OSError:
+                raise ValueError('given resource must be a local path')
 
         super().__init__(hamtide_dataset_directory)
 
@@ -47,7 +51,7 @@ class HAMTIDE(TidalDataset):
             vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
         return self._get_interpolation('elevation', 'AMPL', constituent,
-                                       vertices)
+                                       vertices) * 0.01
 
     def get_phase(
             self,
@@ -64,14 +68,14 @@ class HAMTIDE(TidalDataset):
     def x(self) -> np.ndarray:
         if not hasattr(self, '_x'):
             self._x = Dataset(
-                self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+                    self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
         return self._x
 
     @property
     def y(self) -> np.ndarray:
         if not hasattr(self, '_y'):
             self._y = Dataset(
-                self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+                    self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
         return self._y
 
     @property
@@ -98,8 +102,8 @@ class HAMTIDE(TidalDataset):
             try:
                 dataset = Dataset(path)
                 if data['path'] is None:
-                    self.datasets[variable][constituent]['path'] = path
-                self.datasets[variable][constituent]['dataset'] = dataset
+                    self.datasets[variable][constituent.lower()]['path'] = path
+                self.datasets[variable][constituent.lower()]['dataset'] = dataset
             except FileNotFoundError:
                 raise FileNotFoundError(f'no dataset found for "{variable}" '
                                         f'"{constituent}" at "{path}"')
@@ -118,23 +122,36 @@ class HAMTIDE(TidalDataset):
         xq = np.asarray([x + 360. if x < 0. else x
                          for x in vertices[:, 0]]).flatten()
         yq = vertices[:, 1].flatten()
-
-        xidx = np.logical_and(self.x >= np.min(xq), self.x <= np.max(xq))
-        yidx = np.logical_and(self.y >= np.min(yq), self.y <= np.max(yq))
-
-        dataset = self._get_dataset(variable, constituent)
-
+        dx = (self.x[-1] - self.x[0]) / len(self.x)
+        xidx = np.logical_and(
+            self.x >= np.min(xq) - 2.*dx,
+            self.x <= np.max(xq) + 2.*dx
+        )
+        dy = (self.y[-1] - self.y[0]) / len(self.y)
+        yidx = np.logical_and(
+            self.y >= np.min(yq) - 2.*dy,
+            self.y <= np.max(yq) + 2.*dy
+        )
         xi, yi = np.meshgrid(self.x[xidx], self.y[yidx])
         xi = xi.flatten()
         yi = yi.flatten()
+        dataset = self._get_dataset(variable, constituent)
         zi = dataset[netcdf_variable][yidx, xidx].flatten()
-
-        return griddata(
+        values = griddata(
                 (xi[~zi.mask], yi[~zi.mask]),
                 zi[~zi.mask],
                 (xq, yq),
-                method='nearest'
-        ) * 0.01
+                method='linear',
+                fill_value=np.nan
+            )
+        nan_idxs = np.where(np.isnan(values))
+        values[nan_idxs] = griddata(
+                (xi[~zi.mask], yi[~zi.mask]),
+                zi[~zi.mask],
+                (xq[nan_idxs], yq[nan_idxs]),
+                method='nearest',
+        )
+        return values
 
     def _prepend_path(self, filename: str) -> str:
         if self.path is None:

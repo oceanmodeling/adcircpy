@@ -10,10 +10,9 @@ from typing import Any, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from psutil import cpu_count
+from shapely.geometry import Point
 
 from adcircpy.forcing import Tides  # , Winds
-from adcircpy.forcing.waves.base import WaveForcing
-from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.forcing.winds.best_track import BestTrackForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
@@ -32,7 +31,8 @@ class AdcircRun(Fort15):
             netcdf: bool = True,
             server_config: Union[int, SSHConfig, SlurmConfig] = None,
     ):
-        super().__init__(mesh)
+        # super().__init__(mesh)
+        self._mesh = mesh
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
@@ -365,12 +365,13 @@ class AdcircRun(Fort15):
         # write fort.14
         if fort14:
             path = output_directory / fort14
-            self.mesh.write_fort14(path, overwrite)
+            self.mesh.write(path, overwrite)
 
         # write fort.13 (optional)
         if fort13:
             if len(self.mesh.get_nodal_attribute_names()) > 0:
-                self.mesh.write_fort13(output_directory / fort13, overwrite)
+                self.mesh.nodal_attributes.write(
+                    output_directory / fort13, overwrite)
 
         # write fort.15 -> this part has two different cases that depend
         # on the input configuration given by the user.
@@ -421,6 +422,8 @@ class AdcircRun(Fort15):
         for station_type in station_types:
             stations = Fort15.parse_stations(fort15, station_type)
             for name, vertices in stations.items():
+                if not Point(vertices).within(self.mesh.hull.multipolygon()):
+                    continue
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
                 if station_type == 'NOUTV':
@@ -482,39 +485,22 @@ class AdcircRun(Fort15):
         return self._mesh
 
     @property
-    @lru_cache(maxsize=None)
     def tidal_forcing(self):
-        elevbc = self.mesh._boundary_forcing['iettype'].get('obj')
-        if isinstance(elevbc, Tides):
-            elevbc.start_date = self.start_date
-            elevbc.end_date = self.end_date
-            elevbc.spinup_time = self.spinup_time
-            return elevbc
+        if not hasattr(self, '_tidal_forcing'):
+            self._tidal_forcing = self.mesh.forcings.tides
+            if isinstance(self._tidal_forcing, Tides):
+                self._tidal_forcing.start_date = self.start_date
+                self._tidal_forcing.end_date = self.end_date
+                self._tidal_forcing.spinup_time = self.spinup_time
+        return self._tidal_forcing
 
     @property
     def wind_forcing(self):
-        if self.mesh is not None and self.mesh._surface_forcing is not None:
-            self.__wind_forcing = self.mesh._surface_forcing['imetype']
-        return self.__wind_forcing
-        # if isinstance(elevbc, WindForcing):
-
-    @wind_forcing.setter
-    def wind_forcing(self, wind_forcing: WindForcing):
-        if self.mesh is not None and self.mesh._surface_forcing is not None:
-            self.mesh._surface_forcing['imetype'] = wind_forcing
-        self.__wind_forcing = wind_forcing
+        return self.mesh.forcings.wind
 
     @property
     def wave_forcing(self):
-        if self.mesh is not None and self.mesh._boundary_forcing is not None:
-            self.__wave_forcing = self.mesh._boundary_forcing['iwrtype']['obj']
-        return self.__wave_forcing
-
-    @wave_forcing.setter
-    def wave_forcing(self, wave_forcing: WaveForcing):
-        if self.mesh is not None and self.mesh._boundary_forcing is not None:
-            self.mesh._boundary_forcing['iwrtype']['obj'] = wave_forcing
-        self.__wave_forcing = wave_forcing
+        return self.mesh.forcings.wave
 
     @property
     def spinup_time(self):
@@ -678,6 +664,8 @@ class AdcircRun(Fort15):
     def _run_hotstart(self, nproc, wdir):
         self._stage_files('hotstart', nproc, wdir)
         self._run_adcprep('hotstart', nproc, wdir)
+        if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+            self._run_aswip(wdir / 'hotstart')
         if self.wave_forcing is not None:
             if self.waves_focing.model.lower() == 'swan':
                 self._run_padcswan(wdir / 'hotstart', nproc)
@@ -686,6 +674,11 @@ class AdcircRun(Fort15):
                 raise NotImplementedError(msg)
         else:
             self._run_padcirc(wdir / 'hotstart', nproc)
+
+    def _run_aswip(self, wdir):
+        subprocess.check_call(['aswip'], cwd=wdir)
+        (wdir / f'NWS_{self.mesh.forcings.wind.NWS}_fort.22').replace(
+            wdir / 'fort.22')
 
     def _run_single_phase(self, nproc, wdir):
         # "single phase" means not separated into coldstart/hotstart
@@ -704,6 +697,8 @@ class AdcircRun(Fort15):
         os.symlink(wdir / 'fort.14', cwdir / 'fort.14')
         os.symlink(wdir / 'fort.13', cwdir / 'fort.13')
         os.symlink(wdir / f'fort.15.{runtype}', cwdir / 'fort.15')
+        if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+            os.symlink(wdir / 'fort.22', cwdir / 'fort.22')
         if runtype == 'hotstart':
             os.symlink(wdir / 'coldstart/fort.67.nc', cwdir / 'fort.67.nc')
 
@@ -801,7 +796,9 @@ class AdcircRun(Fort15):
                 break
             print(line, end='')
         p.wait()
-        return p.stderr.readlines()
+        lines = p.stderr.readlines()
+        # p.close()
+        return lines
 
     @staticmethod
     def _get_nproc(nproc):
@@ -863,8 +860,13 @@ class AdcircRun(Fort15):
     @_start_date.setter
     def _start_date(self, start_date):
         if start_date is None:
-            if isinstance(self.wind_forcing, BestTrackForcing):
-                start_date = self.wind_forcing.start_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                start_date = self.mesh.forcings.wind.start_date
+        else:
+            if isinstance(self.mesh.forcings.tides, Tides):
+                self.mesh.forcings.tides.start_date = start_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                self.mesh.forcings.wind.start_date = start_date
         assert isinstance(start_date, datetime)
         self.__start_date = start_date
 
@@ -874,11 +876,17 @@ class AdcircRun(Fort15):
 
     @_end_date.setter
     def _end_date(self, end_date):
+        if isinstance(end_date, timedelta):
+            end_date = self._start_date + end_date
         if end_date is None:
             if isinstance(self.wind_forcing, BestTrackForcing):
                 end_date = self.wind_forcing.end_date
-        if isinstance(end_date, timedelta):
-            end_date = self._start_date + end_date
+        else:
+            if isinstance(self.mesh.forcings.tides, Tides):
+                self.mesh.forcings.tides.end_date = end_date
+            if isinstance(self.mesh.forcings.wind, BestTrackForcing):
+                self.mesh.forcings.wind.end_date = end_date
+
         assert isinstance(end_date, datetime)
         assert end_date > self.start_date
         self.__end_date = end_date

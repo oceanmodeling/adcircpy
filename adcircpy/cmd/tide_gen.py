@@ -34,7 +34,8 @@ def main():
     mesh.add_forcing(tides)
     fort15 = Fort15(mesh)
     if args.output_file is not None:
-        open(args.output_file, 'w').write(fort15.get_tidal_forcing())
+        with open(args.output_file, 'w') as f:
+            f.write(fort15.get_tidal_forcing())
     else:
         print(fort15.get_tidal_forcing())
 

@@ -16,9 +16,7 @@ try:
         )
         from dunamai import Version
 
-    version = Version.from_any_vcs(
-            pattern='^(?P<base>\d+\.\d+\.\d+)(-?((?P<stage>[a-zA-Z]+)\.?(?P<revision>\d+)?))?$'
-    ).serialize()
+    version = Version.from_any_vcs().serialize()
 except RuntimeError as error:
     logging.exception(error)
     version = '0.0.0'
@@ -55,6 +53,7 @@ setuptools.setup(
             'psutil',
             # 'pygrib', # TODO: make separate install
             'pyproj>=2.6',
+            'geopandas',
             'requests',
             'scipy',
             'seaborn',

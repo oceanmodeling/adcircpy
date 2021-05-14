@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 import os
 import pathlib
 import tarfile
+import tempfile
 import unittest
 
-import numpy
 import requests
 
 from adcircpy import AdcircMesh, AdcircRun
@@ -15,12 +15,12 @@ from adcircpy.server.driver_file import DriverFile
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet'
 FORT14_FILENAME = INPUT_DIRECTORY / 'fort.14'
+TEMPORARY_DIRECTORY = tempfile.TemporaryDirectory()
+OUTPUT_DIRECTORY = pathlib.Path(TEMPORARY_DIRECTORY.name)
 
-os.makedirs(INPUT_DIRECTORY, exist_ok=True)
-os.makedirs(OUTPUT_DIRECTORY, exist_ok=True)
+INPUT_DIRECTORY.mkdir(exist_ok=True)
 
 
 class TestAdcircRun(unittest.TestCase):
@@ -69,7 +69,10 @@ class TestAdcircRun(unittest.TestCase):
 
         with open(output_directory / 'slurm.job') as generated_file:
             with open(reference_directory / 'slurm.job') as reference_file:
-                assert generated_file.read() == reference_file.read()
+                self.assertMultiLineEqual(
+                    generated_file.read(),
+                    reference_file.read()
+                    )
 
     def test_configuration(self):
         output_directory = OUTPUT_DIRECTORY / 'test_configuration'
@@ -79,19 +82,21 @@ class TestAdcircRun(unittest.TestCase):
         # open mesh file
         mesh = AdcircMesh.open(FORT14_FILENAME, crs=4326)
 
-        # let's generate the tau0 factor
-        mesh.generate_tau0()
-
-        # let's also add a mannings to the domain (constant for this example)
-        mesh.mannings_n_at_sea_floor = numpy.full(mesh.values.shape, 0.025)
-
         # set simulation dates
         spinup_time = timedelta(days=2)
         start_date = datetime(2015, 12, 14) + spinup_time
         end_date = start_date + timedelta(days=3)
 
-        wind_forcing = AtmosphericMeshForcing(17, 3600)
-        wave_forcing = WaveWatch3DataForcing(5, 3600)
+        wind_forcing = AtmosphericMeshForcing(
+                filename='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+                nws=17,
+                interval_seconds=3600,
+        )
+        wave_forcing = WaveWatch3DataForcing(
+                filename='ww3.HWRF.NOV2018.2012_sxy.nc',
+                nrs=5,
+                interval_seconds=3600,
+        )
 
         mesh.add_forcing(wind_forcing)
         mesh.add_forcing(wave_forcing)
@@ -110,8 +115,9 @@ class TestAdcircRun(unittest.TestCase):
             generated_filename = output_directory / reference_filename.name
             with open(generated_filename) as generated_file, \
                     open(reference_filename) as reference_file:
-                assert generated_file.readlines()[1:] == \
-                       reference_file.readlines()[1:]
+                self.assertMultiLineEqual(
+                    ''.join(generated_file.readlines()[1:]),
+                    ''.join(reference_file.readlines()[1:]))
 
 
 if __name__ == '__main__':

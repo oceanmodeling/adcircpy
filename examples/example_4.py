@@ -30,31 +30,39 @@ def main():
     tidal_forcing = Tides()
     tidal_forcing.use_all()
 
-    wind_forcing = AtmosphericMeshForcing(17, 3600)
-    wave_forcing = WaveWatch3DataForcing(5, 3600)
+    wind_forcing = AtmosphericMeshForcing(
+            filename='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc',
+            nws=17,
+            interval_seconds=3600,
+    )
+    wave_forcing = WaveWatch3DataForcing(
+            filename='ww3.HWRF.NOV2018.2012_sxy.nc',
+            nrs=5,
+            interval_seconds=3600,
+    )
 
     mesh.add_forcing(tidal_forcing)
     mesh.add_forcing(wind_forcing)
     mesh.add_forcing(wave_forcing)
 
     slurm = SlurmConfig(
-        account='account',
-        ntasks=1000,
-        run_name='AdcircPy/examples/example_3.py',
-        partition='partition',
-        walltime=timedelta(hours=8),
-        mail_type='all',
-        mail_user='example@email.gov',
-        log_filename='example_3.log',
-        modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-        path_prefix='$HOME/adcirc/build'
+            account='account',
+            ntasks=1000,
+            run_name='AdcircPy/examples/example_3.py',
+            partition='partition',
+            walltime=timedelta(hours=8),
+            mail_type='all',
+            mail_user='example@email.gov',
+            log_filename='example_3.log',
+            modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
+            path_prefix='$HOME/adcirc/build'
     )
     driver = AdcircRun(
-        mesh=mesh,
-        start_date=datetime.now(),
-        end_date=timedelta(days=7),
-        spinup_time=timedelta(days=5),
-        server_config=slurm,
+            mesh=mesh,
+            start_date=datetime.now(),
+            end_date=timedelta(days=7),
+            spinup_time=timedelta(days=5),
+            server_config=slurm,
     )
 
     driver.write(PARENT / "outputs/example_4", overwrite=True)

@@ -1,5 +1,4 @@
 import argparse
-import logging
 import sys
 
 
@@ -36,22 +35,11 @@ def generate_only(parser):
 
 
 def log_level(parser):
-    log_level = parser.add_mutually_exclusive_group()
-    log_level.add_argument(
-        '--log-level-info',
-        nargs='?',
-        const=logging.INFO,
-        dest="log_level")
-    log_level.add_argument(
-        '--log-level-debug',
-        nargs='?',
-        const=logging.DEBUG,
-        dest="log_level")
-    log_level.add_argument(
-        '--log-level-warning',
-        nargs='?',
-        const=logging.WARNING,
-        dest="log_level")
+    parser.add_argument(
+        "--log-level",
+        choices=['info', 'warning', 'debug'],
+        default='warning'
+    )
 
 
 def server(parser):
@@ -68,8 +56,8 @@ def server(parser):
     parser.add_argument("--additional-mpi-options")
 
     # make nproc required when using ssh
-    args = parser.parse_known_args()[0]
-    if args.hostname is not None:
+    # args = parser.parse_known_args()[0]
+    if '--hostname' in sys.argv:
         parser.add_argument("--nproc", "--ncpu", type=int, required=True)
     else:
         parser.add_argument("--nproc", "--ncpu", type=int, default=-1)
@@ -88,8 +76,8 @@ def server(parser):
     # resource manager specific options
     parser.add_argument('--account', required=_required)
     parser.add_argument('--slurm-ntasks', required=_required, type=int)
-    parser.add_argument('--partition', required=_required)
     parser.add_argument('--walltime', required=_required, type=float)
+    parser.add_argument('--partition')
     parser.add_argument('--slurm-filename')
     parser.add_argument('--slurm-rundir')
     parser.add_argument('--run-name')
@@ -169,7 +157,7 @@ def best_track(parser):
     msg += " Examples: AL132012 for Sandy2012 or AL152017 for Maria2017."
     parser.add_argument('storm_id', help=msg)
     parser.add_argument('--start-date')
-    parser.add_argument('--end-date')
+    parser.add_argument('--run-days', type=float)
     parser.add_argument('--spinup-days', type=float, required=True)
 
 
@@ -182,7 +170,7 @@ def tidal_run(parser):
     msg += "with or without the quotes)."
     parser.add_argument('start_date', help=msg)
     # end_date
-    parser.add_argument('end_date')
+    parser.add_argument('run_days', type=float)
     # spinup_days
     parser.add_argument('--spinup-days', type=float, required=True)
 
@@ -214,6 +202,12 @@ def tau0(parser):
     msg += "are not passed as a nodal attribute. "
     msg += "Defaults to 0.02."
     parser.add_argument("--FFACTOR", type=float, default=0.02, help=msg)
+
+
+def mannings(parser):
+    mannings = parser.add_mutually_exclusive_group()
+    mannings.add_argument('--generate-linear-mannings', action='store_true')
+    mannings.add_argument('--generate-constant-mannings', type=float)
 
 
 def nodal_attributes(parser):
@@ -394,6 +388,7 @@ def get_parser(runtype=None, description=None):
     nodal_attributes(parser)
     timezone(parser)
     tau0(parser)
+    mannings(parser)
     tidal_constituents(parser)
     timestep(parser)
     gwce_solution_scheme(parser)

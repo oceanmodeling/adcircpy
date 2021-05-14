@@ -17,11 +17,14 @@ def parse_args():
     parser.add_argument('--title', help="Plot title override.")
     parser.add_argument('--vmin', type=float)
     parser.add_argument('--vmax', type=float)
+    parser.add_argument('--cmap', type=str, default='jet')
+    parser.add_argument('--levels', type=int, default=256)
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
     maxele = Maxele(args.maxele)
-    maxele.tricontourf()
+    maxele.tricontourf(vmin=args.vmin, vmax=args.vmax, cmap=args.cmap,
+                       levels=args.levels, cbar=True)
     plt.show()
