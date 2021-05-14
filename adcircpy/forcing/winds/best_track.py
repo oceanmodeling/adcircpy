@@ -48,29 +48,39 @@ class BestTrackForcing(WindForcing):
                 f'{row["datetime"]:%Y%m%d%H}'.rjust(11),
                 f'{"":3}',
                 f'{row["record_type"]:>5}',
-                f'{convert_value((row["datetime"] - self.start_date) / timedelta(hours=1), int):>4}',
+                f'{convert_value((row["datetime"] - self.start_date) / timedelta(hours=1), to_type=int):>4}',
             ])
 
-            if row["latitude"] >= 0:
-                line.append(f'{convert_value(row["latitude"] / .1, int):>4}N')
+            latitude = convert_value(
+                    row['latitude'] / .1,
+                    to_type=int,
+                    round_digits=1,
+            )
+            if latitude >= 0:
+                line.append(f'{latitude:>4}N')
             else:
-                line.append(f'{convert_value(row["latitude"] / -.1, int):>4}S')
-            if row["longitude"] >= 0:
-                line.append(f'{convert_value(row["longitude"] / .1, int):>5}E')
+                line.append(f'{latitude * -.1:>4}S')
+
+            longitude = convert_value(
+                    row['longitude'] / .1,
+                    to_type=int,
+                    round_digits=1,
+            )
+            if longitude >= 0:
+                line.append(f'{longitude:>5}E')
             else:
-                line.append(
-                        f'{convert_value(row["longitude"] / -.1, int):>5}W')
+                line.append(f'{longitude * -1:>5}W')
 
             line.extend([
-                f'{convert_value(row["max_sustained_wind_speed"], int):>4}',
-                f'{convert_value(row["central_pressure"], int):>5}',
+                f'{convert_value(row["max_sustained_wind_speed"], to_type=int, round_digits=0):>4}',
+                f'{convert_value(row["central_pressure"], to_type=int, round_digits=0):>5}',
                 f'{row["development_level"]:>3}',
-                f'{convert_value(row["isotach"], int):>4}',
+                f'{convert_value(row["isotach"], to_type=int, round_digits=0):>4}',
                 f'{row["quadrant"]:>4}',
-                f'{convert_value(row["radius_for_NEQ"], int):>5}',
-                f'{convert_value(row["radius_for_SEQ"], int):>5}',
-                f'{convert_value(row["radius_for_SWQ"], int):>5}',
-                f'{convert_value(row["radius_for_NWQ"], int):>5}',
+                f'{convert_value(row["radius_for_NEQ"], to_type=int, round_digits=0):>5}',
+                f'{convert_value(row["radius_for_SEQ"], to_type=int, round_digits=0):>5}',
+                f'{convert_value(row["radius_for_SWQ"], to_type=int, round_digits=0):>5}',
+                f'{convert_value(row["radius_for_NWQ"], to_type=int, round_digits=0):>5}',
             ])
 
             if row["background_pressure"] is None:
@@ -82,15 +92,21 @@ class BestTrackForcing(WindForcing):
             elif (row["background_pressure"] <= row["central_pressure"]
                   and 1013 <= row["central_pressure"]):
                 background_pressure = convert_value(
-                        row["central_pressure"] + 1, int)
+                        row["central_pressure"] + 1,
+                        to_type=int,
+                        round_digits=0,
+                )
             else:
-                background_pressure = convert_value(row["background_pressure"],
-                                                    int)
+                background_pressure = convert_value(
+                        row['background_pressure'],
+                        to_type=int,
+                        round_digits=0,
+                )
             line.append(f'{background_pressure:>5}')
 
             line.extend([
-                f'{convert_value(row["radius_of_last_closed_isobar"], int):>5}',
-                f'{convert_value(row["radius_of_maximum_winds"], int):>4}',
+                f'{convert_value(row["radius_of_last_closed_isobar"], to_type=int, round_digits=0):>5}',
+                f'{convert_value(row["radius_of_maximum_winds"], to_type=int, round_digits=0):>4}',
                 f'{"":>5}',  # gust
                 f'{"":>4}',  # eye
                 f'{"":>4}',  # subregion
@@ -623,19 +639,58 @@ class BestTrackForcing(WindForcing):
                 longitude = float(longitude[:-1]) * -0.1
             row_data['longitude'] = longitude
 
-            row_data['max_sustained_wind_speed'] = convert_value(row[8], int)
-            row_data['central_pressure'] = convert_value(row[9], int)
+            row_data['max_sustained_wind_speed'] = convert_value(
+                    row[8],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['central_pressure'] = convert_value(
+                    row[9],
+                    to_type=int,
+                    round_digits=0,
+            )
             row_data['development_level'] = row[10]
-            row_data['isotach'] = convert_value(row[11], int)
+            row_data['isotach'] = convert_value(
+                    row[11],
+                    to_type=int,
+                    round_digits=0,
+            )
             row_data['quadrant'] = row[12]
-            row_data['radius_for_NEQ'] = convert_value(row[13], int)
-            row_data['radius_for_SEQ'] = convert_value(row[14], int)
-            row_data['radius_for_SWQ'] = convert_value(row[15], int)
-            row_data['radius_for_NWQ'] = convert_value(row[16], int)
-            row_data['background_pressure'] = convert_value(row[17], int)
-            row_data['radius_of_last_closed_isobar'] = convert_value(row[18],
-                                                                     int)
-            row_data['radius_of_maximum_winds'] = convert_value(row[19], int)
+            row_data['radius_for_NEQ'] = convert_value(
+                    row[13],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['radius_for_SEQ'] = convert_value(
+                    row[14],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['radius_for_SWQ'] = convert_value(
+                    row[15],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['radius_for_NWQ'] = convert_value(
+                    row[16],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['background_pressure'] = convert_value(
+                    row[17],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['radius_of_last_closed_isobar'] = convert_value(
+                    row[18],
+                    to_type=int,
+                    round_digits=0,
+            )
+            row_data['radius_of_maximum_winds'] = convert_value(
+                    row[19],
+                    to_type=int,
+                    round_digits=0,
+            )
             row_data['direction'] = row[25]
             row_data['speed'] = row[26]
             row_data['name'] = row[27]
@@ -660,8 +715,12 @@ class BestTrackForcing(WindForcing):
         return instance
 
 
-def convert_value(value: Any, to_type: type) -> Any:
+def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
     if value is not None and value != '':
+        if round_digits is not None and issubclass(to_type, (int, float)):
+            if isinstance(value, str):
+                value = float(value)
+            value = round(value, round_digits)
         value = to_type(value)
     return value
 
