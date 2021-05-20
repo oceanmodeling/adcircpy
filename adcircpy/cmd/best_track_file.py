@@ -60,7 +60,7 @@ def main():
 
     # show cheap plot
     if args.plot_track:
-        bt.plot_trajectory(show=True)
+        bt.plot_track(show=True)
 
     # save fort22
     if args.save_path is not None:
