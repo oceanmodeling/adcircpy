@@ -31,17 +31,17 @@ class BestTrackForcing(WindForcing):
     def __init__(
         self,
         storm_id,
-        synthetic_storm=None,
+        external_track=None,
         nws: int = 20,
         start_date=None,
         end_date=None,
         dst_crs=None,
     ):
         assert nws in [8, 19, 20]
-        if synthetic_storm is None:
+        if external_track is None:
             self._storm_id = storm_id
         else:
-            self.synthetic_storm = synthetic_storm
+            self.external_track = external_track
         self._start_date = start_date
         self._end_date = end_date
         self._dst_crs = dst_crs
@@ -251,11 +251,11 @@ class BestTrackForcing(WindForcing):
         self.__atcf = io.BytesIO(response.read())
 
     @property
-    def synthetic_storm(self) -> str:
+    def external_track(self) -> str:
         return self.synthetic_file_name
 
-    @synthetic_storm.setter
-    def synthetic_storm(self, file_with_storm: str):
+    @external_track.setter
+    def external_track(self, file_with_storm: str):
         self.__atcf = io.open(file_with_storm, "rb")
         self.synthetic_file_name = file_with_storm
 

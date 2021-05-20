@@ -17,8 +17,8 @@ def parse_args():
         "atcf/archive/storm.table",
     )
     parser.add_argument(
-        "--synthetic_storm",
-        help="The filename of a synthetic storm in HURDAT2 format",
+        "--external_track",
+        help="Filename of a track in HURDAT2 format",
     )
     parser.add_argument("--save-path", help="path to which to write fort.22")
     parser.add_argument("--start-date", help="format is %%Y%%m%%d%%H")
@@ -43,9 +43,7 @@ def main():
     args = parse_args()
     bt = BestTrackForcing(
         args.storm_id,
-        synthetic_storm=args.synthetic_storm
-        if args.synthetic_storm is not None
-        else None,
+        external_track=args.external_track if args.external_track is not None else None,
         start_date=datetime.strptime(args.start_date, "%Y%m%d%H")
         if args.start_date is not None
         else None,
