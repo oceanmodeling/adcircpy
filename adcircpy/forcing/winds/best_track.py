@@ -1,30 +1,64 @@
+import gzip
+import io
+import logging
+import os
+import pathlib
+import time
+import urllib.request
+import zipfile
 from collections import Collection
 from datetime import datetime, timedelta
 from functools import wraps
-import gzip
-import io
 from io import StringIO
-import logging
 from os import PathLike
-import pathlib
-import time
 from typing import Any
-import urllib.request
 
-from haversine import haversine
+import appdirs
+import geopandas
 import matplotlib.pyplot as plt
-from matplotlib.transforms import Bbox
 import numpy as np
 import pandas
+import utm
+from haversine import haversine
+from matplotlib.transforms import Bbox
 from pandas import DataFrame, read_csv
 from pyproj import CRS, Proj, Transformer
 from shapely import ops
 from shapely.geometry import Point, Polygon
-import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 
 logger = logging.getLogger(__name__)
+
+
+def _fetch_and_plot_coastline(_ax, show, filename="BestTrack.png"):
+    save_dir = pathlib.Path(appdirs.user_data_dir("ne_coastline"))
+    save_dir.mkdir(exist_ok=True)
+
+    file_path = save_dir / "ne_110m_coastline.shp"
+    zip_file_path = save_dir / "ne_110m_coastline.zip"
+
+    if not (save_dir / "ne_110m_coastline.shp").exists():
+        # download and save if not present
+        url = "http://naciscdn.org/naturalearth/"
+        url += "110m/physical/ne_110m_coastline.zip"
+        urllib.request.urlretrieve(url, zip_file_path)
+        _zip = zipfile.ZipFile(zip_file_path)
+        for name in _zip.namelist():
+            data = _zip.read(name)
+            outfile = os.path.join(save_dir, name)
+            f = open(outfile, "wb")
+            f.write(data)
+            f.close()
+        os.remove(zip_file_path)
+
+    open_shapefile = geopandas.read_file(file_path)
+
+    open_shapefile.plot(ax=_ax)
+    if show:
+        plt.show()
+    else:
+        plt.savefig(filename)
 
 
 class BestTrackForcing(WindForcing):
@@ -522,7 +556,7 @@ class BestTrackForcing(WindForcing):
                 )
         if show:
             axes.axis("scaled")
-            plt.show()
+        _fetch_and_plot_coastline(axes, show)
 
     def _generate_record_numbers(self):
         record_number = [1]
