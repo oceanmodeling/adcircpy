@@ -63,10 +63,19 @@ def _fetch_and_plot_coastline(_ax, show, filename="BestTrack.png"):
 
 class BestTrackForcing(WindForcing):
     def __init__(
-        self, storm_id, nws: int = 20, start_date=None, end_date=None, dst_crs=None
+        self,
+        storm_id,
+        external_track: str = None,
+        nws: int = 20,
+        start_date=None,
+        end_date=None,
+        dst_crs=None,
     ):
         assert nws in [8, 19, 20]
-        self._storm_id = storm_id
+        if external_track is None:
+            self._storm_id = storm_id
+        else:
+            self.external_track = external_track
         self._start_date = start_date
         self._end_date = end_date
         self._dst_crs = dst_crs
@@ -276,6 +285,15 @@ class BestTrackForcing(WindForcing):
         self.__atcf = io.BytesIO(response.read())
 
     @property
+    def external_track(self) -> str:
+        return self.external_file_name
+
+    @external_track.setter
+    def external_track(self, file_with_storm: str):
+        self.__atcf = io.open(file_with_storm, "rb")
+        self.external_file_name = file_with_storm
+
+    @property
     def start_date(self) -> datetime:
         return self._start_date
 
@@ -402,7 +420,12 @@ class BestTrackForcing(WindForcing):
                 "direction": list(),
                 "speed": list(),
             }
-            for i, line in enumerate(gzip.GzipFile(fileobj=self.__atcf)):
+            if isinstance(self.__atcf, io.BytesIO):
+                fd = gzip.GzipFile(fileobj=self.__atcf)
+            else:
+                fd = self.__atcf
+
+            for i, line in enumerate(fd):
                 line = line.decode("UTF-8").split(",")
                 data["basin"].append(line[0])
                 data["storm_number"].append(line[1].strip(" "))
@@ -539,7 +562,6 @@ class BestTrackForcing(WindForcing):
                 )
         if show:
             axes.axis("scaled")
-
         _fetch_and_plot_coastline(axes, show)
 
     def _generate_record_numbers(self):

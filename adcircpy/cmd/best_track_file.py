@@ -8,18 +8,35 @@ from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 def parse_args():
     parser = argparse.ArgumentParser(
-            description='generate `fort.22` information from HURDAT2 data')
-    parser.add_argument('storm_id',
-                        help='Can be StormYYYY (eg. Sandy2012) or '
-                        'storm id from HURDAT2 table: ftp://ftp.nhc.noaa.gov/'
-                        'atcf/archive/storm.table')
-    parser.add_argument('--save-path', help='path to which to write fort.22')
-    parser.add_argument('--start-date', help='format is %%Y%%m%%d%%H')
-    parser.add_argument('--end-date', help='format is %%Y%%m%%d%%H')
-    parser.add_argument('--quiet', '-q', action='store_true', default=False,
-                        help='suppress console output')
-    parser.add_argument('--plot-track', action='store_true', default=False,
-                        help='show a simple plot of the track')
+        description="generate `fort.22` information from HURDAT2 data"
+    )
+    parser.add_argument(
+        "storm_id",
+        help="Can be StormYYYY (eg. Sandy2012) or "
+        "storm id from HURDAT2 table: ftp://ftp.nhc.noaa.gov/"
+        "atcf/archive/storm.table",
+    )
+    parser.add_argument(
+        "--external_track",
+        help="Filename of a track in HURDAT2 format",
+    )
+    parser.add_argument("--save-path", help="path to which to write fort.22")
+    parser.add_argument("--start-date", help="format is %%Y%%m%%d%%H")
+    parser.add_argument("--end-date", help="format is %%Y%%m%%d%%H")
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        default=False,
+        help="suppress console output",
+    )
+    parser.add_argument(
+        "--plot-track",
+        action="store_true",
+        default=False,
+        help="show a simple plot of the track",
+    )
+    parser.add_argument("--nws", help="which NWS forcing option to use")
     return parser.parse_args()
 
 
@@ -27,11 +44,15 @@ def main():
     args = parse_args()
     bt = BestTrackForcing(
         args.storm_id,
-        start_date=datetime.strptime(args.start_date, '%Y%m%d%H')
-        if args.start_date is not None else None,
-        end_date=datetime.strptime(args.end_date, '%Y%m%d%H')
-        if args.end_date is not None else None,
-        )
+        external_track=args.external_track if args.external_track is not None else None,
+        start_date=datetime.strptime(args.start_date, "%Y%m%d%H")
+        if args.start_date is not None
+        else None,
+        end_date=datetime.strptime(args.end_date, "%Y%m%d%H")
+        if args.end_date is not None
+        else None,
+        nws=int(args.nws) if args.nws is not None else 20,
+    )
 
     # print fort22
     if not args.quiet:
@@ -43,9 +64,9 @@ def main():
 
     # save fort22
     if args.save_path is not None:
-        with open(Path(args.save_path), 'w') as output_file:
+        with open(Path(args.save_path), "w") as output_file:
             output_file.write(str(bt))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
