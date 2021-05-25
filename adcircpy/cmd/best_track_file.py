@@ -36,6 +36,7 @@ def parse_args():
         default=False,
         help="show a simple plot of the track",
     )
+    parser.add_argument("--nws", help="which NWS forcing option to use")
     return parser.parse_args()
 
 
@@ -50,6 +51,7 @@ def main():
         end_date=datetime.strptime(args.end_date, "%Y%m%d%H")
         if args.end_date is not None
         else None,
+        nws=int(args.nws) if args.nws is not None else 20,
     )
 
     # print fort22
