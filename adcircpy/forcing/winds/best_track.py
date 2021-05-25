@@ -65,7 +65,7 @@ class BestTrackForcing(WindForcing):
     def __init__(
         self,
         storm_id,
-        external_track=None,
+        external_track: str = None,
         nws: int = 20,
         start_date=None,
         end_date=None,
@@ -286,12 +286,12 @@ class BestTrackForcing(WindForcing):
 
     @property
     def external_track(self) -> str:
-        return self.synthetic_file_name
+        return self.external_file_name
 
     @external_track.setter
     def external_track(self, file_with_storm: str):
         self.__atcf = io.open(file_with_storm, "rb")
-        self.synthetic_file_name = file_with_storm
+        self.external_file_name = file_with_storm
 
     @property
     def start_date(self) -> datetime:
