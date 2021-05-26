@@ -43,6 +43,7 @@ class BestTrackRunCliTestCase(unittest.TestCase):
                 f'--stations-file={pathlib.Path(__file__).parent}/stations.txt',
                 '--elev-stat=6.',
                 '--run-days=0.5',
+                '--no-clip'
                 # '--nproc=1'
             ]
         if shutil.which('padcirc') is None:
