@@ -37,6 +37,9 @@ class TestBestTrack(unittest.TestCase):
         output_filename = OUTPUT_DIRECTORY / "test_besttrack" / "florence2018_fort.22"
         reference_filename = REFERENCE_DIRECTORY / "test_besttrack" / "florence2018_fort.22"
 
+        if not output_filename.parent.exists():
+            output_filename.parent.mkdir(parents=True, exist_ok=True)
+
         best_track = BestTrackForcing.from_atcf_file(
                 atcf=input_filename,
                 nws=8,
