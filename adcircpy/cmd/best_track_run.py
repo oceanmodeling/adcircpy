@@ -22,8 +22,9 @@ class BestTrackRunCommand(AdcircCommand):
             self.args.storm_id, external_track=self.args.external_track
         )
 
-        logger.info("Clip BestTrackForcing to bbox")
-        bt.clip_to_bbox(self.mesh.get_bbox(output_type="bbox"), self.mesh.crs)
+        if self.args.clip:
+            logger.info("Clip BestTrackForcing to bbox")
+            bt.clip_to_bbox(self.mesh.get_bbox(output_type="bbox"), self.mesh.crs)
 
         if args.start_date is None:
             self.start_date = bt.start_date
