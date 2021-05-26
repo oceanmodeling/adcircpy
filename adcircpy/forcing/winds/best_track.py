@@ -669,7 +669,9 @@ class BestTrackForcing(WindForcing):
             cls,
             fort22: PathLike,
             nws: int = None,
-    ) -> "BestTrackForcing":
+            start_date: datetime = None,
+            end_date: datetime = None,
+    ) -> 'BestTrackForcing':
         if nws is None:
             nws = 20
 
@@ -677,11 +679,16 @@ class BestTrackForcing(WindForcing):
 
         storm_id = f'{data["name"][0]}{data["datetime"][0]:%Y}'
 
+        if start_date is None:
+            start_date = min(data['datetime'])
+        if end_date is None:
+            end_date = max(data['datetime'])
+
         instance = cls(
                 storm=storm_id,
                 nws=nws,
-                start_date=min(data["datetime"]),
-                end_date=max(data["datetime"]),
+                start_date=start_date,
+                end_date=end_date,
         )
 
         instance.__df = data
@@ -693,15 +700,15 @@ class BestTrackForcing(WindForcing):
             cls,
             atcf: PathLike,
             nws: int,
+            start_date: datetime = None,
+            end_date: datetime = None,
     ) -> 'BestTrackForcing':
-        instance = cls(
+        return cls(
                 storm=atcf,
                 nws=nws,
-                start_date=None,
-                end_date=None,
+                start_date=start_date,
+                end_date=end_date,
         )
-
-        return instance
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
