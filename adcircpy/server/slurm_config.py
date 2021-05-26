@@ -25,7 +25,7 @@ class SlurmConfig(BaseServerConfig):
             path_prefix: str = None,
             extra_commands: [str] = None,
             launcher: str = 'srun',
-            nodes: int = None
+            nodes: int = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
@@ -114,13 +114,12 @@ class SlurmConfig(BaseServerConfig):
     @_log_filename.setter
     def _log_filename(self, log_filename):
         if log_filename is None:
-            log_filename = "slurm.log"
+            log_filename = 'slurm.log'
         self.__log_filename = log_filename
 
     @property
     def _prefix(self):
-        f = f'#SBATCH -D {self._run_directory}\n' \
-            f'#SBATCH -J {self._run_name}\n'
+        f = f'#SBATCH -D {self._run_directory}\n' f'#SBATCH -J {self._run_name}\n'
 
         if self._account is not None:
             f += f'#SBATCH -A {self._account}\n'
@@ -143,12 +142,10 @@ class SlurmConfig(BaseServerConfig):
         f += '\nulimit -s unlimited\nset -e\n'
 
         if self._modules is not None:
-            f += f'\n' \
-                 f'module load {" ".join(module for module in self._modules)}\n'
+            f += f'\n' f'module load {" ".join(module for module in self._modules)}\n'
 
         if self._path_prefix is not None:
-            f += f'\n' \
-                 f'PATH={self._path_prefix}:$PATH\n'
+            f += f'\n' f'PATH={self._path_prefix}:$PATH\n'
 
         if self._extra_commands is not None:
             f += '\n'

@@ -5,12 +5,8 @@ from adcircpy.forcing.waves import WaveForcing
 
 
 class WaveWatch3DataForcing(WaveForcing):
-    def __init__(
-            self,
-            filename: PathLike,
-            nrs: int = 5,
-            interval_seconds: int = 3600
-    ):
+    def __init__(self, filename: PathLike, nrs: int = 5,
+                 interval_seconds: int = 3600):
         if not isinstance(filename, Path):
             filename = Path(filename)
         self.filename = filename

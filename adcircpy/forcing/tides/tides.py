@@ -18,8 +18,10 @@ class TidalSource(Enum):
 
 
 class Tides(bctypes.EtaBc):
-    def __init__(self, tidal_source: Union[str, TidalSource] = None,
-                 resource: PathLike = None):
+    def __init__(
+            self, tidal_source: Union[str, TidalSource] = None,
+            resource: PathLike = None
+    ):
         if tidal_source is None:
             tidal_source = TidalSource.HAMTIDE
         elif isinstance(tidal_source, str):
@@ -50,7 +52,7 @@ class Tides(bctypes.EtaBc):
                 potential = False
             self._active_constituents[constituent] = {
                 'potential': potential,
-                'forcing': forcing
+                'forcing': forcing,
             }
 
     def use_major(self, potential=True, forcing=True):
@@ -58,19 +60,19 @@ class Tides(bctypes.EtaBc):
             self.use_constituent(constituent, potential, forcing)
 
     def use_constituent(self, constituent, potential=True, forcing=True):
-        msg = "Constituent must be one of "
-        msg += f"{self.constituents}"
+        msg = 'Constituent must be one of '
+        msg += f'{self.constituents}'
         assert constituent in self.constituents, msg
         if constituent not in self.major_constituents:
             potential = False
         self._active_constituents[constituent] = {
-            "potential": potential,
-            "forcing": forcing,
+            'potential': potential,
+            'forcing': forcing,
         }
 
     def drop_constituent(self, constituent):
-        msg = "constituent must be one of: "
-        msg += f"{self.active_constituents}"
+        msg = 'constituent must be one of: '
+        msg += f'{self.active_constituents}'
         assert constituent in self.active_constituents, msg
         self._active_constituents.pop(constituent)
 
@@ -109,7 +111,7 @@ class Tides(bctypes.EtaBc):
             self.get_orbital_frequency(constituent),
             self.get_earth_tidal_potential(constituent),
             self.get_nodal_factor(constituent),
-            self.get_greenwich_factor(constituent)
+            self.get_greenwich_factor(constituent),
         )
 
     def get_earth_tidal_potential(self, constituent):
@@ -119,79 +121,79 @@ class Tides(bctypes.EtaBc):
             pass
 
     def get_nodal_factor(self, constituent):
-        if constituent == "M2":
+        if constituent == 'M2':
             return self.EQ78
-        elif constituent == "S2":
+        elif constituent == 'S2':
             return 1.0
-        elif constituent == "N2":
+        elif constituent == 'N2':
             return self.EQ78
-        elif constituent == "K1":
+        elif constituent == 'K1':
             return self.EQ227
-        elif constituent == "M4":
-            return (self.EQ78) ** 2.
-        elif constituent == "O1":
+        elif constituent == 'M4':
+            return (self.EQ78) ** 2.0
+        elif constituent == 'O1':
             return self.EQ75
-        elif constituent == "M6":
-            return (self.EQ78) ** 3.
-        elif constituent == "MK3":
+        elif constituent == 'M6':
+            return (self.EQ78) ** 3.0
+        elif constituent == 'MK3':
             return self.EQ78 * self.EQ227
-        elif constituent == "S4":
+        elif constituent == 'S4':
             return 1.0
-        elif constituent == "MN4":
-            return (self.EQ78) ** 2.
-        elif constituent == "Nu2":
+        elif constituent == 'MN4':
+            return (self.EQ78) ** 2.0
+        elif constituent == 'Nu2':
             return self.EQ78
-        elif constituent == "S6":
+        elif constituent == 'S6':
             return 1.0
-        elif constituent == "MU2":
+        elif constituent == 'MU2':
             return self.EQ78
-        elif constituent == "2N2":
+        elif constituent == '2N2':
             return self.EQ78
-        elif constituent == "OO1":
+        elif constituent == 'OO1':
             return self.EQ77
-        elif constituent == "lambda2":
+        elif constituent == 'lambda2':
             return self.EQ78
-        elif constituent == "S1":
+        elif constituent == 'S1':
             return 1.0
-        elif constituent == "M1":
+        elif constituent == 'M1':
             return self.EQ207
-        elif constituent == "J1":
+        elif constituent == 'J1':
             return self.EQ76
-        elif constituent == "Mm":
+        elif constituent == 'Mm':
             return self.EQ73
-        elif constituent == "Ssa":
+        elif constituent == 'Ssa':
             return 1.0
-        elif constituent == "Sa":
+        elif constituent == 'Sa':
             return 1.0
-        elif constituent == "Msf":
+        elif constituent == 'Msf':
             return self.EQ78
-        elif constituent == "Mf":
+        elif constituent == 'Mf':
             return self.EQ74
-        elif constituent == "RHO":
+        elif constituent == 'RHO':
             return self.EQ75
-        elif constituent == "Q1":
+        elif constituent == 'Q1':
             return self.EQ75
-        elif constituent == "T2":
+        elif constituent == 'T2':
             return 1.0
-        elif constituent == "R2":
+        elif constituent == 'R2':
             return 1.0
-        elif constituent == "2Q1":
+        elif constituent == '2Q1':
             return self.EQ75
-        elif constituent == "P1":
+        elif constituent == 'P1':
             return 1.0
-        elif constituent == "2SM2":
+        elif constituent == '2SM2':
             return self.EQ78
-        elif constituent == "M3":
+        elif constituent == 'M3':
             return self.EQ149
-        elif constituent == "L2":
+        elif constituent == 'L2':
             return self.EQ215
-        elif constituent == "2MK3":
+        elif constituent == '2MK3':
             return self.EQ227 * self.EQ78 ** 2
-        elif constituent == "K2":
+        elif constituent == 'K2':
             return self.EQ235
-        elif constituent == "M8":
+        elif constituent == 'M8':
             return self.EQ78 ** 4
-        elif constituent == "MS4":
+        elif constituent == 'MS4':
             return self.EQ78
         else:
             msg = f'Unrecognized constituent {constituent}'
@@ -199,179 +201,233 @@ class Tides(bctypes.EtaBc):
 
     def _normalize_to_360(f):
         def decorator(self, constituent):
-            return f(self, constituent) % 360.
+            return f(self, constituent) % 360.0
 
         return decorator
 
     @_normalize_to_360
     def get_greenwich_factor(self, constituent):
-        if constituent == "M2":
-            return 2. * (self.DT - self.DS + self.DH) + 2. * (
-                    self.DXI - self.DNU)
-        elif constituent == "S2":
-            return 2. * self.DT
-        elif constituent == "N2":
-            return 2. * (self.DT + self.DH) - 3. * self.DS + self.DP + 2. \
-                   * (self.DXI - self.DNU)
-        elif constituent == "K1":
-            return self.DT + self.DH - 90. - self.DNUP
-        elif constituent == "M4":
-            return 4. * (self.DT - self.DS + self.DH) + 4. * (
-                    self.DXI - self.DNU)
-        elif constituent == "O1":
-            return self.DT - 2. * self.DS + self.DH + 90. + 2. * self.DXI - self.DNU
-        elif constituent == "M6":
-            return 6. * (self.DT - self.DS + self.DH) + 6. * (
-                    self.DXI - self.DNU)
-        elif constituent == "MK3":
-            return 3. * (self.DT + self.DH) - 2. * self.DS - 90. + 2. * (
-                    self.DXI - self.DNU) \
-                   - self.DNUP
-        elif constituent == "S4":
-            return 4. * self.DT
-        elif constituent == "MN4":
-            return 4. * (self.DT + self.DH) - 5. * self.DS + self.DP + 4. \
-                   * (self.DXI - self.DNU)
-        elif constituent == "Nu2":
-            return 2. * self.DT - 3. * self.DS + 4. * self.DH - self.DP + 2. \
-                   * (self.DXI - self.DNU)
-        elif constituent == "S6":
-            return 6. * self.DT
-        elif constituent == "MU2":
-            return 2. * (self.DT + 2. * (self.DH - self.DS)) + 2. * (
-                    self.DXI - self.DNU)
-        elif constituent == "2N2":
-            return 2. * (self.DT - 2. * self.DS + self.DH + self.DP) + 2. \
-                   * (self.DXI - self.DNU)
-        elif constituent == "OO1":
-            return self.DT + 2. * self.DS + self.DH - 90. - 2. * self.DXI - self.DNU
-        elif constituent == "lambda2":
-            return 2. * self.DT - self.DS + self.DP + 180. + 2. * (
-                    self.DXI - self.DNU)
-        elif constituent == "S1":
+        if constituent == 'M2':
+            return 2.0 * (self.DT - self.DS + self.DH) + 2.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'S2':
+            return 2.0 * self.DT
+        elif constituent == 'N2':
+            return (
+                    2.0 * (self.DT + self.DH)
+                    - 3.0 * self.DS
+                    + self.DP
+                    + 2.0 * (self.DXI - self.DNU)
+            )
+        elif constituent == 'K1':
+            return self.DT + self.DH - 90.0 - self.DNUP
+        elif constituent == 'M4':
+            return 4.0 * (self.DT - self.DS + self.DH) + 4.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'O1':
+            return self.DT - 2.0 * self.DS + self.DH + 90.0 + 2.0 * self.DXI - self.DNU
+        elif constituent == 'M6':
+            return 6.0 * (self.DT - self.DS + self.DH) + 6.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'MK3':
+            return (
+                    3.0 * (self.DT + self.DH)
+                    - 2.0 * self.DS
+                    - 90.0
+                    + 2.0 * (self.DXI - self.DNU)
+                    - self.DNUP
+            )
+        elif constituent == 'S4':
+            return 4.0 * self.DT
+        elif constituent == 'MN4':
+            return (
+                    4.0 * (self.DT + self.DH)
+                    - 5.0 * self.DS
+                    + self.DP
+                    + 4.0 * (self.DXI - self.DNU)
+            )
+        elif constituent == 'Nu2':
+            return (
+                    2.0 * self.DT
+                    - 3.0 * self.DS
+                    + 4.0 * self.DH
+                    - self.DP
+                    + 2.0 * (self.DXI - self.DNU)
+            )
+        elif constituent == 'S6':
+            return 6.0 * self.DT
+        elif constituent == 'MU2':
+            return 2.0 * (self.DT + 2.0 * (self.DH - self.DS)) + 2.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == '2N2':
+            return 2.0 * (
+                        self.DT - 2.0 * self.DS + self.DH + self.DP) + 2.0 * (
+                           self.DXI - self.DNU
+                   )
+        elif constituent == 'OO1':
+            return self.DT + 2.0 * self.DS + self.DH - 90.0 - 2.0 * self.DXI - self.DNU
+        elif constituent == 'lambda2':
+            return 2.0 * self.DT - self.DS + self.DP + 180.0 + 2.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'S1':
             return self.DT
-        elif constituent == "M1":
-            return self.DT - self.DS + self.DH - 90. + self.DXI - self.DNU + self.DQ
-        elif constituent == "J1":
-            return self.DT + self.DS + self.DH - self.DP - 90. - self.DNU
-        elif constituent == "Mm":
+        elif constituent == 'M1':
+            return self.DT - self.DS + self.DH - 90.0 + self.DXI - self.DNU + self.DQ
+        elif constituent == 'J1':
+            return self.DT + self.DS + self.DH - self.DP - 90.0 - self.DNU
+        elif constituent == 'Mm':
             return self.DS - self.DP
-        elif constituent == "Ssa":
-            return 2. * self.DH
-        elif constituent == "Sa":
+        elif constituent == 'Ssa':
+            return 2.0 * self.DH
+        elif constituent == 'Sa':
             return self.DH
-        elif constituent == "Msf":
-            return 2. * (self.DS - self.DH)
-        elif constituent == "Mf":
-            return 2. * self.DS - 2. * self.DXI
-        elif constituent == "RHO":
-            return self.DT + 3. * (self.DH - self.DS) - self.DP + 90. + 2. \
-                   * self.DXI - self.DNU
-        elif constituent == "Q1":
-            return self.DT - 3. * self.DS + self.DH + self.DP + 90. + 2. * self.DXI - self.DNU
-        elif constituent == "T2":
-            return 2. * self.DT - self.DH + self.DP1
-        elif constituent == "R2":
-            return 2. * self.DT + self.DH - self.DP1 + 180.
-        elif constituent == "2Q1":
-            return self.DT - 4. * self.DS + self.DH + 2. * self.DP + 90. + 2. * self.DXI \
-                   - self.DNU
-        elif constituent == "P1":
-            return self.DT - self.DH + 90.
-        elif constituent == "2SM2":
-            return 2. * (self.DT + self.DS - self.DH) + 2. * (
-                    self.DNU - self.DXI)
-        elif constituent == "M3":
-            return 3. * (self.DT - self.DS + self.DH) + 3. * (
-                    self.DXI - self.DNU)
-        elif constituent == "L2":
-            return 2. * (self.DT + self.DH) - self.DS - self.DP + 180. + 2. \
-                   * (self.DXI - self.DNU) - self.DR
-        elif constituent == "2MK3":
-            return 3. * (self.DT + self.DH) - 4. * self.DS + 90. + 4. * (
-                    self.DXI - self.DNU) \
-                   + self.DNUP
-        elif constituent == "K2":
-            return 2. * (self.DT + self.DH) - 2. * self.DNUP2
-        elif constituent == "M8":
-            return 8. * (self.DT - self.DS + self.DH) + 8. * (
-                    self.DXI - self.DNU)
-        elif constituent == "MS4":
-            return 2. * (2. * self.DT - self.DS + self.DH) + 2. * (
-                    self.DXI - self.DNU)
+        elif constituent == 'Msf':
+            return 2.0 * (self.DS - self.DH)
+        elif constituent == 'Mf':
+            return 2.0 * self.DS - 2.0 * self.DXI
+        elif constituent == 'RHO':
+            return (
+                    self.DT
+                    + 3.0 * (self.DH - self.DS)
+                    - self.DP
+                    + 90.0
+                    + 2.0 * self.DXI
+                    - self.DNU
+            )
+        elif constituent == 'Q1':
+            return (
+                    self.DT - 3.0 * self.DS + self.DH + self.DP + 90.0 + 2.0 * self.DXI - self.DNU
+            )
+        elif constituent == 'T2':
+            return 2.0 * self.DT - self.DH + self.DP1
+        elif constituent == 'R2':
+            return 2.0 * self.DT + self.DH - self.DP1 + 180.0
+        elif constituent == '2Q1':
+            return (
+                    self.DT
+                    - 4.0 * self.DS
+                    + self.DH
+                    + 2.0 * self.DP
+                    + 90.0
+                    + 2.0 * self.DXI
+                    - self.DNU
+            )
+        elif constituent == 'P1':
+            return self.DT - self.DH + 90.0
+        elif constituent == '2SM2':
+            return 2.0 * (self.DT + self.DS - self.DH) + 2.0 * (
+                        self.DNU - self.DXI)
+        elif constituent == 'M3':
+            return 3.0 * (self.DT - self.DS + self.DH) + 3.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'L2':
+            return (
+                    2.0 * (self.DT + self.DH)
+                    - self.DS
+                    - self.DP
+                    + 180.0
+                    + 2.0 * (self.DXI - self.DNU)
+                    - self.DR
+            )
+        elif constituent == '2MK3':
+            return (
+                    3.0 * (self.DT + self.DH)
+                    - 4.0 * self.DS
+                    + 90.0
+                    + 4.0 * (self.DXI - self.DNU)
+                    + self.DNUP
+            )
+        elif constituent == 'K2':
+            return 2.0 * (self.DT + self.DH) - 2.0 * self.DNUP2
+        elif constituent == 'M8':
+            return 8.0 * (self.DT - self.DS + self.DH) + 8.0 * (
+                        self.DXI - self.DNU)
+        elif constituent == 'MS4':
+            return 2.0 * (2.0 * self.DT - self.DS + self.DH) + 2.0 * (
+                        self.DXI - self.DNU)
         else:
             msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
 
     def get_lunar_node(self):
-        return 259.1560564 \
-               - 19.328185764 * self.DYR \
-               - .0529539336 * self.DDAY \
-               - .0022064139 * self.hour_middle
+        return (
+                259.1560564
+                - 19.328185764 * self.DYR
+                - 0.0529539336 * self.DDAY
+                - 0.0022064139 * self.hour_middle
+        )
 
     def get_lunar_perigee(self):
-        return 334.3837214 \
-               + 40.66246584 * self.DYR \
-               + .111404016 * self.DDAY \
-               + .004641834 * self.hour_middle
+        return (
+                334.3837214
+                + 40.66246584 * self.DYR
+                + 0.111404016 * self.DDAY
+                + 0.004641834 * self.hour_middle
+        )
 
     def get_lunar_mean_longitude(self):
-        return 277.0256206 \
-               + 129.38482032 * self.DYR \
-               + 13.176396768 * self.DDAY \
-               + .549016532 * self.forcing_start_date.hour
+        return (
+                277.0256206
+                + 129.38482032 * self.DYR
+                + 13.176396768 * self.DDAY
+                + 0.549016532 * self.forcing_start_date.hour
+        )
 
     def get_solar_perigee(self):
-        return 281.2208569 \
-               + .01717836 * self.DYR \
-               + .000047064 * self.DDAY \
-               + .000001961 * self.start_date.hour
+        return (
+                281.2208569
+                + 0.01717836 * self.DYR
+                + 0.000047064 * self.DDAY
+                + 0.000001961 * self.start_date.hour
+        )
 
     def get_solar_mean_longitude(self):
-        return 280.1895014 \
-               - .238724988 * self.DYR \
-               + .9856473288 * self.DDAY \
-               + .0410686387 * self.start_date.hour
+        return (
+                280.1895014
+                - 0.238724988 * self.DYR
+                + 0.9856473288 * self.DDAY
+                + 0.0410686387 * self.start_date.hour
+        )
 
     @property
     def EQ73(self):
         """ """
-        return (2. / 3. - np.sin(self.I) ** 2) / .5021
+        return (2.0 / 3.0 - np.sin(self.I) ** 2) / 0.5021
 
     @property
     def EQ74(self):
         """ """
-        return np.sin(self.I) ** 2 / .1578
+        return np.sin(self.I) ** 2 / 0.1578
 
     @property
     def EQ75(self):
         """ """
-        return np.sin(self.I) * np.cos(self.I / 2.) ** 2 / .37988
+        return np.sin(self.I) * np.cos(self.I / 2.0) ** 2 / 0.37988
 
     @property
     def EQ76(self):
         """ """
-        return np.sin(2. * self.I) / .7214
+        return np.sin(2.0 * self.I) / 0.7214
 
     @property
     def EQ77(self):
         """ """
-        return np.sin(self.I) * np.sin(self.I / 2.) ** 2 / .0164
+        return np.sin(self.I) * np.sin(self.I / 2.0) ** 2 / 0.0164
 
     @property
     def EQ78(self):
         """ """
-        return (np.cos(self.I / 2) ** 4) / .91544
+        return (np.cos(self.I / 2) ** 4) / 0.91544
 
     @property
     def EQ149(self):
         """ """
-        return np.cos(self.I / 2.) ** 6 / .8758
+        return np.cos(self.I / 2.0) ** 6 / 0.8758
 
     @property
     def EQ197(self):
         """ """
-        return np.sqrt(2.310 + 1.435 * np.cos(2. * (self.P - self.XI)))
+        return np.sqrt(2.310 + 1.435 * np.cos(2.0 * (self.P - self.XI)))
 
     @property
     def EQ207(self):
@@ -382,9 +438,9 @@ class Tides(bctypes.EtaBc):
     def EQ213(self):
         """ """
         return np.sqrt(
-                1.
-                - 12. * np.tan(self.I / 2.) ** 2 * np.cos(2. * self.P)
-                + 36. * np.tan(self.I / 2.) ** 4
+                1.0
+                - 12.0 * np.tan(self.I / 2.0) ** 2 * np.cos(2.0 * self.P)
+                + 36.0 * np.tan(self.I / 2.0) ** 4
         )
 
     @property
@@ -395,17 +451,17 @@ class Tides(bctypes.EtaBc):
     @property
     def EQ227(self):
         return np.sqrt(
-                .8965 * np.sin(2. * self.I) ** 2
-                + .6001 * np.sin(2. * self.I) * np.cos(self.NU)
-                + .1006
+                0.8965 * np.sin(2.0 * self.I) ** 2
+                + 0.6001 * np.sin(2.0 * self.I) * np.cos(self.NU)
+                + 0.1006
         )
 
     @property
     def EQ235(self) -> float:
-        return .001 + np.sqrt(
+        return 0.001 + np.sqrt(
                 19.0444 * np.sin(self.I) ** 4
-                + 2.7702 * np.sin(self.I) ** 2 * np.cos(2. * self.NU)
-                + .0981
+                + 2.7702 * np.sin(self.I) ** 2 * np.cos(2.0 * self.NU)
+                + 0.0981
         )
 
     @property
@@ -413,7 +469,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__start_date
         except AttributeError:
-            msg = "Must set start_date attribute."
+            msg = 'Must set start_date attribute.'
             raise AttributeError(msg)
 
     @property
@@ -421,7 +477,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__end_date
         except AttributeError:
-            msg = "Must set end_date attribute."
+            msg = 'Must set end_date attribute.'
             raise AttributeError(msg)
 
     @property
@@ -433,7 +489,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__spinup_time
         except AttributeError:
-            return timedelta(0.)
+            return timedelta(0.0)
 
     @property
     def active_constituents(self) -> [str]:
@@ -447,15 +503,7 @@ class Tides(bctypes.EtaBc):
     def constituents(self) -> [str]:
         constituents = self.major_constituents
         if self.tidal_source == TidalSource.TPXO:
-            constituents.extend([
-                'Mm',
-                'Mf',
-                'M4',
-                'MN4',
-                'MS4',
-                '2N2',
-                'S1'
-            ])
+            constituents.extend(['Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1'])
         return constituents
 
     @property
@@ -497,7 +545,7 @@ class Tides(bctypes.EtaBc):
             'Ssa': 0.0000003982128677,
             'Sa': 0.0000001991061914,
             'Msf': 0.0000049252018242,
-            'Mf': 0.0000053234146919
+            'Mf': 0.0000053234146919,
         }
 
     @property
@@ -510,7 +558,7 @@ class Tides(bctypes.EtaBc):
             'K1': 0.141565,
             'O1': 0.100514,
             'P1': 0.046843,
-            'Q1': 0.019256
+            'Q1': 0.019256,
         }
 
     @property
@@ -523,8 +571,7 @@ class Tides(bctypes.EtaBc):
             'K1': 1,
             'O1': 1,
             'P1': 1,
-            'Q1': 1
-        }
+            'Q1': 1}
 
     @property
     def earth_tidal_potentials(self) -> {str: float}:
@@ -536,18 +583,19 @@ class Tides(bctypes.EtaBc):
             'K1': 0.736,
             'O1': 0.695,
             'P1': 0.706,
-            'Q1': 0.695
+            'Q1': 0.695,
         }
 
     @property
     def hour_middle(self):
         return self.forcing_start_date.hour + (
-                (self.end_date - self.forcing_start_date).total_seconds()
-                / 3600 / 2)
+                (
+                            self.end_date - self.forcing_start_date).total_seconds() / 3600 / 2
+        )
 
     @property
     def I(self):  # noqa:E743
-        return np.arccos(.9136949 - .0356926 * np.cos(self.N))
+        return np.arccos(0.9136949 - 0.0356926 * np.cos(self.N))
 
     @property
     def N(self):
@@ -559,20 +607,23 @@ class Tides(bctypes.EtaBc):
 
     @property
     def DYR(self):
-        return self.forcing_start_date.year - 1900.
+        return self.forcing_start_date.year - 1900.0
 
     @property
     def DDAY(self):
-        return (self.forcing_start_date.timetuple().tm_yday
-                + int((self.forcing_start_date.year - 1901.) / 4.) - 1)
+        return (
+                self.forcing_start_date.timetuple().tm_yday
+                + int((self.forcing_start_date.year - 1901.0) / 4.0)
+                - 1
+        )
 
     @property
     def NU(self):
-        return np.arcsin(.0897056 * np.sin(self.N) / np.sin(self.I))
+        return np.arcsin(0.0897056 * np.sin(self.N) / np.sin(self.I))
 
     @property
     def DT(self):
-        return (180. + self.start_date.hour * (360. / 24))
+        return 180.0 + self.start_date.hour * (360.0 / 24)
 
     @property
     def DS(self):
@@ -600,7 +651,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def XI(self):
-        return self.N - 2. * np.arctan(.64412 * np.tan(self.N / 2)) - self.NU
+        return self.N - 2.0 * np.arctan(0.64412 * np.tan(self.N / 2)) - self.NU
 
     @property
     def DXI(self):
@@ -609,7 +660,7 @@ class Tides(bctypes.EtaBc):
     @property
     def NUP(self):
         return np.arctan(np.sin(self.NU) / (
-                np.cos(self.NU) + .334766 / np.sin(2. * self.I)))
+                    np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I)))
 
     @property
     def DNUP(self):
@@ -625,9 +676,11 @@ class Tides(bctypes.EtaBc):
 
     @property
     def R(self):
-        return (np.arctan(np.sin(2. * self.PC)
-                          / ((1. / 6.) * (1. / np.tan(.5 * self.I)) ** 2
-                             - np.cos(2. * self.PC))))
+        return np.arctan(
+                np.sin(2.0 * self.PC)
+                / ((1.0 / 6.0) * (1.0 / np.tan(0.5 * self.I)) ** 2 - np.cos(
+                    2.0 * self.PC))
+        )
 
     @property
     def DR(self):
@@ -635,9 +688,14 @@ class Tides(bctypes.EtaBc):
 
     @property
     def NUP2(self):
-        return (np.arctan(np.sin(2. * self.NU) / (np.cos(2. * self.NU)
-                                                  + .0726184 / np.sin(
-                        self.I) ** 2)) / 2.)
+        return (
+                np.arctan(
+                        np.sin(2.0 * self.NU)
+                        / (np.cos(2.0 * self.NU) + 0.0726184 / np.sin(
+                            self.I) ** 2)
+                )
+                / 2.0
+        )
 
     @property
     def DNUP2(self):
@@ -645,8 +703,10 @@ class Tides(bctypes.EtaBc):
 
     @property
     def Q(self):
-        return np.arctan2((5. * np.cos(self.I) - 1.) * np.sin(self.PC),
-                          (7. * np.cos(self.I) + 1.) * np.cos(self.PC))
+        return np.arctan2(
+                (5.0 * np.cos(self.I) - 1.0) * np.sin(self.PC),
+                (7.0 * np.cos(self.I) + 1.0) * np.cos(self.PC),
+        )
 
     @property
     def DQ(self):
@@ -663,7 +723,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__cutoff_depth
         except AttributeError:
-            return 40.
+            return 40.0
 
     @property
     def nbfr(self):
@@ -672,12 +732,12 @@ class Tides(bctypes.EtaBc):
     @start_date.setter
     def start_date(self, start_date):
         if start_date is None:
-            del (self.start_date)
+            del self.start_date
             return
-        msg = f"start_date must be an instance of type {datetime}."
+        msg = f'start_date must be an instance of type {datetime}.'
         assert isinstance(start_date, datetime), msg
         try:
-            msg = "start_date must be smaller than end_date."
+            msg = 'start_date must be smaller than end_date.'
             assert start_date < self.end_date, msg
         except AttributeError:
             pass
@@ -686,13 +746,13 @@ class Tides(bctypes.EtaBc):
     @end_date.setter
     def end_date(self, end_date):
         if end_date is None:
-            del (self.end_date)
+            del self.end_date
             return
-        msg = f"end_date must be an instance of type {datetime}."
+        msg = f'end_date must be an instance of type {datetime}.'
         assert isinstance(end_date, datetime), msg
         try:
-            msg = f"end_date ({end_date}) must be larger than "
-            msg += f"start_date ({self.start_date})."
+            msg = f'end_date ({end_date}) must be larger than '
+            msg += f'start_date ({self.start_date}).'
             assert end_date > self.start_date, msg
         except AttributeError:
             pass
@@ -701,9 +761,9 @@ class Tides(bctypes.EtaBc):
     @spinup_time.setter
     def spinup_time(self, spinup_time):
         if spinup_time is None:
-            del (self.spinup_time)
+            del self.spinup_time
             return
-        msg = f"spinup_time must be of and instance of type {timedelta}."
+        msg = f'spinup_time must be of and instance of type {timedelta}.'
         assert isinstance(spinup_time, timedelta), msg
         self.__spinup_time = np.abs(spinup_time)
 
@@ -715,21 +775,21 @@ class Tides(bctypes.EtaBc):
     @start_date.deleter
     def start_date(self):
         try:
-            del (self.__start_date)
+            del self.__start_date
         except AttributeError:
             pass
 
     @end_date.deleter
     def end_date(self):
         try:
-            del (self.__end_date)
+            del self.__end_date
         except AttributeError:
             pass
 
     @spinup_time.deleter
     def spinup_time(self):
         try:
-            del (self.__spinup_time)
+            del self.__spinup_time
         except AttributeError:
             pass
 

@@ -6,9 +6,16 @@ import requests
 
 
 class RESTWrapper:
-
-    def __init__(self, product, start_date, end_date, format='json',
-                 units='metric', time_zone='gmt', datum='msl'):
+    def __init__(
+            self,
+            product,
+            start_date,
+            end_date,
+            format='json',
+            units='metric',
+            time_zone='gmt',
+            datum='msl',
+    ):
         self._product = product
 
         self._init_params()
@@ -25,14 +32,14 @@ class RESTWrapper:
 
     def _init_params(self):
         self._params = {
-            "format": "json",
-            "units": "metric",
-            "time_zone": "gmt",
-            "application": "AdcircPy",
-            "datum": "msl",
-            "product": "water_level"
+            'format': 'json',
+            'units': 'metric',
+            'time_zone': 'gmt',
+            'application': 'AdcircPy',
+            'datum': 'msl',
+            'product': 'water_level',
         }
-        self._url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
+        self._url = 'https://tidesandcurrents.noaa.gov/api/datagetter?'
         self._params['begin_date'] = self.start_date.strftime('%Y%m%d %H:%M')
         self._params['end_date'] = self.end_date.strftime('%Y%m%d %H:%M')
 
@@ -42,7 +49,7 @@ class RESTWrapper:
             response = requests.get(self._url, params=self._params)
             response.raise_for_status()
             data = json.loads(response.text)
-            if "data" in data.keys():
+            if 'data' in data.keys():
                 time = list()
                 values = list()
                 s = list()
@@ -61,9 +68,9 @@ class RESTWrapper:
                         _s = numpy.nan
                     s.append(_s)
                 self[station] = {
-                    "time": numpy.asarray(time),
-                    "zeta": numpy.ma.masked_invalid(values),
-                    "s": numpy.ma.masked_invalid(s),
-                    "metadata": metadata,
-                    "datum": self._params["datum"]
+                    'time': numpy.asarray(time),
+                    'zeta': numpy.ma.masked_invalid(values),
+                    's': numpy.ma.masked_invalid(s),
+                    'metadata': metadata,
+                    'datum': self._params['datum'],
                 }

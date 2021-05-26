@@ -8,7 +8,6 @@ from adcircpy.outputs.maxele import Maxele
 class OutputCollection(
     # Mapping
 ):
-
     def __init__(
             self,
             fort61=None,

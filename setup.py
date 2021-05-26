@@ -12,8 +12,7 @@ try:
         import subprocess
 
         subprocess.check_call(
-                [sys.executable, '-m', 'pip', 'install', 'dunamai']
-        )
+                [sys.executable, '-m', 'pip', 'install', 'dunamai'])
         from dunamai import Version
 
     version = Version.from_any_vcs().serialize()
@@ -24,7 +23,8 @@ except RuntimeError as error:
 logging.info(f'using version {version}')
 
 metadata = setuptools.config.read_configuration(
-        pathlib.Path(__file__).parent.absolute() / 'setup.cfg')['metadata']
+        pathlib.Path(__file__).parent.absolute() / 'setup.cfg'
+)['metadata']
 
 setuptools.setup(
         name=metadata['name'],
@@ -71,6 +71,7 @@ setuptools.setup(
                 'dunamai',
                 'flake8',
                 'nose',
+                'oitnb',
                 'rednose',
             ]
         },
@@ -83,8 +84,7 @@ setuptools.setup(
                 'plot_maxele=adcircpy.cmd.plot_maxele:main',
                 'plot_fort61=adcircpy.cmd.plot_fort61:main',
                 'fort63=adcircpy.cmd.fort63:main',
-                'tide_gen=adcircpy.cmd.tide_gen:main'
-
+                'tide_gen=adcircpy.cmd.tide_gen:main',
             ]
         },
         test_suite='nose.collector',

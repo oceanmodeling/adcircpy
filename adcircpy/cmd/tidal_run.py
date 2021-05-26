@@ -12,8 +12,8 @@ class TidalRunCommand(AdcircCommand):
 
     def __init__(self, args):
         super().__init__(args)
-        self.start_date = datetime.strptime(
-            self.args.start_date, "%Y-%m-%dT%H:%M:%S")
+        self.start_date = datetime.strptime(self.args.start_date,
+                                            '%Y-%m-%dT%H:%M:%S')
         self.end_date = self.start_date + timedelta(days=self.args.run_days)
 
 
@@ -22,13 +22,14 @@ def main():
     if len(args.constituents) == 0:
         args.constituents = ['all']
     logging.basicConfig(
-        level={
-            'warning': logging.WARNING,
-            'info': logging.INFO,
-            'debug': logging.DEBUG,
-        }[args.log_level],
-        format='[%(asctime)s] %(name)s %(levelname)s: %(message)s',
-        force=True,
+            level={
+                'warning': logging.WARNING,
+                'info': logging.INFO,
+                'debug': logging.DEBUG, }[
+                args.log_level
+            ],
+            format='[%(asctime)s] %(name)s %(levelname)s: %(message)s',
+            force=True,
     )
     logging.Formatter.converter = lambda *args: datetime.now(
         tz=timezone('UTC')).timetuple()

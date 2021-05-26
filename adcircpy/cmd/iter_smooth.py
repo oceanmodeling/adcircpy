@@ -31,19 +31,19 @@ def main():
     logs = glob(str(args.base_dir / '**' / args.log_filename), recursive=True)
     base_dir = args.base_dir
     if len(logs) == 0:
-        msg = "No log file found!"
+        msg = 'No log file found!'
         raise Exception(msg)
     elif len(logs) == 1:
         log_file = base_dir / args.log_filename
     else:
-        msg = "More than 1 logfile"
+        msg = 'More than 1 logfile'
         raise NotImplementedError(msg)
 
     elmax, speedmax, indexes = diagnose.parse(log_file)
 
     if len(indexes) == 0:
         msg = 'Congratulations, your mesh did not blowup with ADCIRC. '
-        msg += ' That\'s a feat.'
+        msg += " That's a feat."
         print(msg)
         exit()
     mesh = AdcircMesh.open(base_dir / 'fort.14')

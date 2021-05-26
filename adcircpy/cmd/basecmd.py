@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class AdcircCommand:
-
     def __init__(self, args):
         self.args = args
 
@@ -19,10 +18,8 @@ class AdcircCommand:
         # write and exit if generate only
         if self.args.generate_only:
             logger.info('Generate only is active, writting to disk.')
-            self.driver.write(
-                    self.args.output_directory,
-                    overwrite=self.args.overwrite
-            )
+            self.driver.write(self.args.output_directory,
+                              overwrite=self.args.overwrite)
             return
 
         outputs = self.driver.run(
@@ -41,7 +38,7 @@ class AdcircCommand:
                 self.start_date,
                 self.end_date,
                 self.spinup_time,
-                server_config=self.server_config
+                server_config=self.server_config,
         )
         self._enable_outputs(driver)
         if self.args.timestep:
@@ -121,13 +118,13 @@ class AdcircCommand:
                 _all = (*_major, 'Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1')
             elif self.args.tidal_database == 'hamtide':
                 _all = _major
-            if ('all' in self.args.constituents
-                    and len(self.args.constituents) > 1):
+            if 'all' in self.args.constituents and len(
+                    self.args.constituents) > 1:
                 msg = 'When using all, must only pass one'
                 raise IOError(msg)
 
-            elif ('major' in self.args.constituents
-                  and len(self.args.constituents) > 1):
+            elif 'major' in self.args.constituents and len(
+                    self.args.constituents) > 1:
                 msg = 'When using major, must only pass one'
                 raise IOError(msg)
             if 'all' in self.args.constituents:
@@ -143,9 +140,7 @@ class AdcircCommand:
     @lru_cache(maxsize=None)
     def server_config(self):
         if self.args.hostname:
-            if (not self.args.use_slurm or
-                    not self.args.use_torque or
-                    not self.args.use_pbs):
+            if not self.args.use_slurm or not self.args.use_torque or not self.args.use_pbs:
                 return server.ServerConfig(
                         hostname=self.args.hostname,
                         nprocs=self.args.nproc,
@@ -157,25 +152,25 @@ class AdcircCommand:
 
         if self.args.use_slurm:
             kwargs = {
-                "account": self.args.account,
-                "ntasks": self.args.slurm_ntasks,
-                "partition": self.args.partition,
-                "walltime": timedelta(hours=self.args.walltime),
-                "mail_type": self.args.mail_type,
-                "mail_user": self.args.mail_user,
-                "log_filename": self.args.log_filename,
-                "modules": self.args.modules,
-                "path_prefix": self.args.binaries_prefix,
-                "extra_commands": self.args.extra_commands,
-                "launcher": self.args.slurm_launcher,
-                "nodes": self.args.slurm_nodes
+                'account': self.args.account,
+                'ntasks': self.args.slurm_ntasks,
+                'partition': self.args.partition,
+                'walltime': timedelta(hours=self.args.walltime),
+                'mail_type': self.args.mail_type,
+                'mail_user': self.args.mail_user,
+                'log_filename': self.args.log_filename,
+                'modules': self.args.modules,
+                'path_prefix': self.args.binaries_prefix,
+                'extra_commands': self.args.extra_commands,
+                'launcher': self.args.slurm_launcher,
+                'nodes': self.args.slurm_nodes,
             }
             if self.args.slurm_filename is not None:
-                kwargs.update({"filename": self.args.slurm_ntasks})
+                kwargs.update({'filename': self.args.slurm_ntasks})
             if self.args.slurm_rundir is not None:
-                kwargs.update({"run_directory": self.args.slurm_rundir})
+                kwargs.update({'run_directory': self.args.slurm_rundir})
             if self.args.run_name is not None:
-                kwargs.update({"run_name": self.args.run_name})
+                kwargs.update({'run_name': self.args.run_name})
 
             return server.SlurmConfig(**kwargs)
 
@@ -190,25 +185,23 @@ class AdcircCommand:
         self._init_output_stations(driver)
 
     def _enable_output(self, driver, name, _type):
-        fs = getattr(self.args, f"{name}_{_type}_sampling_rate")
+        fs = getattr(self.args, f'{name}_{_type}_sampling_rate')
         if fs is not None:
             fs = timedelta(minutes=fs)
-        fss = getattr(self.args, f"{name}_{_type}_sampling_rate_spinup")
+        fss = getattr(self.args, f'{name}_{_type}_sampling_rate_spinup')
         if fss is not None:
             fss = timedelta(minutes=fss)
-        ha = getattr(self.args, f"{name}_{_type}_harmonic_analysis")
+        ha = getattr(self.args, f'{name}_{_type}_harmonic_analysis')
         # has = getattr(self.args, f"{name}_{_type}_harmonic_analysis_spinup")
-        getattr(driver, f"set_{name}_{_type}_output")(
-                sampling_rate=fs,
-                harmonic_analysis=ha,
-                spinup=fss,
+        getattr(driver, f'set_{name}_{_type}_output')(
+                sampling_rate=fs, harmonic_analysis=ha, spinup=fss,
                 netcdf=self.args.netcdf,
         )
 
     def _init_output_stations(self, driver):
         if self.args.stations_file is not None:
             driver.import_stations(
-                    pathlib.Path(self.args.stations_file).resolve())
+                pathlib.Path(self.args.stations_file).resolve())
             self._enable_output(driver, 'elevation', 'stations')
             self._enable_output(driver, 'velocity', 'stations')
             self._enable_output(driver, 'meteorological', 'stations')
@@ -217,10 +210,7 @@ class AdcircCommand:
     @property
     @lru_cache(maxsize=None)
     def _mesh(self):
-        mesh = AdcircMesh.open(
-                self.args.mesh,
-                self.args.crs
-        )
+        mesh = AdcircMesh.open(self.args.mesh, self.args.crs)
 
         if self.args.generate_boundaries:
             mesh.generate_boundaries(
@@ -232,8 +222,7 @@ class AdcircCommand:
         # set nodal attributes
         if self.args.fort13 is not None:
             mesh.import_nodal_attributes(
-                    pathlib.Path(self.args.fort13).resolve()
-            )
+                pathlib.Path(self.args.fort13).resolve())
 
         if 'all' in self.args.coldstart_attributes:
             for attr in mesh.get_nodal_attribute_names():

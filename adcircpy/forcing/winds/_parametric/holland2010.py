@@ -11,9 +11,9 @@ def holland_B(hurdat, coriolis=True):
     air_density = 1.15
 
     def with_coriolis(Vmax, Rmax, Pn, Pc, eye_lat):
-        f = 2. * 7.2921e-5 * np.sin(np.radians(np.abs(eye_lat)))
+        f = 2.0 * 7.2921e-5 * np.sin(np.radians(np.abs(eye_lat)))
         return (Vmax ** 2 + Vmax * Rmax * f * air_density * np.exp(1)) / (
-                Pn - Pc)
+                    Pn - Pc)
 
     def no_coriolis(Vmax, Pn, Pc):
         return (Vmax ** 2 * air_density * np.exp(1)) / (Pn - Pc)
@@ -27,16 +27,14 @@ def holland_B(hurdat, coriolis=True):
             Pn = Pc + 1.0
         if coriolis:
             return with_coriolis(
-                data['max_sustained_wind_speed'],
-                data['radius_of_maximum_winds'],
-                Pn,
-                Pc,
-                data['eye']['lat'])
+                    data['max_sustained_wind_speed'],
+                    data['radius_of_maximum_winds'],
+                    Pn,
+                    Pc,
+                    data['eye']['lat'],
+            )
         else:
-            return no_coriolis(
-                data['max_sustained_wind_speed'],
-                Pn,
-                Pc)
+            return no_coriolis(data['max_sustained_wind_speed'], Pn, Pc)
 
 
 def main():
@@ -56,7 +54,7 @@ def main():
 
         def holland2010(r, B, x):
             return Vmax * (
-                    ((Rmax / r) ** B) * np.exp(1 - (Rmax / r) ** B)) ** x
+                        ((Rmax / r) ** B) * np.exp(1 - (Rmax / r) ** B)) ** x
 
         def V(B, x):
             def v(r):
@@ -80,14 +78,14 @@ def main():
             p0 = [B, x]
             # do curve fitting
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+                warnings.simplefilter('ignore')
                 popt, pcov = optimize.curve_fit(
-                    holland2010,
-                    xdata,
-                    ydata,
-                    p0=p0,
-                    # bounds=bounds,
-                    method='dogbox'
+                        holland2010,
+                        xdata,
+                        ydata,
+                        p0=p0,
+                        # bounds=bounds,
+                        method='dogbox',
                 )
                 print(popt)
             v = V(*popt)
@@ -110,6 +108,7 @@ def init():
     if __name__ == '__main__':
         try:
             import colored_traceback
+
             colored_traceback.add_hook(always=True)
         except ModuleNotFoundError:
             pass

@@ -370,8 +370,8 @@ class AdcircRun(Fort15):
         # write fort.13 (optional)
         if fort13:
             if len(self.mesh.get_nodal_attribute_names()) > 0:
-                self.mesh.nodal_attributes.write(
-                    output_directory / fort13, overwrite)
+                self.mesh.nodal_attributes.write(output_directory / fort13,
+                                                 overwrite)
 
         # write fort.15 -> this part has two different cases that depend
         # on the input configuration given by the user.
@@ -761,16 +761,20 @@ class AdcircRun(Fort15):
         self._validate_argument(spinup_start, datetime, 'spinup_start')
         self._validate_argument(spinup_end, datetime, 'spinup_end')
         self._validate_argument(netcdf, bool, 'netcdf', include_none=False)
-        self._validate_argument(harmonic_analysis, bool, 'harmonic_analysis',
-                                include_none=False)
+        self._validate_argument(
+                harmonic_analysis, bool, 'harmonic_analysis',
+                include_none=False
+        )
 
     def _write_bash_driver(self, destination):
         source = pathlib.Path(__file__).parent / 'padcirc_driver.sh'
         shutil.copyfile(source, destination)
 
     @staticmethod
-    def _validate_argument(value: Any, types: [type], name: str = None,
-                           include_none: bool = True):
+    def _validate_argument(
+            value: Any, types: [type], name: str = None,
+            include_none: bool = True
+    ):
         if isinstance(types, type):
             types = [types]
         if include_none:
@@ -818,12 +822,12 @@ class AdcircRun(Fort15):
         }
         for output in s:
             blowup['timestep'].append(
-                    int(output.split('TIME STEP =')[1].split()[0]))
+                int(output.split('TIME STEP =')[1].split()[0]))
             blowup['time'].append(float(output.split('TIME =')[1].split()[0]))
             blowup['maxele'].append(
-                    float(output.split('ELMAX =')[1].split()[0]))
+                float(output.split('ELMAX =')[1].split()[0]))
             blowup['maxvel'].append(
-                    float(output.split('SPEEDMAX =')[1].split()[0]))
+                float(output.split('SPEEDMAX =')[1].split()[0]))
             nodes = output.split('AT NODE')
             blowup['maxele_node'].append(int(nodes[1].split()[0]))
             blowup['maxvel_node'].append(int(nodes[2].split()[0]))

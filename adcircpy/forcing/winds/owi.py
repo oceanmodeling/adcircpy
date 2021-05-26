@@ -24,7 +24,7 @@ class OwiForcing(WindForcing):
             'fort.221': self.fort221,
             'fort.222': self.fort222,
             'fort.223': self.fort223,
-            'fort.224': self.fort224
+            'fort.224': self.fort224,
         }
         for output_filename, output_text in output_filenames.items():
             output_filename = directory / output_filename
@@ -58,8 +58,9 @@ class OwiForcing(WindForcing):
 
     def __set_datetime(self, value: np.ndarray):
         if self.datetime is not None:
-            assert np.array_equal(self.datetime, value), \
-                'Dates of input files provided do not match.'
+            assert np.array_equal(
+                    self.datetime, value
+            ), 'Dates of input files provided do not match.'
         else:
             self.__datetime = np.asarray(value)
 
@@ -158,18 +159,19 @@ class OwiForcing(WindForcing):
             OWI['SWLat'] = float(line[45:51])
             OWI['SWLon'] = float(line[57:65])
             OWI['datetime'].append(
-                    datetime.strptime(line[68:80], '%Y%m%d%H%M'))
+                datetime.strptime(line[68:80], '%Y%m%d%H%M'))
             values = list()
             for line in f:
                 if 'iLat' in line:
                     OWI['datetime'].append(
-                            datetime.strptime(line[68:80], '%Y%m%d%H%M'))
+                        datetime.strptime(line[68:80], '%Y%m%d%H%M'))
                     OWI['values'].append(
                             np.asarray(values).reshape(
-                                    (OWI['iLon'], OWI['iLat'])))
+                                    (OWI['iLon'], OWI['iLat']))
+                    )
                     values = list()
                 else:
-                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
+                    for n in [line[i: i + 10] for i in range(0, 80, 10)]:
                         values.append(float(n))
         return OWI
 
@@ -190,7 +192,7 @@ class OwiForcing(WindForcing):
             OWI['SWLat'] = float(line[45:51])
             OWI['SWLon'] = float(line[57:65])
             OWI['datetime'].append(
-                    datetime.strptime(line[68:80], '%Y%m%d%H%M'))
+                datetime.strptime(line[68:80], '%Y%m%d%H%M'))
             values_u = list()
             values_v = list()
             shape = (OWI['iLon'], OWI['iLat'])
@@ -198,15 +200,15 @@ class OwiForcing(WindForcing):
             for line in f:
                 if 'iLat' in line:
                     OWI['datetime'].append(
-                            datetime.strptime(line[68:80], '%Y%m%d%H%M'))
+                        datetime.strptime(line[68:80], '%Y%m%d%H%M'))
                     OWI['values']['u'].append(
-                            np.asarray(values_u).reshape(shape))
+                        np.asarray(values_u).reshape(shape))
                     OWI['values']['v'].append(
-                            np.asarray(values_v).reshape(shape))
+                        np.asarray(values_v).reshape(shape))
                     values_u = list()
                     values_v = list()
                 else:
-                    for n in [line[i:i + 10] for i in range(0, 80, 10)]:
+                    for n in [line[i: i + 10] for i in range(0, 80, 10)]:
                         if len(values_u) != size:
                             values_u.append(float(n))
                         else:

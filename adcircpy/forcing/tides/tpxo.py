@@ -30,31 +30,28 @@ class TPXO(TidalDataset):
         if self.path is not None:
             self.dataset = Dataset(self.path)
         else:
-            raise FileNotFoundError('\n'.join([
-                f'No TPXO file found at "{self.path}".',
-                'New users will need to register and request a copy of '
-                f'the TPXO9 NetCDF file (specifically `{TPXO_FILENAME}`) '
-                'from the authors at https://www.tpxo.net.',
-                'Once you obtain `h_tpxo9.v1.nc`, you can follow one of the following options: ',
-                f'1) copy or symlink the file to "{self.path}"',
-                f'2) set the environment variable `{TPXO_ENVIRONMENT_VARIABLE}` to point to the file',
-            ]))
+            raise FileNotFoundError(
+                    '\n'.join(
+                            [
+                                f'No TPXO file found at "{self.path}".',
+                                'New users will need to register and request a copy of '
+                                f'the TPXO9 NetCDF file (specifically `{TPXO_FILENAME}`) '
+                                'from the authors at https://www.tpxo.net.',
+                                'Once you obtain `h_tpxo9.v1.nc`, you can follow one of the following options: ',
+                                f'1) copy or symlink the file to "{self.path}"',
+                                f'2) set the environment variable `{TPXO_ENVIRONMENT_VARIABLE}` to point to the file',
+                            ]
+                    )
+            )
 
-    def get_amplitude(
-            self,
-            constituent: str,
-            vertices: np.ndarray
-    ) -> np.ndarray:
+    def get_amplitude(self, constituent: str,
+                      vertices: np.ndarray) -> np.ndarray:
         if not isinstance(vertices, np.ndarray):
             vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
         return self._get_interpolation(self.ha, constituent, vertices)
 
-    def get_phase(
-            self,
-            constituent: str,
-            vertices: np.ndarray
-    ) -> np.ndarray:
+    def get_phase(self, constituent: str, vertices: np.ndarray) -> np.ndarray:
         if not isinstance(vertices, np.ndarray):
             vertices = np.asarray(vertices)
         self._assert_vertices(vertices)
@@ -80,12 +77,19 @@ class TPXO(TidalDataset):
     def constituents(self):
         if not hasattr(self, '_constituents'):
             self._constituents = [
-                c.capitalize() for c in self.dataset['con'][:].astype(
-                    '|S1').tostring().decode('utf-8').split()]
+                c.capitalize()
+                for c in self.dataset['con'][:]
+                    .astype('|S1')
+                    .tostring()
+                    .decode('utf-8')
+                    .split()
+            ]
         return self._constituents
 
-    def _get_interpolation(self, tpxo_array: np.ndarray, constituent: str,
-                           vertices: np.ndarray):
+    def _get_interpolation(
+            self, tpxo_array: np.ndarray, constituent: str,
+            vertices: np.ndarray
+    ):
         """
         `tpxo_index_key` is either `ha` or `hp` based on the keys used
         internally in the TPXO NetCDF file.
@@ -95,7 +99,7 @@ class TPXO(TidalDataset):
         constituents = list(map(lambda x: x.lower(), self.constituents))
         constituent = constituents.index(constituent.lower())
         array = tpxo_array[constituent, :, :].flatten()
-        _x = np.asarray([x + 360. for x in vertices[:, 0] if x < 0]).flatten()
+        _x = np.asarray([x + 360.0 for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()
         x, y = np.meshgrid(self.x, self.y, indexing='ij')
         x = x.flatten()
@@ -106,30 +110,21 @@ class TPXO(TidalDataset):
         # buffer the bbox by 2 difference units
         _idx = np.where(
                 np.logical_and(
-                        np.logical_and(
-                                x >= np.min(_x) - 2 * dx,
-                                x <= np.max(_x) + 2 * dx
-                        ),
-                        np.logical_and(
-                                y >= np.min(_y) - 2 * dy,
-                                y <= np.max(_y) + 2 * dy
-                        )
+                        np.logical_and(x >= np.min(_x) - 2 * dx,
+                                       x <= np.max(_x) + 2 * dx),
+                        np.logical_and(y >= np.min(_y) - 2 * dy,
+                                       y <= np.max(_y) + 2 * dy),
                 )
         )
 
         # "method" can be 'spline' or any string accepted by griddata()'s method kwarg.
         values = griddata(
-                (x[_idx], y[_idx]),
-                array[_idx],
-                (_x, _y),
-                method='linear',
+                (x[_idx], y[_idx]), array[_idx], (_x, _y), method='linear',
                 fill_value=np.nan,
         )
         nan_idxs = np.where(np.isnan(values))
         values[nan_idxs] = griddata(
-                (x[_idx], y[_idx]),
-                array[_idx],
-                (_x[nan_idxs], _y[nan_idxs]),
+                (x[_idx], y[_idx]), array[_idx], (_x[nan_idxs], _y[nan_idxs]),
                 method='nearest',
         )
         return values

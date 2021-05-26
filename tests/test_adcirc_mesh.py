@@ -4,25 +4,23 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-
 from adcircpy import AdcircMesh
 
 
 class AdcircMeshTestCase(unittest.TestCase):
-
     def setUp(self):
         self.nodes = {
-            '1': ((0., 0.), -5.),
-            '2': ((.5, 0.), -4.),
-            '3': ((1., 0.), -3.),
-            '4': ((1., 1.), -2.),
-            '5': ((0., 1.), -1.),
-            '6': ((.5, 1.5), 0.),
-            '7': ((.33, .33), 1.),
-            '8': ((.66, .33), 2.),
-            '9': ((.5, .66), 3.),
-            '10': ((-1., 1.), 4.),
-            '11': ((-1., 0.), 5.),
+            '1': ((0.0, 0.0), -5.0),
+            '2': ((0.5, 0.0), -4.0),
+            '3': ((1.0, 0.0), -3.0),
+            '4': ((1.0, 1.0), -2.0),
+            '5': ((0.0, 1.0), -1.0),
+            '6': ((0.5, 1.5), 0.0),
+            '7': ((0.33, 0.33), 1.0),
+            '8': ((0.66, 0.33), 2.0),
+            '9': ((0.5, 0.66), 3.0),
+            '10': ((-1.0, 1.0), 4.0),
+            '11': ((-1.0, 0.0), 5.0),
         }
         self.elements = {
             '1': ['5', '7', '9'],
@@ -34,48 +32,49 @@ class AdcircMeshTestCase(unittest.TestCase):
             '7': ['4', '6', '5'],
             '8': ['5', '10', '11', '1'],
             '9': ['9', '4', '5'],
-            '10': ['5', '1', '7']
+            '10': ['5', '1', '7'],
         }
 
         self.boundaries = dict()
 
         self.boundaries[None] = {  # "open" boundaries
             0: {'indexes': ['10', '11', '1', '2']},
-            1: {'indexes': ['2', '3', '4']}
+            1: {'indexes': ['2', '3', '4']},
         }
 
         self.boundaries[0] = {  # "land" boundaries
             0: {'indexes': ['4', '6']},
-            1: {'indexes': ['6', '5', '10']}
+            1: {'indexes': ['6', '5', '10']},
         }
 
-        self.boundaries[1] = {  # "interior" boundary
-            0: {'indexes': ['7', '8', '9', '7']}
-        }
+        self.boundaries[1] = {
+            0: {'indexes': ['7', '8', '9', '7']}}  # "interior" boundary
 
         self.grd = {
             'nodes': self.nodes,
             'elements': self.elements,
             'boundaries': self.boundaries,
-            'description': 'gr3_unittest'
+            'description': 'gr3_unittest',
         }
 
     def test_triangles_only(self):
         self.assertIsInstance(
-            AdcircMesh(
-                self.nodes,
-                {id: geom for geom in self.elements.values() if len(geom) == 3}
-            ),
-            AdcircMesh
+                AdcircMesh(
+                        self.nodes,
+                        {id: geom for geom in self.elements.values() if
+                         len(geom) == 3}
+                ),
+                AdcircMesh,
         )
 
     def test_quads_only(self):
         self.assertIsInstance(
-            AdcircMesh(
-                self.nodes,
-                {id: geom for geom in self.elements.values() if len(geom) == 4}
-            ),
-            AdcircMesh
+                AdcircMesh(
+                        self.nodes,
+                        {id: geom for geom in self.elements.values() if
+                         len(geom) == 4}
+                ),
+                AdcircMesh,
         )
 
     def test_hybrid(self):
@@ -96,22 +95,19 @@ class AdcircMeshTestCase(unittest.TestCase):
     def test_make_plot(self, mock):
         h = AdcircMesh(self.nodes, self.elements)
         h.make_plot(
-            show=True,
-            extent=[0, 1, 0, 1],
-            title='test',
-            cbar_label='elevation [m]',
-            vmax=0.
+                show=True, extent=[0, 1, 0, 1], title='test',
+                cbar_label='elevation [m]', vmax=0.0
         )
         self.assertIsInstance(h, AdcircMesh)
 
     @patch('matplotlib.pyplot.show')
     def test_make_plot_wet_only(self, mock):
         nodes = {
-            0: ((0., 0.), 0.),
-            1: ((1., 0.), -1.),
-            2: ((1., 1.), -2.),
-            3: ((0., 1.), -3.),
-            4: ((0.5, 1.5), -4.),
+            0: ((0.0, 0.0), 0.0),
+            1: ((1.0, 0.0), -1.0),
+            2: ((1.0, 1.0), -2.0),
+            3: ((0.0, 1.0), -3.0),
+            4: ((0.5, 1.5), -4.0),
         }
         elements = {
             0: [2, 4, 3],
@@ -125,13 +121,18 @@ class AdcircMeshTestCase(unittest.TestCase):
         h = AdcircMesh(self.nodes, self.elements)
         tmpdir = tempfile.TemporaryDirectory()
         h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.gr3')
-        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', format='2dm')
-        self.assertRaises(Exception, h.write,
-                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
-                          format='2dm')
-        self.assertRaises(ValueError, h.write,
-                          pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
-                          format='txt')
+        h.write(pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm',
+                format='2dm')
+        self.assertRaises(
+                Exception, h.write,
+                pathlib.Path(tmpdir.name) / 'test_AdcircMesh.2dm', format='2dm'
+        )
+        self.assertRaises(
+                ValueError,
+                h.write,
+                pathlib.Path(tmpdir.name) / 'test_AdcircMesh.txt',
+                format='txt',
+        )
 
     def test_triplot(self):
         h = AdcircMesh(self.nodes, self.elements, self.boundaries)
@@ -139,7 +140,7 @@ class AdcircMeshTestCase(unittest.TestCase):
 
     @patch('matplotlib.pyplot.show')
     def test_make_plot_flat_domain(self, mock):
-        nodes = {id: (coord, 0.) for id, (coord, _) in self.nodes.items()}
+        nodes = {id: (coord, 0.0) for id, (coord, _) in self.nodes.items()}
         h = AdcircMesh(nodes, self.elements, self.boundaries)
         h.make_plot()
 
