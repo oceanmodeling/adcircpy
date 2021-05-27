@@ -145,6 +145,18 @@ def best_track(parser):
     parser.add_argument('--start-date')
     parser.add_argument('--run-days', type=float)
     parser.add_argument('--spinup-days', type=float, required=True)
+    parser.add_argument(
+        '--clip',
+        default=True,
+        action='store_true',
+        help='Remove portion of best track outside mesh',
+    )
+    parser.add_argument(
+        '--no-clip',
+        dest='clip',
+        action='store_false',
+        help='Keep portion of best track outside mesh',
+    )
 
 
 def tidal_run(parser):

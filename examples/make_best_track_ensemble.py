@@ -12,13 +12,13 @@ that are valid.
 By William Pringle, Mar 2021 - 
 """
 
-from datetime import datetime, timedelta
-from adcircpy.forcing.winds.best_track import BestTrackForcing
 from copy import deepcopy
+from datetime import datetime, timedelta
+
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 
 
 def main():
-
     # set storm name
     storm_name = 'Sandy2012'
 
@@ -27,7 +27,7 @@ def main():
     end_date = start_date + timedelta(days=5)
 
     # getting best track
-    BT = BestTrackForcing(storm_name, start_date=start_date, end_date=end_date)
+    BT = BestTrackForcing(storm_name, start_date=start_date, end_date=end_date,)
 
     # write out original fort.22
     BT.write('original.22', overwrite=True)
@@ -37,11 +37,7 @@ def main():
 
     # modifying the neccessary variables and
     # writing each to a new fort.22
-    variable_list = [
-        'central_pressure',
-        'max_sustained_wind_speed',
-        'radius_of_maximum_winds',
-    ]
+    variable_list = ['central_pressure', 'max_sustained_wind_speed', 'radius_of_maximum_winds']
     alpha = [0.9, 1.1, 1.1]  # the multiplier for each variable
     for idx, var in enumerate(variable_list):
         print(var)

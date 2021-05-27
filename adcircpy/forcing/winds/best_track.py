@@ -1,39 +1,37 @@
-import gzip
-import io
-import logging
-import os
-import pathlib
-import time
-import urllib.request
-import zipfile
 from collections import Collection
 from datetime import datetime, timedelta
 from functools import wraps
+import gzip
+import io
 from io import StringIO
+import logging
+import os
 from os import PathLike
-from typing import Any
+import pathlib
+import time
+from typing import Any, Union
+import urllib.request
+import zipfile
 
+from adcircpy.forcing.winds.base import WindForcing
 import appdirs
 import geopandas
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas
-import utm
 from haversine import haversine
+import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
+import numpy as np
 from pandas import DataFrame, read_csv
 from pyproj import CRS, Proj, Transformer
 from shapely import ops
 from shapely.geometry import Point, Polygon
-
-from adcircpy.forcing.winds.base import WindForcing
+import utm
 
 logger = logging.getLogger(__name__)
 
 
 def _fetch_and_plot_coastline(_ax, show, filename='BestTrack.png'):
     save_dir = pathlib.Path(appdirs.user_data_dir('ne_coastline'))
-    save_dir.mkdir(exist_ok=True)
+    save_dir.mkdir(exist_ok=True, parents=True)
 
     file_path = save_dir / 'ne_110m_coastline.shp'
     zip_file_path = save_dir / 'ne_110m_coastline.zip'
@@ -43,13 +41,13 @@ def _fetch_and_plot_coastline(_ax, show, filename='BestTrack.png'):
         url = 'http://naciscdn.org/naturalearth/'
         url += '110m/physical/ne_110m_coastline.zip'
         urllib.request.urlretrieve(url, zip_file_path)
-        _zip = zipfile.ZipFile(zip_file_path)
-        for name in _zip.namelist():
-            data = _zip.read(name)
-            outfile = os.path.join(save_dir, name)
-            f = open(outfile, 'wb')
-            f.write(data)
-            f.close()
+        with zipfile.ZipFile(zip_file_path) as _zip:
+            for name in _zip.namelist():
+                data = _zip.read(name)
+                outfile = os.path.join(save_dir, name)
+                f = open(outfile, 'wb')
+                f.write(data)
+                f.close()
         os.remove(zip_file_path)
 
     open_shapefile = geopandas.read_file(file_path)
@@ -64,21 +62,35 @@ def _fetch_and_plot_coastline(_ax, show, filename='BestTrack.png'):
 class BestTrackForcing(WindForcing):
     def __init__(
         self,
-        storm_id,
-        external_track: str = None,
-        nws: int = 20,
-        start_date=None,
-        end_date=None,
-        dst_crs=None,
+        storm: Union[str, PathLike, DataFrame, io.BytesIO],
+        nws: int = None,
+        interval_seconds: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        dst_crs: CRS = None,
     ):
+        if nws is None:
+            nws = 20
+
+        if interval_seconds is None:
+            interval_seconds = 3600
+
+        if isinstance(storm, DataFrame):
+            self.__df = storm
+        elif isinstance(storm, io.BytesIO):
+            self.__atcf = storm
+        elif isinstance(storm, (str, PathLike, pathlib.Path)):
+            if os.path.exists(storm):
+                self.__atcf = io.open(storm, 'rb')
+            else:
+                self._storm_id = storm
+
         assert nws in [8, 19, 20]
-        if external_track is None:
-            self._storm_id = storm_id
-        else:
-            self.external_track = external_track
         self._start_date = start_date
         self._end_date = end_date
         self._dst_crs = dst_crs
+
+        super().__init__(nws=nws, interval_seconds=interval_seconds)
 
     def __str__(self):
         record_number = self._generate_record_numbers()
@@ -182,7 +194,7 @@ class BestTrackForcing(WindForcing):
 
     @NWS.setter
     def NWS(self, NWS: int):
-        assert NWS in [19, 20]
+        assert NWS in [8, 19, 20]
         self.__NWS = int(NWS)
 
     @property
@@ -229,54 +241,42 @@ class BestTrackForcing(WindForcing):
         return f'{self.basin}{self.storm_number}{self.year}'
 
     @_storm_id.setter
-    def _storm_id(self, storm_id):
-        chars = 0
-        for char in storm_id:
-            if char.isdigit():
-                chars += 1
+    def _storm_id(self, storm_id: str):
+        if storm_id is not None:
+            chars = 0
+            for char in storm_id:
+                if char.isdigit():
+                    chars += 1
 
-        if chars == 4:
+            if chars == 4:
 
-            _atcf_id = atcf_id(storm_id)
-            if _atcf_id is None:
-                msg = f'No storm with id: {storm_id}'
-                raise Exception(msg)
-            storm_id = _atcf_id
+                _atcf_id = atcf_id(storm_id)
+                if _atcf_id is None:
+                    msg = f'No storm with id: {storm_id}'
+                    raise Exception(msg)
+                storm_id = _atcf_id
 
-        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/'
-        url += storm_id[4:]
-        url += '/b'
-        url += storm_id[0:2].lower()
-        url += storm_id[2:]
-        url += '.dat.gz'
+            url = f'ftp://ftp.nhc.noaa.gov/atcf/archive/{storm_id[4:]}/b{storm_id[0:2].lower()}{storm_id[2:]}.dat.gz'
 
-        try:
-            logger.info(f'Downloading storm data from {url}')
-            response = urllib.request.urlopen(url)
-        except urllib.error.URLError as e:
-            if '550' in e.reason:
-                raise NameError(
-                    f'Did not find storm with id {storm_id}. ' + f'Submitted URL was {url}.'
-                )
-            else:
+            try:
+                logger.info(f'Downloading storm data from {url}')
+                response = urllib.request.urlopen(url)
+            except urllib.error.URLError as e:
+                if '550' in e.reason:
+                    raise NameError(
+                        f'Did not find storm with id {storm_id}. '
+                        + f'Submitted URL was {url}.'
+                    )
+                else:
 
-                @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
-                def make_request():
-                    logger.info(f'Downloading storm data from {url} failed, ' 'retrying...')
-                    return urllib.request.urlopen(url)
+                    @retry(urllib.error.URLError, tries=4, delay=3, backoff=2)
+                    def make_request():
+                        logger.info(f'Downloading storm data from {url} failed, retrying...')
+                        return urllib.request.urlopen(url)
 
-                response = make_request()
+                    response = make_request()
 
-        self.__atcf = io.BytesIO(response.read())
-
-    @property
-    def external_track(self) -> str:
-        return self.external_file_name
-
-    @external_track.setter
-    def external_track(self, file_with_storm: str):
-        self.__atcf = io.open(file_with_storm, 'rb')
-        self.external_file_name = file_with_storm
+            self.__atcf = io.BytesIO(response.read())
 
     @property
     def start_date(self) -> datetime:
@@ -620,106 +620,36 @@ class BestTrackForcing(WindForcing):
         return data
 
     @classmethod
-    def from_fort22(cls, fort22: PathLike, nws: int = None,) -> 'BestTrackForcing':
+    def from_fort22(
+        cls,
+        fort22: PathLike,
+        nws: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ) -> 'BestTrackForcing':
         if nws is None:
             nws = 20
 
-        try:
-            with open(fort22) as fort22_file:
-                fort22 = fort22_file.readlines()
-        except:
-            fort22 = str(fort22).splitlines()
-
-        data = {
-            'basin': [],
-            'storm_number': [],
-            'datetime': [],
-            'record_type': [],
-            'latitude': [],
-            'longitude': [],
-            'max_sustained_wind_speed': [],
-            'central_pressure': [],
-            'development_level': [],
-            'isotach': [],
-            'quadrant': [],
-            'radius_for_NEQ': [],
-            'radius_for_SEQ': [],
-            'radius_for_SWQ': [],
-            'radius_for_NWQ': [],
-            'background_pressure': [],
-            'radius_of_last_closed_isobar': [],
-            'radius_of_maximum_winds': [],
-            'name': [],
-            'direction': [],
-            'speed': [],
-        }
-
-        for index, row in enumerate(fort22):
-            row = [value.strip() for value in row.split(',')]
-
-            row_data = {key: None for key in data}
-
-            row_data['basin'] = row[0]
-            row_data['storm_number'] = row[1]
-            row_data['datetime'] = datetime.strptime(row[2], '%Y%m%d%H')
-            row_data['record_type'] = row[4]
-
-            latitude = row[6]
-            if 'N' in latitude:
-                latitude = float(latitude[:-1]) * 0.1
-            elif 'S' in latitude:
-                latitude = float(latitude[:-1]) * -0.1
-            row_data['latitude'] = latitude
-
-            longitude = row[7]
-            if 'E' in longitude:
-                longitude = float(longitude[:-1]) * 0.1
-            elif 'W' in longitude:
-                longitude = float(longitude[:-1]) * -0.1
-            row_data['longitude'] = longitude
-
-            row_data['max_sustained_wind_speed'] = convert_value(
-                row[8], to_type=int, round_digits=0,
-            )
-            row_data['central_pressure'] = convert_value(row[9], to_type=int, round_digits=0,)
-            row_data['development_level'] = row[10]
-            row_data['isotach'] = convert_value(row[11], to_type=int, round_digits=0,)
-            row_data['quadrant'] = row[12]
-            row_data['radius_for_NEQ'] = convert_value(row[13], to_type=int, round_digits=0,)
-            row_data['radius_for_SEQ'] = convert_value(row[14], to_type=int, round_digits=0,)
-            row_data['radius_for_SWQ'] = convert_value(row[15], to_type=int, round_digits=0,)
-            row_data['radius_for_NWQ'] = convert_value(row[16], to_type=int, round_digits=0,)
-            row_data['background_pressure'] = convert_value(
-                row[17], to_type=int, round_digits=0,
-            )
-            row_data['radius_of_last_closed_isobar'] = convert_value(
-                row[18], to_type=int, round_digits=0,
-            )
-            row_data['radius_of_maximum_winds'] = convert_value(
-                row[19], to_type=int, round_digits=0,
-            )
-            row_data['direction'] = row[25]
-            row_data['speed'] = row[26]
-            row_data['name'] = row[27]
-
-            for key, value in row_data.items():
-                if isinstance(data[key], Collection):
-                    data[key].append(value)
-                elif data[key] is None:
-                    data[key] = value
+        data = read_atcf(fort22)
 
         storm_id = f'{data["name"][0]}{data["datetime"][0]:%Y}'
 
-        instance = cls(
-            storm_id=storm_id,
-            nws=nws,
-            start_date=min(data['datetime']),
-            end_date=max(data['datetime']),
-        )
+        if start_date is None:
+            start_date = min(data['datetime'])
+        if end_date is None:
+            end_date = max(data['datetime'])
 
-        instance.__df = pandas.DataFrame(data=data)
+        instance = cls(storm=storm_id, nws=nws, start_date=start_date, end_date=end_date,)
+
+        instance.__df = data
 
         return instance
+
+    @classmethod
+    def from_atcf_file(
+        cls, atcf: PathLike, nws: int, start_date: datetime = None, end_date: datetime = None,
+    ) -> 'BestTrackForcing':
+        return cls(storm=atcf, nws=nws, start_date=start_date, end_date=end_date,)
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
@@ -792,3 +722,89 @@ def atcf_id(storm_id):
         return None
     else:
         return entry[20].tolist()[0].strip()
+
+
+def read_atcf(track: PathLike) -> DataFrame:
+    try:
+        with open(track) as track_file:
+            track = track_file.readlines()
+    except:
+        track = str(track).splitlines()
+
+    data = {
+        'basin': [],
+        'storm_number': [],
+        'datetime': [],
+        'record_type': [],
+        'latitude': [],
+        'longitude': [],
+        'max_sustained_wind_speed': [],
+        'central_pressure': [],
+        'development_level': [],
+        'isotach': [],
+        'quadrant': [],
+        'radius_for_NEQ': [],
+        'radius_for_SEQ': [],
+        'radius_for_SWQ': [],
+        'radius_for_NWQ': [],
+        'background_pressure': [],
+        'radius_of_last_closed_isobar': [],
+        'radius_of_maximum_winds': [],
+        'name': [],
+        'direction': [],
+        'speed': [],
+    }
+
+    for index, row in enumerate(track):
+        row = [value.strip() for value in row.split(',')]
+
+        row_data = {key: None for key in data}
+
+        row_data['basin'] = row[0]
+        row_data['storm_number'] = row[1]
+        row_data['datetime'] = datetime.strptime(row[2], '%Y%m%d%H')
+        row_data['record_type'] = row[4]
+
+        latitude = row[6]
+        if 'N' in latitude:
+            latitude = float(latitude[:-1]) * 0.1
+        elif 'S' in latitude:
+            latitude = float(latitude[:-1]) * -0.1
+        row_data['latitude'] = latitude
+
+        longitude = row[7]
+        if 'E' in longitude:
+            longitude = float(longitude[:-1]) * 0.1
+        elif 'W' in longitude:
+            longitude = float(longitude[:-1]) * -0.1
+        row_data['longitude'] = longitude
+
+        row_data['max_sustained_wind_speed'] = convert_value(
+            row[8], to_type=int, round_digits=0,
+        )
+        row_data['central_pressure'] = convert_value(row[9], to_type=int, round_digits=0,)
+        row_data['development_level'] = row[10]
+        row_data['isotach'] = convert_value(row[11], to_type=int, round_digits=0,)
+        row_data['quadrant'] = row[12]
+        row_data['radius_for_NEQ'] = convert_value(row[13], to_type=int, round_digits=0,)
+        row_data['radius_for_SEQ'] = convert_value(row[14], to_type=int, round_digits=0,)
+        row_data['radius_for_SWQ'] = convert_value(row[15], to_type=int, round_digits=0,)
+        row_data['radius_for_NWQ'] = convert_value(row[16], to_type=int, round_digits=0,)
+        row_data['background_pressure'] = convert_value(row[17], to_type=int, round_digits=0,)
+        row_data['radius_of_last_closed_isobar'] = convert_value(
+            row[18], to_type=int, round_digits=0,
+        )
+        row_data['radius_of_maximum_winds'] = convert_value(
+            row[19], to_type=int, round_digits=0,
+        )
+        row_data['direction'] = row[25]
+        row_data['speed'] = row[26]
+        row_data['name'] = row[27]
+
+        for key, value in row_data.items():
+            if isinstance(data[key], Collection):
+                data[key].append(value)
+            elif data[key] is None:
+                data[key] = value
+
+    return DataFrame(data=data)
