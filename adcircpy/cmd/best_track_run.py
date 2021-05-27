@@ -12,23 +12,22 @@ logger = logging.getLogger(__name__)
 
 
 class BestTrackRunCommand(AdcircCommand):
-
     def __init__(self, args):
 
-        logger.info('Init BestTrackRunCommand')
+        logger.info("Init BestTrackRunCommand")
         super().__init__(args)
 
-        logger.info(f'Init BestTrackForcing for {self.args.storm_id}')
+        logger.info(f"Init BestTrackForcing for {self.args.storm_id}")
         bt = BestTrackForcing(self.args.storm_id)
 
-        logger.info('Clip BestTrackForcing to bbox')
-        bt.clip_to_bbox(self.mesh.get_bbox(output_type='bbox'), self.mesh.crs)
+        logger.info("Clip BestTrackForcing to bbox")
+        if self.args.clip:
+            bt.clip_to_bbox(self.mesh.get_bbox(output_type="bbox"), self.mesh.crs)
 
         if args.start_date is None:
             self.start_date = bt.start_date
         else:
-            self.start_date = datetime.strptime(
-                args.start_date, '%%Y-%%m-%%dT%%H')
+            self.start_date = datetime.strptime(args.start_date, "%%Y-%%m-%%dT%%H")
 
         if args.run_days is None:
             self.end_date = bt.end_date
@@ -42,16 +41,17 @@ class BestTrackRunCommand(AdcircCommand):
 
 
 def main():
-    args = argument_parser.get_parser('best_track').parse_args()
+    args = argument_parser.get_parser("best_track").parse_args()
     logging.basicConfig(
         level={
-            'warning': logging.WARNING,
-            'info': logging.INFO,
-            'debug': logging.DEBUG,
+            "warning": logging.WARNING,
+            "info": logging.INFO,
+            "debug": logging.DEBUG,
         }[args.log_level],
-        format='[%(asctime)s] %(name)s %(levelname)s: %(message)s',
+        format="[%(asctime)s] %(name)s %(levelname)s: %(message)s",
         # force=True,
     )
     logging.Formatter.converter = lambda *args: datetime.now(
-        tz=timezone('UTC')).timetuple()
+        tz=timezone("UTC")
+    ).timetuple()
     BestTrackRunCommand(args).run()
