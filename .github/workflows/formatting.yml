@@ -18,6 +18,6 @@ jobs:
       - name: Run linters / formatters
         uses: wearerequired/lint-action@master
         with:
-          oitnb_command_prefix: isort --fss --fass .
+          oitnb_command_prefix: isort --fss --fass .;
           oitnb: true
           auto_fix: true
