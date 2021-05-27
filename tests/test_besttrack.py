@@ -1,5 +1,6 @@
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from adcircpy.forcing.winds import BestTrackForcing
 
@@ -32,7 +33,8 @@ class TestBestTrack(unittest.TestCase):
             with open(reference_filename) as reference_file:
                 assert test_file.read() == reference_file.read()
 
-    def test_from_atcf(self):
+    @patch('matplotlib.pyplot.show')
+    def test_from_atcf(self, mock_requests):
         input_filename = INPUT_DIRECTORY / "test_besttrack" / "florence2018_atcf.trk"
         output_filename = OUTPUT_DIRECTORY / "test_besttrack" / "florence2018_fort.22"
         reference_filename = REFERENCE_DIRECTORY / "test_besttrack" / "florence2018_fort.22"
@@ -53,3 +55,5 @@ class TestBestTrack(unittest.TestCase):
         with open(output_filename) as test_file:
             with open(reference_filename) as reference_file:
                 assert test_file.read() == reference_file.read()
+
+        best_track.plot_track(show=True)

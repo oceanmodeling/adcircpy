@@ -13,6 +13,7 @@ from typing import Any, Union
 import urllib.request
 import zipfile
 
+from adcircpy.forcing.winds.base import WindForcing
 import appdirs
 import geopandas
 from haversine import haversine
@@ -25,14 +26,12 @@ from shapely import ops
 from shapely.geometry import Point, Polygon
 import utm
 
-from adcircpy.forcing.winds.base import WindForcing
-
 logger = logging.getLogger(__name__)
 
 
 def _fetch_and_plot_coastline(_ax, show, filename="BestTrack.png"):
     save_dir = pathlib.Path(appdirs.user_data_dir("ne_coastline"))
-    save_dir.mkdir(exist_ok=True)
+    save_dir.mkdir(exist_ok=True, parents=True)
 
     file_path = save_dir / "ne_110m_coastline.shp"
     zip_file_path = save_dir / "ne_110m_coastline.zip"
@@ -42,13 +41,13 @@ def _fetch_and_plot_coastline(_ax, show, filename="BestTrack.png"):
         url = "http://naciscdn.org/naturalearth/"
         url += "110m/physical/ne_110m_coastline.zip"
         urllib.request.urlretrieve(url, zip_file_path)
-        _zip = zipfile.ZipFile(zip_file_path)
-        for name in _zip.namelist():
-            data = _zip.read(name)
-            outfile = os.path.join(save_dir, name)
-            f = open(outfile, "wb")
-            f.write(data)
-            f.close()
+        with zipfile.ZipFile(zip_file_path) as _zip:
+            for name in _zip.namelist():
+                data = _zip.read(name)
+                outfile = os.path.join(save_dir, name)
+                f = open(outfile, "wb")
+                f.write(data)
+                f.close()
         os.remove(zip_file_path)
 
     open_shapefile = geopandas.read_file(file_path)
