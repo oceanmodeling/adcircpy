@@ -28,17 +28,12 @@ jobs:
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
           pip install -e .[development]
+          pip install black flake8
       - name: Auto lint
         uses: wearerequired/lint-action@v1.9.0
         with:
           black: true
           flake8: true
-      - name: Lint with flake8
-        run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run tests with coverage
         run: coverage run --source adcircpy -m nose --nologcapture --verbose
       - name: Generate coverage report
