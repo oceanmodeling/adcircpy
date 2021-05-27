@@ -51,7 +51,7 @@ setuptools.setup(
         'paramiko',
         'psutil',
         # 'pygrib', # TODO: make separate install
-        'pyproj',
+        'pyproj>=2.6',
         'geopandas',
         'requests',
         'scipy',
