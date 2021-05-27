@@ -4,6 +4,7 @@ from adcircpy.outputs.base import SurfaceOutput
 class Maxele(SurfaceOutput):
     _filetype = 'maxele'
 
+
 # import numpy as np
 # import pathlib
 # from netCDF4 import Dataset

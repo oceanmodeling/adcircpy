@@ -1,4 +1,5 @@
 from functools import lru_cache
+
 # from collections.abc import Mapping
 import pathlib
 
@@ -8,16 +9,15 @@ from adcircpy.outputs.maxele import Maxele
 class OutputCollection(
     # Mapping
 ):
-
     def __init__(
-            self,
-            fort61=None,
-            fort62=None,
-            fort63=None,
-            fort64=None,
-            maxele=None,
-            maxvel=None,
-            crs=None,
+        self,
+        fort61=None,
+        fort62=None,
+        fort63=None,
+        fort64=None,
+        maxele=None,
+        maxvel=None,
+        crs=None,
     ):
         self._crs = crs
         self._maxele = maxele

@@ -7,7 +7,6 @@ import numpy as np
 
 
 class TidalDataset(ABC):
-
     def __init__(self, path: PathLike = None):
         """
         create a new tidal dataset object
@@ -17,9 +16,7 @@ class TidalDataset(ABC):
         self.path = str(path) if path is not None else None
 
     def __call__(
-            self,
-            constituent: str,
-            vertices: np.ndarray
+        self, constituent: str, vertices: np.ndarray
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         get tidal ampltidue and phase
@@ -27,15 +24,10 @@ class TidalDataset(ABC):
         :param vertices: XY locations at which to sample (Mx2)
         :return: amplitude and phase arrays at given locations
         """
-        return self.get_amplitude(constituent, vertices), \
-            self.get_phase(constituent, vertices)
+        return self.get_amplitude(constituent, vertices), self.get_phase(constituent, vertices)
 
     @abstractmethod
-    def get_amplitude(
-            self,
-            constituent: str,
-            vertices: np.ndarray
-    ) -> np.ndarray:
+    def get_amplitude(self, constituent: str, vertices: np.ndarray) -> np.ndarray:
         """
         generate tidal ampltidue
         :param constituent: tidal constituent
@@ -45,11 +37,7 @@ class TidalDataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_phase(
-            self,
-            constituent: str,
-            vertices: np.ndarray
-    ) -> np.ndarray:
+    def get_phase(self, constituent: str, vertices: np.ndarray) -> np.ndarray:
         """
         generate tidal phase
         :param constituent: tidal constituent
@@ -88,5 +76,6 @@ class TidalDataset(ABC):
         :param vertices: list of XY locations
         :return: whether vertices are in XY format (Mx2)
         """
-        assert len(vertices.shape) == 2 and vertices.shape[1] == 2, \
-            'vertices must be of shape Mx2'
+        assert (
+            len(vertices.shape) == 2 and vertices.shape[1] == 2
+        ), 'vertices must be of shape Mx2'
