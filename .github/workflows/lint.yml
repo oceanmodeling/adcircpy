@@ -17,5 +17,4 @@ jobs:
         uses: wearerequired/lint-action@v1
         with:
           black: true
-          flake8: true
           auto_fix: true
