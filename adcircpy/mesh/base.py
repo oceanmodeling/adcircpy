@@ -15,7 +15,7 @@ from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy as np
 from pyproj import CRS, Transformer
-from shapely.geometry import LinearRing, LineString, MultiPolygon, Point, Polygon, box
+from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Point, Polygon
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm

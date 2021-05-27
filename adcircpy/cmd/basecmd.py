@@ -4,7 +4,7 @@ from functools import lru_cache
 import logging
 import pathlib
 
-from adcircpy import AdcircMesh, AdcircRun, Tides, server
+from adcircpy import AdcircMesh, AdcircRun, server, Tides
 
 logger = logging.getLogger(__name__)
 

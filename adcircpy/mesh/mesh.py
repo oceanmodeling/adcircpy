@@ -2,7 +2,7 @@
 from collections import defaultdict
 from itertools import permutations
 
-from haversine import Unit, haversine
+from haversine import haversine, Unit
 import numpy as np
 
 from adcircpy.forcing.bctypes import BoundaryCondition
