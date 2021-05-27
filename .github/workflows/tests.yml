@@ -28,8 +28,11 @@ jobs:
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
           pip install -e .[development]
-      - name: Lint Action
+      - name: Auto lint
         uses: wearerequired/lint-action@v1.9.0
+        with:
+          black: true
+          flake8: true
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
