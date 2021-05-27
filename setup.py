@@ -73,6 +73,7 @@ setuptools.setup(
         'development': [
             'dunamai',
             'flake8',
+            'isort',
             'oitnb',
         ],
     },
