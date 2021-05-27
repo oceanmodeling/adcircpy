@@ -12,9 +12,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
       - name: Install dependencies
-        run: pip install black
+        run: pip install oitnb
       - name: Run linters / formatters
         uses: wearerequired/lint-action@v1
         with:
-          black: true
+          oitnb: true
           auto_fix: true
