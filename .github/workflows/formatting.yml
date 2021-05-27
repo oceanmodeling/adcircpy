@@ -12,7 +12,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
       - name: Install dependencies
-        run: pip install -e .[development]
+        run: |
+          pip install wheel
+          pip install -e .[development]
       - name: Sort imports
         run: isort --fss .
       - name: Run linters / formatters
