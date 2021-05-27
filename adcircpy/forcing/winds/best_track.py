@@ -1,6 +1,6 @@
 from collections import Collection
 from datetime import datetime, timedelta
-from functools import wraps, partial
+from functools import partial, wraps
 import gzip
 import io
 from io import StringIO
@@ -803,17 +803,16 @@ def read_atcf(track: PathLike) -> DataFrame:
 
 def get_circle_of_radius(lon, lat, radius):
 
-    local_azimuthal_projection = "+proj=aeqd +R=6371000 +units=m " \
-                                 f"+lat_0={lat} +lon_0={lon}"
+    local_azimuthal_projection = '+proj=aeqd +R=6371000 +units=m ' f'+lat_0={lat} +lon_0={lon}'
     wgs84_to_aeqd = partial(
         pyproj.transform,
-        pyproj.Proj("+proj=longlat +datum=WGS84 +no_defs"),
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
         pyproj.Proj(local_azimuthal_projection),
     )
     aeqd_to_wgs84 = partial(
         pyproj.transform,
         pyproj.Proj(local_azimuthal_projection),
-        pyproj.Proj("+proj=longlat +datum=WGS84 +no_defs"),
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
     )
 
     center = Point(float(lon), float(lat))
