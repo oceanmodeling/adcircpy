@@ -17,8 +17,9 @@ import tempfile
 import urllib.request
 import warnings
 
-from adcircpy import AdcircMesh, AdcircRun, Tides
 import numpy as np
+
+from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / 'data/NetCDF_Shinnecock_Inlet/fort.14'

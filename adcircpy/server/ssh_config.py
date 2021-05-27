@@ -7,8 +7,9 @@ import tempfile
 from typing import Union
 import uuid
 
-from adcircpy.server.base_config import BaseServerConfig
 import paramiko
+
+from adcircpy.server.base_config import BaseServerConfig
 
 
 class SSHConfig(BaseServerConfig):

@@ -1,10 +1,11 @@
 from os import PathLike
 from pathlib import Path
 
-from adcircpy.forcing.tides.dataset import TidalDataset
 from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
+
+from adcircpy.forcing.tides.dataset import TidalDataset
 
 
 class HAMTIDE(TidalDataset):

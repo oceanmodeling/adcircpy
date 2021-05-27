@@ -8,9 +8,10 @@ import argparse
 from glob import glob
 import pathlib
 
+import matplotlib.pyplot as plt
+
 from adcircpy.cmd import diagnose
 from adcircpy.mesh import AdcircMesh
-import matplotlib.pyplot as plt
 
 
 def parse_args():

@@ -5,10 +5,11 @@ from functools import lru_cache
 from os import PathLike
 from typing import Union
 
+import numpy as np
+
 from adcircpy.forcing import bctypes
 from adcircpy.forcing.tides.hamtide import HAMTIDE
 from adcircpy.forcing.tides.tpxo import TPXO
-import numpy as np
 
 
 class TidalSource(Enum):

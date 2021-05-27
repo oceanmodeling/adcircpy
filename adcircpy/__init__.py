@@ -1,11 +1,12 @@
 from importlib import util
 
+import matplotlib as mpl
+from pandas.plotting import register_matplotlib_converters
+
 from adcircpy.driver import AdcircRun
 from adcircpy.forcing import TidalSource, Tides, WaveForcing, WindForcing
 from adcircpy.fort15 import Fort15
 from adcircpy.mesh import AdcircMesh
-import matplotlib as mpl
-from pandas.plotting import register_matplotlib_converters
 
 __all__ = [
     'AdcircMesh',

@@ -7,8 +7,6 @@ import os
 import pathlib
 from typing import Dict, Hashable, List, Sequence, Union
 
-from adcircpy.figures import figure
-from adcircpy.mesh.parsers import grd, sms2dm
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
@@ -17,7 +15,10 @@ from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy as np
 from pyproj import CRS, Transformer
-from shapely.geometry import LineString, LinearRing, MultiPolygon, Point, Polygon, box
+from shapely.geometry import LinearRing, LineString, MultiPolygon, Point, Polygon, box
+
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import grd, sms2dm
 
 _logger = logging.getLogger(__name__)
 

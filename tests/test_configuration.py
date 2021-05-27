@@ -5,12 +5,13 @@ import tarfile
 import tempfile
 import unittest
 
+import requests
+
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
-import requests
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'

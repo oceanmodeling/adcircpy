@@ -2,11 +2,12 @@ import os
 from os import PathLike
 from pathlib import Path
 
-from adcircpy.forcing.tides.dataset import TidalDataset
 import appdirs
 from netCDF4 import Dataset
 import numpy as np
 from scipy.interpolate import griddata
+
+from adcircpy.forcing.tides.dataset import TidalDataset
 
 TPXO_ENVIRONMENT_VARIABLE = 'TPXO_NCFILE'
 TPXO_FILENAME = 'h_tpxo9.v1.nc'

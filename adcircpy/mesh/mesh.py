@@ -2,14 +2,15 @@
 from collections import defaultdict
 from itertools import permutations
 
+from haversine import Unit, haversine
+import numpy as np
+
 from adcircpy.forcing.bctypes import BoundaryCondition
 from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.waves import WaveForcing
 from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.mesh.fort13 import NodalAttributes
 from adcircpy.mesh.fort14 import Fort14
-from haversine import Unit, haversine
-import numpy as np
 
 
 class ModelForcings:

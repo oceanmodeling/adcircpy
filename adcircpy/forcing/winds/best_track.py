@@ -13,7 +13,6 @@ from typing import Any, Union
 import urllib.request
 import zipfile
 
-from adcircpy.forcing.winds.base import WindForcing
 import appdirs
 import geopandas
 from haversine import haversine
@@ -25,6 +24,8 @@ from pyproj import CRS, Proj, Transformer
 from shapely import ops
 from shapely.geometry import Point, Polygon
 import utm
+
+from adcircpy.forcing.winds.base import WindForcing
 
 logger = logging.getLogger(__name__)
 

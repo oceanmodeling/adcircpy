@@ -3,8 +3,9 @@ from os import PathLike
 from pathlib import Path
 from typing import Any
 
-from adcircpy.forcing.winds.base import WindForcing
 import numpy as np
+
+from adcircpy.forcing.winds.base import WindForcing
 
 
 class OwiForcing(WindForcing):

@@ -1,7 +1,8 @@
 import argparse
 
-from adcircpy.outputs import Maxele
 import matplotlib.pyplot as plt
+
+from adcircpy.outputs import Maxele
 
 
 def parse_args():
