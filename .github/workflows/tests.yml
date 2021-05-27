@@ -27,6 +27,7 @@ jobs:
         run: |
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
+          pip install flake8
           pip install -e .[testing]
       - name: Lint with flake8
         run: |
