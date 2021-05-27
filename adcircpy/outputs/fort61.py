@@ -11,7 +11,6 @@ https://stackoverflow.com/questions/4014621/a-python-class-that-acts-like-dict
 
 
 class ElevationStations:
-
     def __init__(self, path):
         self._path = path
 
@@ -30,8 +29,7 @@ class ElevationStations:
     def _init_netcdf_stations(self):
         stations = dict()
         for idx, name in enumerate(self.nc['station_name']):
-            name = ''.join(
-                [s.decode('UTF-8') for s in name]).strip(' ')
+            name = "".join([s.decode('UTF-8') for s in name]).strip(' ')
             if len(name) == 0 or name in stations.keys():
                 name = uuid.uuid4().hex[:8]
             stations[name] = dict()
@@ -49,14 +47,13 @@ class ElevationStations:
             except ValueError:
                 pass
         if isinstance(base_date, str):
-            msg = f"Could not parse input date {base_date}. "
+            msg = f'Could not parse input date {base_date}. '
             msg += "Known formats are '%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M'."
             raise IOError(msg)
-        self.__datetime = [base_date + timedelta(seconds=float(s))
-                           for s in self.nc['time']]
+        self.__datetime = [base_date + timedelta(seconds=float(s)) for s in self.nc['time']]
 
     def _init_ascii(self):
-        msg = "ASCII fort.61 files have not yet been implemented."
+        msg = 'ASCII fort.61 files have not yet been implemented.'
         raise NotImplementedError(msg)
 
     @property

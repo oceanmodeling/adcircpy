@@ -18,20 +18,20 @@ class SSHConfig(BaseServerConfig):
     """
 
     def __init__(
-            self,
-            hostname: str = None,
-            nprocs: int = None,
-            wdir: str = None,
-            binaries_prefix: str = None,
-            port: int = 22,
-            username: str = None,
-            password: str = None,
-            pkey: str = None,
-            writer_procs: int = None,
-            source_script: str = None,
-            additional_mpi_options: str = None,
-            keep_wdir: bool = False,
-            filename: str = None
+        self,
+        hostname: str = None,
+        nprocs: int = None,
+        wdir: str = None,
+        binaries_prefix: str = None,
+        port: int = 22,
+        username: str = None,
+        password: str = None,
+        pkey: str = None,
+        writer_procs: int = None,
+        source_script: str = None,
+        additional_mpi_options: str = None,
+        keep_wdir: bool = False,
+        filename: str = None,
     ):
         self._hostname = hostname
         self._nprocs = nprocs
@@ -51,19 +51,19 @@ class SSHConfig(BaseServerConfig):
         pass
 
     def run(
-            self,
-            driver,
-            outdir: Union[str, pathlib.Path],
-            overwrite: bool = False,
-            coldstart: bool = True,
-            hotstart: bool = True
+        self,
+        driver,
+        outdir: Union[str, pathlib.Path],
+        overwrite: bool = False,
+        coldstart: bool = True,
+        hotstart: bool = True,
     ) -> None:
         """
         puts driver outputs on outdir using a remote server for compute
         """
         outdir = pathlib.Path(outdir)
         if not outdir.exists():
-            msg = f"{outdir} exists and overwrite is not enabled."
+            msg = f'{outdir} exists and overwrite is not enabled.'
             raise IOError(msg)
         self.ssh.exec_command(f'mkdir -p {self._wdir}')
         self._deploy_files_to_server(driver)
@@ -96,7 +96,7 @@ class SSHConfig(BaseServerConfig):
     def _run_adcprep_command(self, runtype):
         cmd = f'rm -rf {self._wdir}/{runtype}; '
         cmd += f'mkdir -p {self._wdir}/{runtype}; '
-        cmd += f"cd {self._wdir}/{runtype}; "
+        cmd += f'cd {self._wdir}/{runtype}; '
         cmd += 'ln -sf ../fort.14; '
         cmd += 'ln -sf ../fort.13; '
         cmd += 'ln -sf ../fort.15.{runtype} ./fort.15; '
@@ -114,15 +114,15 @@ class SSHConfig(BaseServerConfig):
             out = stdout.readline()
             if not out:
                 break
-            print(out, end='')
+            print(out, end="")
         lines = stderr.readlines()
         if len(lines) > 0:
-            msg = "\n"
+            msg = '\n'
             msg += "".join(lines)
             raise Exception(msg)
 
     def _run_padcirc_command(self, runtype, driver):
-        cmd = ''
+        cmd = ""
         if self._nprocs > 1:
             # if self.libraries_path:
             #     cmd += f'export LD_LIBRARY_PATH={self.libraries_path}:'
@@ -131,28 +131,28 @@ class SSHConfig(BaseServerConfig):
                 cmd += f'source {self._source_script} && '
             cmd += f'mpiexec -n {self._nprocs} '
             if self.additional_mpi_options:
-                mpi_opts = self.additional_mpi_options.strip("'\"")
+                mpi_opts = self.additional_mpi_options.strip('\'"')
                 cmd += f'{mpi_opts} '
-            cmd += f"--wdir {self._wdir}/{runtype} "
-        cmd += f"{self.padcirc_binary}"
+            cmd += f'--wdir {self._wdir}/{runtype} '
+        cmd += f'{self.padcirc_binary}'
         self.logger.info(cmd)
         stdin, stdout, stderr = self.ssh.exec_command(cmd)
         while True:
             out = stdout.readline()
             if not out:
                 break
-            print(out, end='')
+            print(out, end="")
         lines = stderr.readlines()
-        msg = "** ERROR: Elevation.gt.ErrorElev, ADCIRC stopping. **"
+        msg = '** ERROR: Elevation.gt.ErrorElev, ADCIRC stopping. **'
         if msg in "".join(lines):
             self.logger.warning(msg)
             driver._handle_blowup(lines)
         # filter IEEE_UNDERFLOW_FLAG IEEE_DENORMAL
-        msg = "Note: The following floating-point exceptions are signalling:"
+        msg = 'Note: The following floating-point exceptions are signalling:'
         lines = [line for line in lines if msg not in line]
         if len(lines) > 0:
             if msg not in "".join(lines):
-                msg = "\n"
+                msg = '\n'
                 msg += "".join(lines)
                 raise Exception(msg)
             else:
@@ -170,9 +170,7 @@ class SSHConfig(BaseServerConfig):
                 ldir = outdir / rsubdir
                 if not ldir.exists():
                     ldir.mkdir()
-                self._sftp.get(
-                    str(rfile),
-                    str(ldir / file))
+                self._sftp.get(str(rfile), str(ldir / file))
 
     def _sftp_walk(self, remotepath):
         """
@@ -216,12 +214,10 @@ class SSHConfig(BaseServerConfig):
             'hostname': self.hostname,
             'port': self.port,
             'username': self.username,
-            'password': self.password
+            'password': self.password,
         }
         if self.pkey:
-            kwargs.update({
-                'pkey': paramiko.RSAKey.from_private_key_file(
-                    self.pkey)})
+            kwargs.update({'pkey': paramiko.RSAKey.from_private_key_file(self.pkey)})
         # try:
         ssh.connect(**kwargs)
         # except paramiko.ssh_exception.SSHException:
@@ -365,6 +361,7 @@ class SSHConfig(BaseServerConfig):
         if filename is None:
             filename = 'driver.sh'
         self.__filename = filename
+
 
 # class ServerConfig:
 #     def __init__(self, script: str):

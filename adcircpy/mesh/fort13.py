@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class NodalAttributes:
-
     def __init__(self, fort14):
         self._fort14 = fort14
         self._attributes = {}
@@ -26,22 +25,25 @@ class NodalAttributes:
 
         for name in self.get_attribute_names():
             attribute = self.get_attribute(name)
-            fort13.extend([
-                f'{name}',
-                f'{attribute["units"]}',
-                f'{len(attribute["defaults"])}',
-                ' '.join(f'{n:<.16E}' for n in attribute['defaults'])
-            ])
+            fort13.extend(
+                [
+                    f'{name}',
+                    f'{attribute["units"]}',
+                    f'{len(attribute["defaults"])}',
+                    ' '.join(f'{n:<.16E}' for n in attribute['defaults']),
+                ]
+            )
         for name in self.get_attribute_names():
             attribute = self.get_attribute(name)
-            fort13.extend([
-                f'{name}',
-                f'{len(attribute["non_default_indexes"])}',
-            ])
+            fort13.extend(
+                [f'{name}', f'{len(attribute["non_default_indexes"])}',]
+            )
             for i, values in enumerate(
-                    attribute['values'][attribute['non_default_indexes'], :]):
+                attribute['values'][attribute['non_default_indexes'], :]
+            ):
                 node_id = self._fort14.nodes.get_id_by_index(
-                    attribute["non_default_indexes"][i])
+                    attribute['non_default_indexes'][i]
+                )
                 line = [f'{node_id}']
                 for value in values:
                     line.append(f'{value}')
@@ -50,14 +52,17 @@ class NodalAttributes:
 
     def add_attribute(self, name: str, units: str = None):
         if name in self._attributes:
-            raise AttributeError(f'Cannot add nodal attribute with name '
-                                 f'{name}: attribute already exists.')
-        self._attributes.setdefault(name, {}).update({
-            'units': 'unitless' if units is None else str(units),
-            'values': None,
-            'coldstart': False,
-            'hotstart': False,
-            })
+            raise AttributeError(
+                f'Cannot add nodal attribute with name ' f'{name}: attribute already exists.'
+            )
+        self._attributes.setdefault(name, {}).update(
+            {
+                'units': 'unitless' if units is None else str(units),
+                'values': None,
+                'coldstart': False,
+                'hotstart': False,
+            }
+        )
 
     def get_coldstart_attributes(self):
         coldstart_attributes = dict()
@@ -83,12 +88,7 @@ class NodalAttributes:
         assert isinstance(state, bool)
         self.get_attribute(attribute)['hotstart'] = state
 
-    def set_attribute_state(
-            self,
-            attribute,
-            coldstart,
-            hotstart
-    ):
+    def set_attribute_state(self, attribute, coldstart, hotstart):
         self.set_attribute_coldstart_state(attribute, coldstart)
         self.set_attribute_hotstart_state(attribute, hotstart)
 
@@ -97,28 +97,27 @@ class NodalAttributes:
 
     def get_attribute(self, name):
         if name not in self.get_attribute_names():
-            msg = f"Nodal attribute with name {name} has not been loaded."
+            msg = f'Nodal attribute with name {name} has not been loaded.'
             raise AttributeError(msg)
         if self._attributes[name].get('defaults') is None:
             # TODO: the 'values' array can be generated more succintly.
             def mode_rows(a):
                 a = np.ascontiguousarray(a)
-                void_dt = np.dtype((np.void,
-                                    a.dtype.itemsize * np.prod(a.shape[1:])))
-                _, ids, count = np.unique(a.view(void_dt).ravel(),
-                                          return_index=True,
-                                          return_counts=True)
+                void_dt = np.dtype((np.void, a.dtype.itemsize * np.prod(a.shape[1:])))
+                _, ids, count = np.unique(
+                    a.view(void_dt).ravel(), return_index=True, return_counts=True
+                )
                 largest_count_id = ids[count.argmax()]
                 most_frequent_row = a[largest_count_id]
                 return most_frequent_row
 
             _attr = self._attributes[name]
             if _attr['values'].ndim == 1:  # rewrite as column major
-                _attr['values'] = _attr['values'].reshape(
-                        (_attr['values'].shape[0], 1))
+                _attr['values'] = _attr['values'].reshape((_attr['values'].shape[0], 1))
             _attr['defaults'] = mode_rows(_attr['values'])
             _attr['non_default_indexes'] = np.where(
-                    (_attr['values'] != _attr['defaults']).all(axis=1))[0]
+                (_attr['values'] != _attr['defaults']).all(axis=1)
+            )[0]
             self._attributes[name] = _attr
         return self._attributes[name]
 
@@ -139,32 +138,29 @@ class NodalAttributes:
                     return True
             return False
 
-    def set_attribute(
-            self,
-            name,
-            values,
-            coldstart: bool = False,
-            hotstart: bool = False
-    ):
+    def set_attribute(self, name, values, coldstart: bool = False, hotstart: bool = False):
         if name not in self.get_attribute_names():
-            raise AttributeError(f'Cannot set nodal attribute with name '
-                                 f'{name}: attribute has not been '
-                                 f'added yet.')
+            raise AttributeError(
+                f'Cannot set nodal attribute with name '
+                f'{name}: attribute has not been '
+                f'added yet.'
+            )
         assert isinstance(coldstart, bool)
         assert isinstance(hotstart, bool)
         assert values.flatten().shape[0] % self._fort14.values.shape[0] == 0
-        self._attributes[name].update({
-                'values': values,
-                'coldstart': coldstart,
-                'hotstart': hotstart
-            })
+        self._attributes[name].update(
+            {'values': values, 'coldstart': coldstart, 'hotstart': hotstart}
+        )
 
     def add_patch(self, name, patch, value):
         if name not in self.get_attribute_names():
             raise AttributeError(
                 f'Cannot add patch to nodal attribute with name {name}: '
-                'attribute has not been added yet.')
-        idxs = [row.Index for row in self._fort14.nodes.gdf.geometry.within(patch).itertuples()]
+                'attribute has not been added yet.'
+            )
+        idxs = [
+            row.Index for row in self._fort14.nodes.gdf.geometry.within(patch).itertuples()
+        ]
         self._attributes[name]['values'][idxs] = value
 
     def import_fort13(self, fort13):
@@ -177,9 +173,9 @@ class NodalAttributes:
             if values.ndim == 1:
                 values = values.reshape((values.shape[0], 1))
             full_values = np.full(
-                    (self._fort14.values.size,
-                     np.asarray(data['defaults']).flatten().size),
-                    np.nan)
+                (self._fort14.values.size, np.asarray(data['defaults']).flatten().size),
+                np.nan,
+            )
             for i, idx in enumerate(data['indexes']):
                 for j, value in enumerate(values[i, :].tolist()):
                     full_values[idx, j] = value
@@ -220,9 +216,11 @@ def parse_fort13(path):
                 units = 'unitless'
             f.readline()
             defaults = [float(x) for x in f.readline().split()]
-            fort13[attribute_name] = {'units': units,
-                                      'defaults': defaults,
-                                      'indexes': []}
+            fort13[attribute_name] = {
+                'units': units,
+                'defaults': defaults,
+                'indexes': [],
+            }
             i += 1
         for i in range(NAttr):
             attribute_name = f.readline().strip()
@@ -237,7 +235,6 @@ def parse_fort13(path):
                 node_values = [float(x) for x in str[1:]]
                 values[index, :] = node_values
                 j += 1
-            values[np.where(np.isnan(values[:, 0])), :] = \
-                fort13[attribute_name]['defaults']
+            values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13

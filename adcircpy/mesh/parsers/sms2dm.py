@@ -12,17 +12,13 @@ def read(path):
             if line[0] in ['E3T', 'E4Q']:
                 if line[0] not in sms2dm:
                     sms2dm[line[0]] = {}
-                sms2dm[line[0]].update({
-                    line[1]: line[2:]
-                    })
+                sms2dm[line[0]].update({line[1]: line[2:]})
             if line[0] == 'ND':
                 if line[0] not in sms2dm:
                     sms2dm[line[0]] = {}
-                sms2dm[line[0]].update({
-                    line[1]: (
-                        list(map(float, line[2:-1])), float(line[-1])
-                        )
-                    })
+                sms2dm[line[0]].update(
+                    {line[1]: (list(map(float, line[2:-1])), float(line[-1]))}
+                )
     return sms2dm
 
 
@@ -43,7 +39,7 @@ def string(sms2dm):
 
 
 def graph(sms2dm):
-    f = "MESH2D\n"
+    f = 'MESH2D\n'
     # TODO: Make faster using np.array2string
     f += triangular_elements(sms2dm)
     f += quadrilateral_elements(sms2dm)
@@ -53,17 +49,17 @@ def graph(sms2dm):
 
 def nodes(sms2dm):
     assert all(int(id) > 0 for id in sms2dm['ND'])
-    f = ''
+    f = ""
     for id, (coords, value) in sms2dm['ND'].items():
-        f += f"ND {int(id):d} "
-        f += f"{coords[0]:<.16E} "
-        f += f"{coords[1]:<.16E} "
-        f += f"{value:<.16E}\n"
+        f += f'ND {int(id):d} '
+        f += f'{coords[0]:<.16E} '
+        f += f'{coords[1]:<.16E} '
+        f += f'{value:<.16E}\n'
     return f
 
 
 def boundaries(sms2dm):
-    f = ''
+    f = ""
     if 'boundaries' in sms2dm.keys():
         for ibtype, bnds in sms2dm['boundaries'].items():
             for id, bnd in bnds.items():
@@ -74,20 +70,20 @@ def boundaries(sms2dm):
 def geom_string(geom_type, sms2dm):
     assert geom_type in ['E3T', 'E4Q', 'E6T', 'E8Q', 'E9Q']
     assert all(int(id) > 0 for id in sms2dm[geom_type])
-    f = ''
+    f = ""
     for id, geom in sms2dm[geom_type].items():
-        f += f"{geom_type} {id} "
+        f += f'{geom_type} {id} '
         for j in range(len(geom)):
-            f += f"{geom[j]} "
-        f += "\n"
+            f += f'{geom[j]} '
+        f += '\n'
     return f
 
 
 def nodestring(geom):
-    f = "NS "
+    f = 'NS '
     for i in range(len(geom) - 1):
-        f += f"{geom[i]} "
-    f += f"-{geom[-1]}\n"
+        f += f'{geom[i]} '
+    f += f'-{geom[-1]}\n'
     return f
 
 
@@ -96,14 +92,14 @@ def nodestrings(geom):
 
 
 def triangular_elements(geom):
-    f = ''
+    f = ""
     if geom is not None:
-        f += geom_string("E3T", geom)
+        f += geom_string('E3T', geom)
     return f
 
 
 def quadrilateral_elements(geom):
-    f = ''
+    f = ""
     if geom is not None:
-        f += geom_string("E4Q", geom)
+        f += geom_string('E4Q', geom)
     return f

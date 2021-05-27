@@ -8,7 +8,6 @@ import requests
 
 
 class TidalStations(Mapping):
-
     def __init__(self):
         self.__storage = dict()
 
@@ -23,24 +22,24 @@ class TidalStations(Mapping):
 
     def add_station(self, station_id, start_date, end_date):
         self.__storage[station_id] = self.__fetch_station_data(
-            station_id, start_date, end_date)
+            station_id, start_date, end_date
+        )
 
     def __fetch_station_data(self, station_id, start_date, end_date):
         responses = list()
-        for _start_date, _end_date in self.__get_datetime_segments(start_date,
-                                                                   end_date):
+        for _start_date, _end_date in self.__get_datetime_segments(start_date, end_date):
             params = self.__get_params(station_id, _start_date, _end_date)
             try:
-                r = requests.get(self.url, params=params, timeout=10.)
+                r = requests.get(self.url, params=params, timeout=10.0)
                 r.raise_for_status()
             except requests.exceptions.HTTPError as errh:
-                print("Http Error:", errh)
+                print('Http Error:', errh)
             except requests.exceptions.ConnectionError as errc:
-                print("Error Connecting:", errc)
+                print('Error Connecting:', errc)
             except requests.exceptions.Timeout as errt:
-                print("Timeout Error:", errt)
+                print('Timeout Error:', errt)
             except requests.exceptions.RequestException as err:
-                print("Unknown error.", err)
+                print('Unknown error.', err)
             responses.append(r)
         data = dict()
         data['datetime'] = list()
@@ -49,7 +48,8 @@ class TidalStations(Mapping):
             json_data = json.loads(response.text)
             if 'error' in json_data.keys():
                 _start_date, _end_date = list(
-                    self.__get_datetime_segments(start_date, end_date))[i]
+                    self.__get_datetime_segments(start_date, end_date)
+                )[i]
                 data['datetime'].append(_start_date)
                 data['values'].append(np.nan)
                 data['datetime'].append(_end_date)
@@ -62,14 +62,13 @@ class TidalStations(Mapping):
             if 'name' not in data.keys():
                 data['name'] = json_data['metadata']['name']
             for _data in json_data['data']:
-                data['datetime'].append(
-                    datetime.strptime(_data['t'], '%Y-%m-%d %H:%M'))
+                data['datetime'].append(datetime.strptime(_data['t'], '%Y-%m-%d %H:%M'))
                 try:
                     data['values'].append(float(_data['v']))
                 except ValueError:
                     data['values'].append(np.nan)
         if 'name' not in data.keys():
-            data['name'] = ''
+            data['name'] = ""
         return data
 
     def __get_params(self, station_id, start_date, end_date):
@@ -92,12 +91,18 @@ class TidalStations(Mapping):
 
         segments = [(start_date, end_date)]
         interval = 2
-        while np.any([(_end_date - _start_date).total_seconds()
-                      > timedelta(days=31).total_seconds()
-                      for _start_date, _end_date in segments]):
-            segments = [(from_datetime, to_datetime)
-                        for from_datetime, to_datetime
-                        in self.__get_datespan(start_date, end_date, interval)]
+        while np.any(
+            [
+                (_end_date - _start_date).total_seconds() > timedelta(days=31).total_seconds()
+                for _start_date, _end_date in segments
+            ]
+        ):
+            segments = [
+                (from_datetime, to_datetime)
+                for from_datetime, to_datetime in self.__get_datespan(
+                    start_date, end_date, interval
+                )
+            ]
             interval += 1
         for _start_date, _end_date in segments:
             yield _start_date, _end_date
@@ -110,7 +115,7 @@ class TidalStations(Mapping):
         delta = timedelta(seconds=step)
         currentdate = startdate
         while currentdate + delta <= enddate:
-            todate = (currentdate + delta)
+            todate = currentdate + delta
             yield currentdate, todate
             currentdate += delta
 
@@ -134,7 +139,7 @@ class TidalStations(Mapping):
         try:
             return self.__storage[self.station]['name']
         except KeyError:
-            return ''
+            return ""
 
     @property
     def start_date(self):
@@ -146,7 +151,7 @@ class TidalStations(Mapping):
 
     @property
     def url(self):
-        return "https://tidesandcurrents.noaa.gov/api/datagetter?"
+        return 'https://tidesandcurrents.noaa.gov/api/datagetter?'
 
     @property
     def datum(self):
@@ -186,9 +191,7 @@ class TidalStations(Mapping):
 
     @datum.setter
     def datum(self, datum):
-        assert datum \
-               in ['MHHW', 'MHW', 'MTL', 'MSL', 'MLW', 'MLLW', 'NAVD88',
-                   'STND']
+        assert datum in ['MHHW', 'MHW', 'MTL', 'MSL', 'MLW', 'MLLW', 'NAVD88', 'STND']
         if datum == 'NAVD88':
             datum = 'NAVD'
         self.__datum = datum
