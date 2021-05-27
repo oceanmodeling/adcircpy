@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 import logging
 
-from pytz import timezone
-
 from adcircpy.cmd import argument_parser
 from adcircpy.cmd.basecmd import AdcircCommand
+from pytz import timezone
 
 
 class TidalRunCommand(AdcircCommand):

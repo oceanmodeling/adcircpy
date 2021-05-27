@@ -7,11 +7,6 @@ import subprocess
 import tempfile
 from typing import Any, Union
 
-import matplotlib.pyplot as plt
-import numpy as np
-from psutil import cpu_count
-from shapely.geometry import Point
-
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.forcing.winds.best_track import BestTrackForcing
 from adcircpy.fort15 import Fort15
@@ -19,6 +14,10 @@ from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server import SSHConfig, SlurmConfig
 from adcircpy.server.driver_file import DriverFile
+import matplotlib.pyplot as plt
+import numpy as np
+from psutil import cpu_count
+from shapely.geometry import Point
 
 
 class AdcircRun(Fort15):

@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-
 from adcircpy import AdcircMesh
 
 

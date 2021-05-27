@@ -7,10 +7,9 @@ import tempfile
 import unittest
 import urllib.request
 
-from adcircpy.mesh import AdcircMesh
 from adcircpy.driver import AdcircRun
 from adcircpy.forcing import Tides
-
+from adcircpy.mesh import AdcircMesh
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 FORT14 = DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet/fort.14'

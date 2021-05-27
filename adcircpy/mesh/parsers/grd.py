@@ -1,8 +1,8 @@
 from collections import defaultdict
-import os
 import numbers
+import os
 import pathlib
-from typing import Union, Dict, TextIO, Iterable
+from typing import Dict, Iterable, TextIO, Union
 import warnings
 
 import numpy as np  # type: ignore[import]

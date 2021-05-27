@@ -7,7 +7,6 @@ import pathlib
 from adcircpy import AdcircMesh, Fort15
 from adcircpy.forcing.tides import Tides
 
-
 _logger = logging.getLogger(__name__)
 
 

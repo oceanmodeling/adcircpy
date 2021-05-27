@@ -3,11 +3,10 @@ import argparse
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
-
 from adcircpy.outputs import Fort61
 from adcircpy.validation import COOPS
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def parse_args():

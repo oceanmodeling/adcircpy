@@ -2,15 +2,14 @@ import abc
 from functools import lru_cache
 import pathlib
 
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import sms2dm
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 from matplotlib.tri import Triangulation
 from netCDF4 import Dataset
 import numpy as np
 from pyproj import CRS
-
-from adcircpy.mesh.parsers import sms2dm
-from adcircpy.figures import figure
 
 
 # class OutputVariable(Enum):

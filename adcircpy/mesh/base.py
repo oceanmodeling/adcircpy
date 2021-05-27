@@ -1,31 +1,24 @@
 from abc import ABC
 from collections import defaultdict
 from functools import lru_cache
-import logging
 from itertools import permutations
+import logging
 import os
 import pathlib
-from typing import Union, Sequence, Hashable, List, Dict
+from typing import Dict, Hashable, List, Sequence, Union
 
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import grd, sms2dm
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
 import matplotlib.pyplot as plt
-from matplotlib.tri import Triangulation
 from matplotlib.transforms import Bbox
+from matplotlib.tri import Triangulation
 import numpy as np
-from pyproj import Transformer, CRS
-from shapely.geometry import (
-    box,
-    LinearRing,
-    LineString,
-    MultiPolygon,
-    Polygon,
-    Point,
-)
-
-from adcircpy.mesh.parsers import grd, sms2dm
-from adcircpy.figures import figure
+from pyproj import CRS, Transformer
+from shapely.geometry import LineString, LinearRing, MultiPolygon, \
+    Point, Polygon, box
 
 _logger = logging.getLogger(__name__)
 

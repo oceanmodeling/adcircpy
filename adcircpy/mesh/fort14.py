@@ -1,16 +1,15 @@
 import logging
 from typing import Union
 
+from adcircpy.figures import figure, get_topobathy_kwargs
+from adcircpy.mesh.base import Grd  # , sort_edges, signed_polygon_area
+from adcircpy.mesh.parsers import grd
 import geopandas as gpd
 from matplotlib.cm import ScalarMappable
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 from shapely.geometry import LineString, MultiLineString
-
-from adcircpy.figures import figure, get_topobathy_kwargs
-from adcircpy.mesh.parsers import grd
-from adcircpy.mesh.base import Grd  # , sort_edges, signed_polygon_area
 
 _logger = logging.getLogger(__name__)
 

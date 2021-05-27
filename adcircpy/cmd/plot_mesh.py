@@ -2,9 +2,8 @@
 import argparse
 import pathlib
 
-import matplotlib.pyplot as plt
-
 from adcircpy import AdcircMesh
+import matplotlib.pyplot as plt
 
 
 class PlotMeshCommand:
