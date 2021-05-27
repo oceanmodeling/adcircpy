@@ -17,8 +17,7 @@ from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy as np
 from pyproj import CRS, Transformer
-from shapely.geometry import LineString, LinearRing, MultiPolygon, \
-    Point, Polygon, box
+from shapely.geometry import LineString, LinearRing, MultiPolygon, Point, Polygon, box
 
 _logger = logging.getLogger(__name__)
 
