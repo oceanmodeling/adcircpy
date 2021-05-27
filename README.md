@@ -5,6 +5,7 @@
 [![codecov](https://codecov.io/gh/JaimeCalzadaNOAA/adcircpy/branch/main/graph/badge.svg?token=BQWB1QKJ3Q)](https://codecov.io/gh/JaimeCalzadaNOAA/adcircpy)
 [![version](https://img.shields.io/pypi/v/adcircpy)](https://pypi.org/project/adcircpy)
 [![license](https://img.shields.io/github/license/JaimeCalzadaNOAA/adcircpy)](https://opensource.org/licenses/gpl-license)
+[![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
 
 ### Installation notes:
 
