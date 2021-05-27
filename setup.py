@@ -63,15 +63,18 @@ setuptools.setup(
     ],
     # test and development dependencies
     extras_require={
-        'development': [
+        'testing': [
             'colored_traceback',
             'coverage',
             'coverage-badge',
-            'dunamai',
-            'flake8',
             'nose',
             'rednose',
-        ]
+        ],
+        'development': [
+            'dunamai',
+            'flake8',
+            'oitnb',
+        ],
     },
     entry_points={
         'console_scripts': [
