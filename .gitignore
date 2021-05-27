@@ -1,6 +1,7 @@
 examples/outputs
 examples/data
-tests/data
+tests/data/input
+tests/data/output
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python

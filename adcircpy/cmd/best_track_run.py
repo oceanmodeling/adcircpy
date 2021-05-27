@@ -1,31 +1,53 @@
 # import argparse
+from datetime import datetime, timedelta
 import logging
 
+from pytz import timezone
+
 from adcircpy.cmd import argument_parser
-from adcircpy.cmd.basecmd import _AdcircCommand
+from adcircpy.cmd.basecmd import AdcircCommand
 from adcircpy.forcing.winds.best_track import BestTrackForcing
 
+logger = logging.getLogger(__name__)
 
-class _BestTrackRunCommand(_AdcircCommand):
 
+class BestTrackRunCommand(AdcircCommand):
     def __init__(self, args):
+
+        logger.info('Init BestTrackRunCommand')
         super().__init__(args)
-        bt = BestTrackForcing(self._args.storm_id)
-        self.mesh.add_forcing(bt)
-        if self._args.start_date is None:
-            self._start_date = bt.start_date
-            self._end_date = bt.end_date
+
+        logger.info(f'Init BestTrackForcing for {self.args.storm_id}')
+        bt = BestTrackForcing(self.args.storm_id)
+
+        logger.info('Clip BestTrackForcing to bbox')
+        if self.args.clip:
+            bt.clip_to_bbox(self.mesh.get_bbox(output_type='bbox'), self.mesh.crs)
+
+        if args.start_date is None:
+            self.start_date = bt.start_date
         else:
-            raise NotImplementedError("add custom date times?")
+            self.start_date = datetime.strptime(args.start_date, '%%Y-%%m-%%dT%%H')
+
+        if args.run_days is None:
+            self.end_date = bt.end_date
+        else:
+            self.end_date = self.start_date + timedelta(days=args.run_days)
+
+        bt.start_date = self.start_date
+        bt.end_date = self.end_date
+
+        self.mesh.add_forcing(bt)
 
 
 def main():
     args = argument_parser.get_parser('best_track').parse_args()
-    # if len(args.constituents) == 0:
-    #     args.constituents = ['all']
-    logging.basicConfig(level=args.log_level)
-    logging.getLogger("rasterio").setLevel(logging.WARNING)
-    logging.getLogger("fiona").setLevel(logging.WARNING)
-    logging.getLogger("matplotlib").setLevel(logging.WARNING)
-    logging.getLogger("paramiko").setLevel(logging.WARNING)
-    exit(_BestTrackRunCommand(args).run())
+    logging.basicConfig(
+        level={'warning': logging.WARNING, 'info': logging.INFO, 'debug': logging.DEBUG,}[
+            args.log_level
+        ],
+        format='[%(asctime)s] %(name)s %(levelname)s: %(message)s',
+        # force=True,
+    )
+    logging.Formatter.converter = lambda *args: datetime.now(tz=timezone('UTC')).timetuple()
+    BestTrackRunCommand(args).run()

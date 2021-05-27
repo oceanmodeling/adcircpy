@@ -1,31 +1,31 @@
 from datetime import timedelta
 import uuid
 
-from adcircpy.server._base_config import _BaseServerConfig
+from adcircpy.server.base_config import BaseServerConfig
 
 
-class SlurmConfig(_BaseServerConfig):
+class SlurmConfig(BaseServerConfig):
     """
     Object instance of a Slurm shell script (`*.job`).
     """
 
     def __init__(
-            self,
-            account: str,
-            ntasks: int,
-            partition: str,
-            walltime: timedelta,
-            filename: str = 'slurm.job',
-            run_directory: str = '.',
-            run_name: str = None,
-            mail_type: str = None,
-            mail_user: str = None,
-            log_filename: str = None,
-            modules: [str] = None,
-            path_prefix: str = None,
-            extra_commands: [str] = None,
-            launcher: str = 'srun',
-            nodes: int = None
+        self,
+        account: str,
+        ntasks: int,
+        walltime: timedelta,
+        partition: str = None,
+        filename: str = 'slurm.job',
+        run_directory: str = '.',
+        run_name: str = None,
+        mail_type: str = None,
+        mail_user: str = None,
+        log_filename: str = None,
+        modules: [str] = None,
+        path_prefix: str = None,
+        extra_commands: [str] = None,
+        launcher: str = 'srun',
+        nodes: int = None,
     ):
         """
         Instantiate a new Slurm shell script (`*.job`).
@@ -114,13 +114,12 @@ class SlurmConfig(_BaseServerConfig):
     @_log_filename.setter
     def _log_filename(self, log_filename):
         if log_filename is None:
-            log_filename = "slurm.log"
+            log_filename = 'slurm.log'
         self.__log_filename = log_filename
 
     @property
     def _prefix(self):
-        f = f'#SBATCH -D {self._run_directory}\n' \
-            f'#SBATCH -J {self._run_name}\n'
+        f = f'#SBATCH -D {self._run_directory}\n' f'#SBATCH -J {self._run_name}\n'
 
         if self._account is not None:
             f += f'#SBATCH -A {self._account}\n'
@@ -135,18 +134,18 @@ class SlurmConfig(_BaseServerConfig):
         if self._nodes is not None:
             f += f'#SBATCH -N {self._nodes}\n'
 
-        f += f'#SBATCH --time={self._walltime}\n' \
-             f'#SBATCH --partition={self._partition}\n' \
-             f'\n' \
-             f'set -e\n'
+        f += f'#SBATCH --time={self._walltime}\n'
+
+        if self._partition is not None:
+            f += f'#SBATCH --partition={self._partition}\n'
+
+        f += '\nulimit -s unlimited\nset -e\n'
 
         if self._modules is not None:
-            f += f'\n' \
-                 f'module load {" ".join(module for module in self._modules)}\n'
+            f += f'\n' f'module load {" ".join(module for module in self._modules)}\n'
 
         if self._path_prefix is not None:
-            f += f'\n' \
-                 f'PATH={self._path_prefix}:$PATH\n'
+            f += f'\n' f'PATH={self._path_prefix}:$PATH\n'
 
         if self._extra_commands is not None:
             f += '\n'

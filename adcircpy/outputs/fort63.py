@@ -1,7 +1,7 @@
-from adcircpy.outputs.base import _ScalarSurfaceOutputTimeseries
+from adcircpy.outputs.base import ScalarSurfaceOutputTimeseries
 
 
-class Fort63(_ScalarSurfaceOutputTimeseries):
-    _filetype = "fort.63"
+class Fort63(ScalarSurfaceOutputTimeseries):
+    _filetype = 'fort.63'
     _cmap = 'jet'
     _levels = 256

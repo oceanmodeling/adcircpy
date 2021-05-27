@@ -9,53 +9,40 @@ from netCDF4 import Dataset
 import numpy as np
 from pyproj import CRS
 
-from adcircpy.mesh import sms2dm
-from adcircpy.mesh._figures import _figure
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import sms2dm
+
+# class OutputVariable(Enum):
+#     FORT63 = 'zeta'
 
 
-class _SurfaceOutput(metaclass=abc.ABCMeta):
-    _physical_variables = {
-        "fort.63": "zeta",
-        "maxele": "zeta_max"
-    }
+class SurfaceOutput(metaclass=abc.ABCMeta):
+    # change this for __types__
+
+    _physical_variables = {'fort.63': 'zeta', 'maxele': 'zeta_max'}
 
     def __init__(self, path, crs=None):
         self._path = path
         self._crs = crs
 
     def export(self, path, overwrite=False):
-        coords = {i + 1: (self.x[i], self.y[i]) for i in
-                  range(len(self.values))}
-        values = self.values.filled(99999.)
-        nodes = {
-            id: ((x, y), values[i])
-            for i, (id, (x, y)) in enumerate(coords.items())
-        }
-        triangles = {
-            id + 1: tuple(e) for id, e in enumerate(self.triangles + 1)
-        }
-        sms2dm.writer({
-            'ND': nodes,
-            'E3T': triangles
-        },
-            path, overwrite)
+        coords = {i + 1: (self.x[i], self.y[i]) for i in range(len(self.values))}
+        values = self.values.filled(99999.0)
+        nodes = {id: ((x, y), values[i]) for i, (id, (x, y)) in enumerate(coords.items())}
+        triangles = {id + 1: tuple(e) for id, e in enumerate(self.triangles + 1)}
+        sms2dm.writer({'ND': nodes, 'E3T': triangles}, path, overwrite)
 
-    @_figure
+    @figure
     def triplot(self, *args, axes=None, color='k', linewidth=0.1, **kwargs):
-        plt.triplot(
-            self.x,
-            self.y,
-            self.triangles,
-            color=color,
-            linewidth=linewidth
-        )
+        plt.triplot(self.x, self.y, self.triangles, color=color, linewidth=linewidth)
         return axes
 
-    @_figure
+    @figure
     def tricontourf(self, *args, axes=None, **kwargs):
         if np.any(self.values.mask):
-            self.triangulation.set_mask(np.any(
-                self.values.mask[self.triangulation.triangles], axis=1))
+            self.triangulation.set_mask(
+                np.any(self.values.mask[self.triangulation.triangles], axis=1)
+            )
         _ax = plt.tricontourf(
             self.triangulation,
             self.values,
@@ -115,7 +102,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
     def _path(self, path):
         path = pathlib.Path(path)
         if not path.is_file():
-            raise IOError(f"File not found: {str(path)}")
+            raise IOError(f'File not found: {str(path)}')
         self.__path = path
 
     @property
@@ -144,7 +131,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
     @property
     @abc.abstractmethod
     def _filetype(self):
-        """ Subclass must implement _filetype attribute."""
+        """Subclass must implement _filetype attribute."""
 
     @property
     def _values(self):
@@ -162,20 +149,19 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
     def _ptr(self):
         try:
             nc = Dataset(self._path)
-            msg = "NetCDF file provided is not a surface output."
-            assert "adcirc_mesh" in nc.variables, msg
+            msg = 'NetCDF file provided is not a surface output.'
+            assert 'adcirc_mesh' in nc.variables, msg
             msg = f'"{self._physical_variable}" variable not found in file: '
             msg += f'{self._path}, '
-            msg += f"therefore, this is not a {self._filetype} file."
+            msg += f'therefore, this is not a {self._filetype} file.'
             assert self._physical_variable in nc.variables, msg
             return nc
         except OSError as e:
             if e.errno == -51:
                 if self._is_ascii:
-                    raise NotImplementedError(
-                        'ASCII outputs are not implemented.')
+                    raise NotImplementedError('ASCII outputs are not implemented.')
                     values = self._get_ascii_values(0)
-                    return {f"{self._physical_variable}": values}
+                    return {f'{self._physical_variable}': values}
             raise e
 
     @property
@@ -197,8 +183,7 @@ class _SurfaceOutput(metaclass=abc.ABCMeta):
             return False
 
 
-class _SurfaceOutputTimeseries(_SurfaceOutput):
-
+class SurfaceOutputTimeseries(SurfaceOutput):
     def __init__(self, path, crs=None, index=0):
         super().__init__(path, crs)
         self.index = index
@@ -232,23 +217,13 @@ class _SurfaceOutputTimeseries(_SurfaceOutput):
     @property
     @abc.abstractmethod
     def animation(self):
-        """ Subclass must implement animation method."""
+        """Subclass must implement animation method."""
 
 
-class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
+class ScalarSurfaceOutputTimeseries(SurfaceOutputTimeseries):
+    def animation(self, save=False, fps=3, start_frame=0, end_frame=-1, **kwargs):
 
-    def animation(
-            self,
-            save=False,
-            fps=3,
-            start_frame=0,
-            end_frame=-1,
-            **kwargs
-            ):
-
-        fig = plt.figure(
-            figsize=kwargs.get("figsize")
-            )
+        fig = plt.figure(figsize=kwargs.get('figsize'))
         ax = fig.add_subplot(111)
         plt.tight_layout(pad=2)
         _oi = self.index
@@ -263,8 +238,9 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             else:
                 cax = None
             if np.any(self.values.mask):
-                self.triangulation.set_mask(np.any(
-                    self.values.mask[self.triangulation.triangles], axis=1))
+                self.triangulation.set_mask(
+                    np.any(self.values.mask[self.triangulation.triangles], axis=1)
+                )
 
             if kwargs.get('elements', False):
                 ax.triplot(self.triangulation, color='k', linewidth=0.7)
@@ -272,19 +248,11 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             _ax = ax.tricontourf(
                 self.triangulation,
                 self.values,
-                cmap=kwargs.get("cmap", self._cmap),
-                levels=kwargs.get("levels", self._levels),
-                )
-            ax.set_ylim(
-                ymin=kwargs.get("ymin"),
-                ymax=kwargs.get("ymax"),
-                auto=True
-                )
-            ax.set_xlim(
-                xmin=kwargs.get("xmin"),
-                xmax=kwargs.get("xmax"),
-                auto=True
-                )
+                cmap=kwargs.get('cmap', self._cmap),
+                levels=kwargs.get('levels', self._levels),
+            )
+            ax.set_ylim(ymin=kwargs.get('ymin'), ymax=kwargs.get('ymax'), auto=True)
+            ax.set_xlim(xmin=kwargs.get('xmin'), xmax=kwargs.get('xmax'), auto=True)
             # ax.set_title(dates[i].strftime('%b %d, %Y %H:%M'))
             ax.set_xlabel('Longitude (°E)')
             ax.set_ylabel('Latitude (°N)')
@@ -292,26 +260,16 @@ class _ScalarSurfaceOutputTimeseries(_SurfaceOutputTimeseries):
             # cbar.ax.set_ylabel('UNITS', rotation=90)
 
         end_frame = end_frame % len(self) if end_frame < 0 else end_frame
-        start_frame = start_frame % len(
-            self) if start_frame < 0 else start_frame
+        start_frame = start_frame % len(self) if start_frame < 0 else start_frame
         frames = range(start_frame, end_frame)
-        anim = FuncAnimation(
-            fig,
-            animate,
-            frames,
-            blit=False
-            )
+        anim = FuncAnimation(fig, animate, frames, blit=False)
 
         if save:
-            anim.save(
-                pathlib.Path(save),
-                writer='imagemagick',
-                fps=fps
-            )
+            anim.save(pathlib.Path(save), writer='imagemagick', fps=fps)
 
         self.index = _oi
 
-        if kwargs.get("show", False):
+        if kwargs.get('show', False):
             plt.show()
 
         return anim

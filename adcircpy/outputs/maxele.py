@@ -1,8 +1,9 @@
-from adcircpy.outputs.base import _SurfaceOutput
+from adcircpy.outputs.base import SurfaceOutput
 
 
-class Maxele(_SurfaceOutput):
+class Maxele(SurfaceOutput):
     _filetype = 'maxele'
+
 
 # import numpy as np
 # import pathlib

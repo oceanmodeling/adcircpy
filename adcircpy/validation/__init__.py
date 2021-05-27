@@ -4,6 +4,6 @@ from adcircpy.validation import COOPS
 # from adcircpy.outputs.validation.TaylorDiagram import TaylorDiagram
 __all__ = [
     # "USGS",
-    "COOPS",
+    'COOPS',
     # "TaylorDiagram"
 ]
