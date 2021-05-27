@@ -22,20 +22,20 @@ import numpy as np
 from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
-FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
+FORT14 = PARENT / 'data/NetCDF_Shinnecock_Inlet/fort.14'
 
 
 def main():
     # fetch shinnecock inlet test data
     if not FORT14.is_file():
-        url = "https://www.dropbox.com/s/1wk91r67cacf132/"
-        url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
+        url = 'https://www.dropbox.com/s/1wk91r67cacf132/'
+        url += 'NetCDF_shinnecock_inlet.tar.bz2?dl=1'
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
-        with open(tmpfile.name, "b+w") as f:
+        with open(tmpfile.name, 'b+w') as f:
             f.write(g.read())
-        with tarfile.open(tmpfile.name, "r:bz2") as tar:
-            tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
+        with tarfile.open(tmpfile.name, 'r:bz2') as tar:
+            tar.extractall(PARENT / 'data/NetCDF_Shinnecock_Inlet/')
 
     # open mesh file
     mesh = AdcircMesh.open(FORT14, crs=4326)
@@ -48,11 +48,11 @@ def main():
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
-    tidal_forcing.use_constituent("M2")
-    tidal_forcing.use_constituent("N2")
-    tidal_forcing.use_constituent("S2")
-    tidal_forcing.use_constituent("K1")
-    tidal_forcing.use_constituent("O1")
+    tidal_forcing.use_constituent('M2')
+    tidal_forcing.use_constituent('N2')
+    tidal_forcing.use_constituent('S2')
+    tidal_forcing.use_constituent('K1')
+    tidal_forcing.use_constituent('O1')
 
     mesh.add_forcing(tidal_forcing)
 
@@ -62,12 +62,7 @@ def main():
     end_date = start_date + timedelta(days=3)
 
     # instantiate AdcircRun object.
-    driver = AdcircRun(
-        mesh,
-        start_date,
-        end_date,
-        spinup_time,
-    )
+    driver = AdcircRun(mesh, start_date, end_date, spinup_time,)
 
     # request outputs
     driver.set_elevation_surface_output(sampling_rate=timedelta(minutes=30))
@@ -77,18 +72,18 @@ def main():
     driver.timestep = 4.0
 
     # run parallel ADCIRC if binary is installed
-    if shutil.which("padcirc") is not None:
-        driver.run(PARENT / "outputs/example_2", overwrite=True)
+    if shutil.which('padcirc') is not None:
+        driver.run(PARENT / 'outputs/example_2', overwrite=True)
     # run serial ADCIRC if binary is installed
-    elif shutil.which("adcirc") is not None:
-        driver.run(PARENT / "outputs/example_2", overwrite=True, nproc=1)
+    elif shutil.which('adcirc') is not None:
+        driver.run(PARENT / 'outputs/example_2', overwrite=True, nproc=1)
     # binaries are not installed, write to disk and exit
     else:
-        msg = "ADCIRC binaries were not found in PATH. ADCIRC will not run. "
-        msg += "Writing files to disk..."
+        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg += 'Writing files to disk...'
         warnings.warn(msg)
-        driver.write(PARENT / "outputs/example_2", overwrite=True)
+        driver.write(PARENT / 'outputs/example_2', overwrite=True)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

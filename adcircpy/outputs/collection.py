@@ -57,7 +57,7 @@ class OutputCollection(
 
     @property
     def _maxele(self):
-        return self._container["maxele"]
+        return self._container['maxele']
 
     @property
     def _crs(self):
@@ -65,7 +65,7 @@ class OutputCollection(
 
     @_maxele.setter
     def _maxele(self, maxele):
-        self._container["maxele"] = self._certify_output_type(maxele, Maxele)
+        self._container['maxele'] = self._certify_output_type(maxele, Maxele)
 
     @_crs.setter
     def _crs(self, crs):

@@ -9,13 +9,13 @@ from scipy.interpolate import griddata
 
 from adcircpy.forcing.tides.dataset import TidalDataset
 
-TPXO_ENVIRONMENT_VARIABLE = "TPXO_NCFILE"
-TPXO_FILENAME = "h_tpxo9.v1.nc"
+TPXO_ENVIRONMENT_VARIABLE = 'TPXO_NCFILE'
+TPXO_FILENAME = 'h_tpxo9.v1.nc'
 
 
 class TPXO(TidalDataset):
 
-    DEFAULT_PATH = Path(appdirs.user_data_dir("tpxo")) / TPXO_FILENAME
+    DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / TPXO_FILENAME
 
     def __init__(self, tpxo_dataset_filename: PathLike = None):
         if tpxo_dataset_filename is None:
@@ -31,15 +31,15 @@ class TPXO(TidalDataset):
             self.dataset = Dataset(self.path)
         else:
             raise FileNotFoundError(
-                "\n".join(
+                '\n'.join(
                     [
                         f'No TPXO file found at "{self.path}".',
-                        "New users will need to register and request a copy of "
-                        f"the TPXO9 NetCDF file (specifically `{TPXO_FILENAME}`) "
-                        "from the authors at https://www.tpxo.net.",
-                        "Once you obtain `h_tpxo9.v1.nc`, you can follow one of the following options: ",
+                        'New users will need to register and request a copy of '
+                        f'the TPXO9 NetCDF file (specifically `{TPXO_FILENAME}`) '
+                        'from the authors at https://www.tpxo.net.',
+                        'Once you obtain `h_tpxo9.v1.nc`, you can follow one of the following options: ',
                         f'1) copy or symlink the file to "{self.path}"',
-                        f"2) set the environment variable `{TPXO_ENVIRONMENT_VARIABLE}` to point to the file",
+                        f'2) set the environment variable `{TPXO_ENVIRONMENT_VARIABLE}` to point to the file',
                     ]
                 )
             )
@@ -58,29 +58,29 @@ class TPXO(TidalDataset):
 
     @property
     def x(self) -> np.ndarray:
-        return self.dataset["lon_z"][:, 0].data
+        return self.dataset['lon_z'][:, 0].data
 
     @property
     def y(self) -> np.ndarray:
-        return self.dataset["lat_z"][0, :].data
+        return self.dataset['lat_z'][0, :].data
 
     @property
     def ha(self) -> np.ndarray:
-        return self.dataset["ha"][:]
+        return self.dataset['ha'][:]
 
     @property
     def hp(self) -> np.ndarray:
-        return self.dataset["hp"][:]
+        return self.dataset['hp'][:]
 
     @property
     def constituents(self):
-        if not hasattr(self, "_constituents"):
+        if not hasattr(self, '_constituents'):
             self._constituents = [
                 c.capitalize()
-                for c in self.dataset["con"][:]
-                .astype("|S1")
+                for c in self.dataset['con'][:]
+                .astype('|S1')
                 .tostring()
-                .decode("utf-8")
+                .decode('utf-8')
                 .split()
             ]
         return self._constituents
@@ -99,7 +99,7 @@ class TPXO(TidalDataset):
         array = tpxo_array[constituent, :, :].flatten()
         _x = np.asarray([x + 360.0 for x in vertices[:, 0] if x < 0]).flatten()
         _y = vertices[:, 1].flatten()
-        x, y = np.meshgrid(self.x, self.y, indexing="ij")
+        x, y = np.meshgrid(self.x, self.y, indexing='ij')
         x = x.flatten()
         y = y.flatten()
         dx = np.mean(np.diff(self.x))
@@ -115,17 +115,10 @@ class TPXO(TidalDataset):
 
         # "method" can be 'spline' or any string accepted by griddata()'s method kwarg.
         values = griddata(
-            (x[_idx], y[_idx]),
-            array[_idx],
-            (_x, _y),
-            method="linear",
-            fill_value=np.nan,
+            (x[_idx], y[_idx]), array[_idx], (_x, _y), method='linear', fill_value=np.nan,
         )
         nan_idxs = np.where(np.isnan(values))
         values[nan_idxs] = griddata(
-            (x[_idx], y[_idx]),
-            array[_idx],
-            (_x[nan_idxs], _y[nan_idxs]),
-            method="nearest",
+            (x[_idx], y[_idx]), array[_idx], (_x[nan_idxs], _y[nan_idxs]), method='nearest',
         )
         return values

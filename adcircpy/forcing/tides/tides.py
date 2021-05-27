@@ -28,8 +28,8 @@ class Tides(bctypes.EtaBc):
                 tidal_source = TidalSource[tidal_source.upper()]
             except:
                 raise NotImplementedError(
-                    f"tidal source {tidal_source} not recognized; "
-                    f"must be one of {[entry.__name__ for entry in TidalSource]}"
+                    f'tidal source {tidal_source} not recognized; '
+                    f'must be one of {[entry.__name__ for entry in TidalSource]}'
                 )
 
         self.tidal_source = tidal_source
@@ -50,8 +50,8 @@ class Tides(bctypes.EtaBc):
             if constituent not in self.major_constituents:
                 potential = False
             self._active_constituents[constituent] = {
-                "potential": potential,
-                "forcing": forcing,
+                'potential': potential,
+                'forcing': forcing,
             }
 
     def use_major(self, potential=True, forcing=True):
@@ -59,19 +59,19 @@ class Tides(bctypes.EtaBc):
             self.use_constituent(constituent, potential, forcing)
 
     def use_constituent(self, constituent, potential=True, forcing=True):
-        msg = "Constituent must be one of "
-        msg += f"{self.constituents}"
+        msg = 'Constituent must be one of '
+        msg += f'{self.constituents}'
         assert constituent in self.constituents, msg
         if constituent not in self.major_constituents:
             potential = False
         self._active_constituents[constituent] = {
-            "potential": potential,
-            "forcing": forcing,
+            'potential': potential,
+            'forcing': forcing,
         }
 
     def drop_constituent(self, constituent):
-        msg = "constituent must be one of: "
-        msg += f"{self.active_constituents}"
+        msg = 'constituent must be one of: '
+        msg += f'{self.active_constituents}'
         assert constituent in self.active_constituents, msg
         self._active_constituents.pop(constituent)
 
@@ -81,14 +81,14 @@ class Tides(bctypes.EtaBc):
     def get_active_forcing_constituents(self):
         fc = []
         for c, d in self.active_constituents.items():
-            if d["forcing"]:
+            if d['forcing']:
                 fc.append(c)
         return fc
 
     def get_active_potential_constituents(self):
         fc = []
         for c, d in self.active_constituents.items():
-            if d["potential"]:
+            if d['potential']:
                 fc.append(c)
         return fc
 
@@ -120,82 +120,82 @@ class Tides(bctypes.EtaBc):
             pass
 
     def get_nodal_factor(self, constituent):
-        if constituent == "M2":
+        if constituent == 'M2':
             return self.EQ78
-        elif constituent == "S2":
+        elif constituent == 'S2':
             return 1.0
-        elif constituent == "N2":
+        elif constituent == 'N2':
             return self.EQ78
-        elif constituent == "K1":
+        elif constituent == 'K1':
             return self.EQ227
-        elif constituent == "M4":
+        elif constituent == 'M4':
             return (self.EQ78) ** 2.0
-        elif constituent == "O1":
+        elif constituent == 'O1':
             return self.EQ75
-        elif constituent == "M6":
+        elif constituent == 'M6':
             return (self.EQ78) ** 3.0
-        elif constituent == "MK3":
+        elif constituent == 'MK3':
             return self.EQ78 * self.EQ227
-        elif constituent == "S4":
+        elif constituent == 'S4':
             return 1.0
-        elif constituent == "MN4":
+        elif constituent == 'MN4':
             return (self.EQ78) ** 2.0
-        elif constituent == "Nu2":
+        elif constituent == 'Nu2':
             return self.EQ78
-        elif constituent == "S6":
+        elif constituent == 'S6':
             return 1.0
-        elif constituent == "MU2":
+        elif constituent == 'MU2':
             return self.EQ78
-        elif constituent == "2N2":
+        elif constituent == '2N2':
             return self.EQ78
-        elif constituent == "OO1":
+        elif constituent == 'OO1':
             return self.EQ77
-        elif constituent == "lambda2":
+        elif constituent == 'lambda2':
             return self.EQ78
-        elif constituent == "S1":
+        elif constituent == 'S1':
             return 1.0
-        elif constituent == "M1":
+        elif constituent == 'M1':
             return self.EQ207
-        elif constituent == "J1":
+        elif constituent == 'J1':
             return self.EQ76
-        elif constituent == "Mm":
+        elif constituent == 'Mm':
             return self.EQ73
-        elif constituent == "Ssa":
+        elif constituent == 'Ssa':
             return 1.0
-        elif constituent == "Sa":
+        elif constituent == 'Sa':
             return 1.0
-        elif constituent == "Msf":
+        elif constituent == 'Msf':
             return self.EQ78
-        elif constituent == "Mf":
+        elif constituent == 'Mf':
             return self.EQ74
-        elif constituent == "RHO":
+        elif constituent == 'RHO':
             return self.EQ75
-        elif constituent == "Q1":
+        elif constituent == 'Q1':
             return self.EQ75
-        elif constituent == "T2":
+        elif constituent == 'T2':
             return 1.0
-        elif constituent == "R2":
+        elif constituent == 'R2':
             return 1.0
-        elif constituent == "2Q1":
+        elif constituent == '2Q1':
             return self.EQ75
-        elif constituent == "P1":
+        elif constituent == 'P1':
             return 1.0
-        elif constituent == "2SM2":
+        elif constituent == '2SM2':
             return self.EQ78
-        elif constituent == "M3":
+        elif constituent == 'M3':
             return self.EQ149
-        elif constituent == "L2":
+        elif constituent == 'L2':
             return self.EQ215
-        elif constituent == "2MK3":
+        elif constituent == '2MK3':
             return self.EQ227 * self.EQ78 ** 2
-        elif constituent == "K2":
+        elif constituent == 'K2':
             return self.EQ235
-        elif constituent == "M8":
+        elif constituent == 'M8':
             return self.EQ78 ** 4
-        elif constituent == "MS4":
+        elif constituent == 'MS4':
             return self.EQ78
         else:
-            msg = f"Unrecognized constituent {constituent}"
+            msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
 
     def _normalize_to_360(f):
@@ -206,26 +206,26 @@ class Tides(bctypes.EtaBc):
 
     @_normalize_to_360
     def get_greenwich_factor(self, constituent):
-        if constituent == "M2":
+        if constituent == 'M2':
             return 2.0 * (self.DT - self.DS + self.DH) + 2.0 * (self.DXI - self.DNU)
-        elif constituent == "S2":
+        elif constituent == 'S2':
             return 2.0 * self.DT
-        elif constituent == "N2":
+        elif constituent == 'N2':
             return (
                 2.0 * (self.DT + self.DH)
                 - 3.0 * self.DS
                 + self.DP
                 + 2.0 * (self.DXI - self.DNU)
             )
-        elif constituent == "K1":
+        elif constituent == 'K1':
             return self.DT + self.DH - 90.0 - self.DNUP
-        elif constituent == "M4":
+        elif constituent == 'M4':
             return 4.0 * (self.DT - self.DS + self.DH) + 4.0 * (self.DXI - self.DNU)
-        elif constituent == "O1":
+        elif constituent == 'O1':
             return self.DT - 2.0 * self.DS + self.DH + 90.0 + 2.0 * self.DXI - self.DNU
-        elif constituent == "M6":
+        elif constituent == 'M6':
             return 6.0 * (self.DT - self.DS + self.DH) + 6.0 * (self.DXI - self.DNU)
-        elif constituent == "MK3":
+        elif constituent == 'MK3':
             return (
                 3.0 * (self.DT + self.DH)
                 - 2.0 * self.DS
@@ -233,16 +233,16 @@ class Tides(bctypes.EtaBc):
                 + 2.0 * (self.DXI - self.DNU)
                 - self.DNUP
             )
-        elif constituent == "S4":
+        elif constituent == 'S4':
             return 4.0 * self.DT
-        elif constituent == "MN4":
+        elif constituent == 'MN4':
             return (
                 4.0 * (self.DT + self.DH)
                 - 5.0 * self.DS
                 + self.DP
                 + 4.0 * (self.DXI - self.DNU)
             )
-        elif constituent == "Nu2":
+        elif constituent == 'Nu2':
             return (
                 2.0 * self.DT
                 - 3.0 * self.DS
@@ -250,39 +250,35 @@ class Tides(bctypes.EtaBc):
                 - self.DP
                 + 2.0 * (self.DXI - self.DNU)
             )
-        elif constituent == "S6":
+        elif constituent == 'S6':
             return 6.0 * self.DT
-        elif constituent == "MU2":
-            return 2.0 * (self.DT + 2.0 * (self.DH - self.DS)) + 2.0 * (
-                self.DXI - self.DNU
-            )
-        elif constituent == "2N2":
+        elif constituent == 'MU2':
+            return 2.0 * (self.DT + 2.0 * (self.DH - self.DS)) + 2.0 * (self.DXI - self.DNU)
+        elif constituent == '2N2':
             return 2.0 * (self.DT - 2.0 * self.DS + self.DH + self.DP) + 2.0 * (
                 self.DXI - self.DNU
             )
-        elif constituent == "OO1":
+        elif constituent == 'OO1':
             return self.DT + 2.0 * self.DS + self.DH - 90.0 - 2.0 * self.DXI - self.DNU
-        elif constituent == "lambda2":
-            return (
-                2.0 * self.DT - self.DS + self.DP + 180.0 + 2.0 * (self.DXI - self.DNU)
-            )
-        elif constituent == "S1":
+        elif constituent == 'lambda2':
+            return 2.0 * self.DT - self.DS + self.DP + 180.0 + 2.0 * (self.DXI - self.DNU)
+        elif constituent == 'S1':
             return self.DT
-        elif constituent == "M1":
+        elif constituent == 'M1':
             return self.DT - self.DS + self.DH - 90.0 + self.DXI - self.DNU + self.DQ
-        elif constituent == "J1":
+        elif constituent == 'J1':
             return self.DT + self.DS + self.DH - self.DP - 90.0 - self.DNU
-        elif constituent == "Mm":
+        elif constituent == 'Mm':
             return self.DS - self.DP
-        elif constituent == "Ssa":
+        elif constituent == 'Ssa':
             return 2.0 * self.DH
-        elif constituent == "Sa":
+        elif constituent == 'Sa':
             return self.DH
-        elif constituent == "Msf":
+        elif constituent == 'Msf':
             return 2.0 * (self.DS - self.DH)
-        elif constituent == "Mf":
+        elif constituent == 'Mf':
             return 2.0 * self.DS - 2.0 * self.DXI
-        elif constituent == "RHO":
+        elif constituent == 'RHO':
             return (
                 self.DT
                 + 3.0 * (self.DH - self.DS)
@@ -291,21 +287,15 @@ class Tides(bctypes.EtaBc):
                 + 2.0 * self.DXI
                 - self.DNU
             )
-        elif constituent == "Q1":
+        elif constituent == 'Q1':
             return (
-                self.DT
-                - 3.0 * self.DS
-                + self.DH
-                + self.DP
-                + 90.0
-                + 2.0 * self.DXI
-                - self.DNU
+                self.DT - 3.0 * self.DS + self.DH + self.DP + 90.0 + 2.0 * self.DXI - self.DNU
             )
-        elif constituent == "T2":
+        elif constituent == 'T2':
             return 2.0 * self.DT - self.DH + self.DP1
-        elif constituent == "R2":
+        elif constituent == 'R2':
             return 2.0 * self.DT + self.DH - self.DP1 + 180.0
-        elif constituent == "2Q1":
+        elif constituent == '2Q1':
             return (
                 self.DT
                 - 4.0 * self.DS
@@ -315,13 +305,13 @@ class Tides(bctypes.EtaBc):
                 + 2.0 * self.DXI
                 - self.DNU
             )
-        elif constituent == "P1":
+        elif constituent == 'P1':
             return self.DT - self.DH + 90.0
-        elif constituent == "2SM2":
+        elif constituent == '2SM2':
             return 2.0 * (self.DT + self.DS - self.DH) + 2.0 * (self.DNU - self.DXI)
-        elif constituent == "M3":
+        elif constituent == 'M3':
             return 3.0 * (self.DT - self.DS + self.DH) + 3.0 * (self.DXI - self.DNU)
-        elif constituent == "L2":
+        elif constituent == 'L2':
             return (
                 2.0 * (self.DT + self.DH)
                 - self.DS
@@ -330,7 +320,7 @@ class Tides(bctypes.EtaBc):
                 + 2.0 * (self.DXI - self.DNU)
                 - self.DR
             )
-        elif constituent == "2MK3":
+        elif constituent == '2MK3':
             return (
                 3.0 * (self.DT + self.DH)
                 - 4.0 * self.DS
@@ -338,16 +328,14 @@ class Tides(bctypes.EtaBc):
                 + 4.0 * (self.DXI - self.DNU)
                 + self.DNUP
             )
-        elif constituent == "K2":
+        elif constituent == 'K2':
             return 2.0 * (self.DT + self.DH) - 2.0 * self.DNUP2
-        elif constituent == "M8":
+        elif constituent == 'M8':
             return 8.0 * (self.DT - self.DS + self.DH) + 8.0 * (self.DXI - self.DNU)
-        elif constituent == "MS4":
-            return 2.0 * (2.0 * self.DT - self.DS + self.DH) + 2.0 * (
-                self.DXI - self.DNU
-            )
+        elif constituent == 'MS4':
+            return 2.0 * (2.0 * self.DT - self.DS + self.DH) + 2.0 * (self.DXI - self.DNU)
         else:
-            msg = f"Unrecognized constituent {constituent}"
+            msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
 
     def get_lunar_node(self):
@@ -470,7 +458,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__start_date
         except AttributeError:
-            msg = "Must set start_date attribute."
+            msg = 'Must set start_date attribute.'
             raise AttributeError(msg)
 
     @property
@@ -478,7 +466,7 @@ class Tides(bctypes.EtaBc):
         try:
             return self.__end_date
         except AttributeError:
-            msg = "Must set end_date attribute."
+            msg = 'Must set end_date attribute.'
             raise AttributeError(msg)
 
     @property
@@ -498,85 +486,85 @@ class Tides(bctypes.EtaBc):
 
     @property
     def major_constituents(self) -> [str]:
-        return ["Q1", "O1", "P1", "K1", "N2", "M2", "S2", "K2"]
+        return ['Q1', 'O1', 'P1', 'K1', 'N2', 'M2', 'S2', 'K2']
 
     @property
     def constituents(self) -> [str]:
         constituents = self.major_constituents
         if self.tidal_source == TidalSource.TPXO:
-            constituents.extend(["Mm", "Mf", "M4", "MN4", "MS4", "2N2", "S1"])
+            constituents.extend(['Mm', 'Mf', 'M4', 'MN4', 'MS4', '2N2', 'S1'])
         return constituents
 
     @property
     def orbital_frequencies(self) -> {str: float}:
         return {
-            "M4": 0.0002810378050173,
-            "M6": 0.0004215567080107,
-            "MK3": 0.0002134400613513,
-            "S4": 0.0002908882086657,
-            "MN4": 0.0002783986019952,
-            "S6": 0.0004363323129986,
-            "M3": 0.0002107783537630,
-            "2MK3": 0.0002081166466594,
-            "M8": 0.0005620756090649,
-            "MS4": 0.0002859630068415,
-            "M2": 0.0001405189025086,
-            "S2": 0.0001454441043329,
-            "N2": 0.0001378796994865,
-            "Nu2": 0.0001382329037065,
-            "MU2": 0.0001355937006844,
-            "2N2": 0.0001352404964644,
-            "lambda2": 0.0001428049013108,
-            "T2": 0.0001452450073529,
-            "R2": 0.0001456432013128,
-            "2SM2": 0.0001503693061571,
-            "L2": 0.0001431581055307,
-            "K2": 0.0001458423172006,
-            "K1": 0.0000729211583579,
-            "O1": 0.0000675977441508,
-            "OO1": 0.0000782445730498,
-            "S1": 0.0000727220521664,
-            "M1": 0.0000702594512543,
-            "J1": 0.0000755603613800,
-            "RHO": 0.0000653117453487,
-            "Q1": 0.0000649585411287,
-            "2Q1": 0.0000623193381066,
-            "P1": 0.0000725229459750,
-            "Mm": 0.0000026392030221,
-            "Ssa": 0.0000003982128677,
-            "Sa": 0.0000001991061914,
-            "Msf": 0.0000049252018242,
-            "Mf": 0.0000053234146919,
+            'M4': 0.0002810378050173,
+            'M6': 0.0004215567080107,
+            'MK3': 0.0002134400613513,
+            'S4': 0.0002908882086657,
+            'MN4': 0.0002783986019952,
+            'S6': 0.0004363323129986,
+            'M3': 0.0002107783537630,
+            '2MK3': 0.0002081166466594,
+            'M8': 0.0005620756090649,
+            'MS4': 0.0002859630068415,
+            'M2': 0.0001405189025086,
+            'S2': 0.0001454441043329,
+            'N2': 0.0001378796994865,
+            'Nu2': 0.0001382329037065,
+            'MU2': 0.0001355937006844,
+            '2N2': 0.0001352404964644,
+            'lambda2': 0.0001428049013108,
+            'T2': 0.0001452450073529,
+            'R2': 0.0001456432013128,
+            '2SM2': 0.0001503693061571,
+            'L2': 0.0001431581055307,
+            'K2': 0.0001458423172006,
+            'K1': 0.0000729211583579,
+            'O1': 0.0000675977441508,
+            'OO1': 0.0000782445730498,
+            'S1': 0.0000727220521664,
+            'M1': 0.0000702594512543,
+            'J1': 0.0000755603613800,
+            'RHO': 0.0000653117453487,
+            'Q1': 0.0000649585411287,
+            '2Q1': 0.0000623193381066,
+            'P1': 0.0000725229459750,
+            'Mm': 0.0000026392030221,
+            'Ssa': 0.0000003982128677,
+            'Sa': 0.0000001991061914,
+            'Msf': 0.0000049252018242,
+            'Mf': 0.0000053234146919,
         }
 
     @property
     def tidal_potential_amplitudes(self) -> {str: float}:
         return {
-            "M2": 0.242334,
-            "S2": 0.112841,
-            "N2": 0.046398,
-            "K2": 0.030704,
-            "K1": 0.141565,
-            "O1": 0.100514,
-            "P1": 0.046843,
-            "Q1": 0.019256,
+            'M2': 0.242334,
+            'S2': 0.112841,
+            'N2': 0.046398,
+            'K2': 0.030704,
+            'K1': 0.141565,
+            'O1': 0.100514,
+            'P1': 0.046843,
+            'Q1': 0.019256,
         }
 
     @property
     def tidal_species_type(self) -> {str: float}:
-        return {"M2": 2, "S2": 2, "N2": 2, "K2": 2, "K1": 1, "O1": 1, "P1": 1, "Q1": 1}
+        return {'M2': 2, 'S2': 2, 'N2': 2, 'K2': 2, 'K1': 1, 'O1': 1, 'P1': 1, 'Q1': 1}
 
     @property
     def earth_tidal_potentials(self) -> {str: float}:
         return {
-            "M2": 0.693,
-            "S2": 0.693,
-            "N2": 0.693,
-            "K2": 0.693,
-            "K1": 0.736,
-            "O1": 0.695,
-            "P1": 0.706,
-            "Q1": 0.695,
+            'M2': 0.693,
+            'S2': 0.693,
+            'N2': 0.693,
+            'K2': 0.693,
+            'K1': 0.736,
+            'O1': 0.695,
+            'P1': 0.706,
+            'Q1': 0.695,
         }
 
     @property
@@ -651,9 +639,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def NUP(self):
-        return np.arctan(
-            np.sin(self.NU) / (np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I))
-        )
+        return np.arctan(np.sin(self.NU) / (np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I)))
 
     @property
     def DNUP(self):
@@ -725,10 +711,10 @@ class Tides(bctypes.EtaBc):
         if start_date is None:
             del self.start_date
             return
-        msg = f"start_date must be an instance of type {datetime}."
+        msg = f'start_date must be an instance of type {datetime}.'
         assert isinstance(start_date, datetime), msg
         try:
-            msg = "start_date must be smaller than end_date."
+            msg = 'start_date must be smaller than end_date.'
             assert start_date < self.end_date, msg
         except AttributeError:
             pass
@@ -739,11 +725,11 @@ class Tides(bctypes.EtaBc):
         if end_date is None:
             del self.end_date
             return
-        msg = f"end_date must be an instance of type {datetime}."
+        msg = f'end_date must be an instance of type {datetime}.'
         assert isinstance(end_date, datetime), msg
         try:
-            msg = f"end_date ({end_date}) must be larger than "
-            msg += f"start_date ({self.start_date})."
+            msg = f'end_date ({end_date}) must be larger than '
+            msg += f'start_date ({self.start_date}).'
             assert end_date > self.start_date, msg
         except AttributeError:
             pass
@@ -754,7 +740,7 @@ class Tides(bctypes.EtaBc):
         if spinup_time is None:
             del self.spinup_time
             return
-        msg = f"spinup_time must be of and instance of type {timedelta}."
+        msg = f'spinup_time must be of and instance of type {timedelta}.'
         assert isinstance(spinup_time, timedelta), msg
         self.__spinup_time = np.abs(spinup_time)
 
@@ -791,7 +777,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def btype(self):
-        return "iettype"
+        return 'iettype'
 
     @property
     def iettype(self):

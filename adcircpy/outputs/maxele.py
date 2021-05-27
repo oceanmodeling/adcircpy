@@ -2,7 +2,7 @@ from adcircpy.outputs.base import SurfaceOutput
 
 
 class Maxele(SurfaceOutput):
-    _filetype = "maxele"
+    _filetype = 'maxele'
 
 
 # import numpy as np

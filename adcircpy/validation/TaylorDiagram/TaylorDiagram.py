@@ -3,8 +3,8 @@ Taylor diagram (Taylor, 2001) test implementation.
 http://www-pcmdi.llnl.gov/about/staff/Taylor/CV/Taylor_diagram_primer.htm
 """
 
-__version__ = "Time-stamp: <2012-02-17 20:59:35 ycopin>"
-__author__ = "Yannick Copin <yannick.copin@laposte.net>"
+__version__ = 'Time-stamp: <2012-02-17 20:59:35 ycopin>'
+__author__ = 'Yannick Copin <yannick.copin@laposte.net>'
 
 # Rev. 1.0  saeed Moghimi  moghimis@gmail.com
 
@@ -20,7 +20,7 @@ class TaylorDiagram:
     r=stddev and theta=arccos(correlation).
     """
 
-    def __init__(self, refstd, fig=None, rect=111, label="_"):
+    def __init__(self, refstd, fig=None, rect=111, label='_'):
         """Set up Taylor diagram axes, i.e. single quadrant polar
         plot, using mpl_toolkits.axisartist.floating_axes. refstd is
         the reference standard deviation to be compared to.
@@ -58,22 +58,22 @@ class TaylorDiagram:
         fig.add_subplot(ax)
 
         # Adjust axes
-        ax.axis["top"].set_axis_direction("bottom")  # "Angle axis"
-        ax.axis["top"].toggle(ticklabels=True, label=True)
-        ax.axis["top"].major_ticklabels.set_axis_direction("top")
-        ax.axis["top"].label.set_axis_direction("top")
-        ax.axis["top"].label.set_text("Correlation")
+        ax.axis['top'].set_axis_direction('bottom')  # "Angle axis"
+        ax.axis['top'].toggle(ticklabels=True, label=True)
+        ax.axis['top'].major_ticklabels.set_axis_direction('top')
+        ax.axis['top'].label.set_axis_direction('top')
+        ax.axis['top'].label.set_text('Correlation')
 
-        ax.axis["left"].set_axis_direction("bottom")  # "X axis"
-        ax.axis["left"].label.set_text("Standard deviation")
+        ax.axis['left'].set_axis_direction('bottom')  # "X axis"
+        ax.axis['left'].label.set_text('Standard deviation')
 
-        ax.axis["right"].set_axis_direction("top")  # "Y axis"
-        ax.axis["right"].label.set_text("Standard deviation")
+        ax.axis['right'].set_axis_direction('top')  # "Y axis"
+        ax.axis['right'].label.set_text('Standard deviation')
 
-        ax.axis["right"].toggle(ticklabels=True)
-        ax.axis["right"].major_ticklabels.set_axis_direction("left")
+        ax.axis['right'].toggle(ticklabels=True)
+        ax.axis['right'].major_ticklabels.set_axis_direction('left')
 
-        ax.axis["bottom"].set_visible(False)  # Useless
+        ax.axis['bottom'].set_visible(False)  # Useless
 
         # Contours along standard deviations
         ax.grid(False)
@@ -92,7 +92,7 @@ class TaylorDiagram:
         for ip in range(len(rlocs)):
             x = [self.smin, self.smax]
             y = [np.arccos(rlocs[ip]), np.arccos(rlocs[ip])]
-            self.ax.plot(y, x, "grey", linewidth=0.25)
+            self.ax.plot(y, x, 'grey', linewidth=0.25)
 
         # Collect sample points for latter use (e.g. legend)
         # self.samplePoints = [l]                       rem by saeed
@@ -103,22 +103,18 @@ class TaylorDiagram:
         and kwargs are directly propagated to the Figure.plot
         command."""
 
-        (l,) = self.ax.plot(
-            np.arccos(corrcoef), stddev, *args, **kwargs
-        )  # (theta,radius)
+        (l,) = self.ax.plot(np.arccos(corrcoef), stddev, *args, **kwargs)  # (theta,radius)
         self.samplePoints.append(l)
 
         if ref:
             t = np.linspace(0, np.pi / 2)  # add by saeed
             r = np.zeros_like(t) + stddev  # add by saeed
-            self.ax.plot(t, r, "grey", linewidth=0.25, label="_")  # add by saeed
+            self.ax.plot(t, r, 'grey', linewidth=0.25, label='_')  # add by saeed
         return l
 
     def add_contours(self, levels, data_std, **kwargs):
         """Add constant centered RMS difference contours."""
-        rs, ts = np.meshgrid(
-            np.linspace(self.smin, self.smax), np.linspace(0, np.pi / 2)
-        )
+        rs, ts = np.meshgrid(np.linspace(self.smin, self.smax), np.linspace(0, np.pi / 2))
         # Compute centered RMS difference
         rms = np.sqrt(data_std ** 2 + rs ** 2 - 2 * data_std * rs * np.cos(ts))
         contours = self.ax.contour(ts, rs, rms, levels, **kwargs)
@@ -139,36 +135,34 @@ class TaylorDiagramTestCase(unittest.TestCase):
         m3 = np.sin(x - np.pi / 10)  # Model 3
 
         # Compute stddev and correlation coefficient of models
-        samples = np.array(
-            [[m.std(ddof=1), np.corrcoef(data, m)[0, 1]] for m in (m1, m2, m3)]
-        )
+        samples = np.array([[m.std(ddof=1), np.corrcoef(data, m)[0, 1]] for m in (m1, m2, m3)])
 
         fig = plt.figure(1, figsize=(10, 4))
         fig.clf()
-        ax1 = fig.add_subplot(1, 2, 1, xlabel="X", ylabel="Y")
+        ax1 = fig.add_subplot(1, 2, 1, xlabel='X', ylabel='Y')
         # Taylor diagram
-        dia = TaylorDiagram(refstd, fig=fig, rect=122, label="Reference")
+        dia = TaylorDiagram(refstd, fig=fig, rect=122, label='Reference')
         colors = plt.matplotlib.cm.jet(np.linspace(0, 1, len(samples)))
-        ax1.plot(x, data, "ko", label="Data")
+        ax1.plot(x, data, 'ko', label='Data')
         for i, m in enumerate([m1, m2, m3]):
-            ax1.plot(x, m, c=colors[i], label="Model %d" % (i + 1))
-        ax1.legend(numpoints=1, prop=dict(size="small"), loc="best")
+            ax1.plot(x, m, c=colors[i], label='Model %d' % (i + 1))
+        ax1.legend(numpoints=1, prop=dict(size='small'), loc='best')
         # Add samples to Taylor diagram
         for i, (stddev, corrcoef) in enumerate(samples):
             dia.add_sample(
                 stddev,
                 corrcoef,
                 ref=False,
-                marker="s",
+                marker='s',
                 ls="",
                 c=colors[i],
-                label="Model %d" % (i + 1),
+                label='Model %d' % (i + 1),
             )
 
-        dia.add_sample(refstd, 1.0, ref=True, marker="*", ls="", c="k", label="Ref.")
+        dia.add_sample(refstd, 1.0, ref=True, marker='*', ls="", c='k', label='Ref.')
 
         # Add RMS contours, and label them
-        contours = dia.add_contours(levels=5, data_std=refstd, colors="0.5")
+        contours = dia.add_contours(levels=5, data_std=refstd, colors='0.5')
         plt.clabel(contours, inline=1, fontsize=10)
 
         # Add a figure legend
@@ -176,7 +170,7 @@ class TaylorDiagramTestCase(unittest.TestCase):
             dia.samplePoints,
             [p.get_label() for p in dia.samplePoints],
             numpoints=1,
-            prop=dict(size="small"),
-            loc="upper right",
+            prop=dict(size='small'),
+            loc='upper right',
         )
         plt.show(block=False)

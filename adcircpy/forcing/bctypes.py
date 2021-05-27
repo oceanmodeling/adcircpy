@@ -11,28 +11,28 @@ class BoundaryCondition(metaclass=ABCMeta):
 class EtaBc(BoundaryCondition):
     @property
     def btype(self):
-        return "iettype"
+        return 'iettype'
 
 
 class VelBc(BoundaryCondition):
     @property
     def btype(self):
-        return "ifltype"
+        return 'ifltype'
 
 
 class TempBc(BoundaryCondition):
     @property
     def btype(self):
-        return "itetype"
+        return 'itetype'
 
 
 class SalBc(BoundaryCondition):
     @property
     def btype(self):
-        return "isatype"
+        return 'isatype'
 
 
 class TraceBc(BoundaryCondition):
     @property
     def btype(self):
-        return "itrtype"
+        return 'itrtype'

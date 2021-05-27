@@ -19,33 +19,33 @@ def holland_B(hurdat, coriolis=True):
 
     for data in hurdat.values():
 
-        Pc = data["central_pressure"]
-        Pn = data["background_pressure"]
+        Pc = data['central_pressure']
+        Pn = data['background_pressure']
         # avoid negative Holland B parameter as initial guess
         if Pn <= Pc:
             Pn = Pc + 1.0
         if coriolis:
             return with_coriolis(
-                data["max_sustained_wind_speed"],
-                data["radius_of_maximum_winds"],
+                data['max_sustained_wind_speed'],
+                data['radius_of_maximum_winds'],
                 Pn,
                 Pc,
-                data["eye"]["lat"],
+                data['eye']['lat'],
             )
         else:
-            return no_coriolis(data["max_sustained_wind_speed"], Pn, Pc)
+            return no_coriolis(data['max_sustained_wind_speed'], Pn, Pc)
 
 
 def main():
-    storm_id = "AL152017"
+    storm_id = 'AL152017'
     # storm_id = 'AL182012'
     hurdat = Bdeck(storm_id).data
     for time, data in hurdat.items():
-        if len(data["isotachs"].keys()) != 4:
+        if len(data['isotachs'].keys()) != 4:
             continue
         # initial guesses
-        Vmax = data["max_sustained_wind_speed"]
-        Rmax = data["radius_of_maximum_winds"]
+        Vmax = data['max_sustained_wind_speed']
+        Rmax = data['radius_of_maximum_winds']
         # print(data)
         # exit()
         x = 1.0
@@ -61,7 +61,7 @@ def main():
             return v
 
         # B = holland_B(hurdat)
-        for quad, isotachs in data["isotachs"].items():
+        for quad, isotachs in data['isotachs'].items():
             xdata = []
             ydata = []
             for y, x in isotachs.items():
@@ -71,19 +71,19 @@ def main():
             # ydata.append(Vmax)
             # add bounds
             bi = np.finfo(float).eps  # avoid divide by zero
-            bf = data["radius_of_last_closed_isobar"]
+            bf = data['radius_of_last_closed_isobar']
             bounds = (bi, bf)
             p0 = [B, x]
             # do curve fitting
             with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
+                warnings.simplefilter('ignore')
                 popt, pcov = optimize.curve_fit(
                     holland2010,
                     xdata,
                     ydata,
                     p0=p0,
                     # bounds=bounds,
-                    method="dogbox",
+                    method='dogbox',
                 )
                 print(popt)
             v = V(*popt)
@@ -103,7 +103,7 @@ def main():
 
 
 def init():
-    if __name__ == "__main__":
+    if __name__ == '__main__':
         try:
             import colored_traceback
 

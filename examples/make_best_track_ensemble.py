@@ -20,7 +20,7 @@ from copy import deepcopy
 def main():
 
     # set storm name
-    storm_name = "Sandy2012"
+    storm_name = 'Sandy2012'
 
     # set simulation dates
     start_date = datetime(2012, 10, 22)
@@ -30,7 +30,7 @@ def main():
     BT = BestTrackForcing(storm_name, start_date=start_date, end_date=end_date)
 
     # write out original fort.22
-    BT.write("original.22", overwrite=True)
+    BT.write('original.22', overwrite=True)
 
     # extracting original dataframe
     df_original = BT.df
@@ -38,9 +38,9 @@ def main():
     # modifying the neccessary variables and
     # writing each to a new fort.22
     variable_list = [
-        "central_pressure",
-        "max_sustained_wind_speed",
-        "radius_of_maximum_winds",
+        'central_pressure',
+        'max_sustained_wind_speed',
+        'radius_of_maximum_winds',
     ]
     alpha = [0.9, 1.1, 1.1]  # the multiplier for each variable
     for idx, var in enumerate(variable_list):
@@ -51,8 +51,8 @@ def main():
         # reset the dataframe
         BT._df = df_modified
         # write out the modified fort.22
-        BT.write(var + ".22", overwrite=True)
+        BT.write(var + '.22', overwrite=True)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

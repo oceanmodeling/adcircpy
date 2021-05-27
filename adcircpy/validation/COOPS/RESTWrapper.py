@@ -11,10 +11,10 @@ class RESTWrapper:
         product,
         start_date,
         end_date,
-        format="json",
-        units="metric",
-        time_zone="gmt",
-        datum="msl",
+        format='json',
+        units='metric',
+        time_zone='gmt',
+        datum='msl',
     ):
         self._product = product
 
@@ -32,44 +32,44 @@ class RESTWrapper:
 
     def _init_params(self):
         self._params = {
-            "format": "json",
-            "units": "metric",
-            "time_zone": "gmt",
-            "application": "AdcircPy",
-            "datum": "msl",
-            "product": "water_level",
+            'format': 'json',
+            'units': 'metric',
+            'time_zone': 'gmt',
+            'application': 'AdcircPy',
+            'datum': 'msl',
+            'product': 'water_level',
         }
-        self._url = "https://tidesandcurrents.noaa.gov/api/datagetter?"
-        self._params["begin_date"] = self.start_date.strftime("%Y%m%d %H:%M")
-        self._params["end_date"] = self.end_date.strftime("%Y%m%d %H:%M")
+        self._url = 'https://tidesandcurrents.noaa.gov/api/datagetter?'
+        self._params['begin_date'] = self.start_date.strftime('%Y%m%d %H:%M')
+        self._params['end_date'] = self.end_date.strftime('%Y%m%d %H:%M')
 
     def _call_REST(self):
         for station in self.stations:
-            self._params["station"] = station
+            self._params['station'] = station
             response = requests.get(self._url, params=self._params)
             response.raise_for_status()
             data = json.loads(response.text)
-            if "data" in data.keys():
+            if 'data' in data.keys():
                 time = list()
                 values = list()
                 s = list()
-                metadata = data["metadata"]
-                for datapoint in data["data"]:
-                    time.append(datetime.strptime(datapoint["t"], "%Y-%m-%d %H:%M"))
+                metadata = data['metadata']
+                for datapoint in data['data']:
+                    time.append(datetime.strptime(datapoint['t'], '%Y-%m-%d %H:%M'))
                     try:
-                        val = float(datapoint["v"])
+                        val = float(datapoint['v'])
                     except:
                         val = numpy.nan
                     values.append(val)
                     try:
-                        _s = float(datapoint["s"])
+                        _s = float(datapoint['s'])
                     except:
                         _s = numpy.nan
                     s.append(_s)
                 self[station] = {
-                    "time": numpy.asarray(time),
-                    "zeta": numpy.ma.masked_invalid(values),
-                    "s": numpy.ma.masked_invalid(s),
-                    "metadata": metadata,
-                    "datum": self._params["datum"],
+                    'time': numpy.asarray(time),
+                    'zeta': numpy.ma.masked_invalid(values),
+                    's': numpy.ma.masked_invalid(s),
+                    'metadata': metadata,
+                    'datum': self._params['datum'],
                 }

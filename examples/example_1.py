@@ -23,31 +23,31 @@ import warnings
 from adcircpy import AdcircMesh, AdcircRun, Tides
 
 PARENT = pathlib.Path(__file__).parent.absolute()
-FORT14 = PARENT / "data/NetCDF_Shinnecock_Inlet/fort.14"
+FORT14 = PARENT / 'data/NetCDF_Shinnecock_Inlet/fort.14'
 
 
 def main():
     # fetch shinnecock inlet test data
     if not FORT14.is_file():
-        url = "https://www.dropbox.com/s/1wk91r67cacf132/"
-        url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
+        url = 'https://www.dropbox.com/s/1wk91r67cacf132/'
+        url += 'NetCDF_shinnecock_inlet.tar.bz2?dl=1'
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
-        with open(tmpfile.name, "b+w") as f:
+        with open(tmpfile.name, 'b+w') as f:
             f.write(g.read())
-        with tarfile.open(tmpfile.name, "r:bz2") as tar:
-            tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
+        with tarfile.open(tmpfile.name, 'r:bz2') as tar:
+            tar.extractall(PARENT / 'data/NetCDF_Shinnecock_Inlet/')
 
     # open mesh file
     mesh = AdcircMesh.open(FORT14, crs=4326)
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
-    tidal_forcing.use_constituent("M2")
-    tidal_forcing.use_constituent("N2")
-    tidal_forcing.use_constituent("S2")
-    tidal_forcing.use_constituent("K1")
-    tidal_forcing.use_constituent("O1")
+    tidal_forcing.use_constituent('M2')
+    tidal_forcing.use_constituent('N2')
+    tidal_forcing.use_constituent('S2')
+    tidal_forcing.use_constituent('K1')
+    tidal_forcing.use_constituent('O1')
 
     mesh.add_forcing(tidal_forcing)
 
@@ -70,21 +70,21 @@ def main():
     driver.TOUTGV = 3.8
     driver.smagorinsky = False
     driver.horizontal_mixing_coefficient = 5.0
-    driver.gwce_solution_scheme = "semi-implicit-legacy"
+    driver.gwce_solution_scheme = 'semi-implicit-legacy'
 
     # run parallel ADCIRC if binary is installed
-    if shutil.which("padcirc") is not None:
-        driver.run(PARENT / "outputs/example_1", overwrite=True)
+    if shutil.which('padcirc') is not None:
+        driver.run(PARENT / 'outputs/example_1', overwrite=True)
     # run serial ADCIRC if binary is installed
-    elif shutil.which("adcirc") is not None:
-        driver.run(PARENT / "outputs/example_1", overwrite=True, nproc=1)
+    elif shutil.which('adcirc') is not None:
+        driver.run(PARENT / 'outputs/example_1', overwrite=True, nproc=1)
     # binaries are not installed, write to disk and exit
     else:
-        msg = "ADCIRC binaries were not found in PATH. ADCIRC will not run. "
-        msg += "Writing files to disk..."
+        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg += 'Writing files to disk...'
         warnings.warn(msg)
-        driver.write(PARENT / "outputs/example_1", overwrite=True)
+        driver.write(PARENT / 'outputs/example_1', overwrite=True)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
