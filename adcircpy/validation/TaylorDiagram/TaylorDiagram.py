@@ -20,7 +20,7 @@ class TaylorDiagram:
     r=stddev and theta=arccos(correlation).
     """
 
-    def __init__(self, refstd, fig=None, rect=111, label='_'):
+    def __init__(self, refstd, fig=None, rect=111, label="_"):
         """Set up Taylor diagram axes, i.e. single quadrant polar
         plot, using mpl_toolkits.axisartist.floating_axes. refstd is
         the reference standard deviation to be compared to.
@@ -35,7 +35,7 @@ class TaylorDiagram:
         tr = PolarAxes.PolarTransform()
 
         # Correlation labels
-        rlocs = np.concatenate((np.arange(10) / 10., [0.95, 0.99]))
+        rlocs = np.concatenate((np.arange(10) / 10.0, [0.95, 0.99]))
         tlocs = np.arccos(rlocs)  # Conversion to polar angles
         gl1 = GF.FixedLocator(tlocs)  # Positions
         tf1 = GF.DictFormatter(dict(zip(tlocs, map(str, rlocs))))
@@ -44,13 +44,12 @@ class TaylorDiagram:
         self.smin = 0
         self.smax = 1.5 * self.refstd
 
-        ghelper = FA.GridHelperCurveLinear(tr,
-                                           extremes=(
-                                               0, np.pi / 2,  # 1stquadrant
-                                               self.smin, self.smax),
-                                           grid_locator1=gl1,
-                                           tick_formatter1=tf1,
-                                           )
+        ghelper = FA.GridHelperCurveLinear(
+            tr,
+            extremes=(0, np.pi / 2, self.smin, self.smax),  # 1stquadrant
+            grid_locator1=gl1,
+            tick_formatter1=tf1,
+        )
 
         if fig is None:
             fig = plt.figure()
@@ -93,7 +92,7 @@ class TaylorDiagram:
         for ip in range(len(rlocs)):
             x = [self.smin, self.smax]
             y = [np.arccos(rlocs[ip]), np.arccos(rlocs[ip])]
-            self.ax.plot(y, x, 'grey', linewidth=0.25)
+            self.ax.plot(y, x, "grey", linewidth=0.25)
 
         # Collect sample points for latter use (e.g. legend)
         # self.samplePoints = [l]                       rem by saeed
@@ -104,21 +103,22 @@ class TaylorDiagram:
         and kwargs are directly propagated to the Figure.plot
         command."""
 
-        l, = self.ax.plot(np.arccos(corrcoef), stddev,
-                          *args, **kwargs)  # (theta,radius)
+        (l,) = self.ax.plot(
+            np.arccos(corrcoef), stddev, *args, **kwargs
+        )  # (theta,radius)
         self.samplePoints.append(l)
 
         if ref:
             t = np.linspace(0, np.pi / 2)  # add by saeed
             r = np.zeros_like(t) + stddev  # add by saeed
-            self.ax.plot(t, r, 'grey', linewidth=0.25,
-                         label='_')  # add by saeed
+            self.ax.plot(t, r, "grey", linewidth=0.25, label="_")  # add by saeed
         return l
 
     def add_contours(self, levels, data_std, **kwargs):
         """Add constant centered RMS difference contours."""
-        rs, ts = np.meshgrid(np.linspace(self.smin, self.smax),
-                             np.linspace(0, np.pi / 2))
+        rs, ts = np.meshgrid(
+            np.linspace(self.smin, self.smax), np.linspace(0, np.pi / 2)
+        )
         # Compute centered RMS difference
         rms = np.sqrt(data_std ** 2 + rs ** 2 - 2 * data_std * rs * np.cos(ts))
         contours = self.ax.contour(ts, rs, rms, levels, **kwargs)
@@ -135,38 +135,48 @@ class TaylorDiagramTestCase(unittest.TestCase):
 
         # Models
         m1 = data + 0.2 * np.random.randn(len(x))  # Model 1
-        m2 = 0.8 * data + .1 * np.random.randn(len(x))  # Model 2
+        m2 = 0.8 * data + 0.1 * np.random.randn(len(x))  # Model 2
         m3 = np.sin(x - np.pi / 10)  # Model 3
 
         # Compute stddev and correlation coefficient of models
-        samples = np.array([[m.std(ddof=1), np.corrcoef(data, m)[0, 1]]
-                            for m in (m1, m2, m3)])
+        samples = np.array(
+            [[m.std(ddof=1), np.corrcoef(data, m)[0, 1]] for m in (m1, m2, m3)]
+        )
 
         fig = plt.figure(1, figsize=(10, 4))
         fig.clf()
-        ax1 = fig.add_subplot(1, 2, 1, xlabel='X', ylabel='Y')
+        ax1 = fig.add_subplot(1, 2, 1, xlabel="X", ylabel="Y")
         # Taylor diagram
         dia = TaylorDiagram(refstd, fig=fig, rect=122, label="Reference")
         colors = plt.matplotlib.cm.jet(np.linspace(0, 1, len(samples)))
-        ax1.plot(x, data, 'ko', label='Data')
+        ax1.plot(x, data, "ko", label="Data")
         for i, m in enumerate([m1, m2, m3]):
-            ax1.plot(x, m, c=colors[i], label='Model %d' % (i + 1))
-        ax1.legend(numpoints=1, prop=dict(size='small'), loc='best')
+            ax1.plot(x, m, c=colors[i], label="Model %d" % (i + 1))
+        ax1.legend(numpoints=1, prop=dict(size="small"), loc="best")
         # Add samples to Taylor diagram
         for i, (stddev, corrcoef) in enumerate(samples):
-            dia.add_sample(stddev, corrcoef, ref=False,
-                           marker='s', ls='', c=colors[i],
-                           label="Model %d" % (i + 1))
+            dia.add_sample(
+                stddev,
+                corrcoef,
+                ref=False,
+                marker="s",
+                ls="",
+                c=colors[i],
+                label="Model %d" % (i + 1),
+            )
 
-        dia.add_sample(refstd, 1.0, ref=True, marker='*', ls='',
-                       c='k', label="Ref.")
+        dia.add_sample(refstd, 1.0, ref=True, marker="*", ls="", c="k", label="Ref.")
 
         # Add RMS contours, and label them
-        contours = dia.add_contours(levels=5, data_std=refstd, colors='0.5')
+        contours = dia.add_contours(levels=5, data_std=refstd, colors="0.5")
         plt.clabel(contours, inline=1, fontsize=10)
 
         # Add a figure legend
-        fig.legend(dia.samplePoints,
-                   [p.get_label() for p in dia.samplePoints],
-                   numpoints=1, prop=dict(size='small'), loc='upper right')
+        fig.legend(
+            dia.samplePoints,
+            [p.get_label() for p in dia.samplePoints],
+            numpoints=1,
+            prop=dict(size="small"),
+            loc="upper right",
+        )
         plt.show(block=False)

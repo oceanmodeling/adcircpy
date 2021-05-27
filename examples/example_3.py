@@ -30,7 +30,7 @@ def main():
         url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
-        with open(tmpfile.name, 'b+w') as f:
+        with open(tmpfile.name, "b+w") as f:
             f.write(g.read())
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
             tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
@@ -45,31 +45,27 @@ def main():
     mesh.add_forcing(tidal_forcing)
 
     # Add wind forcing to model
-    wind_forcing = BestTrackForcing('Sandy2012')
+    wind_forcing = BestTrackForcing("Sandy2012")
     mesh.add_forcing(wind_forcing)
 
     # instantiate AdcircRun object.
     slurm = SlurmConfig(
-        account='account',
+        account="account",
         ntasks=1000,
-        run_name='AdcircPy/examples/example_3.py',
-        partition='partition',
+        run_name="AdcircPy/examples/example_3.py",
+        partition="partition",
         walltime=timedelta(hours=8),
-        mail_type='all',
-        mail_user='example@email.gov',
-        log_filename='example_3.log',
-        modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-        path_prefix='$HOME/adcirc/build'
+        mail_type="all",
+        mail_user="example@email.gov",
+        log_filename="example_3.log",
+        modules=["intel/2020", "impi/2020", "netcdf/4.7.2-parallel"],
+        path_prefix="$HOME/adcirc/build",
     )
-    driver = AdcircRun(
-        mesh,
-        spinup_time=timedelta(days=15),
-        server_config=slurm
-    )
+    driver = AdcircRun(mesh, spinup_time=timedelta(days=15), server_config=slurm)
 
     # Write driver state to file.
     driver.write(PARENT / "outputs/example_3", overwrite=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

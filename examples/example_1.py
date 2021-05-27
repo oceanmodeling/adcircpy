@@ -33,7 +33,7 @@ def main():
         url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
-        with open(tmpfile.name, 'b+w') as f:
+        with open(tmpfile.name, "b+w") as f:
             f.write(g.read())
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
             tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
@@ -43,11 +43,11 @@ def main():
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
-    tidal_forcing.use_constituent('M2')
-    tidal_forcing.use_constituent('N2')
-    tidal_forcing.use_constituent('S2')
-    tidal_forcing.use_constituent('K1')
-    tidal_forcing.use_constituent('O1')
+    tidal_forcing.use_constituent("M2")
+    tidal_forcing.use_constituent("N2")
+    tidal_forcing.use_constituent("S2")
+    tidal_forcing.use_constituent("K1")
+    tidal_forcing.use_constituent("O1")
 
     mesh.add_forcing(tidal_forcing)
 
@@ -64,27 +64,27 @@ def main():
 
     # override the AdcircPy defaults so that the fort.15
     # matches the original Shinnecock test case options
-    driver.timestep = 6.
-    driver.DRAMP = 2.
+    driver.timestep = 6.0
+    driver.DRAMP = 2.0
     driver.TOUTGE = 3.8
     driver.TOUTGV = 3.8
     driver.smagorinsky = False
-    driver.horizontal_mixing_coefficient = 5.
-    driver.gwce_solution_scheme = 'semi-implicit-legacy'  
+    driver.horizontal_mixing_coefficient = 5.0
+    driver.gwce_solution_scheme = "semi-implicit-legacy"
 
     # run parallel ADCIRC if binary is installed
-    if shutil.which('padcirc') is not None:
+    if shutil.which("padcirc") is not None:
         driver.run(PARENT / "outputs/example_1", overwrite=True)
     # run serial ADCIRC if binary is installed
-    elif shutil.which('adcirc') is not None:
+    elif shutil.which("adcirc") is not None:
         driver.run(PARENT / "outputs/example_1", overwrite=True, nproc=1)
     # binaries are not installed, write to disk and exit
     else:
-        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg = "ADCIRC binaries were not found in PATH. ADCIRC will not run. "
         msg += "Writing files to disk..."
         warnings.warn(msg)
         driver.write(PARENT / "outputs/example_1", overwrite=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

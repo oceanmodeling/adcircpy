@@ -17,7 +17,6 @@ from adcircpy.mesh.fort13 import NodalAttributes
 
 
 class ModelForcings:
-
     def __init__(self, fort14):
         self.wind = None
         self.wave = None
@@ -29,7 +28,8 @@ class ModelForcings:
                 self.tides = forcing
             else:
                 raise NotImplementedError(
-                    f'Unhandled boundary condition of type {type(forcing)}.')
+                    f"Unhandled boundary condition of type {type(forcing)}."
+                )
 
         elif isinstance(forcing, WindForcing):
             self.wind = forcing
@@ -43,7 +43,6 @@ class ModelForcings:
 
 
 class NodalAttributeDescriptor:
-
     def __init__(self, name):
         self.name = name
 
@@ -59,22 +58,22 @@ class NodalAttributeDescriptor:
 class AdcircMeshMeta(type):
 
     adcirc_nodal_attributes = [
-            'primitive_weighting_in_continuity_equation',
-            'surface_submergence_state',
-            'quadratic_friction_coefficient_at_sea_floor',
-            'surface_directional_effective_roughness_length',
-            'surface_canopy_coefficient',
-            'bridge_pilings_friction_parameters',
-            'mannings_n_at_sea_floor',
-            'chezy_friction_coefficient_at_sea_floor',
-            'sea_surface_height_above_geoid',
-            'bottom_roughness_length',
-            'wave_refraction_in_swan',
-            'average_horizontal_eddy_viscosity_in_sea_water_wrt_depth',
-            'elemental_slope_limiter',
-            'advection_state',
-            'initial_river_elevation',
-        ]
+        "primitive_weighting_in_continuity_equation",
+        "surface_submergence_state",
+        "quadratic_friction_coefficient_at_sea_floor",
+        "surface_directional_effective_roughness_length",
+        "surface_canopy_coefficient",
+        "bridge_pilings_friction_parameters",
+        "mannings_n_at_sea_floor",
+        "chezy_friction_coefficient_at_sea_floor",
+        "sea_surface_height_above_geoid",
+        "bottom_roughness_length",
+        "wave_refraction_in_swan",
+        "average_horizontal_eddy_viscosity_in_sea_water_wrt_depth",
+        "elemental_slope_limiter",
+        "advection_state",
+        "initial_river_elevation",
+    ]
 
     def __new__(meta, name, bases, attrs):
         for attribute in meta.adcirc_nodal_attributes:
@@ -100,8 +99,9 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
     def add_nodal_attribute(self, name: str, units: str):
         self.nodal_attributes.add_attribute(name, units)
 
-    def set_nodal_attribute(self, name, values, coldstart: bool = False,
-                            hotstart: bool = False):
+    def set_nodal_attribute(
+        self, name, values, coldstart: bool = False, hotstart: bool = False
+    ):
         self.nodal_attributes.set_attribute(name, values, coldstart, hotstart)
 
     def get_coldstart_nodal_attributes(self):
@@ -135,25 +135,24 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
         self.nodal_attributes.import_fort13(fort13)
 
     def generate_constant_mannings_n(self, value: float):
-        self.mannings_n_at_sea_floor = self.coords.shape[0]*[value]
+        self.mannings_n_at_sea_floor = self.coords.shape[0] * [value]
 
     def generate_linear_mannings_n(
-            self,
-            min_value: float = 0.02,
-            max_value: float = 0.05,
-            min_depth: float = None,
-            max_depth: float = None):
+        self,
+        min_value: float = 0.02,
+        max_value: float = 0.05,
+        min_depth: float = None,
+        max_depth: float = None,
+    ):
 
         # Inspired by https://github.com/schism-dev/schism/blob/master/src/Utility/Pre-Processing/NWM/Manning/write_manning.py
 
-        min_depth = np.min(self.values) if min_depth is None \
-            else float(min_depth)
-        max_depth = np.max(self.values) if max_depth is None \
-            else float(max_depth)
+        min_depth = np.min(self.values) if min_depth is None else float(min_depth)
+        max_depth = np.max(self.values) if max_depth is None else float(max_depth)
 
-        values = (
-                min_value + (self.values - min_depth)
-                * (max_value - min_value) / (max_depth - min_depth))
+        values = min_value + (self.values - min_depth) * (max_value - min_value) / (
+            max_depth - min_depth
+        )
 
         if min_value is not None:
             values[values < min_value] = min_value
@@ -164,14 +163,14 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
         self.mannings_n_at_sea_floor = values
 
     def generate_tau0(
-            self,
-            default_value=0.03,
-            threshold_distance=1750.,
-            shallow_tau0=0.02,
-            deep_tau0=0.005,
-            threshold_depth=-10.,
-            coldstart=True,
-            hotstart=True
+        self,
+        default_value=0.03,
+        threshold_distance=1750.0,
+        shallow_tau0=0.02,
+        deep_tau0=0.005,
+        threshold_depth=-10.0,
+        coldstart=True,
+        hotstart=True,
     ):
         """
         Reimplementation of tau0_gen.f by Robert Weaver (2008)
@@ -200,7 +199,7 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                     values[k] = deep_tau0
         self.primitive_weighting_in_continuity_equation = values
 
-    def critical_timestep(self, cfl, maxvel=5., g=9.8):
+    def critical_timestep(self, cfl, maxvel=5.0, g=9.8):
         """
         http://swash.sourceforge.net/online_doc/swashuse/node47.html
         """
@@ -214,8 +213,8 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
 
     @property
     def node_distances_in_meters(self):
-        if not hasattr(self, '_node_distances_in_meters'):
-            points = self.get_xy('EPSG:4326')
+        if not hasattr(self, "_node_distances_in_meters"):
+            points = self.get_xy("EPSG:4326")
             self._node_distances_in_meters = {}
             for k, v in self.node_neighbors.items():
                 x0, y0 = points[k]
@@ -223,9 +222,7 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                 for idx in v:
                     x1, y1 = points[idx]
                     self._node_distances_in_meters[k][idx] = haversine(
-                        (x0, y0),
-                        (x1, y1),
-                        unit=Unit.METERS
+                        (x0, y0), (x1, y1), unit=Unit.METERS
                     )
         return self._node_distances_in_meters
 

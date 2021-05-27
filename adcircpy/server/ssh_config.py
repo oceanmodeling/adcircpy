@@ -18,20 +18,20 @@ class SSHConfig(BaseServerConfig):
     """
 
     def __init__(
-            self,
-            hostname: str = None,
-            nprocs: int = None,
-            wdir: str = None,
-            binaries_prefix: str = None,
-            port: int = 22,
-            username: str = None,
-            password: str = None,
-            pkey: str = None,
-            writer_procs: int = None,
-            source_script: str = None,
-            additional_mpi_options: str = None,
-            keep_wdir: bool = False,
-            filename: str = None
+        self,
+        hostname: str = None,
+        nprocs: int = None,
+        wdir: str = None,
+        binaries_prefix: str = None,
+        port: int = 22,
+        username: str = None,
+        password: str = None,
+        pkey: str = None,
+        writer_procs: int = None,
+        source_script: str = None,
+        additional_mpi_options: str = None,
+        keep_wdir: bool = False,
+        filename: str = None,
     ):
         self._hostname = hostname
         self._nprocs = nprocs
@@ -51,12 +51,12 @@ class SSHConfig(BaseServerConfig):
         pass
 
     def run(
-            self,
-            driver,
-            outdir: Union[str, pathlib.Path],
-            overwrite: bool = False,
-            coldstart: bool = True,
-            hotstart: bool = True
+        self,
+        driver,
+        outdir: Union[str, pathlib.Path],
+        overwrite: bool = False,
+        coldstart: bool = True,
+        hotstart: bool = True,
     ) -> None:
         """
         puts driver outputs on outdir using a remote server for compute
@@ -65,15 +65,15 @@ class SSHConfig(BaseServerConfig):
         if not outdir.exists():
             msg = f"{outdir} exists and overwrite is not enabled."
             raise IOError(msg)
-        self.ssh.exec_command(f'mkdir -p {self._wdir}')
+        self.ssh.exec_command(f"mkdir -p {self._wdir}")
         self._deploy_files_to_server(driver)
         self._run_coldstart(driver)
-        self._cleanup_rundir('coldstart')
+        self._cleanup_rundir("coldstart")
         self._run_hotstart(driver)
-        self._cleanup_rundir('hotstart')
+        self._cleanup_rundir("hotstart")
         self._retrieve_files(outdir)
         if not self.keep_wdir:
-            self.ssh.exec_command(f'rm -rf {self._wdir}')
+            self.ssh.exec_command(f"rm -rf {self._wdir}")
 
     @property
     def nprocs(self):
@@ -82,39 +82,39 @@ class SSHConfig(BaseServerConfig):
     def _deploy_files_to_server(self, driver):
         outdir = tempfile.TemporaryDirectory()
         driver.dump(outdir.name)
-        for item in pathlib.Path(outdir.name).glob('**/*'):
-            self._sftp.put(item.absolute(), f'{self._wdir}/{item.name}')
+        for item in pathlib.Path(outdir.name).glob("**/*"):
+            self._sftp.put(item.absolute(), f"{self._wdir}/{item.name}")
 
     def _run_coldstart(self, driver):
-        self._run_adcprep_command('coldstart')
-        self._run_padcirc_command('coldstart', driver)
+        self._run_adcprep_command("coldstart")
+        self._run_padcirc_command("coldstart", driver)
 
     def _run_hotstart(self, driver):
-        self._run_adcprep_command('hotstart')
-        self._run_padcirc_command('hotstart', driver)
+        self._run_adcprep_command("hotstart")
+        self._run_padcirc_command("hotstart", driver)
 
     def _run_adcprep_command(self, runtype):
-        cmd = f'rm -rf {self._wdir}/{runtype}; '
-        cmd += f'mkdir -p {self._wdir}/{runtype}; '
+        cmd = f"rm -rf {self._wdir}/{runtype}; "
+        cmd += f"mkdir -p {self._wdir}/{runtype}; "
         cmd += f"cd {self._wdir}/{runtype}; "
-        cmd += 'ln -sf ../fort.14; '
-        cmd += 'ln -sf ../fort.13; '
-        cmd += 'ln -sf ../fort.15.{runtype} ./fort.15; '
-        if runtype == 'hotstart':
-            cmd += 'ln -sf ../coldstart/fort.67.nc ./fort.67.nc; '
+        cmd += "ln -sf ../fort.14; "
+        cmd += "ln -sf ../fort.13; "
+        cmd += "ln -sf ../fort.15.{runtype} ./fort.15; "
+        if runtype == "hotstart":
+            cmd += "ln -sf ../coldstart/fort.67.nc ./fort.67.nc; "
         # if self.libraries_path:
         #     cmd += f'export LD_LIBRARY_PATH={self.libraries_path}:'
         #     cmd += "$LD_LIBRARY_PATH && "
         if self._source_script:
-            cmd += f'source {self._source_script} && '
-        cmd += f'{self._adcprep_binary} --np {self._nprocs} --partmesh && '
-        cmd += f'{self._adcprep_binary} --np {self._nprocs} --prepall'
+            cmd += f"source {self._source_script} && "
+        cmd += f"{self._adcprep_binary} --np {self._nprocs} --partmesh && "
+        cmd += f"{self._adcprep_binary} --np {self._nprocs} --prepall"
         stdin, stdout, stderr = self._ssh.exec_command(cmd)
         while True:
             out = stdout.readline()
             if not out:
                 break
-            print(out, end='')
+            print(out, end="")
         lines = stderr.readlines()
         if len(lines) > 0:
             msg = "\n"
@@ -122,17 +122,17 @@ class SSHConfig(BaseServerConfig):
             raise Exception(msg)
 
     def _run_padcirc_command(self, runtype, driver):
-        cmd = ''
+        cmd = ""
         if self._nprocs > 1:
             # if self.libraries_path:
             #     cmd += f'export LD_LIBRARY_PATH={self.libraries_path}:'
             #     cmd += "$LD_LIBRARY_PATH && "
             if self._source_script:
-                cmd += f'source {self._source_script} && '
-            cmd += f'mpiexec -n {self._nprocs} '
+                cmd += f"source {self._source_script} && "
+            cmd += f"mpiexec -n {self._nprocs} "
             if self.additional_mpi_options:
                 mpi_opts = self.additional_mpi_options.strip("'\"")
-                cmd += f'{mpi_opts} '
+                cmd += f"{mpi_opts} "
             cmd += f"--wdir {self._wdir}/{runtype} "
         cmd += f"{self.padcirc_binary}"
         self.logger.info(cmd)
@@ -141,7 +141,7 @@ class SSHConfig(BaseServerConfig):
             out = stdout.readline()
             if not out:
                 break
-            print(out, end='')
+            print(out, end="")
         lines = stderr.readlines()
         msg = "** ERROR: Elevation.gt.ErrorElev, ADCIRC stopping. **"
         if msg in "".join(lines):
@@ -166,13 +166,11 @@ class SSHConfig(BaseServerConfig):
             rdir = pathlib.Path(walker[0])
             for file in walker[1]:
                 rfile = rdir / file
-                rsubdir = str(rdir).split(parent)[1].strip('/')
+                rsubdir = str(rdir).split(parent)[1].strip("/")
                 ldir = outdir / rsubdir
                 if not ldir.exists():
                     ldir.mkdir()
-                self._sftp.get(
-                    str(rfile),
-                    str(ldir / file))
+                self._sftp.get(str(rfile), str(ldir / file))
 
     def _sftp_walk(self, remotepath):
         """
@@ -194,18 +192,18 @@ class SSHConfig(BaseServerConfig):
                 yield x
 
     def _cleanup_rundir(self, runtype):
-        self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/PE*')
-        self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/partmesh.txt')
-        self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/fort.13')
-        self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/fort.14')
-        self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/fort.15')
-        if runtype == 'coldstart':
-            self.ssh.exec_command(f'rm -rf {self._wdir}/{runtype}/fort.68.nc')
+        self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/PE*")
+        self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/partmesh.txt")
+        self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/fort.13")
+        self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/fort.14")
+        self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/fort.15")
+        if runtype == "coldstart":
+            self.ssh.exec_command(f"rm -rf {self._wdir}/{runtype}/fort.68.nc")
 
     @property
     @lru_cache(maxsize=None)
     def _logger(self):
-        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
+        return logging.getLogger(__name__ + "." + self.__class__.__name__)
 
     @property
     @lru_cache(maxsize=None)
@@ -213,15 +211,13 @@ class SSHConfig(BaseServerConfig):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         kwargs = {
-            'hostname': self.hostname,
-            'port': self.port,
-            'username': self.username,
-            'password': self.password
+            "hostname": self.hostname,
+            "port": self.port,
+            "username": self.username,
+            "password": self.password,
         }
         if self.pkey:
-            kwargs.update({
-                'pkey': paramiko.RSAKey.from_private_key_file(
-                    self.pkey)})
+            kwargs.update({"pkey": paramiko.RSAKey.from_private_key_file(self.pkey)})
         # try:
         ssh.connect(**kwargs)
         # except paramiko.ssh_exception.SSHException:
@@ -244,16 +240,16 @@ class SSHConfig(BaseServerConfig):
     @property
     def _padcirc_binary_path(self):
         if self.binaries_prefix:
-            return self.binaries_prefix.absolute() / 'padcirc'
+            return self.binaries_prefix.absolute() / "padcirc"
         else:
-            return 'padcirc'
+            return "padcirc"
 
     @property
     def _adcprep_binary_path(self):
         if self.binaries_prefix:
-            return self.binaries_prefix.absolute() / 'adcprep'
+            return self.binaries_prefix.absolute() / "adcprep"
         else:
-            return 'adcprep'
+            return "adcprep"
 
     @property
     def _hostname(self):
@@ -279,7 +275,7 @@ class SSHConfig(BaseServerConfig):
     def _wdir(self, wdir):
         if wdir is not None:
             # TODO: get path using tempfile module
-            wdir = f'/tmp/{uuid.uuid4().hex[:8]}'
+            wdir = f"/tmp/{uuid.uuid4().hex[:8]}"
         self.__wdir = pathlib.Path(wdir)
 
     @property
@@ -363,8 +359,9 @@ class SSHConfig(BaseServerConfig):
     @_filename.setter
     def _filename(self, filename):
         if filename is None:
-            filename = 'driver.sh'
+            filename = "driver.sh"
         self.__filename = filename
+
 
 # class ServerConfig:
 #     def __init__(self, script: str):

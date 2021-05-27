@@ -16,47 +16,47 @@ _logger = logging.getLogger(__name__)
 
 
 class BaseBoundaries:
-
     def __init__(self, mesh, data):
         self._mesh = mesh
         self._data = data
 
     @property
     def ids(self):
-        if not hasattr(self, '_ids'):
+        if not hasattr(self, "_ids"):
             self._ids = list(self._data.keys())
         return self._ids
 
     @property
     def indexes(self):
-        if not hasattr(self, '_indexes'):
+        if not hasattr(self, "_indexes"):
             self._indexes = list()
             for data in self._data.values():
                 self._indexes.append(
-                    list(map(
-                        self._mesh.nodes.get_index_by_id, data['node_id'])))
+                    list(map(self._mesh.nodes.get_index_by_id, data["node_id"]))
+                )
         return np.array(self._indexes)
 
     @property
     def node_id(self):
-        if not hasattr(self, '_node_id'):
+        if not hasattr(self, "_node_id"):
             self._node_id = list()
             for data in self._data.values():
-                self._node_id.append(data['node_id'])
+                self._node_id.append(data["node_id"])
         return self._node_id
 
     @property
     def gdf(self):
-        if not hasattr(self, '_gdf'):
+        if not hasattr(self, "_gdf"):
             data = []
             for i, (id, boundary) in enumerate(self._data.items()):
-                data.append({
-                    'geometry': LineString(
-                        self._mesh.coords[self.indexes[i], :]),
-                    'key': f'{boundary.get("ibtype")}:{id}',
-                    'indexes': self.indexes[i],
-                    **boundary
-                    })
+                data.append(
+                    {
+                        "geometry": LineString(self._mesh.coords[self.indexes[i], :]),
+                        "key": f'{boundary.get("ibtype")}:{id}',
+                        "indexes": self.indexes[i],
+                        **boundary,
+                    }
+                )
             self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
@@ -78,30 +78,39 @@ class InflowBoundaries(BaseBoundaries):
 
 
 class BarrierBaseBoundaries(BaseBoundaries):
-
     @property
     def indexes(self):
-        if not hasattr(self, '_indexes'):
+        if not hasattr(self, "_indexes"):
             self._indexes = list()
             for data in self._data.values():
-                self._indexes.append(np.array([list(
-                    map(self._mesh.nodes.get_index_by_id, geom))
-                    for geom in data['node_id']]))
+                self._indexes.append(
+                    np.array(
+                        [
+                            list(map(self._mesh.nodes.get_index_by_id, geom))
+                            for geom in data["node_id"]
+                        ]
+                    )
+                )
         return self._indexes
 
     @property
     def gdf(self):
-        if not hasattr(self, '_gdf'):
+        if not hasattr(self, "_gdf"):
             data = []
             for i, (id, boundary) in enumerate(self._data.items()):
                 front_face, back_face = list(zip(*self.indexes[i]))
-                data.append({
-                    'geometry': MultiLineString([
-                            LineString(self._mesh.coords[front_face, :]),
-                            LineString(self._mesh.coords[back_face, :])]),
-                    'key': f'{boundary.get("ibtype")}:{id}',
-                    **boundary
-                    })
+                data.append(
+                    {
+                        "geometry": MultiLineString(
+                            [
+                                LineString(self._mesh.coords[front_face, :]),
+                                LineString(self._mesh.coords[back_face, :]),
+                            ]
+                        ),
+                        "key": f'{boundary.get("ibtype")}:{id}',
+                        **boundary,
+                    }
+                )
             self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
@@ -119,7 +128,6 @@ class CulvertBoundaries(BarrierBaseBoundaries):
 
 
 class Fort14Boundaries:
-
     def __init__(self, fort14: "Fort14", boundaries: Union[dict, None]):
         self._data = {} if boundaries is None else boundaries
         self._mesh = fort14
@@ -128,9 +136,19 @@ class Fort14Boundaries:
         return self._data
 
     @figure
-    def plot(self, *args, ocean=True, land=True, interior=True, inflow=True,
-             outflow=True, weir=True, culvert=True, **kwargs):
-        ax = kwargs['axes']
+    def plot(
+        self,
+        *args,
+        ocean=True,
+        land=True,
+        interior=True,
+        inflow=True,
+        outflow=True,
+        weir=True,
+        culvert=True,
+        **kwargs,
+    ):
+        ax = kwargs["axes"]
         if ocean is True:
             self.ocean.gdf.plot(ax=ax)
 
@@ -139,61 +157,52 @@ class Fort14Boundaries:
 
     @property
     def ocean(self):
-        if not hasattr(self, '_ocean'):
+        if not hasattr(self, "_ocean"):
             self._ocean = OceanBoundaries(self._mesh, self._data.get(None, {}))
         return self._ocean
 
     @property
     def land(self):
-        if not hasattr(self, '_land'):
-            self._land = LandBoundaries(
-                self._mesh,
-                self._aggregate_boundaries('0')
-            )
+        if not hasattr(self, "_land"):
+            self._land = LandBoundaries(self._mesh, self._aggregate_boundaries("0"))
         return self._land
 
     @property
     def interior(self):
-        if not hasattr(self, '_interior'):
+        if not hasattr(self, "_interior"):
             self._interior = InteriorBoundaries(
-                self._mesh,
-                self._aggregate_boundaries('1')
+                self._mesh, self._aggregate_boundaries("1")
             )
         return self._interior
 
     @property
     def inflow(self):
-        if not hasattr(self, '_inflow'):
-            self._inflow = InflowBoundaries(
-                self._mesh,
-                self._aggregate_boundaries('2')
-            )
+        if not hasattr(self, "_inflow"):
+            self._inflow = InflowBoundaries(self._mesh, self._aggregate_boundaries("2"))
         return self._inflow
 
     @property
     def outflow(self):
-        if not hasattr(self, '_outflow'):
+        if not hasattr(self, "_outflow"):
             self._outflow = OutflowBoundaries(
-                self._mesh,
-                self._aggregate_boundaries('3')
+                self._mesh, self._aggregate_boundaries("3")
             )
         return self._outflow
 
     @property
     def weir(self):
-        if not hasattr(self, '_weir'):
+        if not hasattr(self, "_weir"):
             self._weir = WeirBoundaries(
                 self._mesh,
-                self._aggregate_boundaries('4'),
+                self._aggregate_boundaries("4"),
             )
         return self._weir
 
     @property
     def culvert(self):
-        if not hasattr(self, '_culvert'):
+        if not hasattr(self, "_culvert"):
             self._culvert = CulvertBoundaries(
-                self.mesh,
-                self._aggregate_boundaries('5')
+                self.mesh, self._aggregate_boundaries("5")
             )
         return self._culvert
 
@@ -204,11 +213,15 @@ class Fort14Boundaries:
                 continue
             if ibtype.endswith(endswith):
                 for bdata in list(_boundaries.values()):
-                    boundaries.update({
-                        len(boundaries) + 1: {
-                            'ibtype': ibtype,
-                            **bdata,
-                        }})
+                    boundaries.update(
+                        {
+                            len(boundaries)
+                            + 1: {
+                                "ibtype": ibtype,
+                                **bdata,
+                            }
+                        }
+                    )
         return boundaries
 
 
@@ -216,6 +229,7 @@ class Fort14(Grd):
     """
     Class that represents the unstructured planar mesh used by SCHISM.
     """
+
     # _boundaries = BoundariesDescriptor()
 
     def __init__(self, *args, boundaries=None, **kwargs):
@@ -225,18 +239,23 @@ class Fort14(Grd):
     @classmethod
     def open(cls, path, crs=None):
         _grd = grd.read(path, crs=crs)
-        _grd['nodes'] = {id: (coords, -val) for id, (coords, val)
-                         in _grd['nodes'].items()}
+        _grd["nodes"] = {
+            id: (coords, -val) for id, (coords, val) in _grd["nodes"].items()
+        }
         return cls(**_grd)
 
     def to_dict(self, boundaries=True):
         _grd = super().to_dict()
         if boundaries is True:
-            _grd.update({
-                "nodes": {id: (coord, -val) for id, (coord, val)
-                          in self.nodes.to_dict().items()},
-                "boundaries": self.boundaries.to_dict()
-                })
+            _grd.update(
+                {
+                    "nodes": {
+                        id: (coord, -val)
+                        for id, (coord, val) in self.nodes.to_dict().items()
+                    },
+                    "boundaries": self.boundaries.to_dict(),
+                }
+            )
         return _grd
 
     @figure
@@ -250,41 +269,31 @@ class Fort14(Grd):
         # figsize=rcParams["figure.figsize"],
         extent=None,
         cbar_label=None,
-        **kwargs
+        **kwargs,
     ):
         if vmin is None:
             vmin = np.min(self.values)
         if vmax is None:
             vmax = np.max(self.values)
         kwargs.update(**get_topobathy_kwargs(self.values, vmin, vmax))
-        kwargs.pop('col_val')
-        levels = kwargs.pop('levels')
+        kwargs.pop("col_val")
+        levels = kwargs.pop("levels")
         if vmin != vmax:
-            self.tricontourf(
-                axes=axes,
-                levels=levels,
-                vmin=vmin,
-                vmax=vmax,
-                **kwargs
-            )
+            self.tricontourf(axes=axes, levels=levels, vmin=vmin, vmax=vmax, **kwargs)
         else:
             self.tripcolor(axes=axes, **kwargs)
         self.quadface(axes=axes, **kwargs)
-        axes.axis('scaled')
+        axes.axis("scaled")
         if extent is not None:
             axes.axis(extent)
         if title is not None:
             axes.set_title(title)
-        mappable = ScalarMappable(cmap=kwargs['cmap'])
+        mappable = ScalarMappable(cmap=kwargs["cmap"])
         mappable.set_array([])
         mappable.set_clim(vmin, vmax)
         divider = make_axes_locatable(axes)
         cax = divider.append_axes("bottom", size="2%", pad=0.5)
-        cbar = plt.colorbar(
-            mappable,
-            cax=cax,
-            orientation='horizontal'
-        )
+        cbar = plt.colorbar(mappable, cax=cax, orientation="horizontal")
         cbar.set_ticks([vmin, vmax])
         cbar.set_ticklabels([np.around(vmin, 2), np.around(vmax, 2)])
         if cbar_label is not None:

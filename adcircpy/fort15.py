@@ -23,107 +23,160 @@ class Fort15:
         # model options
         # ----------------
         f = []
-        f.extend([
-            fort15_line(self.RUNDES, 'RUNDES',
-                        '32 CHARACTER ALPHANUMERIC RUN DESCRIPTION'),
-            fort15_line(self.RUNID, 'RUNID',
-                        '24 CHARACTER ALPANUMERIC RUN IDENTIFICATION'),
-            fort15_line(f'{self.NFOVER:d}', 'NFOVER',
-                        'NONFATAL ERROR OVERRIDE OPTION'),
-            fort15_line(f'{self.NABOUT:d}', 'NABOUT',
-                        'ABREVIATED OUTPUT OPTION PARAMETER'),
-            fort15_line(f'{self.NSCREEN:d}', 'NSCREEN',
-                        'UNIT 6 OUTPUT OPTION PARAMETER'),
-            fort15_line(f'{self.IHOT:d}', 'IHOT', 'HOT START PARAMETER'),
-            fort15_line(f'{self.ICS:d}', 'ICS',
-                        'COORDINATE SYSTEM SELECTION PARAMETER'),
-            fort15_line(f'{self.IM:d}', 'IM', 'MODEL SELECTION PARAMETER'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    self.RUNDES, "RUNDES", "32 CHARACTER ALPHANUMERIC RUN DESCRIPTION"
+                ),
+                fort15_line(
+                    self.RUNID, "RUNID", "24 CHARACTER ALPANUMERIC RUN IDENTIFICATION"
+                ),
+                fort15_line(
+                    f"{self.NFOVER:d}", "NFOVER", "NONFATAL ERROR OVERRIDE OPTION"
+                ),
+                fort15_line(
+                    f"{self.NABOUT:d}", "NABOUT", "ABREVIATED OUTPUT OPTION PARAMETER"
+                ),
+                fort15_line(
+                    f"{self.NSCREEN:d}", "NSCREEN", "UNIT 6 OUTPUT OPTION PARAMETER"
+                ),
+                fort15_line(f"{self.IHOT:d}", "IHOT", "HOT START PARAMETER"),
+                fort15_line(
+                    f"{self.ICS:d}", "ICS", "COORDINATE SYSTEM SELECTION PARAMETER"
+                ),
+                fort15_line(f"{self.IM:d}", "IM", "MODEL SELECTION PARAMETER"),
+            ]
+        )
         if self.IM in [21, 611113]:
-            f.append(fort15_line(f'{self.IDEN:d}', 'IDEN'))
-        f.extend([
-            fort15_line(f'{self.NOLIBF:G}', 'NOLIBF',
-                        'BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, \'2\' was used'),
-            fort15_line(f'{self.NOLIFA:d}', 'NOLIFA',
-                        'FINITE AMPLITUDE TERM SELECTION PARAMETER'),
-            fort15_line(f'{self.NOLICA:d}', 'NOLICA',
-                        'SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER'),
-            fort15_line(f'{self.NOLICAT:d}', 'NOLICAT',
-                        'TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER'),
-            fort15_line(f'{self.NWP:d}', 'NWP',
-                        'VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0'),
-        ])
-        if self._runtype == 'coldstart':
+            f.append(fort15_line(f"{self.IDEN:d}", "IDEN"))
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.NOLIBF:G}",
+                    "NOLIBF",
+                    "BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used",
+                ),
+                fort15_line(
+                    f"{self.NOLIFA:d}",
+                    "NOLIFA",
+                    "FINITE AMPLITUDE TERM SELECTION PARAMETER",
+                ),
+                fort15_line(
+                    f"{self.NOLICA:d}",
+                    "NOLICA",
+                    "SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER",
+                ),
+                fort15_line(
+                    f"{self.NOLICAT:d}",
+                    "NOLICAT",
+                    "TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER",
+                ),
+                fort15_line(
+                    f"{self.NWP:d}",
+                    "NWP",
+                    "VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0",
+                ),
+            ]
+        )
+        if self._runtype == "coldstart":
             attributes = self.mesh.get_coldstart_nodal_attributes()
-        elif self._runtype == 'hotstart':
+        elif self._runtype == "hotstart":
             attributes = self.mesh.get_hotstart_nodal_attributes()
         f.extend(fort15_line(attribute) for attribute in attributes)
-        f.extend([
-            fort15_line(f'{self.NCOR:d}', 'NCOR',
-                        'VARIABLE CORIOLIS IN SPACE OPTION PARAMETER'),
-            fort15_line(f'{self.NTIP:d}', 'NTIP',
-                        'TIDAL POTENTIAL OPTION PARAMETER'),
-            fort15_line(f'{int((self.NRS * 100) + self.NWS):d}', 'NWS',
-                        'WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER'),
-            fort15_line(f'{self.NRAMP:d}', 'NRAMP', 'RAMP FUNCTION OPTION'),
-            fort15_line(f'{self.G:G}', 'G',
-                        'ACCELERATION DUE TO GRAVITY - DETERMINES UNITS'),
-            fort15_line(f'{self.TAU0:G}', 'TAU0',
-                        'WEIGHTING FACTOR IN GWCE; original, 0.005'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.NCOR:d}",
+                    "NCOR",
+                    "VARIABLE CORIOLIS IN SPACE OPTION PARAMETER",
+                ),
+                fort15_line(
+                    f"{self.NTIP:d}", "NTIP", "TIDAL POTENTIAL OPTION PARAMETER"
+                ),
+                fort15_line(
+                    f"{int((self.NRS * 100) + self.NWS):d}",
+                    "NWS",
+                    "WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER",
+                ),
+                fort15_line(f"{self.NRAMP:d}", "NRAMP", "RAMP FUNCTION OPTION"),
+                fort15_line(
+                    f"{self.G:G}", "G", "ACCELERATION DUE TO GRAVITY - DETERMINES UNITS"
+                ),
+                fort15_line(
+                    f"{self.TAU0:G}",
+                    "TAU0",
+                    "WEIGHTING FACTOR IN GWCE; original, 0.005",
+                ),
+            ]
+        )
         if self.TAU0 == -5:
             f.append(
-                    fort15_line(
-                        f'{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}',
-                        'Tau0FullDomainMin Tau0FullDomainMax')
+                fort15_line(
+                    f"{self.Tau0FullDomainMin:G} {self.Tau0FullDomainMax:G}",
+                    "Tau0FullDomainMin Tau0FullDomainMax",
+                )
             )
-        f.extend([
-            fort15_line(f'{self.DTDP:.6f}', 'DTDP', 'TIME STEP (IN SECONDS)'),
-            fort15_line(f'{self.STATIM:G}', 'STATIM',
-                        'STARTING TIME (IN DAYS)'),
-            fort15_line(f'{self.REFTIM:G}', 'REFTIM',
-                        'REFERENCE TIME (IN DAYS)'),
-        ])
+        f.extend(
+            [
+                fort15_line(f"{self.DTDP:.6f}", "DTDP", "TIME STEP (IN SECONDS)"),
+                fort15_line(f"{self.STATIM:G}", "STATIM", "STARTING TIME (IN DAYS)"),
+                fort15_line(f"{self.REFTIM:G}", "REFTIM", "REFERENCE TIME (IN DAYS)"),
+            ]
+        )
         if self.NWS not in [0, 1, 9, 11]:
-            interval = f'{self.WTIMINC}'
+            interval = f"{self.WTIMINC}"
             description = {
-                'WTIMINC': 'meteorological data time increment',
+                "WTIMINC": "meteorological data time increment",
             }
             if self.NRS in [1, 3, 4, 5]:
-                interval += f' {self.RSTIMINC}'
-                description['RSTIMINC'] = 'wave forcing increment'
+                interval += f" {self.RSTIMINC}"
+                description["RSTIMINC"] = "wave forcing increment"
             f.append(
-                    fort15_line(f'{interval}', ' '.join(description),
-                                ', '.join(description.values()))
+                fort15_line(
+                    f"{interval}",
+                    " ".join(description),
+                    ", ".join(description.values()),
+                )
             )
-        f.extend([
-            fort15_line(f'{self.RNDAY:G}', 'RNDAY',
-                        'TOTAL LENGTH OF SIMULATION (IN DAYS)'),
-            fort15_line(self.DRAMP, 'DRAMP',
-                        'DURATION OF RAMP FUNCTION (IN DAYS)'),
-            fort15_line(f'{self.A00:G} {self.B00:G} {self.C00:G}',
-                        'A00 B00 C00',
-                        'TIME WEIGHTING FACTORS FOR THE GWCE EQUATION'),
-            fort15_line(f'{self.H0:G} 0 0 {self.VELMIN:G}',
-                        'H0 NODEDRYMIN NODEWETRMP VELMIN'),
-            fort15_line(f'{self.SLAM0:G} {self.SFEA0:G}', 'SLAM0 SFEA0',
-                        'CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)'),
-            fort15_line(self.FFACTOR,
-                        'CF HBREAK FTHETA FGAMMA' if self.NOLIBF == 2 else 'FFACTOR'),
-            fort15_line(f'{self.ESLM:G}',
-                        'smagorinsky coefficient' if self.smagorinsky else 'ESL',
-                        'LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1'),
-            fort15_line(f'{self.CORI:G}', 'CORI',
-                        'CORIOLIS PARAMETER - IGNORED IF NCOR = 1'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.RNDAY:G}", "RNDAY", "TOTAL LENGTH OF SIMULATION (IN DAYS)"
+                ),
+                fort15_line(self.DRAMP, "DRAMP", "DURATION OF RAMP FUNCTION (IN DAYS)"),
+                fort15_line(
+                    f"{self.A00:G} {self.B00:G} {self.C00:G}",
+                    "A00 B00 C00",
+                    "TIME WEIGHTING FACTORS FOR THE GWCE EQUATION",
+                ),
+                fort15_line(
+                    f"{self.H0:G} 0 0 {self.VELMIN:G}",
+                    "H0 NODEDRYMIN NODEWETRMP VELMIN",
+                ),
+                fort15_line(
+                    f"{self.SLAM0:G} {self.SFEA0:G}",
+                    "SLAM0 SFEA0",
+                    "CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)",
+                ),
+                fort15_line(
+                    self.FFACTOR,
+                    "CF HBREAK FTHETA FGAMMA" if self.NOLIBF == 2 else "FFACTOR",
+                ),
+                fort15_line(
+                    f"{self.ESLM:G}",
+                    "smagorinsky coefficient" if self.smagorinsky else "ESL",
+                    "LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1",
+                ),
+                fort15_line(
+                    f"{self.CORI:G}", "CORI", "CORIOLIS PARAMETER - IGNORED IF NCOR = 1"
+                ),
+            ]
+        )
         # ----------------
         # tidal forcings
         # ----------------
         f.append(self.get_tidal_forcing())
-        f.append(
-                fort15_line(f'{self.ANGINN:G}', 'ANGINN',
-                            'INNER ANGLE THRESHOLD')
-        )
+        f.append(fort15_line(f"{self.ANGINN:G}", "ANGINN", "INNER ANGLE THRESHOLD"))
         # ----------------
         # other boundary forcings go here.
         # (e.g. river boundary forcing)
@@ -158,131 +211,151 @@ class Fort15:
         # output requests
         # ----------------
         # elevation out stations
-        f.extend([
-            fort15_line(
-                f'{self.NOUTE:G} {self.TOUTSE:G} {self.TOUTFE:G} {self.NSPOOLE:G}',
-                'NOUTE TOUTSE TOUTFE NSPOOLE',
-                'ELEV STATION OUTPUT INFO (UNIT 61)'),
-            fort15_line(f'{self.NSTAE:d}', 'NSTAE',
-                        'TOTAL NUMBER OF ELEVATION RECORDING STATIONS'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.NOUTE:G} {self.TOUTSE:G} {self.TOUTFE:G} {self.NSPOOLE:G}",
+                    "NOUTE TOUTSE TOUTFE NSPOOLE",
+                    "ELEV STATION OUTPUT INFO (UNIT 61)",
+                ),
+                fort15_line(
+                    f"{self.NSTAE:d}",
+                    "NSTAE",
+                    "TOTAL NUMBER OF ELEVATION RECORDING STATIONS",
+                ),
+            ]
+        )
         stations = self.elevation_stations_output
-        if stations['sampling_rate'] is not None:
-            if self._runtype == 'coldstart':
-                if stations['spinup']:
+        if stations["sampling_rate"] is not None:
+            if self._runtype == "coldstart":
+                if stations["spinup"]:
                     f.extend(
-                            fort15_line(f'{x:G} {y:G}', station_id)
-                            for station_id, (x, y) in
-                            stations['collection'].items()
+                        fort15_line(f"{x:G} {y:G}", station_id)
+                        for station_id, (x, y) in stations["collection"].items()
                     )
             else:
                 f.extend(
-                        fort15_line(f'{x:G} {y:G}', station_id)
-                        for station_id, (x, y) in
-                        stations['collection'].items()
+                    fort15_line(f"{x:G} {y:G}", station_id)
+                    for station_id, (x, y) in stations["collection"].items()
                 )
         # velocity out stations
-        f.extend([
-            fort15_line(
-                f'{self.NOUTV:G} {self.TOUTSV:G} {self.TOUTFV:G} {self.NSPOOLV:G}',
-                'NOUTV TOUTSV TOUTFV NSPOOLV',
-                'VELOCITY STATION OUTPUT INFO (UNIT 62)'),
-            fort15_line(f'{self.NSTAV:<63G}', 'NSTAV',
-                        'TOTAL NUMBER OF VELOCITY RECORDING STATIONS'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.NOUTV:G} {self.TOUTSV:G} {self.TOUTFV:G} {self.NSPOOLV:G}",
+                    "NOUTV TOUTSV TOUTFV NSPOOLV",
+                    "VELOCITY STATION OUTPUT INFO (UNIT 62)",
+                ),
+                fort15_line(
+                    f"{self.NSTAV:<63G}",
+                    "NSTAV",
+                    "TOTAL NUMBER OF VELOCITY RECORDING STATIONS",
+                ),
+            ]
+        )
         stations = self.velocity_stations_output
-        if stations['sampling_rate'] is not None:
-            if self._runtype == 'coldstart':
-                if stations['spinup']:
+        if stations["sampling_rate"] is not None:
+            if self._runtype == "coldstart":
+                if stations["spinup"]:
                     f.extend(
-                            fort15_line(f'{x:G} {y:G}', station_id)
-                            for station_id, (x, y) in
-                            stations['collection'].items()
+                        fort15_line(f"{x:G} {y:G}", station_id)
+                        for station_id, (x, y) in stations["collection"].items()
                     )
             else:
                 f.extend(
-                        fort15_line(f'{x:G} {y:G}', station_id)
-                        for station_id, (x, y) in
-                        stations['collection'].items()
+                    fort15_line(f"{x:G} {y:G}", station_id)
+                    for station_id, (x, y) in stations["collection"].items()
                 )
         if self.IM == 10:
             # concentration out stations
-            f.extend([
-                fort15_line(
-                    f'{self.NOUTC:G} {self.TOUTSC:G} {self.TOUTFC:G} {self.NSPOOLC:G}',
-                    'NOUTC TOUTSC TOUTFC NSPOOLC',
-                    'CONCENTRATION STATION OUTPUT INFO (UNIT 91)'),
-                fort15_line(f'{self.NSTAC:d}', 'NSTAC',
-                            'TOTAL NUMBER OF CONCENTRATION RECORDING STATIONS'),
-            ])
+            f.extend(
+                [
+                    fort15_line(
+                        f"{self.NOUTC:G} {self.TOUTSC:G} {self.TOUTFC:G} {self.NSPOOLC:G}",
+                        "NOUTC TOUTSC TOUTFC NSPOOLC",
+                        "CONCENTRATION STATION OUTPUT INFO (UNIT 91)",
+                    ),
+                    fort15_line(
+                        f"{self.NSTAC:d}",
+                        "NSTAC",
+                        "TOTAL NUMBER OF CONCENTRATION RECORDING STATIONS",
+                    ),
+                ]
+            )
             stations = self.concentration_stations_output
-            if stations['sampling_rate'] is not None:
-                if self._runtype == 'coldstart':
-                    if stations['spinup']:
+            if stations["sampling_rate"] is not None:
+                if self._runtype == "coldstart":
+                    if stations["spinup"]:
                         f.extend(
-                                fort15_line(f'{x:G} {y:G}', station_id)
-                                for station_id, (x, y) in
-                                stations['collection'].items()
+                            fort15_line(f"{x:G} {y:G}", station_id)
+                            for station_id, (x, y) in stations["collection"].items()
                         )
                 else:
                     f.extend(
-                            fort15_line(f'{x:G} {y:G}', station_id)
-                            for station_id, (x, y) in
-                            stations['collection'].items()
+                        fort15_line(f"{x:G} {y:G}", station_id)
+                        for station_id, (x, y) in stations["collection"].items()
                     )
         if self.NWS > 0:
             # meteorological out stations
-            f.extend([
-                fort15_line(
-                    f'{self.NOUTM:G} {self.TOUTSM:G} {self.TOUTFM:G} {self.NSPOOLM:G}',
-                    'NOUTM TOUTSM TOUTFM NSPOOLM',
-                    'METEOROLOGICAL STATION OUTPUT INFO (UNITS 71/72)'),
-                fort15_line(f'{self.NSTAM:d}', 'NSTAM',
-                            'TOTAL NUMBER OF METEOROLOGICAL RECORDING STATIONS'),
-            ])
+            f.extend(
+                [
+                    fort15_line(
+                        f"{self.NOUTM:G} {self.TOUTSM:G} {self.TOUTFM:G} {self.NSPOOLM:G}",
+                        "NOUTM TOUTSM TOUTFM NSPOOLM",
+                        "METEOROLOGICAL STATION OUTPUT INFO (UNITS 71/72)",
+                    ),
+                    fort15_line(
+                        f"{self.NSTAM:d}",
+                        "NSTAM",
+                        "TOTAL NUMBER OF METEOROLOGICAL RECORDING STATIONS",
+                    ),
+                ]
+            )
             stations = self.meteorological_stations_output
-            if stations['sampling_rate'] is not None:
-                if stations['sampling_rate'] is not None:
-                    if self._runtype == 'coldstart':
-                        if stations['spinup']:
+            if stations["sampling_rate"] is not None:
+                if stations["sampling_rate"] is not None:
+                    if self._runtype == "coldstart":
+                        if stations["spinup"]:
                             f.extend(
-                                    fort15_line(f'{x:G} {y:G}', station_id)
-                                    for station_id, (x, y) in
-                                    stations['collection'].items()
+                                fort15_line(f"{x:G} {y:G}", station_id)
+                                for station_id, (x, y) in stations["collection"].items()
                             )
                     else:
                         f.extend(
-                                fort15_line(f'{x:G} {y:G}', station_id)
-                                for station_id, (x, y) in
-                                stations['collection'].items()
+                            fort15_line(f"{x:G} {y:G}", station_id)
+                            for station_id, (x, y) in stations["collection"].items()
                         )
         # elevation global outputs
         f.append(
-                fort15_line(
-                    f'{self.NOUTGE:d} {self.TOUTSGE:f} {self.TOUTFGE:f} {self.NSPOOLGE:d}',
-                    'NOUTGE TOUTSGE TOUTFGE NSPOOLGE',
-                    'GLOBAL ELEVATION OUTPUT INFO (UNIT 63)')
+            fort15_line(
+                f"{self.NOUTGE:d} {self.TOUTSGE:f} {self.TOUTFGE:f} {self.NSPOOLGE:d}",
+                "NOUTGE TOUTSGE TOUTFGE NSPOOLGE",
+                "GLOBAL ELEVATION OUTPUT INFO (UNIT 63)",
+            )
         )
         # velocity global otuputs
         f.append(
-                fort15_line(
-                    f'{self.NOUTGV:d} {self.TOUTSGV:f} {self.TOUTFGV:f} {self.NSPOOLGV:d}',
-                    'NOUTGV TOUTSGV TOUTFGV NSPOOLGV',
-                    'GLOBAL VELOCITY OUTPUT INFO (UNIT 64)')
+            fort15_line(
+                f"{self.NOUTGV:d} {self.TOUTSGV:f} {self.TOUTFGV:f} {self.NSPOOLGV:d}",
+                "NOUTGV TOUTSGV TOUTFGV NSPOOLGV",
+                "GLOBAL VELOCITY OUTPUT INFO (UNIT 64)",
+            )
         )
         if self.IM == 10:
             f.append(
-                    fort15_line(
-                        f'{self.NOUTGC:d} {self.TOUTSGC:f} {self.TOUTFGC:f} {self.NSPOOLGC:d}',
-                        'NOUTSGC TOUTGC TOUTFGC NSPOOLGC',
-                        'GLOBAL CONCENTRATION OUTPUT INFO')
+                fort15_line(
+                    f"{self.NOUTGC:d} {self.TOUTSGC:f} {self.TOUTFGC:f} {self.NSPOOLGC:d}",
+                    "NOUTSGC TOUTGC TOUTFGC NSPOOLGC",
+                    "GLOBAL CONCENTRATION OUTPUT INFO",
+                )
             )
         if self.NWS != 0:
             f.append(
-                    fort15_line(
-                        f'{self.NOUTGM:d} {self.TOUTSGM:f} {self.TOUTFGM:f} {self.NSPOOLGM:d}',
-                        'NOUTGM TOUTSGM TOUTFGM NSPOOLGM',
-                        'GLOBAL METEOROLOGICAL OUTPUT INFO')
+                fort15_line(
+                    f"{self.NOUTGM:d} {self.TOUTSGM:f} {self.TOUTFGM:f} {self.NSPOOLGM:d}",
+                    "NOUTGM TOUTSGM TOUTFGM NSPOOLGM",
+                    "GLOBAL METEOROLOGICAL OUTPUT INFO",
+                )
             )
         # harmonic analysis requests
         harmonic_analysis = False
@@ -293,128 +366,150 @@ class Fort15:
             self.velocity_stations_output,
         ]
         for _output in self._outputs:
-            if _output['harmonic_analysis']:
-                if self._runtype == 'coldstart':
-                    if _output['spinup']:
+            if _output["harmonic_analysis"]:
+                if self._runtype == "coldstart":
+                    if _output["spinup"]:
                         harmonic_analysis = True
                         break
                 else:
                     harmonic_analysis = True
                     break
-        f.append(fort15_line(f'{self.NFREQ:d}', 'NFREQ'))
+        f.append(fort15_line(f"{self.NFREQ:d}", "NFREQ"))
         if harmonic_analysis:
             for constituent, forcing in self.mesh.forcings.tides:
-                f.extend([
-                    f'{constituent:<63} ',
-                    f'{forcing[1]:<.16G} {forcing[3]:<.16G} {forcing[4]:<.16G}'.ljust(
-                        63),
-                ])
-        f.extend([
-            fort15_line(
-                f'{self.THAS:G} {self.THAF:G} {self.NHAINC} {self.FMV}',
-                'THAS THAF NHAINC FMV', 'HARMONIC ANALYSIS PARAMETERS'),
-            fort15_line(
-                f'{self.NHASE:G} {self.NHASV:G} {self.NHAGE:G} {self.NHAGV:G}',
-                'NHASE NHASV NHAGE NHAGV',
-                'CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54'),
-        ])
+                f.extend(
+                    [
+                        f"{constituent:<63} ",
+                        f"{forcing[1]:<.16G} {forcing[3]:<.16G} {forcing[4]:<.16G}".ljust(
+                            63
+                        ),
+                    ]
+                )
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.THAS:G} {self.THAF:G} {self.NHAINC} {self.FMV}",
+                    "THAS THAF NHAINC FMV",
+                    "HARMONIC ANALYSIS PARAMETERS",
+                ),
+                fort15_line(
+                    f"{self.NHASE:G} {self.NHASV:G} {self.NHAGE:G} {self.NHAGV:G}",
+                    "NHASE NHASV NHAGE NHAGV",
+                    "CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54",
+                ),
+            ]
+        )
         # ----------------
         # hostart file generation
         # ----------------
-        f.extend([
-            fort15_line(f'{self.NHSTAR:d} {self.NHSINC:d}', 'NHSTAR NHSINC',
-                        'HOT START FILE GENERATION PARAMETERS'),
-            fort15_line(
-                f'{self.ITITER:<1d} {self.ISLDIA:<1d} {self.CONVCR:<.15G} {self.ITMAX:<4d}',
-                'ITITER ISLDIA CONVCR ITMAX', 'ALGEBRAIC SOLUTION PARAMETERS'),
-        ])
-        if self.vertical_mode == '3D':
-            raise NotImplementedError('3D runs not yet implemented')
-        f.extend([
-            fort15_line(self.NCPROJ, 'NCPROJ', 'PROJECT TITLE'),
-            fort15_line(self.NCINST, 'NCINST', 'PROJECT INSTITUTION'),
-            fort15_line(self.NCSOUR, 'NCSOUR', 'PROJECT SOURCE'),
-            fort15_line(self.NCHIST, 'NCHIST', 'PROJECT HISTORY'),
-            fort15_line(self.NCREF, 'NCREF', 'PROJECT REFERENCES'),
-            fort15_line(self.NCCOM, 'NCCOM', 'PROJECT COMMENTS'),
-            fort15_line(self.NCHOST, 'NCHOST', 'PROJECT HOST'),
-            fort15_line(self.NCCONV, 'NCONV', 'CONVENTIONS'),
-            fort15_line(self.NCCONT, 'NCCONT', 'CONTACT INFORMATION'),
-            fort15_line(self.NCDATE, 'NCDATE', 'forcing start date'),
-        ])
+        f.extend(
+            [
+                fort15_line(
+                    f"{self.NHSTAR:d} {self.NHSINC:d}",
+                    "NHSTAR NHSINC",
+                    "HOT START FILE GENERATION PARAMETERS",
+                ),
+                fort15_line(
+                    f"{self.ITITER:<1d} {self.ISLDIA:<1d} {self.CONVCR:<.15G} {self.ITMAX:<4d}",
+                    "ITITER ISLDIA CONVCR ITMAX",
+                    "ALGEBRAIC SOLUTION PARAMETERS",
+                ),
+            ]
+        )
+        if self.vertical_mode == "3D":
+            raise NotImplementedError("3D runs not yet implemented")
+        f.extend(
+            [
+                fort15_line(self.NCPROJ, "NCPROJ", "PROJECT TITLE"),
+                fort15_line(self.NCINST, "NCINST", "PROJECT INSTITUTION"),
+                fort15_line(self.NCSOUR, "NCSOUR", "PROJECT SOURCE"),
+                fort15_line(self.NCHIST, "NCHIST", "PROJECT HISTORY"),
+                fort15_line(self.NCREF, "NCREF", "PROJECT REFERENCES"),
+                fort15_line(self.NCCOM, "NCCOM", "PROJECT COMMENTS"),
+                fort15_line(self.NCHOST, "NCHOST", "PROJECT HOST"),
+                fort15_line(self.NCCONV, "NCONV", "CONVENTIONS"),
+                fort15_line(self.NCCONT, "NCCONT", "CONTACT INFORMATION"),
+                fort15_line(self.NCDATE, "NCDATE", "forcing start date"),
+            ]
+        )
         del self._outputs
 
         for name, namelist in self.namelists.items():
-            f.append(f'&{name} ' +
-                     ', '.join([
-                         f'{key}={value}' for key, value in namelist.items()
-                     ]) + ' \\')
-        f.append('')
-        return '\n'.join(f)
+            f.append(
+                f"&{name} "
+                + ", ".join([f"{key}={value}" for key, value in namelist.items()])
+                + " \\"
+            )
+        f.append("")
+        return "\n".join(f)
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
-        assert runtype in ['coldstart', 'hotstart']
+        assert runtype in ["coldstart", "hotstart"]
         fort15 = pathlib.Path(path)
         if fort15.exists() and not overwrite:
-            raise Exception(f'{fort15} exists. '
-                            f'Pass `overwrite=True` to overwrite.')
-        with open(fort15, 'w', newline='\n') as f:
+            raise Exception(f"{fort15} exists. " f"Pass `overwrite=True` to overwrite.")
+        with open(fort15, "w", newline="\n") as f:
             f.write(self.fort15(runtype))
 
     def get_tidal_forcing(self):
         f = []
         f.append(
-                fort15_line(f'{self.NTIF:d}', 'NTIF',
-                            'NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300')
+            fort15_line(
+                f"{self.NTIF:d}",
+                "NTIF",
+                "NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300",
+            )
         )
         if self.NTIF > 0:
             active = self.mesh.forcings.tides.get_active_potential_constituents()
             for constituent in active:
                 forcing = self.mesh.forcings.tides(constituent)
-                f.extend([
-                    fort15_line(constituent),
-                    fort15_line(
-                        f'{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}'),
-                ])
-        f.append(fort15_line(f'{self.NBFR:d}'))
+                f.extend(
+                    [
+                        fort15_line(constituent),
+                        fort15_line(
+                            f"{forcing[0]:G} {forcing[1]:G} {forcing[2]:G} {forcing[3]:G} {forcing[4]:G}"
+                        ),
+                    ]
+                )
+        f.append(fort15_line(f"{self.NBFR:d}"))
         if self.NBFR > 0:
             active = self.mesh.forcings.tides.get_active_forcing_constituents()
             for constituent in active:
                 forcing = self.mesh.forcings.tides(constituent)
                 f.extend(
-                        [
-                            fort15_line(constituent),
-                            fort15_line(
-                                f'{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}'),
-                            # f'{len(self.mesh.open_boundaries)}',
-                        ]
+                    [
+                        fort15_line(constituent),
+                        fort15_line(f"{forcing[1]:G} {forcing[3]:G} {forcing[4]:G}"),
+                        # f'{len(self.mesh.open_boundaries)}',
+                    ]
                 )
             for row in self.mesh.boundaries.ocean.gdf.itertuples():
                 for constituent in self.mesh.forcings.tides.get_active_constituents():
                     f.append(fort15_line(constituent))
-                    vertices = self.mesh.get_xy(crs='EPSG:4326')[row.indexes,
-                               :]
+                    vertices = self.mesh.get_xy(crs="EPSG:4326")[row.indexes, :]
                     amp, phase = self.mesh.forcings.tides.tidal_dataset(
-                            constituent, vertices)
+                        constituent, vertices
+                    )
                     f.extend(
-                            fort15_line(f'{amp[i]:.8e} {phase[i]:.8e}')
-                            for i in range(len(vertices))
+                        fort15_line(f"{amp[i]:.8e} {phase[i]:.8e}")
+                        for i in range(len(vertices))
                     )
 
-        return '\n'.join(f)
+        return "\n".join(f)
 
     @property
     def namelists(self) -> {str: {str: str}}:
         namelists = {}
         if self.NRS in [1, 3, 4, 5]:
-            namelists['SWANOutputControl'] = {
-                'SWAN_OutputHS': 'False',
-                'SWAN_OutputDIR': 'False',
-                'SWAN_OutputTM01': 'False',
-                'SWAN_OutputTPS': 'False',
-                'SWAN_OutputWIND': 'False',
-                'SWAN_OutputTM02': 'False',
-                'SWAN_OutputTMM10': 'False'
+            namelists["SWANOutputControl"] = {
+                "SWAN_OutputHS": "False",
+                "SWAN_OutputDIR": "False",
+                "SWAN_OutputTM01": "False",
+                "SWAN_OutputTPS": "False",
+                "SWAN_OutputWIND": "False",
+                "SWAN_OutputTM02": "False",
+                "SWAN_OutputTMM10": "False",
             }
         return namelists
 
@@ -430,19 +525,19 @@ class Fort15:
     @staticmethod
     def parse_stations(path, station_type):
         stations = dict()
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             for line in f:
                 if station_type in line:
-                    line = f.readline().split('!')[0]
+                    line = f.readline().split("!")[0]
                     num = int(line)
                     for i in range(num):
-                        line = f.readline().split('!')
+                        line = f.readline().split("!")
                         if len(line) > 0:
-                            station_name = line[1].strip(' \n')
+                            station_name = line[1].strip(" \n")
                         else:
                             station_name = str(i)
-                        vertices = line[0].split(' ')
-                        vertices = [float(x) for x in vertices if x != '']
+                        vertices = line[0].split(" ")
+                        vertices = [float(x) for x in vertices if x != ""]
                         x = float(vertices[0])
                         y = float(vertices[1])
                         try:
@@ -460,7 +555,7 @@ class Fort15:
         try:
             return self.__vertical_mode
         except AttributeError:
-            return '2D'
+            return "2D"
 
     @property
     def lateral_stress_in_gwce(self):
@@ -471,9 +566,9 @@ class Fort15:
             return self.__lateral_stress_in_gwce
         except AttributeError:
             if self.smagorinsky:
-                return 'velocity_based'
+                return "velocity_based"
             else:
-                return 'kolar_grey'
+                return "kolar_grey"
 
     @property
     def lateral_stress_in_gwce_is_symmetrical(self):
@@ -496,7 +591,7 @@ class Fort15:
         try:
             return self.__advection_in_gwce
         except AttributeError:
-            return 'non_conservative'
+            return "non_conservative"
 
     @property
     def lateral_stress_in_momentum(self):
@@ -506,7 +601,7 @@ class Fort15:
         try:
             return self.__lateral_stress_in_momentum
         except AttributeError:
-            return 'velocity_based'
+            return "velocity_based"
 
     @property
     def lateral_stress_in_momentum_is_symmetrical(self):
@@ -526,7 +621,7 @@ class Fort15:
         try:
             return self.__lateral_stress_in_momentum_method
         except AttributeError:
-            return 'integration_by_parts'
+            return "integration_by_parts"
 
     @property
     def advection_in_momentum(self):
@@ -536,7 +631,7 @@ class Fort15:
         try:
             return self.__advection_in_momentum
         except AttributeError:
-            return 'non_conservative'
+            return "non_conservative"
 
     @property
     def area_integration_in_momentum(self):
@@ -546,7 +641,7 @@ class Fort15:
         try:
             return self.__area_integration_in_momentum
         except AttributeError:
-            return 'corrected'
+            return "corrected"
 
     @property
     def baroclinicity(self):
@@ -583,7 +678,7 @@ class Fort15:
         try:
             return self.__gwce_solution_scheme
         except AttributeError:
-            return 'semi-implicit'
+            return "semi-implicit"
 
     @property
     def horizontal_mixing_coefficient(self):
@@ -625,7 +720,7 @@ class Fort15:
         try:
             self.__RUNDES
         except AttributeError:
-            return datetime.now().strftime('created on %Y-%m-%d %H:%M')
+            return datetime.now().strftime("created on %Y-%m-%d %H:%M")
 
     @property
     def RUNID(self):
@@ -643,9 +738,9 @@ class Fort15:
         try:
             return self.__IHOT
         except AttributeError:
-            if self._runtype == 'coldstart':
+            if self._runtype == "coldstart":
                 return 0
-            elif self._runtype == 'hotstart':
+            elif self._runtype == "hotstart":
                 return 567
 
     @property
@@ -704,7 +799,7 @@ class Fort15:
         http://adcirc.org/home/documentation/users-manual-v50/input-file-descriptions/nws-values-table/
         """
 
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             nws = 0
         elif self.mesh is not None:
             if self.mesh.forcings.wind is not None:
@@ -728,7 +823,7 @@ class Fort15:
         500 - WW3
         """
 
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             nrs = 0
         elif self.mesh is not None:
             if self.mesh.forcings.wave is not None:
@@ -755,7 +850,7 @@ class Fort15:
             return 2
 
         elif self.passive_scalar_transport:
-            if self.vertical_mode == '2D':
+            if self.vertical_mode == "2D":
                 if not self.baroclinicity:
                     return 10
                 else:
@@ -768,15 +863,15 @@ class Fort15:
         else:
 
             def get_digit_1():
-                if self.vertical_mode == '2D':
-                    if self.lateral_stress_in_gwce == 'kolar_grey':
+                if self.vertical_mode == "2D":
+                    if self.lateral_stress_in_gwce == "kolar_grey":
                         return 1
-                    elif self.lateral_stress_in_gwce == 'flux_based':
+                    elif self.lateral_stress_in_gwce == "flux_based":
                         if self.lateral_stress_in_gwce_is_symmetrical:
                             return 4
                         else:
                             return 2
-                    elif self.lateral_stress_in_gwce == 'velocity_based':
+                    elif self.lateral_stress_in_gwce == "velocity_based":
                         if self.lateral_stress_in_gwce_is_symmetrical:
                             return 5
                         else:
@@ -785,64 +880,68 @@ class Fort15:
                     return 6
 
             def get_digit_2():
-                if self.advection_in_gwce == 'non_conservative':
+                if self.advection_in_gwce == "non_conservative":
                     return 1
-                elif self.advection_in_gwce == 'form_1':
+                elif self.advection_in_gwce == "form_1":
                     return 2
-                elif self.advection_in_gwce == 'form_2':
+                elif self.advection_in_gwce == "form_2":
                     return 3
 
             def get_digit_3():
-                if self.lateral_stress_in_momentum == 'velocity_based':
-                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
+                if self.lateral_stress_in_momentum == "velocity_based":
+                    if self.lateral_stress_in_momentum_method == "integration_by_parts":
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 3
                         else:
                             return 1
                     else:
-                        raise NotImplementedError('not implemented in adcirc')
+                        raise NotImplementedError("not implemented in adcirc")
                         return 5
-                elif self.lateral_stress_in_momentum == 'flux_based':
-                    if self.lateral_stress_in_momentum_method == 'integration_by_parts':
+                elif self.lateral_stress_in_momentum == "flux_based":
+                    if self.lateral_stress_in_momentum_method == "integration_by_parts":
                         if self.lateral_stress_in_momentum_is_symmetrical:
                             return 4
                         else:
                             return 2
                     else:
-                        raise NotImplementedError('not implemented in adcirc')
+                        raise NotImplementedError("not implemented in adcirc")
                         return 6
 
             def get_digit_4():
-                if self.advection_in_momentum == 'non_conservative':
+                if self.advection_in_momentum == "non_conservative":
                     return 1
-                elif self.advection_in_momentum == 'form_1':
+                elif self.advection_in_momentum == "form_1":
                     return 2
-                elif self.advection_in_momentum == 'form_2':
+                elif self.advection_in_momentum == "form_2":
                     return 3
 
             def get_digit_5():
-                if self.area_integration_in_momentum == 'corrected':
+                if self.area_integration_in_momentum == "corrected":
                     return 1
-                elif self.area_integration_in_momentum == 'original':
+                elif self.area_integration_in_momentum == "original":
                     return 2
 
             def get_digit_6():
-                if (not self.baroclinicity and
-                    self.gwce_solution_scheme == 'semi-implicit-legacy'):
+                if (
+                    not self.baroclinicity
+                    and self.gwce_solution_scheme == "semi-implicit-legacy"
+                ):
                     return 1
 
-                elif (not self.baroclinicity and
-                      self.gwce_solution_scheme == 'explicit'):
+                elif not self.baroclinicity and self.gwce_solution_scheme == "explicit":
                     return 2
 
-                elif (not self.baroclinicity and
-                      self.gwce_solution_scheme == 'semi-implicit'):
+                elif (
+                    not self.baroclinicity
+                    and self.gwce_solution_scheme == "semi-implicit"
+                ):
                     return 3
 
                 else:
                     raise Exception(
-                        f'No IM digit 6 for {self.baroclinicity}, '
-                        f'{self.gwce_solution_scheme}')
+                        f"No IM digit 6 for {self.baroclinicity}, "
+                        f"{self.gwce_solution_scheme}"
+                    )
 
                 # elif (self.baroclinicity and
                 #       self.gwce_solution_scheme == 'semi-implicit'):
@@ -851,12 +950,12 @@ class Fort15:
                 #       self.gwce_solution_scheme == 'explicit'):
                 #     return 4
 
-            IM = '{:d}'.format(get_digit_1())
-            IM += '{:d}'.format(get_digit_2())
-            IM += '{:d}'.format(get_digit_3())
-            IM += '{:d}'.format(get_digit_4())
-            IM += '{:d}'.format(get_digit_5())
-            IM += '{:d}'.format(get_digit_6())
+            IM = "{:d}".format(get_digit_1())
+            IM += "{:d}".format(get_digit_2())
+            IM += "{:d}".format(get_digit_3())
+            IM += "{:d}".format(get_digit_4())
+            IM += "{:d}".format(get_digit_5())
+            IM += "{:d}".format(get_digit_6())
             return int(IM)
 
     @property
@@ -872,17 +971,17 @@ class Fort15:
             NOLIBF = 2
             mesh_attributes = self.mesh.get_nodal_attribute_names()
             for attribute in [
-                'quadratic_friction_coefficient_at_sea_floor',
-                'mannings_n_at_sea_floor',
-                'chezy_friction_coefficient_at_sea_floor',
+                "quadratic_friction_coefficient_at_sea_floor",
+                "mannings_n_at_sea_floor",
+                "chezy_friction_coefficient_at_sea_floor",
             ]:
                 if attribute in mesh_attributes:
                     attr = self.mesh.get_nodal_attribute(attribute)
-                    if self._runtype == 'coldstart':
-                        if attr['coldstart'] is True:
+                    if self._runtype == "coldstart":
+                        if attr["coldstart"] is True:
                             NOLIBF = 1
                     else:
-                        if attr['hotstart'] is True:
+                        if attr["hotstart"] is True:
                             NOLIBF = 1
             return NOLIBF
 
@@ -909,7 +1008,7 @@ class Fort15:
 
     @property
     def NWP(self):
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             return len(self.mesh.get_coldstart_nodal_attributes())
         else:
             return len(self.mesh.get_hotstart_nodal_attributes())
@@ -918,7 +1017,7 @@ class Fort15:
     def NRAMP(self):
         if self.spinup_time.total_seconds() == 0:
             return 1
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             return 1
         else:
             return 8
@@ -938,7 +1037,7 @@ class Fort15:
                 try:
                     self.fort24
                 except AttributeError:
-                    raise Exception('Must generate fort.24 file.')
+                    raise Exception("Must generate fort.24 file.")
             return NTIP
         except AttributeError:
             return 1
@@ -974,7 +1073,7 @@ class Fort15:
             return self.__TAU0
         except AttributeError:
             if self.mesh.has_nodal_attribute(
-                'primitive_weighting_in_continuity_equation', self._runtype
+                "primitive_weighting_in_continuity_equation", self._runtype
             ):
                 return -3
             if self.NOLIBF != 2:
@@ -987,11 +1086,11 @@ class Fort15:
         try:
             return self.__FFACTOR
         except AttributeError:
-            FFACTOR = f'{self.CF:G} '
+            FFACTOR = f"{self.CF:G} "
             if self.NOLIBF == 2:
-                FFACTOR += f'{self.HBREAK:G} '
-                FFACTOR += f'{self.FTHETA:G} '
-                FFACTOR += f'{self.FGAMMA:G}'
+                FFACTOR += f"{self.HBREAK:G} "
+                FFACTOR += f"{self.FTHETA:G} "
+                FFACTOR += f"{self.FGAMMA:G}"
                 return FFACTOR
             else:
                 return FFACTOR
@@ -1018,7 +1117,7 @@ class Fort15:
         try:
             return self.__STATIM
         except AttributeError:
-            if self._runtype == 'coldstart':
+            if self._runtype == "coldstart":
                 return 0
             else:
                 # Looks like this has always to be zero!
@@ -1057,7 +1156,7 @@ class Fort15:
 
     @property
     def RNDAY(self):
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             if self.spinup_time.total_seconds() > 0.0:
                 RNDAY = self.start_date - self.forcing_start_date
             else:
@@ -1070,8 +1169,8 @@ class Fort15:
     @property
     def DRAMP(self):
         try:
-            DRAMP = '{:<.16G}'.format(self.__DRAMP)
-            DRAMP += 10 * ' '
+            DRAMP = "{:<.16G}".format(self.__DRAMP)
+            DRAMP += 10 * " "
             return DRAMP
         except AttributeError:
             DRAMP = self.spinup_factor * (
@@ -1079,19 +1178,19 @@ class Fort15:
                 / (60.0 * 60.0 * 24.0)
             )
             if self.NRAMP in [0, 1]:
-                DRAMP = '{:<.16G}'.format(DRAMP)
-                DRAMP += 10 * ' '
+                DRAMP = "{:<.16G}".format(DRAMP)
+                DRAMP += 10 * " "
                 return DRAMP
             else:
-                DRAMP = '{:<.3f} '.format(DRAMP)
-                DRAMP += '{:<.3f} '.format(self.DRAMPExtFlux)
-                DRAMP += '{:<.3f} '.format(self.FluxSettlingTime)
-                DRAMP += '{:<.3f} '.format(self.DRAMPIntFlux)
-                DRAMP += '{:<.3f} '.format(self.DRAMPElev)
-                DRAMP += '{:<.3f} '.format(self.DRAMPTip)
-                DRAMP += '{:<.3f} '.format(self.DRAMPMete)
-                DRAMP += '{:<.3f} '.format(self.DRAMPWRad)
-                DRAMP += '{:<.3f} '.format(self.DUnRampMete)
+                DRAMP = "{:<.3f} ".format(DRAMP)
+                DRAMP += "{:<.3f} ".format(self.DRAMPExtFlux)
+                DRAMP += "{:<.3f} ".format(self.FluxSettlingTime)
+                DRAMP += "{:<.3f} ".format(self.DRAMPIntFlux)
+                DRAMP += "{:<.3f} ".format(self.DRAMPElev)
+                DRAMP += "{:<.3f} ".format(self.DRAMPTip)
+                DRAMP += "{:<.3f} ".format(self.DRAMPMete)
+                DRAMP += "{:<.3f} ".format(self.DRAMPWRad)
+                DRAMP += "{:<.3f} ".format(self.DUnRampMete)
                 return DRAMP
 
     @property
@@ -1162,11 +1261,11 @@ class Fort15:
         try:
             return self.__A00
         except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
+            if self.gwce_solution_scheme == "explicit":
                 return 0
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+            if self.gwce_solution_scheme == "semi-implicit-legacy":
                 return 0.35
-            if self.gwce_solution_scheme == 'semi-implicit':
+            if self.gwce_solution_scheme == "semi-implicit":
                 return 0.5
 
     @property
@@ -1174,11 +1273,11 @@ class Fort15:
         try:
             return self.__B00
         except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
+            if self.gwce_solution_scheme == "explicit":
                 return 1
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+            if self.gwce_solution_scheme == "semi-implicit-legacy":
                 return 0.30
-            if self.gwce_solution_scheme == 'semi-implicit':
+            if self.gwce_solution_scheme == "semi-implicit":
                 return 0.5
 
     @property
@@ -1186,11 +1285,11 @@ class Fort15:
         try:
             return self.__C00
         except AttributeError:
-            if self.gwce_solution_scheme == 'explicit':
+            if self.gwce_solution_scheme == "explicit":
                 return 0
-            if self.gwce_solution_scheme == 'semi-implicit-legacy':
+            if self.gwce_solution_scheme == "semi-implicit-legacy":
                 return 0.35
-            if self.gwce_solution_scheme == 'semi-implicit':
+            if self.gwce_solution_scheme == "semi-implicit":
                 return 0
 
     @property
@@ -1268,9 +1367,8 @@ class Fort15:
 
     @property
     def tidal_forcing(self):
-        if not hasattr(self, '_tidal_forcing'):
-            self._tidal_forcing = self.mesh._boundary_forcing['iettype'].get(
-                'obj')
+        if not hasattr(self, "_tidal_forcing"):
+            self._tidal_forcing = self.mesh._boundary_forcing["iettype"].get("obj")
         return self._tidal_forcing
 
     @property
@@ -1300,279 +1398,308 @@ class Fort15:
         try:
             self.__NOUTE
         except AttributeError:
-            return self._get_NOUT__('stations', 'elevation')
+            return self._get_NOUT__("stations", "elevation")
 
     @property
     def TOUTSE(self):
         try:
             return self.__TOUTSE
         except AttributeError:
-            return min(self._get_TOUTS__('stations', 'elevation'),
-                       self._get_TOUTF__('stations', 'elevation'))
+            return min(
+                self._get_TOUTS__("stations", "elevation"),
+                self._get_TOUTF__("stations", "elevation"),
+            )
 
     @property
     def TOUTFE(self):
         try:
             return self.__TOUTFE
         except AttributeError:
-            return max(self._get_TOUTS__('stations', 'elevation'),
-                       self._get_TOUTF__('stations', 'elevation'))
+            return max(
+                self._get_TOUTS__("stations", "elevation"),
+                self._get_TOUTF__("stations", "elevation"),
+            )
 
     @property
     def NSPOOLE(self):
         try:
             return self.__NSPOOLE
         except AttributeError:
-            return self._get_NSPOOL__('stations', 'elevation')
+            return self._get_NSPOOL__("stations", "elevation")
 
     @property
     def NSTAE(self):
         try:
             return self.__NSTAE
         except AttributeError:
-            return self._get_NSTA_('elevation')
+            return self._get_NSTA_("elevation")
 
     @property
     def NOUTV(self):
         try:
             self.__NOUTV
         except AttributeError:
-            return self._get_NOUT__('stations', 'velocity')
+            return self._get_NOUT__("stations", "velocity")
 
     @property
     def TOUTSV(self):
         try:
             return self.__TOUTSV
         except AttributeError:
-            return min(self._get_TOUTS__('stations', 'velocity'),
-                       self._get_TOUTF__('stations', 'velocity'))
+            return min(
+                self._get_TOUTS__("stations", "velocity"),
+                self._get_TOUTF__("stations", "velocity"),
+            )
 
     @property
     def TOUTFV(self):
         try:
             return self.__TOUTFV
         except AttributeError:
-            return max(self._get_TOUTS__('stations', 'velocity'),
-                       self._get_TOUTF__('stations', 'velocity'))
+            return max(
+                self._get_TOUTS__("stations", "velocity"),
+                self._get_TOUTF__("stations", "velocity"),
+            )
 
     @property
     def NSPOOLV(self):
         try:
             return self.__NSPOOLV
         except AttributeError:
-            return self._get_NSPOOL__('stations', 'velocity')
+            return self._get_NSPOOL__("stations", "velocity")
 
     @property
     def NSTAV(self):
         try:
             return self.__NSTAV
         except AttributeError:
-            return self._get_NSTA_('velocity')
+            return self._get_NSTA_("velocity")
 
     @property
     def NOUTM(self):
         try:
             self.__NOUTM
         except AttributeError:
-            return self._get_NOUT__('stations', 'meteorological')
+            return self._get_NOUT__("stations", "meteorological")
 
     @property
     def TOUTSM(self):
         try:
             return self.__TOUTSM
         except AttributeError:
-            return min(self._get_TOUTS__('stations', 'meteorological'),
-                       self._get_TOUTF__('stations', 'meteorological'))
+            return min(
+                self._get_TOUTS__("stations", "meteorological"),
+                self._get_TOUTF__("stations", "meteorological"),
+            )
 
     @property
     def TOUTFM(self):
         try:
             return self.__TOUTFM
         except AttributeError:
-            return max(self._get_TOUTS__('stations', 'meteorological'),
-                       self._get_TOUTF__('stations', 'meteorological'))
+            return max(
+                self._get_TOUTS__("stations", "meteorological"),
+                self._get_TOUTF__("stations", "meteorological"),
+            )
 
     @property
     def NSPOOLM(self):
         try:
             return self.__NSPOOLM
         except AttributeError:
-            return self._get_NSPOOL__('stations', 'meteorological')
+            return self._get_NSPOOL__("stations", "meteorological")
 
     @property
     def NSTAM(self):
         try:
             return self.__NSTAM
         except AttributeError:
-            return self._get_NSTA_('meteorological')
+            return self._get_NSTA_("meteorological")
 
     @property
     def NOUTC(self):
         try:
             self.__NOUTC
         except AttributeError:
-            return self._get_NOUT__('stations', 'concentration')
+            return self._get_NOUT__("stations", "concentration")
 
     @property
     def TOUTSC(self):
         try:
             return self.__TOUTSC
         except AttributeError:
-            return min(self._get_TOUTS__('stations', 'concentration'),
-                       self._get_TOUTF__('stations', 'concentration'))
+            return min(
+                self._get_TOUTS__("stations", "concentration"),
+                self._get_TOUTF__("stations", "concentration"),
+            )
 
     @property
     def TOUTFC(self):
         try:
             return self.__TOUTFC
         except AttributeError:
-            return max(self._get_TOUTS__('stations', 'concentration'),
-                       self._get_TOUTF__('stations', 'concentration'))
+            return max(
+                self._get_TOUTS__("stations", "concentration"),
+                self._get_TOUTF__("stations", "concentration"),
+            )
 
     @property
     def NSPOOLC(self):
         try:
             return self.__NSPOOLC
         except AttributeError:
-            return self._get_NSPOOL__('stations', 'concentration')
+            return self._get_NSPOOL__("stations", "concentration")
 
     @property
     def NSTAC(self):
         try:
             return self.__NSTAC
         except AttributeError:
-            return self._get_NSTA_('concentration')
+            return self._get_NSTA_("concentration")
 
     @property
     def NOUTGE(self):
         try:
             return self.__NOUTGE
         except AttributeError:
-            return self._get_NOUT__('surface', 'elevation')
+            return self._get_NOUT__("surface", "elevation")
 
     @property
     def TOUTSGE(self):
         try:
             return self.__TOUTSGE
         except AttributeError:
-            return min(self._get_TOUTS__('surface', 'elevation'),
-                       self._get_TOUTF__('surface', 'elevation'))
+            return min(
+                self._get_TOUTS__("surface", "elevation"),
+                self._get_TOUTF__("surface", "elevation"),
+            )
 
     @property
     def TOUTFGE(self):
         try:
             return self.__TOUTFGE
         except AttributeError:
-            return max(self._get_TOUTS__('surface', 'elevation'),
-                       self._get_TOUTF__('surface', 'elevation'))
+            return max(
+                self._get_TOUTS__("surface", "elevation"),
+                self._get_TOUTF__("surface", "elevation"),
+            )
 
     @property
     def NSPOOLGE(self):
         try:
             return self.__NSPOOLGE
         except AttributeError:
-            return self._get_NSPOOL__('surface', 'elevation')
+            return self._get_NSPOOL__("surface", "elevation")
 
     @property
     def NOUTGV(self):
         try:
             return self.__NOUTGV
         except AttributeError:
-            return self._get_NOUT__('surface', 'velocity')
+            return self._get_NOUT__("surface", "velocity")
 
     @property
     def TOUTSGV(self):
         try:
             return self.__TOUTSGV
         except AttributeError:
-            return min(self._get_TOUTS__('surface', 'velocity'),
-                       self._get_TOUTF__('surface', 'velocity'))
+            return min(
+                self._get_TOUTS__("surface", "velocity"),
+                self._get_TOUTF__("surface", "velocity"),
+            )
 
     @property
     def TOUTFGV(self):
         try:
             return self.__TOUTFGV
         except AttributeError:
-            return self._get_TOUTF__('surface', 'velocity')
+            return self._get_TOUTF__("surface", "velocity")
 
     @property
     def NSPOOLGV(self):
         try:
             return self.__NSPOOLGV
         except AttributeError:
-            return self._get_NSPOOL__('surface', 'velocity')
+            return self._get_NSPOOL__("surface", "velocity")
 
     @property
     def NOUTGM(self):
         try:
             return self.__NOUTGM
         except AttributeError:
-            return self._get_NOUT__('surface', 'meteorological')
+            return self._get_NOUT__("surface", "meteorological")
 
     @property
     def TOUTSGM(self):
         try:
             return self.__TOUTSGM
         except AttributeError:
-            return min(self._get_TOUTS__('surface', 'meteorological'),
-                       self._get_TOUTF__('surface', 'meteorological'))
+            return min(
+                self._get_TOUTS__("surface", "meteorological"),
+                self._get_TOUTF__("surface", "meteorological"),
+            )
 
     @property
     def TOUTFGM(self):
         try:
             return self.__TOUTFGM
         except AttributeError:
-            return max(self._get_TOUTS__('surface', 'meteorological'),
-                       self._get_TOUTF__('surface', 'meteorological'))
+            return max(
+                self._get_TOUTS__("surface", "meteorological"),
+                self._get_TOUTF__("surface", "meteorological"),
+            )
 
     @property
     def NSPOOLGM(self):
         try:
             return self.__NSPOOLGM
         except AttributeError:
-            return self._get_NSPOOL__('surface', 'meteorological')
+            return self._get_NSPOOL__("surface", "meteorological")
 
     @property
     def NOUTGC(self):
         try:
             return self.__NOUTGC
         except AttributeError:
-            return self._get_NOUT__('surface', 'concentration')
+            return self._get_NOUT__("surface", "concentration")
 
     @property
     def TOUTSGC(self):
         try:
             return self.__TOUTSGC
         except AttributeError:
-            return min(self._get_TOUTS__('surface', 'concentration'),
-                       self._get_TOUTF__('surface', 'concentration'))
+            return min(
+                self._get_TOUTS__("surface", "concentration"),
+                self._get_TOUTF__("surface", "concentration"),
+            )
 
     @property
     def TOUTFGC(self):
         try:
             return self.__TOUTFGC
         except AttributeError:
-            return max(self._get_TOUTS__('surface', 'concentration'),
-                       self._get_TOUTF__('surface', 'concentration'))
+            return max(
+                self._get_TOUTS__("surface", "concentration"),
+                self._get_TOUTF__("surface", "concentration"),
+            )
 
     @property
     def NSPOOLGC(self):
         try:
             return self.__NSPOOLGC
         except AttributeError:
-            return self._get_NSPOOL__('surface', 'concentration')
+            return self._get_NSPOOL__("surface", "concentration")
 
     @property
     def NFREQ(self):
-        if self._runtype == 'coldstart':
-            if np.any([_['spinup'] for _ in self._outputs]):
-                if np.any([_['sampling_rate'] for _ in self._outputs]):
-                    if np.any([_['harmonic_analysis'] for _ in self._outputs]):
-                        return len(
-                            self.mesh.forcings.tides.get_active_constituents())
+        if self._runtype == "coldstart":
+            if np.any([_["spinup"] for _ in self._outputs]):
+                if np.any([_["sampling_rate"] for _ in self._outputs]):
+                    if np.any([_["harmonic_analysis"] for _ in self._outputs]):
+                        return len(self.mesh.forcings.tides.get_active_constituents())
         else:
-            if np.any([_['sampling_rate'] for _ in self._outputs]):
-                if np.any([_['harmonic_analysis'] for _ in self._outputs]):
+            if np.any([_["sampling_rate"] for _ in self._outputs]):
+                if np.any([_["harmonic_analysis"] for _ in self._outputs]):
                     return len(self.mesh.forcings.tides.get_active_constituents())
         return 0
 
@@ -1583,12 +1710,11 @@ class Fort15:
         except AttributeError:
             if self.NFREQ > 0:
                 try:
-                    if self._runtype == 'coldstart':
+                    if self._runtype == "coldstart":
                         return self.STATIM + float(self.DRAMP)
                     else:
                         dt = self.start_date - self.forcing_start_date
-                        return (self.STATIM + dt.total_seconds()) / (
-                            24.0 * 60.0 * 60.0)
+                        return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
                 except TypeError:
                     #  if self.DRAMP is not castable to float()
                     raise
@@ -1603,7 +1729,7 @@ class Fort15:
             if self.NFREQ == 0:
                 return 0
             dt = self.start_date - self.forcing_start_date
-            if self._runtype == 'coldstart':
+            if self._runtype == "coldstart":
                 if dt.total_seconds() == 0:
                     dt = self.end_date - self.start_date
                     return dt.total_seconds() / (24.0 * 60.0 * 60.0)
@@ -1611,25 +1737,24 @@ class Fort15:
                     return dt.days
             else:
                 dt = self.start_date - self.forcing_start_date
-                return (self.STATIM + dt.total_seconds()) / (
-                    24.0 * 60.0 * 60.0)
+                return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
 
     @property
     def NHAINC(self):
         try:
             return self.__NHAINC
         except AttributeError:
-            NHAINC = float('inf')
+            NHAINC = float("inf")
             for _output in self._outputs:
-                if _output['harmonic_analysis']:
-                    if self._runtype == 'coldstart':
-                        if _output['spinup']:
-                            fs = _output['sampling_rate']
+                if _output["harmonic_analysis"]:
+                    if self._runtype == "coldstart":
+                        if _output["spinup"]:
+                            fs = _output["sampling_rate"]
                             NHAINC = np.min([NHAINC, fs.total_seconds()])
                     else:  # consider a "metonly" run?
-                        fs = _output['sampling_rate']
+                        fs = _output["sampling_rate"]
                         NHAINC = np.min([NHAINC, fs.total_seconds()])
-            if NHAINC == float('inf'):
+            if NHAINC == float("inf"):
                 NHAINC = 0
             return int(NHAINC / self.DTDP)
 
@@ -1645,32 +1770,28 @@ class Fort15:
         try:
             return self.__NHASE
         except AttributeError:
-            return self._get_harmonic_analysis_state(
-                self.elevation_stations_output)
+            return self._get_harmonic_analysis_state(self.elevation_stations_output)
 
     @property
     def NHASV(self):
         try:
             return self.__NHASV
         except AttributeError:
-            return self._get_harmonic_analysis_state(
-                self.velocity_stations_output)
+            return self._get_harmonic_analysis_state(self.velocity_stations_output)
 
     @property
     def NHAGE(self):
         try:
             return self.__NHAGE
         except AttributeError:
-            return self._get_harmonic_analysis_state(
-                self.elevation_surface_output)
+            return self._get_harmonic_analysis_state(self.elevation_surface_output)
 
     @property
     def NHAGV(self):
         try:
             return self.__NHAGV
         except AttributeError:
-            return self._get_harmonic_analysis_state(
-                self.velocity_surface_output)
+            return self._get_harmonic_analysis_state(self.velocity_surface_output)
 
     @property
     def NHSTAR(self):
@@ -1679,7 +1800,7 @@ class Fort15:
         except AttributeError:
             if self.forcing_start_date == self.start_date:
                 return 0
-            if self._runtype == 'coldstart':
+            if self._runtype == "coldstart":
                 if self.netcdf is True:
                     return 5
                 else:
@@ -1797,7 +1918,7 @@ class Fort15:
 
     @property
     def NCDATE(self):
-        return self.forcing_start_date.strftime('%Y-%m-%d %H:%M')
+        return self.forcing_start_date.strftime("%Y-%m-%d %H:%M")
 
     @property
     def FortranNamelists(self):
@@ -1838,12 +1959,13 @@ class Fort15:
         if iWarnElevDump is not None:
             iWarnElevDump = int(iWarnElevDump)
             if iWarnElevDump not in [0, 1]:
-                raise TypeError('iWarnElevDump must be 0 or 1')
+                raise TypeError("iWarnElevDump must be 0 or 1")
             self.__iWarnElevDump = int(iWarnElevDump)
         else:
             if self.WarnElev is not None:
                 raise RuntimeError(
-                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
+                    "Must set iWarnElevDump if WarnElev is not " + "None"
+                )
 
     @WarnElevDumpLimit.setter
     def WarnElevDumpLimit(self, WarnElevDumpLimit):
@@ -1854,7 +1976,8 @@ class Fort15:
         else:
             if self.WarnElev is not None:
                 raise RuntimeError(
-                    'Must set WarnElevDumpLimit if WarnElev is ' + 'not None')
+                    "Must set WarnElevDumpLimit if WarnElev is " + "not None"
+                )
 
     @ErrorElev.setter
     def ErrorElev(self, ErrorElev):
@@ -1863,7 +1986,8 @@ class Fort15:
         else:
             if self.WarnElev is not None:
                 raise RuntimeError(
-                    'Must set iWarnElevDump if WarnElev is not ' + 'None')
+                    "Must set iWarnElevDump if WarnElev is not " + "None"
+                )
 
     @NABOUT.setter
     def NABOUT(self, NABOUT):
@@ -1879,7 +2003,7 @@ class Fort15:
     @IDEN.setter
     def IDEN(self, IDEN):
         if IDEN is not None:
-            raise NotImplementedError('3D runs not yet supported.')
+            raise NotImplementedError("3D runs not yet supported.")
 
     @NOLIBF.setter
     def NOLIBF(self, NOLIBF):
@@ -2096,7 +2220,7 @@ class Fort15:
     def CORI(self, CORI):
         if CORI is None:
             if self.NCOR == 0:
-                raise Exception('Must pass CORI when NCOR=0')
+                raise Exception("Must pass CORI when NCOR=0")
             else:
                 CORI = 0.0
         else:
@@ -2198,7 +2322,7 @@ class Fort15:
 
     @vertical_mode.setter
     def vertical_mode(self, vertical_mode):
-        assert vertical_mode in ['2D', '3D']
+        assert vertical_mode in ["2D", "3D"]
         self.__vertical_mode = vertical_mode
 
     @timestep.setter
@@ -2207,25 +2331,25 @@ class Fort15:
 
     @lateral_stress_in_gwce.setter
     def lateral_stress_in_gwce(self, lateral_stress_in_gwce):
-        assert lateral_stress_in_gwce in ['kolar-grey', 'velocity_based',
-                                          'flux_based']
+        assert lateral_stress_in_gwce in ["kolar-grey", "velocity_based", "flux_based"]
         self.__lateral_stress_in_gwce = lateral_stress_in_gwce
 
     @lateral_stress_in_gwce_is_symmetrical.setter
-    def lateral_stress_in_gwce_is_symmetrical(self,
-                                              lateral_stress_in_gwce_is_symmetrical):
+    def lateral_stress_in_gwce_is_symmetrical(
+        self, lateral_stress_in_gwce_is_symmetrical
+    ):
         self.__lateral_stress_in_gwce_is_symmetrical = bool(
             lateral_stress_in_gwce_is_symmetrical
         )
 
     @advection_in_gwce.setter
     def advection_in_gwce(self, advection_in_gwce):
-        assert advection_in_gwce in ['non_conservative', 'form_1', 'form_2']
+        assert advection_in_gwce in ["non_conservative", "form_1", "form_2"]
         self.__advection_in_gwce = advection_in_gwce
 
     @lateral_stress_in_momentum.setter
     def lateral_stress_in_momentum(self, lateral_stress_in_momentum):
-        assert lateral_stress_in_momentum in ['velocity_based', 'flux_based']
+        assert lateral_stress_in_momentum in ["velocity_based", "flux_based"]
         self.__lateral_stress_in_momentum = lateral_stress_in_momentum
 
     @lateral_stress_in_momentum_is_symmetrical.setter
@@ -2237,21 +2361,18 @@ class Fort15:
         )
 
     @lateral_stress_in_momentum_method.setter
-    def lateral_stress_in_momentum_method(self,
-                                          lateral_stress_in_momentum_method):
-        assert lateral_stress_in_momentum_method in ['2_part',
-                                                     'integration_by_parts']
+    def lateral_stress_in_momentum_method(self, lateral_stress_in_momentum_method):
+        assert lateral_stress_in_momentum_method in ["2_part", "integration_by_parts"]
         self.__lateral_stress_in_momentum_method = lateral_stress_in_momentum_method
 
     @advection_in_momentum.setter
     def advection_in_momentum(self, advection_in_momentum):
-        assert advection_in_momentum in ['non_conservative', 'form_1',
-                                         'form_2']
+        assert advection_in_momentum in ["non_conservative", "form_1", "form_2"]
         self.__advection_in_momentum = advection_in_momentum
 
     @area_integration_in_momentum.setter
     def area_integration_in_momentum(self, area_integration_in_momentum):
-        assert area_integration_in_momentum in ['corrected', 'original']
+        assert area_integration_in_momentum in ["corrected", "original"]
         self.__area_integration_in_momentum = area_integration_in_momentum
 
     @baroclinicity.setter
@@ -2260,8 +2381,11 @@ class Fort15:
 
     @gwce_solution_scheme.setter
     def gwce_solution_scheme(self, gwce_solution_scheme):
-        assert gwce_solution_scheme in ['semi-implicit', 'explicit',
-                                        'semi-implicit-legacy']
+        assert gwce_solution_scheme in [
+            "semi-implicit",
+            "explicit",
+            "semi-implicit-legacy",
+        ]
         self.__gwce_solution_scheme = gwce_solution_scheme
 
     @passive_scalar_transport.setter
@@ -2283,39 +2407,40 @@ class Fort15:
     @horizontal_mixing_coefficient.setter
     def horizontal_mixing_coefficient(self, horizontal_mixing_coefficient):
         self.__horizontal_mixing_coefficient = np.abs(
-            float(horizontal_mixing_coefficient))
+            float(horizontal_mixing_coefficient)
+        )
 
     @CFL.setter
     def CFL(self, CFL):
         self.__CFL = float(CFL)
 
     def _get_NSTA_(self, physical_var):
-        stations = self._container['stations'][physical_var]
-        if self._runtype == 'coldstart':
-            if stations['spinup'] is not None:
-                return len(stations['collection'].keys())
+        stations = self._container["stations"][physical_var]
+        if self._runtype == "coldstart":
+            if stations["spinup"] is not None:
+                return len(stations["collection"].keys())
             else:
                 return 0
         else:
-            if np.abs(self._get_NOUT__('stations', physical_var)) > 0:
-                return len(stations['collection'].keys())
+            if np.abs(self._get_NOUT__("stations", physical_var)) > 0:
+                return len(stations["collection"].keys())
             else:
                 return 0
 
     def _get_NOUT__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        if self._runtype == 'coldstart':
-            if output['spinup'] is not None:
-                if output['netcdf'] is True:
+        if self._runtype == "coldstart":
+            if output["spinup"] is not None:
+                if output["netcdf"] is True:
                     return -5
                 else:
                     return -1
             else:
                 return 0
 
-        elif self._runtype == 'hotstart':
-            if output['sampling_rate'] is not None:
-                if output['netcdf'] is True:
+        elif self._runtype == "hotstart":
+            if output["sampling_rate"] is not None:
+                if output["netcdf"] is True:
                     return -5
                 else:
                     return -1
@@ -2324,29 +2449,29 @@ class Fort15:
 
     def _get_TOUTS__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             # coldstart
-            if output['spinup'] is not None:
-                start = output['spinup_start']
+            if output["spinup"] is not None:
+                start = output["spinup_start"]
             else:
                 start = self.start_date
-        elif output['sampling_rate'] is not None:
+        elif output["sampling_rate"] is not None:
             # hotstart
-            start = output['start']
+            start = output["start"]
         else:
             start = self.start_date
 
         # typecast
         if isinstance(start, int):  # int interpreted as literal timestep
             start = timedelta(seconds=(start * self.timestep))
-            if self._runtype == 'coldstart':
+            if self._runtype == "coldstart":
                 start -= self.forcing_start_date
             else:
                 start -= self.start_date
         elif isinstance(start, datetime):
             start -= self.start_date
         elif isinstance(start, type(None)):
-            if self._runtype == 'hotstart':
+            if self._runtype == "hotstart":
                 start = self.start_date - self.forcing_start_date
             else:
                 start = timedelta(seconds=0)
@@ -2358,24 +2483,28 @@ class Fort15:
 
     def _get_TOUTF__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        if self._runtype == 'coldstart':
+        if self._runtype == "coldstart":
             # coldstart
-            if output['spinup'] is not None:
-                if output['spinup_end'] is None or output['spinup_end'] == \
-                        output['start']:
+            if output["spinup"] is not None:
+                if (
+                    output["spinup_end"] is None
+                    or output["spinup_end"] == output["start"]
+                ):
                     if self.NOUTGE != 0:
-                        time = output['spinup_end'] - self.start_date
+                        time = output["spinup_end"] - self.start_date
                     else:
                         time = timedelta(seconds=0)
                 else:
-                    raise NotImplementedError('specific spinup end time is not implemented')
+                    raise NotImplementedError(
+                        "specific spinup end time is not implemented"
+                    )
             else:
                 time = timedelta(seconds=0)
-        elif self._runtype == 'hotstart':
+        elif self._runtype == "hotstart":
             # hotstart
-            if output['sampling_rate'] is not None:
-                if output['end'] is None or output['end'] == self.end_date:
-                    if self._runtype == 'hotstart':
+            if output["sampling_rate"] is not None:
+                if output["end"] is None or output["end"] == self.end_date:
+                    if self._runtype == "hotstart":
                         time = self.end_date - self.forcing_start_date
                     # if self.NOUTGE != 0:
                     #     time = self.spinup_time
@@ -2385,7 +2514,8 @@ class Fort15:
                         time = self.start_date - self.forcing_start_date
                 else:
                     raise NotImplementedError(
-                        'specific model end time is not implemented')
+                        "specific model end time is not implemented"
+                    )
             else:
                 time = timedelta(seconds=0)
 
@@ -2396,32 +2526,34 @@ class Fort15:
 
     def _get_NSPOOL__(self, output_type, physical_var):
         output = self._container[output_type][physical_var]
-        if self._runtype == 'coldstart':
-            if output['spinup']:
-                return int(round(output['spinup'].total_seconds() / self.DTDP))
+        if self._runtype == "coldstart":
+            if output["spinup"]:
+                return int(round(output["spinup"].total_seconds() / self.DTDP))
             else:
                 return 0
         else:
-            if output['sampling_rate'] is not None:
-                if output_type == 'surface' and output[
-                    'sampling_rate'].total_seconds() == 0:
-                    return int((
-                                   self.end_date - self.start_date).total_seconds() / self.DTDP)
-                return int(round(
-                    (output['sampling_rate'].total_seconds() / self.DTDP)))
+            if output["sampling_rate"] is not None:
+                if (
+                    output_type == "surface"
+                    and output["sampling_rate"].total_seconds() == 0
+                ):
+                    return int(
+                        (self.end_date - self.start_date).total_seconds() / self.DTDP
+                    )
+                return int(round((output["sampling_rate"].total_seconds() / self.DTDP)))
             else:
                 return 0
 
     def _get_harmonic_analysis_state(self, output):
         state = 0
-        if self._runtype == 'coldstart':
-            if output['spinup'] and output['harmonic_analysis']:
+        if self._runtype == "coldstart":
+            if output["spinup"] and output["harmonic_analysis"]:
                 if self.netcdf:
                     return 5
                 else:
                     return 1
         else:
-            if output['harmonic_analysis']:
+            if output["harmonic_analysis"]:
                 if self.netcdf:
                     return 5
                 else:
@@ -2430,12 +2562,12 @@ class Fort15:
 
 
 def fort15_line(value: Any, name: str = None, description: str = None) -> str:
-    line = f'{value}'
+    line = f"{value}"
     if name is not None or description is not None:
-        line = f'{line:<63}'
+        line = f"{line:<63}"
         if name is None:
-            name = ''
-        line += f' ! {name:<35}'
+            name = ""
+        line += f" ! {name:<35}"
         if description is not None:
-            line += f' - {description}'
+            line += f" - {description}"
     return line

@@ -484,11 +484,11 @@ class BestTrackForcing(WindForcing):
             # data = self._transform_coordinates(data)
             self.__df = DataFrame(data=data)
             return self.__df
-    
+
     @_df.setter
     def _df(self, data):
         msg = f"data must be a pandas {DataFrame} instance."
-        assert isinstance(data,DataFrame), msg
+        assert isinstance(data, DataFrame), msg
         self.__df = DataFrame(data=data)
 
     def clip_to_bbox(self, bbox, bbox_crs):

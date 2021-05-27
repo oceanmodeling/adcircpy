@@ -11,7 +11,6 @@ https://stackoverflow.com/questions/4014621/a-python-class-that-acts-like-dict
 
 
 class ElevationStations:
-
     def __init__(self, path):
         self._path = path
 
@@ -23,26 +22,25 @@ class ElevationStations:
         print(self.stations)
 
     def _certify_netcdf_stations_file(self, nc):
-        msg = f'Input file {self.path} is not an ADCIRC stations output file '
-        msg += '(fort.61.nc).'
-        assert 'station_name' in nc.variables and 'zeta' in nc.variables, msg
+        msg = f"Input file {self.path} is not an ADCIRC stations output file "
+        msg += "(fort.61.nc)."
+        assert "station_name" in nc.variables and "zeta" in nc.variables, msg
 
     def _init_netcdf_stations(self):
         stations = dict()
-        for idx, name in enumerate(self.nc['station_name']):
-            name = ''.join(
-                [s.decode('UTF-8') for s in name]).strip(' ')
+        for idx, name in enumerate(self.nc["station_name"]):
+            name = "".join([s.decode("UTF-8") for s in name]).strip(" ")
             if len(name) == 0 or name in stations.keys():
                 name = uuid.uuid4().hex[:8]
             stations[name] = dict()
-            stations[name]['x'] = float(self.nc['x'][idx])
-            stations[name]['y'] = float(self.nc['y'][idx])
-            stations[name]['values'] = self.nc['zeta'][:, idx]
+            stations[name]["x"] = float(self.nc["x"][idx])
+            stations[name]["y"] = float(self.nc["y"][idx])
+            stations[name]["values"] = self.nc["zeta"][:, idx]
         self.__stations = stations
 
     def _init_netcdf_datetime(self):
-        base_date = self.nc['time'].base_date.split('!')[0].strip(' ')
-        for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M'):
+        base_date = self.nc["time"].base_date.split("!")[0].strip(" ")
+        for fmt in ("%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"):
             try:
                 base_date = datetime.strptime(base_date, fmt)
                 break
@@ -52,8 +50,9 @@ class ElevationStations:
             msg = f"Could not parse input date {base_date}. "
             msg += "Known formats are '%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M'."
             raise IOError(msg)
-        self.__datetime = [base_date + timedelta(seconds=float(s))
-                           for s in self.nc['time']]
+        self.__datetime = [
+            base_date + timedelta(seconds=float(s)) for s in self.nc["time"]
+        ]
 
     def _init_ascii(self):
         msg = "ASCII fort.61 files have not yet been implemented."

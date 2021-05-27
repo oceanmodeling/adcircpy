@@ -32,7 +32,7 @@ def main():
         url += "NetCDF_shinnecock_inlet.tar.bz2?dl=1"
         g = urllib.request.urlopen(url)
         tmpfile = tempfile.NamedTemporaryFile()
-        with open(tmpfile.name, 'b+w') as f:
+        with open(tmpfile.name, "b+w") as f:
             f.write(g.read())
         with tarfile.open(tmpfile.name, "r:bz2") as tar:
             tar.extractall(PARENT / "data/NetCDF_Shinnecock_Inlet/")
@@ -48,11 +48,11 @@ def main():
 
     # init tidal forcing and setup requests
     tidal_forcing = Tides()
-    tidal_forcing.use_constituent('M2')
-    tidal_forcing.use_constituent('N2')
-    tidal_forcing.use_constituent('S2')
-    tidal_forcing.use_constituent('K1')
-    tidal_forcing.use_constituent('O1')
+    tidal_forcing.use_constituent("M2")
+    tidal_forcing.use_constituent("N2")
+    tidal_forcing.use_constituent("S2")
+    tidal_forcing.use_constituent("K1")
+    tidal_forcing.use_constituent("O1")
 
     mesh.add_forcing(tidal_forcing)
 
@@ -77,18 +77,18 @@ def main():
     driver.timestep = 4.0
 
     # run parallel ADCIRC if binary is installed
-    if shutil.which('padcirc') is not None:
+    if shutil.which("padcirc") is not None:
         driver.run(PARENT / "outputs/example_2", overwrite=True)
     # run serial ADCIRC if binary is installed
-    elif shutil.which('adcirc') is not None:
+    elif shutil.which("adcirc") is not None:
         driver.run(PARENT / "outputs/example_2", overwrite=True, nproc=1)
     # binaries are not installed, write to disk and exit
     else:
-        msg = 'ADCIRC binaries were not found in PATH. ADCIRC will not run. '
+        msg = "ADCIRC binaries were not found in PATH. ADCIRC will not run. "
         msg += "Writing files to disk..."
         warnings.warn(msg)
         driver.write(PARENT / "outputs/example_2", overwrite=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
