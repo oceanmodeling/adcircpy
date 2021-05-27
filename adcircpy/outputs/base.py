@@ -9,9 +9,8 @@ from netCDF4 import Dataset
 import numpy as np
 from pyproj import CRS
 
-from adcircpy.mesh.parsers import sms2dm
 from adcircpy.figures import figure
-
+from adcircpy.mesh.parsers import sms2dm
 
 # class OutputVariable(Enum):
 #     FORT63 = 'zeta'

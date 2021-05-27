@@ -4,8 +4,9 @@ from os import PathLike
 import pathlib
 from typing import Any
 
-from adcircpy.mesh.mesh import AdcircMesh
 import numpy as np
+
+from adcircpy.mesh.mesh import AdcircMesh
 
 
 class Fort15:

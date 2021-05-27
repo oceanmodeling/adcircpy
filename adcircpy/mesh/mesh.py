@@ -1,19 +1,16 @@
 # type: ignore[attr-defined]
 from collections import defaultdict
 from itertools import permutations
-from typing import Union
 
-from haversine import Unit, haversine
+from haversine import haversine, Unit
 import numpy as np
-from shapely.geometry import Polygon, MultiPolygon
-
 
 from adcircpy.forcing.bctypes import BoundaryCondition
 from adcircpy.forcing.tides import Tides
 from adcircpy.forcing.waves import WaveForcing
 from adcircpy.forcing.winds.base import WindForcing
-from adcircpy.mesh.fort14 import Fort14
 from adcircpy.mesh.fort13 import NodalAttributes
+from adcircpy.mesh.fort14 import Fort14
 
 
 class ModelForcings:
@@ -56,7 +53,6 @@ class NodalAttributeDescriptor:
 
 
 class AdcircMeshMeta(type):
-
     adcirc_nodal_attributes = [
         'primitive_weighting_in_continuity_equation',
         'surface_submergence_state',

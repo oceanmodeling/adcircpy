@@ -8,8 +8,8 @@ try:
     try:
         from dunamai import Version
     except ImportError:
-        import sys
         import subprocess
+        import sys
 
         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
         from dunamai import Version
@@ -63,15 +63,8 @@ setuptools.setup(
     ],
     # test and development dependencies
     extras_require={
-        'development': [
-            'colored_traceback',
-            'coverage',
-            'coverage-badge',
-            'dunamai',
-            'flake8',
-            'nose',
-            'rednose',
-        ]
+        'testing': ['colored_traceback', 'coverage', 'coverage-badge', 'nose', 'rednose',],
+        'development': ['dunamai', 'flake8', 'isort', 'oitnb',],
     },
     entry_points={
         'console_scripts': [

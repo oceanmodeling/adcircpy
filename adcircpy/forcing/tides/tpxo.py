@@ -14,7 +14,6 @@ TPXO_FILENAME = 'h_tpxo9.v1.nc'
 
 
 class TPXO(TidalDataset):
-
     DEFAULT_PATH = Path(appdirs.user_data_dir('tpxo')) / TPXO_FILENAME
 
     def __init__(self, tpxo_dataset_filename: PathLike = None):

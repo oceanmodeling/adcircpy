@@ -1,4 +1,4 @@
-from adcircpy.forcing.tides import HAMTIDE, TPXO, TidalSource, Tides
+from adcircpy.forcing.tides import HAMTIDE, TidalSource, Tides, TPXO
 from adcircpy.forcing.waves import WaveForcing, WaveWatch3DataForcing
 from adcircpy.forcing.winds import (
     AtmosphericMeshForcing,

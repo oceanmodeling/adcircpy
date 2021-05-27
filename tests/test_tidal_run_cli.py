@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 from datetime import datetime
 import pathlib
-import sys
 import shutil
+import sys
 import tarfile
 import tempfile
 import unittest
@@ -10,7 +10,6 @@ from unittest.mock import patch
 import urllib.request
 
 from adcircpy.cmd import tidal_run
-
 
 DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
 FORT14 = DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet/fort.14'

@@ -1,8 +1,7 @@
-import numpy as np
 from matplotlib import rcParams
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, Normalize
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
+import numpy as np
 
 
 def get_topobathy_kwargs(values, vmin, vmax, colors=256):

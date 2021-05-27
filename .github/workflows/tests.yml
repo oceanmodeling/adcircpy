@@ -27,7 +27,8 @@ jobs:
         run: |
           apt update -y && apt install -y libnetcdf-dev libnetcdff-dev
           pip install wheel
-          pip install -e .[development]
+          pip install flake8
+          pip install -e .[testing]
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

@@ -12,9 +12,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v1
       - name: Install dependencies
-        run: pip install oitnb
+        run: |
+          pip install wheel
+          pip install -e .[development]
       - name: Run linters / formatters
         uses: wearerequired/lint-action@master
         with:
+          oitnb_command_prefix: isort --fss --fass .;
           oitnb: true
           auto_fix: true

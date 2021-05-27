@@ -9,8 +9,8 @@ import numpy as np
 from shapely.geometry import LineString, MultiLineString
 
 from adcircpy.figures import figure, get_topobathy_kwargs
-from adcircpy.mesh.parsers import grd
 from adcircpy.mesh.base import Grd  # , sort_edges, signed_polygon_area
+from adcircpy.mesh.parsers import grd
 
 _logger = logging.getLogger(__name__)
 

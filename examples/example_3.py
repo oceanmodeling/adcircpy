@@ -9,15 +9,15 @@ by a coldstart and hotstart phase.
 The behaviour of this program is similar to the example_1.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pathlib
 import tarfile
 import tempfile
 import urllib.request
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.server import SlurmConfig
 from adcircpy.forcing.winds import BestTrackForcing
+from adcircpy.server import SlurmConfig
 
 PARENT = pathlib.Path(__file__).parent.absolute()
 FORT14 = PARENT / 'data/NetCDF_Shinnecock_Inlet/fort.14'
