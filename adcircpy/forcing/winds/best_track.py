@@ -1,6 +1,6 @@
 from collections import Collection
 from datetime import datetime, timedelta
-from functools import wraps
+from functools import partial, wraps
 import gzip
 import io
 from io import StringIO
@@ -20,7 +20,8 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 import numpy as np
 from pandas import DataFrame, read_csv
-from pyproj import CRS, Proj, Transformer
+import pyproj
+from pyproj import CRS, Proj
 from shapely import ops
 from shapely.geometry import Point, Polygon
 import utm
@@ -494,18 +495,7 @@ class BestTrackForcing(WindForcing):
             radii = 1852.0 * radii  # convert to meters
             lon = records['longitude'].iloc[0]
             lat = records['latitude'].iloc[0]
-            _, _, number, letter = utm.from_latlon(lat, lon)
-            df_crs = CRS.from_epsg(4326)
-            utm_crs = CRS(
-                proj='utm',
-                zone=f'{number}{letter}',
-                ellps={'GRS 1980': 'GRS80', 'WGS 84': 'WGS84'}[df_crs.ellipsoid.name],
-            )
-            transformer = Transformer.from_crs(df_crs, utm_crs, always_xy=True)
-            p = Point(*transformer.transform(lon, lat))
-            pol = p.buffer(radii)
-            transformer = Transformer.from_crs(utm_crs, bbox_crs, always_xy=True)
-            pol = ops.transform(transformer.transform, pol)
+            pol = get_circle_of_radius(lon, lat, radii)
             if _switch is True:
                 if not pol.intersects(bbox_pol):
                     continue
@@ -809,3 +799,23 @@ def read_atcf(track: PathLike) -> DataFrame:
                 data[key] = value
 
     return DataFrame(data=data)
+
+
+def get_circle_of_radius(lon, lat, radius):
+
+    local_azimuthal_projection = '+proj=aeqd +R=6371000 +units=m ' f'+lat_0={lat} +lon_0={lon}'
+    wgs84_to_aeqd = partial(
+        pyproj.transform,
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+        pyproj.Proj(local_azimuthal_projection),
+    )
+    aeqd_to_wgs84 = partial(
+        pyproj.transform,
+        pyproj.Proj(local_azimuthal_projection),
+        pyproj.Proj('+proj=longlat +datum=WGS84 +no_defs'),
+    )
+
+    center = Point(float(lon), float(lat))
+    point_transformed = ops.transform(wgs84_to_aeqd, center)
+
+    return ops.transform(aeqd_to_wgs84, point_transformed.buffer(radius))
