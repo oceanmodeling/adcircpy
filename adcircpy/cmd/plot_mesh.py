@@ -9,42 +9,16 @@ from adcircpy import AdcircMesh
 
 class PlotMeshCommand:
     def __init__(self, args: argparse.Namespace):
-        self.args = args
-
-    def run(self):
-        mesh = AdcircMesh.open(self.args.mesh, crs=self.args.crs)
-        ax = None
-        if not self.args.no_topobathy:
-            ax = mesh.make_plot(vmin=self.args.vmin, vmax=self.args.vmax,)
-        if self.args.show_elements:
-            ax = mesh.triplot(axes=ax)
-
-        if self.args.plot_boundaries:
-            self.mesh.boundaries.gdf.plot(ax=self.ax)
-
-    @property
-    def mesh(self):
-        try:
-            return self.__mesh
-        except AttributeError:
-            self.__mesh = AdcircMesh.open(self.args.mesh)
-            return self.__mesh
-
-    @property
-    def fig(self):
-        try:
-            return self.__fig
-        except AttributeError:
-            self.__fig = plt.figure()
-            return self.__fig
-
-    @property
-    def ax(self):
-        try:
-            return self.__ax
-        except AttributeError:
-            self.__ax = self.fig.add_subplot(111)
-            return self.__ax
+        mesh = AdcircMesh.open(args.mesh, crs=args.crs)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        if args.no_topobathy is False:
+            mesh.make_plot(axes=ax, vmin=args.vmin, vmax=args.vmax)
+        if args.show_elements:
+            mesh.triplot(axes=ax)
+        if args.plot_boundaries:
+            mesh.boundaries.gdf.plot(ax=ax)
+        plt.show(block=True)
 
 
 def diagnose(logfile):
@@ -84,7 +58,7 @@ def parse_args():
 
 
 def main():
-    exit(PlotMeshCommand(parse_args()).run())
+    PlotMeshCommand(parse_args())
 
 
 if __name__ == '__main__':
