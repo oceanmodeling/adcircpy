@@ -2,11 +2,11 @@ from adcircpy.outputs.base import SurfaceOutput
 
 
 class Maxele(SurfaceOutput):
-    _filetype = "maxele"
+    _filetype = 'maxele'
 
 
 class TimeOfMaxEle(SurfaceOutput):
-    _filetype = "time_of_maxele"
+    _filetype = 'time_of_maxele'
 
 
 # import numpy as np
