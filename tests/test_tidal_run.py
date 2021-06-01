@@ -35,10 +35,10 @@ def test_tidal_run():
     mesh.add_forcing(tidal_forcing)
     now = datetime.utcnow()
     driver = AdcircRun(
-            mesh,
-            start_date=now,
-            end_date=now + timedelta(days=0.5),
-            spinup_time=timedelta(days=0.5),
+        mesh,
+        start_date=now,
+        end_date=now + timedelta(days=0.5),
+        spinup_time=timedelta(days=0.5),
     )
     driver.timestep = 10.0
 

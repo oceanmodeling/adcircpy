@@ -16,7 +16,7 @@ def test_from_fort22():
     if not output_filename.parent.exists():
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
-    best_track = BestTrackForcing.from_fort22(fort22=input_filename, nws=20, )
+    best_track = BestTrackForcing.from_fort22(fort22=input_filename, nws=20,)
 
     assert best_track.storm_id == 'AL112017'
     assert best_track.name == 'IRMA'
@@ -38,7 +38,7 @@ def test_from_atcf(mocker):
     if not output_filename.parent.exists():
         output_filename.parent.mkdir(parents=True, exist_ok=True)
 
-    best_track = BestTrackForcing.from_atcf_file(atcf=input_filename, nws=8, )
+    best_track = BestTrackForcing.from_atcf_file(atcf=input_filename, nws=8,)
 
     assert best_track.storm_id == 'BT02008'
     assert best_track.name == 'WRT00001'
