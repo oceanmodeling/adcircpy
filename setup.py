@@ -63,8 +63,14 @@ setuptools.setup(
     ],
     # test and development dependencies
     extras_require={
-        'testing': ['colored_traceback', 'coverage', 'coverage-badge', 'nose', 'rednose',],
-        'development': ['dunamai', 'flake8', 'isort', 'oitnb',],
+        'testing': [
+            'colored_traceback',
+            'pytest',
+            'putest-mock',
+            'pytest-cov',
+            'pytest-xdist',
+        ],
+        'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
     },
     entry_points={
         'console_scripts': [
