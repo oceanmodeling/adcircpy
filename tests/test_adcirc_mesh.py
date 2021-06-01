@@ -2,7 +2,7 @@
 from pathlib import Path
 import tempfile
 
-import pytest as pytest
+import pytest
 
 from adcircpy import AdcircMesh
 
