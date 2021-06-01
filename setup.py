@@ -66,7 +66,7 @@ setuptools.setup(
         'testing': [
             'colored_traceback',
             'pytest',
-            'putest-mock',
+            'pytest-mock',
             'pytest-cov',
             'pytest-xdist',
         ],
