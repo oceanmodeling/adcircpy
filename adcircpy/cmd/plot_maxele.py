@@ -2,7 +2,7 @@ import argparse
 
 import matplotlib.pyplot as plt
 
-from adcircpy.outputs import Maxele, TimeOfMaxEle
+from adcircpy.outputs import Maxele, MaximumElevationTimes
 
 
 def parse_args():
@@ -29,7 +29,7 @@ def parse_args():
 def main():
     args = parse_args()
     if args.plot_timestep_of_maxele:
-        maxele = TimeOfMaxEle(args.maxele)
+        maxele = MaximumElevationTimes(args.maxele)
     else:
         maxele = Maxele(args.maxele)
     maxele.tricontourf(

@@ -5,7 +5,7 @@ class Maxele(SurfaceOutput):
     _filetype = 'maxele'
 
 
-class TimeOfMaxEle(SurfaceOutput):
+class MaximumElevationTimes(SurfaceOutput):
     _filetype = 'time_of_maxele'
 
 
