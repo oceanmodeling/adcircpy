@@ -23,9 +23,9 @@ def test_from_fort22():
 
     best_track.write(output_filename, overwrite=True)
 
-    with open(output_filename) as test_file:
+    with open(output_filename) as generated_file:
         with open(reference_filename) as reference_file:
-            assert test_file.read() == reference_file.read()
+            assert generated_file.read() == reference_file.read()
 
 
 def test_from_atcf(mocker):
@@ -45,8 +45,8 @@ def test_from_atcf(mocker):
 
     best_track.write(output_filename, overwrite=True)
 
-    with open(output_filename) as test_file:
+    with open(output_filename) as generated_file:
         with open(reference_filename) as reference_file:
-            assert test_file.read() == reference_file.read()
+            assert generated_file.read() == reference_file.read()
 
     best_track.plot_track(show=True)

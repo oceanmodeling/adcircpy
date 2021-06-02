@@ -69,6 +69,7 @@ setuptools.setup(
             'pytest-mock',
             'pytest-cov',
             'pytest-xdist',
+            'pytest-codeblocks',
         ],
         'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
     },
@@ -84,5 +85,4 @@ setuptools.setup(
             'tide_gen=adcircpy.cmd.tide_gen:main',
         ]
     },
-    test_suite='nose.collector',
 )
