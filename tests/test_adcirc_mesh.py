@@ -8,7 +8,7 @@ from adcircpy import AdcircMesh
 
 
 @pytest.fixture
-def nodes() -> {str: ((float, float), float)}:
+def nodes() -> {int: ((float, float), float)}:
     return {
         '1': ((0.0, 0.0), -5.0),
         '2': ((0.5, 0.0), -4.0),
@@ -25,7 +25,7 @@ def nodes() -> {str: ((float, float), float)}:
 
 
 @pytest.fixture
-def elements() -> {str: [str]}:
+def elements() -> {int: [int]}:
     return {
         '1': ['5', '7', '9'],
         '2': ['1', '2', '7'],
@@ -41,14 +41,33 @@ def elements() -> {str: [str]}:
 
 
 @pytest.fixture
-def boundaries() -> {int: {int: {str: [str]}}}:
+def boundaries() -> {int: {int: {str: [int]}}}:
     return {
         # "open" boundaries
-        None: {0: {'indexes': ['10', '11', '1', '2']}, 1: {'indexes': ['2', '3', '4']},},
+        None: {0: {'indexes': ['10', '11', '1', '2']}, 1: {'indexes': ['2', '3', '4']}},
         # "land" boundaries
-        0: {0: {'indexes': ['4', '6']}, 1: {'indexes': ['6', '5', '10']},},
+        0: {0: {'indexes': ['4', '6']}, 1: {'indexes': ['6', '5', '10']}},
         # "interior" boundary
         1: {0: {'indexes': ['7', '8', '9', '7']}},
+    }
+
+
+@pytest.fixture
+def wet_nodes() -> {int: ((float, float), float)}:
+    return {
+        0: ((0.0, 0.0), 0.0),
+        1: ((1.0, 0.0), -1.0),
+        2: ((1.0, 1.0), -2.0),
+        3: ((0.0, 1.0), -3.0),
+        4: ((0.5, 1.5), -4.0),
+    }
+
+
+@pytest.fixture
+def wet_elements() -> {int: [int]}:
+    return {
+        0: [2, 4, 3],
+        1: [0, 1, 2, 3],
     }
 
 
@@ -95,22 +114,10 @@ def test_make_plot(nodes, elements, mocker):
     assert isinstance(mesh, AdcircMesh)
 
 
-def test_make_plot_wet_only(mocker):
+def test_make_plot_wet_only(wet_nodes, wet_elements, mocker):
     mocker.patch('matplotlib.pyplot.show')
 
-    nodes = {
-        0: ((0.0, 0.0), 0.0),
-        1: ((1.0, 0.0), -1.0),
-        2: ((1.0, 1.0), -2.0),
-        3: ((0.0, 1.0), -3.0),
-        4: ((0.5, 1.5), -4.0),
-    }
-    elements = {
-        0: [2, 4, 3],
-        1: [0, 1, 2, 3],
-    }
-
-    mesh = AdcircMesh(nodes, elements)
+    mesh = AdcircMesh(wet_nodes, wet_elements)
     mesh.make_plot()
 
     assert isinstance(mesh, AdcircMesh)
