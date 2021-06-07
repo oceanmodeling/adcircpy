@@ -9,8 +9,12 @@ from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
 
 # noinspection PyUnresolvedReferences
-from tests import OUTPUT_DIRECTORY, REFERENCE_DIRECTORY, \
-    check_reference_directory, shinnecock_mesh_directory
+from tests import (
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    check_reference_directory,
+    shinnecock_mesh_directory,
+)
 
 
 def test_slurm_driver(shinnecock_mesh_directory):
@@ -74,7 +78,5 @@ def test_configuration(shinnecock_mesh_directory):
     driver.write(output_directory, overwrite=True)
 
     check_reference_directory(
-            output_directory,
-            reference_directory,
-            skip_lines={'fort.15': [0]},
+        output_directory, reference_directory, skip_lines={'fort.15': [0]},
     )
