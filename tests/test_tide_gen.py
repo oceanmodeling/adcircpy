@@ -4,9 +4,9 @@ from adcircpy.cmd import tide_gen
 
 # noinspection PyUnresolvedReferences
 from tests import (
-    check_reference_directory,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
+    check_reference_directory,
     shinnecock_mesh_directory,
 )
 
@@ -30,4 +30,6 @@ def test_tide_gen(shinnecock_mesh_directory, mocker):
 
     tide_gen.main()
 
-    check_reference_directory(output_directory, reference_directory, skip_lines=1)
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -1]}
+    )

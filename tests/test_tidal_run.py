@@ -10,9 +10,9 @@ from adcircpy.mesh import AdcircMesh
 
 # noinspection PyUnresolvedReferences
 from tests import (
-    check_reference_directory,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
+    check_reference_directory,
     shinnecock_mesh_directory,
 )
 
@@ -44,7 +44,9 @@ def test_tidal_run(shinnecock_mesh_directory):
     else:
         driver.write(output_directory, overwrite=True)
 
-    check_reference_directory(output_directory, reference_directory, skip_lines=1)
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -1]}
+    )
 
 
 def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
@@ -75,4 +77,6 @@ def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
 
     tidal_run.main()
 
-    check_reference_directory(output_directory, reference_directory, skip_lines=1)
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -1]}
+    )

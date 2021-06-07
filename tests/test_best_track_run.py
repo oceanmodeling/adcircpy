@@ -46,4 +46,6 @@ def test_best_track_run(shinnecock_mesh_directory, mocker):
 
     best_track_run.main()
 
-    check_reference_directory(output_directory, reference_directory, skip_lines=1)
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -1]}
+    )
