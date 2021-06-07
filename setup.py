@@ -24,7 +24,6 @@ logging.info(f'using version {version}')
 metadata = setuptools.config.read_configuration(
     pathlib.Path(__file__).parent.absolute() / 'setup.cfg'
 )['metadata']
-
 setuptools.setup(
     name=metadata['name'],
     version=version,
@@ -65,11 +64,11 @@ setuptools.setup(
     extras_require={
         'testing': [
             'colored_traceback',
+            'FileLock',
             'pytest',
             'pytest-mock',
             'pytest-cov',
             'pytest-xdist',
-            'pytest-codeblocks',
         ],
         'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
     },

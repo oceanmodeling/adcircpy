@@ -6,7 +6,7 @@ import shutil
 import numpy
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from tests import download_mesh
+from adcircpy.utilities import download_mesh
 
 MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 
