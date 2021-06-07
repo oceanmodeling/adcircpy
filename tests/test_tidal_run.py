@@ -9,7 +9,7 @@ from adcircpy.mesh import AdcircMesh
 from tests import download_mesh
 
 DATA_DIRECTORY = Path(__file__).parent.absolute().resolve() / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'/'NetCDF_Shinnecock_Inlet'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'NetCDF_Shinnecock_Inlet'
 
 download_mesh(
     url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',

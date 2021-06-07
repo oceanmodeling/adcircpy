@@ -18,7 +18,7 @@ OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
 INPUT_DIRECTORY.mkdir(exist_ok=True)
 
 download_mesh(
-        url=MESH_URL, directory=INPUT_DIRECTORY,
+    url=MESH_URL, directory=INPUT_DIRECTORY,
 )
 
 
@@ -30,23 +30,23 @@ def test_slurm_driver():
     mesh = AdcircMesh.open(INPUT_DIRECTORY / 'fort.14', crs=4326)
 
     slurm = SlurmConfig(
-            account='account',
-            ntasks=1000,
-            run_name='adcircpy/tests/test_configuration.py',
-            partition='partition',
-            walltime=timedelta(hours=8),
-            mail_type='all',
-            mail_user='example@email.gov',
-            log_filename='test_configuration.log',
-            modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
-            path_prefix='$HOME/adcirc/build',
+        account='account',
+        ntasks=1000,
+        run_name='adcircpy/tests/test_configuration.py',
+        partition='partition',
+        walltime=timedelta(hours=8),
+        mail_type='all',
+        mail_user='example@email.gov',
+        log_filename='test_configuration.log',
+        modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
+        path_prefix='$HOME/adcirc/build',
     )
     driver = AdcircRun(
-            mesh=mesh,
-            start_date=datetime.now(),
-            end_date=timedelta(days=7),
-            spinup_time=timedelta(days=5),
-            server_config=slurm,
+        mesh=mesh,
+        start_date=datetime.now(),
+        end_date=timedelta(days=7),
+        spinup_time=timedelta(days=5),
+        server_config=slurm,
     )
     DriverFile(driver).write(output_directory / 'slurm.job', overwrite=True)
 
@@ -67,25 +67,22 @@ def test_configuration():
     end_date = start_date + timedelta(days=3)
 
     wind_forcing = AtmosphericMeshForcing(
-            filename='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc', nws=17,
-            interval_seconds=3600,
+        filename='Wind_HWRF_SANDY_Nov2018_ExtendedSmoothT.nc', nws=17, interval_seconds=3600,
     )
     wave_forcing = WaveWatch3DataForcing(
-            filename='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5,
-            interval_seconds=3600,
+        filename='ww3.HWRF.NOV2018.2012_sxy.nc', nrs=5, interval_seconds=3600,
     )
 
     mesh.add_forcing(wind_forcing)
     mesh.add_forcing(wave_forcing)
 
-    driver = AdcircRun(mesh, start_date, end_date, spinup_time, )
+    driver = AdcircRun(mesh, start_date, end_date, spinup_time,)
 
     driver.write(output_directory, overwrite=True)
 
     for reference_filename in reference_directory.iterdir():
         generated_filename = output_directory / reference_filename.name
         with open(generated_filename) as generated_file, open(
-                reference_filename
+            reference_filename
         ) as reference_file:
-            assert generated_file.readlines()[
-                   1:] == reference_file.readlines()[1:]
+            assert generated_file.readlines()[1:] == reference_file.readlines()[1:]
