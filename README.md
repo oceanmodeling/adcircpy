@@ -107,6 +107,14 @@ See the [examples](examples) directory for usage examples.
 
 #### `example_1.py`
 
+The following code builds a simple ADCIRC run configuration by doing the following:
+
+1. reads a `fort.14` mesh file (specifically a test mesh for Shinnecock Inlet)
+2. adds tidal forcing to the mesh
+3. creates an `AdcircRun` driver object with the mesh, including start and end dates
+4. overrides default model options in the resulting `fort.15`
+5. runs ADCIRC if present, otherwise writes configuration to disk
+
 ```python
 from datetime import datetime, timedelta
 import logging
@@ -172,6 +180,8 @@ else:
 ```
 
 #### `example_2.py`
+
+The following code is similar to `example_1.py`, above, except it adds a static Manning's N coefficient to the mesh.
 
 ```python
 from datetime import datetime, timedelta
@@ -242,6 +252,9 @@ else:
 
 #### `example_3.py`
 
+The following code is similar to `example_1.py`, above, except it adds HURDAT BestTrack wind forcing and also builds a Slurm
+job script for submission to a job manager.
+
 ```python
 from datetime import timedelta
 from pathlib import Path
@@ -288,13 +301,15 @@ slurm = SlurmConfig(
 )
 
 # instantiate driver object
-driver = AdcircRun(mesh, spinup_time=timedelta(days=15), server_config=slurm, )
+driver = AdcircRun(mesh, spinup_time=timedelta(days=15), server_config=slurm)
 
 # write driver state to disk
 driver.write(OUTPUT_DIRECTORY, overwrite=True)
 ```
 
 #### `example_4.py`
+
+The following code is similar to `example_3.py`, above, except it uses ATMESH wind forcing and WW3DATA wave forcing.
 
 ```python
 from datetime import datetime, timedelta
@@ -365,4 +380,4 @@ driver.write(OUTPUT_DIRECTORY, overwrite=True)
 
 ### Contact
 
-For questions comments and suggestions, please email me at [jreniel@gmail.com](mailto:jreniel@gmail.com)
+For questions comments and suggestions, please email me at [jreniel@gmail.com](mailto:jreniel@gmail.com).
