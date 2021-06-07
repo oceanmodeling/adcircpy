@@ -45,9 +45,9 @@ def check_reference_directory(
             test_filename = test_directory / reference_filename.name
 
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
-                message = f'"{test_filename}" != "{reference_filename}"'
                 test_lines = list(test_file.readlines())
                 reference_lines = list(reference_file.readlines())
+                message = f'"{test_filename}" != "{reference_filename}"\n{set(test_lines) ^ set(reference_lines)}'
 
                 assert len(test_lines) == len(reference_lines), message
 
