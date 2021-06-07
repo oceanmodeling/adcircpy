@@ -46,24 +46,21 @@ def check_reference_directory(
 
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
                 message = f'"{test_filename}" != "{reference_filename}"'
-                if len(skip_lines) == 0:
-                    assert test_file.read() == reference_file.read(), message
-                else:
-                    test_lines = list(test_file.readlines())
-                    reference_lines = list(reference_file.readlines())
+                test_lines = list(test_file.readlines())
+                reference_lines = list(reference_file.readlines())
 
-                    assert len(test_lines) == len(reference_lines), message
+                assert len(test_lines) == len(reference_lines), message
 
-                    lines_to_skip = set()
-                    for file_mask, line_indices in skip_lines.items():
-                        if file_mask in str(test_filename) or re.match(
-                            file_mask, str(test_filename)
-                        ):
-                            lines_to_skip.update(
-                                line_index % len(test_lines) for line_index in line_indices
-                            )
+                lines_to_skip = set()
+                for file_mask, line_indices in skip_lines.items():
+                    if file_mask in str(test_filename) or re.match(
+                        file_mask, str(test_filename)
+                    ):
+                        lines_to_skip.update(
+                            line_index % len(test_lines) for line_index in line_indices
+                        )
 
-                    for line_index in sorted(lines_to_skip, reverse=True):
-                        del test_lines[line_index], reference_lines[line_index]
+                for line_index in sorted(lines_to_skip, reverse=True):
+                    del test_lines[line_index], reference_lines[line_index]
 
-                    assert '\n'.join(test_lines) == '\n'.join(reference_lines), message
+                assert '\n'.join(test_lines) == '\n'.join(reference_lines), message
