@@ -1,11 +1,9 @@
 #! /usr/bin/env python
 
-from pathlib import Path
-import tempfile
-
 import pytest
 
 from adcircpy import AdcircMesh
+from tests import OUTPUT_DIRECTORY
 
 
 @pytest.fixture
@@ -54,6 +52,19 @@ def boundaries() -> {int: {int: {str: [int]}}}:
 
 
 @pytest.fixture
+def fort14(elements, nodes) -> str:
+    lines = [
+        f'\n{len(elements):d} {len(nodes):d}',
+        *(f'{id} {x} {y} {z}' for id, ((x, y), z) in nodes.items()),
+        *(
+            f'{id} {len(geometry)} {" ".join(idx for idx in geometry)}'
+            for id, geometry in elements.items()
+        ),
+    ]
+    return '\n'.join(lines)
+
+
+@pytest.fixture
 def wet_nodes() -> {int: ((float, float), float)}:
     return {
         0: ((0.0, 0.0), 0.0),
@@ -90,16 +101,18 @@ def test_hybrid(nodes, elements):
     assert isinstance(mesh, AdcircMesh)
 
 
-def test_open(nodes, elements):
-    temporary_file_handle = tempfile.NamedTemporaryFile()
-    with open(temporary_file_handle.name, 'w') as temporary_file:
-        temporary_file.write(f'\n{len(elements):d} {len(nodes):d}\n')
-        for id, ((x, y), z) in nodes.items():
-            temporary_file.write(f'{id} {x} {y} {z}\n')
-        for id, geometry in elements.items():
-            temporary_file.write(f'{id} {len(geometry)} {" ".join(idx for idx in geometry)}\n')
+def test_open(fort14):
+    output_directory = OUTPUT_DIRECTORY / 'test_open'
 
-    mesh = AdcircMesh.open(temporary_file_handle.name)
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    mesh_filename = output_directory / 'fort.14'
+
+    with open(mesh_filename, 'w') as temporary_file:
+        temporary_file.write(fort14)
+
+    mesh = AdcircMesh.open(mesh_filename)
 
     assert isinstance(mesh, AdcircMesh)
 
@@ -116,45 +129,42 @@ def test_make_plot(nodes, elements, mocker):
 
 
 def test_make_plot_wet_only(wet_nodes, wet_elements, mocker):
-    mocker.patch('matplotlib.pyplot.show')
-
     mesh = AdcircMesh(wet_nodes, wet_elements)
+
+    mocker.patch('matplotlib.pyplot.show')
     mesh.make_plot()
 
     assert isinstance(mesh, AdcircMesh)
 
 
 def test_write(nodes, elements):
+    output_directory = OUTPUT_DIRECTORY / 'test_write'
+
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
     mesh = AdcircMesh(nodes, elements)
-    temporary_directory = tempfile.TemporaryDirectory()
-    temporary_directory_path = Path(temporary_directory.name)
 
-    mesh.write(Path(temporary_directory.name) / 'test_AdcircMesh.gr3',)
-    mesh.write(
-        Path(temporary_directory.name) / 'test_AdcircMesh.2dm', format='2dm',
-    )
+    mesh.write(output_directory / 'test_AdcircMesh.gr3', overwrite=True)
+    mesh.write(output_directory / 'test_AdcircMesh.2dm', format='2dm', overwrite=True)
 
-    with pytest.raises(Exception):
-        mesh.write(
-            temporary_directory_path / 'test_AdcircMesh.2dm', format='2dm',
-        )
+    with pytest.raises(FileExistsError):
+        mesh.write(output_directory / 'test_AdcircMesh.2dm', format='2dm')
 
     with pytest.raises(ValueError):
-        mesh.write(
-            temporary_directory_path / 'test_AdcircMesh.txt', format='txt',
-        )
+        mesh.write(output_directory / 'test_AdcircMesh.txt', format='txt', overwrite=True)
 
 
 def test_triplot(nodes, elements, boundaries, mocker):
-    mocker.patch('matplotlib.pyplot.show')
-
     mesh = AdcircMesh(nodes, elements, boundaries)
+
+    mocker.patch('matplotlib.pyplot.show')
     mesh.triplot()
 
 
 def test_make_plot_flat_domain(nodes, elements, boundaries, mocker):
-    mocker.patch('matplotlib.pyplot.show')
-
     nodes = {id: (coord, 0.0) for id, (coord, _) in nodes.items()}
     mesh = AdcircMesh(nodes, elements, boundaries)
+
+    mocker.patch('matplotlib.pyplot.show')
     mesh.make_plot()

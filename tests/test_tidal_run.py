@@ -1,26 +1,30 @@
 #! /usr/bin/env python
 
 from datetime import datetime, timedelta
-from pathlib import Path
 import shutil
-import tempfile
 
+from adcircpy.cmd import tidal_run
 from adcircpy.driver import AdcircRun
 from adcircpy.forcing import Tides
 from adcircpy.mesh import AdcircMesh
-from tests import download_mesh
 
-DATA_DIRECTORY = Path(__file__).parent.absolute().resolve() / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'NetCDF_Shinnecock_Inlet'
-
-download_mesh(
-    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
-    directory=INPUT_DIRECTORY,
+# noinspection PyUnresolvedReferences
+from tests import (
+    check_reference_directory,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    shinnecock_mesh_directory,
 )
 
 
-def test_tidal_run():
-    mesh = AdcircMesh.open(INPUT_DIRECTORY / 'fort.14', crs=4326)
+def test_tidal_run(shinnecock_mesh_directory):
+    output_directory = OUTPUT_DIRECTORY / 'test_tidal_run'
+    reference_directory = REFERENCE_DIRECTORY / 'test_tidal_run'
+
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    mesh = AdcircMesh.open(shinnecock_mesh_directory / 'fort.14', crs=4326)
 
     tidal_forcing = Tides()
     tidal_forcing.use_all()
@@ -35,8 +39,40 @@ def test_tidal_run():
     )
     driver.timestep = 10.0
 
-    if shutil.which('padcirc') is None:
-        tmpdir = tempfile.TemporaryDirectory()
-        driver.write(tmpdir.name)
+    if shutil.which('padcirc') is not None:
+        driver.run(output_directory)
     else:
-        driver.run()
+        driver.write(output_directory)
+
+    check_reference_directory(output_directory, reference_directory)
+
+
+def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
+    output_directory = OUTPUT_DIRECTORY / 'test_tidal_run_cli'
+    reference_directory = REFERENCE_DIRECTORY / 'test_tidal_run_cli'
+
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        'tidal_run',
+        f'{shinnecock_mesh_directory / "fort.14"}',
+        f"{datetime.strftime(datetime.utcnow(), '%Y-%m-%dT%H:%M:%S')}",
+        '0.5',
+        '--spinup-days=0.5',
+        '--crs=EPSG:4326',
+        f'--output-directory={output_directory}',
+        '--constituents=all',
+        '--overwrite',
+        '--timestep=10.',
+    ]
+    if shutil.which('padcirc') is None:
+        if shutil.which('adcirc') is not None:
+            cmd.append('--nproc=1')
+        else:
+            cmd.append('--skip-run')
+    mocker.patch('sys.argv', cmd)
+
+    tidal_run.main()
+
+    check_reference_directory(output_directory, reference_directory)

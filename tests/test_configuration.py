@@ -1,35 +1,25 @@
 # ! /usr/bin/env python
 
 from datetime import datetime, timedelta
-from pathlib import Path
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
 from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
-from tests import download_mesh
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
-
-DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
-REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'NetCDF_Shinnecock_Inlet'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
-
-INPUT_DIRECTORY.mkdir(exist_ok=True)
-
-download_mesh(
-    url=MESH_URL, directory=INPUT_DIRECTORY,
-)
+# noinspection PyUnresolvedReferences
+from tests import OUTPUT_DIRECTORY, REFERENCE_DIRECTORY, shinnecock_mesh_directory
 
 
-def test_slurm_driver():
+def test_slurm_driver(shinnecock_mesh_directory):
     output_directory = OUTPUT_DIRECTORY / 'test_slurm_driver'
     reference_directory = REFERENCE_DIRECTORY / 'test_slurm_driver'
-    output_directory.mkdir(parents=True, exist_ok=True)
 
-    mesh = AdcircMesh.open(INPUT_DIRECTORY / 'fort.14', crs=4326)
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    mesh = AdcircMesh.open(shinnecock_mesh_directory / 'fort.14', crs=4326)
 
     slurm = SlurmConfig(
         account='account',
@@ -57,12 +47,14 @@ def test_slurm_driver():
             assert generated_file.read() == reference_file.read()
 
 
-def test_configuration():
+def test_configuration(shinnecock_mesh_directory):
     output_directory = OUTPUT_DIRECTORY / 'test_configuration'
     reference_directory = REFERENCE_DIRECTORY / 'test_configuration'
-    output_directory.mkdir(parents=True, exist_ok=True)
 
-    mesh = AdcircMesh.open(INPUT_DIRECTORY / 'fort.14', crs=4326)
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    mesh = AdcircMesh.open(shinnecock_mesh_directory / 'fort.14', crs=4326)
 
     spinup_time = timedelta(days=2)
     start_date = datetime(2015, 12, 14) + spinup_time

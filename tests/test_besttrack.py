@@ -1,54 +1,52 @@
 # ! /usr/bin/env python
 
-from pathlib import Path
-
 from adcircpy.forcing.winds import BestTrackForcing
-
-DATA_DIRECTORY = Path(__file__).parent / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
-REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
+from tests import (
+    check_reference_directory,
+    INPUT_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+)
 
 
 def test_from_fort22():
-    input_filename = INPUT_DIRECTORY / 'test_besttrack' / 'irma2017_fort.22'
-    output_filename = OUTPUT_DIRECTORY / 'test_besttrack' / 'irma2017_fort.22'
-    reference_filename = REFERENCE_DIRECTORY / 'test_besttrack' / 'irma2017_fort.22'
+    input_directory = INPUT_DIRECTORY / 'test_besttrack'
+    output_directory = OUTPUT_DIRECTORY / 'test_from_fort22'
+    reference_directory = REFERENCE_DIRECTORY / 'test_from_fort22'
 
-    if not output_filename.parent.exists():
-        output_filename.parent.mkdir(parents=True, exist_ok=True)
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
 
-    best_track = BestTrackForcing.from_fort22(fort22=input_filename, nws=20,)
+    best_track = BestTrackForcing.from_fort22(
+        fort22=input_directory / 'irma2017_fort.22', nws=20,
+    )
 
     assert best_track.storm_id == 'AL112017'
     assert best_track.name == 'IRMA'
 
-    best_track.write(output_filename, overwrite=True)
+    best_track.write(output_directory / 'irma2017_fort.22', overwrite=True)
 
-    with open(output_filename) as generated_file:
-        with open(reference_filename) as reference_file:
-            assert generated_file.read() == reference_file.read()
+    check_reference_directory(output_directory, reference_directory)
 
 
 def test_from_atcf(mocker):
-    mocker.patch('matplotlib.pyplot.show')
+    input_directory = INPUT_DIRECTORY / 'test_besttrack'
+    output_directory = OUTPUT_DIRECTORY / 'test_besttrack'
+    reference_directory = REFERENCE_DIRECTORY / 'test_besttrack'
 
-    input_filename = INPUT_DIRECTORY / 'test_besttrack' / 'florence2018_atcf.trk'
-    output_filename = OUTPUT_DIRECTORY / 'test_besttrack' / 'florence2018_fort.22'
-    reference_filename = REFERENCE_DIRECTORY / 'test_besttrack' / 'florence2018_fort.22'
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
 
-    if not output_filename.parent.exists():
-        output_filename.parent.mkdir(parents=True, exist_ok=True)
-
-    best_track = BestTrackForcing.from_atcf_file(atcf=input_filename, nws=8,)
+    best_track = BestTrackForcing.from_atcf_file(
+        atcf=input_directory / 'florence2018_atcf.trk', nws=8,
+    )
 
     assert best_track.storm_id == 'BT02008'
     assert best_track.name == 'WRT00001'
 
-    best_track.write(output_filename, overwrite=True)
+    best_track.write(output_directory / 'florence2018_fort.22', overwrite=True)
 
-    with open(output_filename) as generated_file:
-        with open(reference_filename) as reference_file:
-            assert generated_file.read() == reference_file.read()
+    check_reference_directory(output_directory, reference_directory)
 
+    mocker.patch('matplotlib.pyplot.show')
     best_track.plot_track(show=True)

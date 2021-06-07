@@ -4,14 +4,26 @@ from os import PathLike
 from pathlib import Path
 import tarfile
 
+from filelock import FileLock
+import pytest
 import wget
 
-DATA_DIRECTORY = Path(__file__).parent / 'data'
+DATA_DIRECTORY = Path(__file__).parent.absolute().resolve() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
+OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output'
+REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 
-MESH_URLS = {
-    'shinnecock': 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
-}
+
+@pytest.fixture
+def shinnecock_mesh_directory(worker_id) -> Path:
+    mesh_directory = INPUT_DIRECTORY / 'shinnecock'
+
+    download_mesh(
+        url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+        directory=mesh_directory,
+    )
+
+    return mesh_directory
 
 
 def download_mesh(url: str, directory: PathLike, overwrite: bool = False):
@@ -20,12 +32,12 @@ def download_mesh(url: str, directory: PathLike, overwrite: bool = False):
     if not directory.exists():
         directory.mkdir(parents=True, exist_ok=True)
 
-    mesh_directory = directory / 'mesh'
-    if not (mesh_directory / 'fort.14').exists() or overwrite:
-        logging.info(f'downloading mesh files to {mesh_directory}')
-        extract_download(url, mesh_directory, ['fort.13', 'fort.14'])
+    if not (directory / 'fort.14').exists() or overwrite:
+        with FileLock(str(directory) + '.lock'):
+            logging.info(f'downloading mesh files to {directory}')
+            extract_download(url, directory, ['fort.13', 'fort.14'])
 
-    return mesh_directory
+    return directory
 
 
 def extract_download(

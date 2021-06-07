@@ -1,42 +1,49 @@
 #! /usr/bin/env python
 
-from pathlib import Path
 import shutil
-from unittest.mock import patch
 
 from adcircpy.cmd import best_track_run
-from tests import download_mesh
 
-DATA_DIRECTORY = Path(__file__).parent.absolute().resolve() / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'NetCDF_Shinnecock_Inlet'
-
-download_mesh(
-    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
-    directory=INPUT_DIRECTORY,
+# noinspection PyUnresolvedReferences
+from tests import (
+    check_reference_directory,
+    INPUT_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    shinnecock_mesh_directory,
 )
 
 
-def test_best_track_run():
+def test_best_track_run(shinnecock_mesh_directory, mocker):
+    input_directory = INPUT_DIRECTORY / 'test_best_track_run'
+    output_directory = OUTPUT_DIRECTORY / 'test_best_track_run'
+    reference_directory = REFERENCE_DIRECTORY / 'test_best_track_run'
+
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
     cmd = [
         'best_track_run',
-        f'{INPUT_DIRECTORY / "fort.14"}',
+        f'{shinnecock_mesh_directory / "fort.14"}',
         'Sandy2012',
         '--spinup-days=0.5',
         '--crs=EPSG:4326',
-        '--output-directory=/tmp/test',
+        f'--output-directory={str(output_directory)}',
         '--constituents=all',
         '--overwrite',
         '--timestep=10.',
         '--tau0-gen',
-        f'--stations-file={Path(__file__).parent}/stations.txt',
+        f'--stations-file={input_directory / "stations.txt"}',
         '--elev-stat=6.',
         '--run-days=0.5',
     ]
     if shutil.which('padcirc') is None:
-        if shutil.which('adcirc') is None:
+        if shutil.which('adcirc') is not None:
             cmd.append('--nproc=1')
         else:
             cmd.append('--skip-run')
+    mocker.patch('sys.argv', cmd)
 
-    with patch('sys.argv', cmd):
-        best_track_run.main()
+    best_track_run.main()
+
+    check_reference_directory(output_directory, reference_directory)
