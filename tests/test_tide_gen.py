@@ -30,4 +30,4 @@ def test_tide_gen(shinnecock_mesh_directory, mocker):
 
     tide_gen.main()
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(output_directory, reference_directory, skip_lines=1)

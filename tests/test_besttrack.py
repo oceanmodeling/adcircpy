@@ -10,7 +10,7 @@ from tests import (
 
 
 def test_from_fort22():
-    input_directory = INPUT_DIRECTORY / 'test_besttrack'
+    input_directory = INPUT_DIRECTORY / 'test_from_fort22'
     output_directory = OUTPUT_DIRECTORY / 'test_from_fort22'
     reference_directory = REFERENCE_DIRECTORY / 'test_from_fort22'
 
@@ -30,9 +30,9 @@ def test_from_fort22():
 
 
 def test_from_atcf(mocker):
-    input_directory = INPUT_DIRECTORY / 'test_besttrack'
-    output_directory = OUTPUT_DIRECTORY / 'test_besttrack'
-    reference_directory = REFERENCE_DIRECTORY / 'test_besttrack'
+    input_directory = INPUT_DIRECTORY / 'test_from_atcf'
+    output_directory = OUTPUT_DIRECTORY / 'test_from_atcf'
+    reference_directory = REFERENCE_DIRECTORY / 'test_from_atcf'
 
     if not output_directory.exists():
         output_directory.mkdir(parents=True, exist_ok=True)

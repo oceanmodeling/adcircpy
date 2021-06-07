@@ -44,7 +44,7 @@ def test_tidal_run(shinnecock_mesh_directory):
     else:
         driver.write(output_directory, overwrite=True)
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(output_directory, reference_directory, skip_lines=1)
 
 
 def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
@@ -75,4 +75,4 @@ def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
 
     tidal_run.main()
 
-    check_reference_directory(output_directory, reference_directory)
+    check_reference_directory(output_directory, reference_directory, skip_lines=1)
