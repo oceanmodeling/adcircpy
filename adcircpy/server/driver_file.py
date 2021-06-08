@@ -5,7 +5,7 @@ from adcircpy.server.slurm_config import SlurmConfig
 
 
 class DriverFile:
-    def __init__(self, driver: 'AdcircRun', nprocs: int = None):
+    def __init__(self, driver, nprocs: int = None):
         self._driver = driver
         self.__nprocs = nprocs
 
