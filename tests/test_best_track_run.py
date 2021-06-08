@@ -36,6 +36,7 @@ def test_best_track_run(shinnecock_mesh_directory, mocker):
         f'--stations-file={input_directory / "stations.txt"}',
         '--elev-stat=6.',
         '--run-days=0.5',
+        '--nproc=4',
     ]
     if shutil.which('padcirc') is None:
         if shutil.which('adcirc') is not None:
