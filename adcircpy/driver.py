@@ -408,9 +408,7 @@ class AdcircRun(Fort15):
         if driver is not None:
             if isinstance(self._server_config, SlurmConfig):
                 driver = self._server_config._filename
-            script = DriverFile(self)
-            if nprocs is not None:
-                script._nprocs = nprocs
+            script = DriverFile(self, nprocs)
             script.write(output_directory / driver, overwrite)
 
     def import_stations(self, fort15):

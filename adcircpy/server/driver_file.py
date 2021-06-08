@@ -5,8 +5,9 @@ from adcircpy.server.slurm_config import SlurmConfig
 
 
 class DriverFile:
-    def __init__(self, driver):
+    def __init__(self, driver: 'AdcircRun', nprocs: int = None):
         self._driver = driver
+        self.__nprocs = nprocs
 
     def write(self, path: str, overwrite: bool = False):
         if not os.path.exists(path) or overwrite:
@@ -246,7 +247,9 @@ class DriverFile:
 
     @property
     def _nprocs(self):
-        if isinstance(self._server_config, int):
+        if self.__nprocs is not None:
+            return self.__nprocs
+        elif isinstance(self._server_config, int):
             return self._server_config
         else:
             return self._server_config.nprocs
