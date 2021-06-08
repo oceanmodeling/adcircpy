@@ -4,7 +4,7 @@ ulimit -s unlimited
 
 set -e
 
-NPROCS=4
+NPROCS=2
 
 main() {
   SECONDS=0
@@ -33,9 +33,9 @@ run_coldstart_phase() {
   ln -sf ../fort.14
   ln -sf ../fort.13
   ln -sf ../fort.15.coldstart ./fort.15
-  adcprep --np 4 --partmesh
-  adcprep --np 4 --prepall
-  mpiexec -n 4 padcirc 2>&1 | tee ../padcirc.log
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 padcirc 2>&1 | tee ../padcirc.log
   clean_directory
   cd ..
 }
@@ -48,9 +48,9 @@ run_hotstart_phase() {
   ln -sf ../fort.13
   ln -sf ../fort.15.hotstart ./fort.15
   ln -sf ../coldstart/fort.67.nc
-  adcprep --np 4 --partmesh
-  adcprep --np 4 --prepall
-  mpiexec -n 4 padcirc 2>&1 | tee -a ../padcirc.log
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 padcirc 2>&1 | tee -a ../padcirc.log
   clean_directory
   cd ..
 }

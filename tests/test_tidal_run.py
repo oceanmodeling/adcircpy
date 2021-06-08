@@ -40,9 +40,9 @@ def test_tidal_run(shinnecock_mesh_directory):
     driver.timestep = 10.0
 
     if shutil.which('padcirc') is not None:
-        driver.run(output_directory, nproc=4, overwrite=True)
+        driver.run(output_directory, nproc=2, overwrite=True)
     else:
-        driver.write(output_directory, nprocs=4, overwrite=True)
+        driver.write(output_directory, nproc=2, overwrite=True)
 
     check_reference_directory(
         output_directory,
@@ -69,7 +69,7 @@ def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
         '--constituents=all',
         '--overwrite',
         '--timestep=10.',
-        '--nproc=4',
+        '--nproc=2',
     ]
     if shutil.which('padcirc') is None:
         if shutil.which('adcirc') is not None:
