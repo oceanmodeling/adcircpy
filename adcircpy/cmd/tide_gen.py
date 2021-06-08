@@ -7,19 +7,16 @@ import pathlib
 from adcircpy import AdcircMesh, Fort15
 from adcircpy.forcing.tides import Tides
 
-
 _logger = logging.getLogger(__name__)
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('mesh')
-    parser.add_argument(
-        'start_date', type=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'))
+    parser.add_argument('start_date', type=lambda x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S'))
     parser.add_argument('run_days', type=float)
     parser.add_argument('--output-file', type=pathlib.Path)
-    parser.add_argument('--tidal-database', '--tidal-db',
-                        choices=['hamtide', 'tpxo'])
+    parser.add_argument('--tidal-database', '--tidal-db', choices=['hamtide', 'tpxo'])
     parser.add_argument('--mesh-crs')
     return parser.parse_args()
 

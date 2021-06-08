@@ -1,10 +1,10 @@
 #!/bin/bash --login
 #SBATCH -D .
-#SBATCH -J AdcircPy/examples/example_3.py
+#SBATCH -J adcircpy/tests/test_configuration.py
 #SBATCH -A account
 #SBATCH --mail-type=all
 #SBATCH --mail-user=example@email.gov
-#SBATCH --output=example_3.log
+#SBATCH --output=test_configuration.log
 #SBATCH -n 1000
 #SBATCH --time=08:00:00
 #SBATCH --partition=partition
@@ -19,7 +19,7 @@ PATH=$HOME/adcirc/build:$PATH
 main() {
   SECONDS=0
   run_coldstart_phase
-  if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." example_3.log; then
+  if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." test_configuration.log; then
     duration=$SECONDS
     echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."
     echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
@@ -27,7 +27,7 @@ main() {
   else
     run_hotstart_phase
     duration=$SECONDS
-    if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." example_3.log; then
+    if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." test_configuration.log; then
       echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."
       echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
       exit -1
