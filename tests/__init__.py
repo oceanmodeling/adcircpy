@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 
 from filelock import FileLock
+from ordered_set import OrderedSet
 import pytest
 
 from adcircpy.utilities import download_mesh
@@ -47,7 +48,7 @@ def check_reference_directory(
             with open(test_filename) as test_file, open(reference_filename) as reference_file:
                 test_lines = list(test_file.readlines())
                 reference_lines = list(reference_file.readlines())
-                message = f'"{test_filename}" != "{reference_filename}"\n{set(test_lines) ^ set(reference_lines)}'
+                message = f'"{test_filename}" != "{reference_filename}"\n{OrderedSet(test_lines) ^ OrderedSet(reference_lines)}'
 
                 assert len(test_lines) == len(reference_lines), message
 
