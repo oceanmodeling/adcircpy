@@ -47,7 +47,7 @@ def test_tidal_run(shinnecock_mesh_directory):
     check_reference_directory(
         output_directory,
         reference_directory,
-        skip_lines={'fort.15': [0, *range(32, 47, 2), *range(49, 64, 2), -1]},
+        skip_lines={'fort.15': [0, *range(32, 47, 2), *range(49, 64, 2), -2]},
     )
 
 
@@ -82,5 +82,5 @@ def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
     check_reference_directory(
         output_directory,
         reference_directory,
-        skip_lines={'fort.15': [0, *range(32, 47, 2), *range(49, 64, 2), -1]},
+        skip_lines={'fort.15': [0, *range(32, 47, 2), *range(49, 64, 2), -2]},
     )
