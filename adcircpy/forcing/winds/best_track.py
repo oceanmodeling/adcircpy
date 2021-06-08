@@ -1,4 +1,4 @@
-from collections import Collection
+from collections.abc import Collection
 from datetime import datetime, timedelta
 from functools import partial, wraps
 import gzip

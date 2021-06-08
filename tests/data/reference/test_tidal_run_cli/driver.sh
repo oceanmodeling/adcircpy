@@ -1,25 +1,15 @@
-#!/bin/bash --login
-#SBATCH -D .
-#SBATCH -J adcircpy/tests/test_configuration.py
-#SBATCH -A account
-#SBATCH --mail-type=all
-#SBATCH --mail-user=example@email.gov
-#SBATCH --output=test_configuration.log
-#SBATCH -n 1000
-#SBATCH --time=08:00:00
-#SBATCH --partition=partition
+#!/bin/bash
 
 ulimit -s unlimited
+
 set -e
 
-module load intel/2020 impi/2020 netcdf/4.7.2-parallel
-
-PATH=$HOME/adcirc/build:$PATH
+NPROCS=2
 
 main() {
   SECONDS=0
   run_coldstart_phase
-  if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." test_configuration.log; then
+  if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." padcirc.log; then
     duration=$SECONDS
     echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."
     echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
@@ -27,7 +17,7 @@ main() {
   else
     run_hotstart_phase
     duration=$SECONDS
-    if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." test_configuration.log; then
+    if grep -Rq "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping." padcirc.log; then
       echo "ERROR: Elevation.gt.ErrorElev, ADCIRC stopping."
       echo "Wallclock time: $(($duration / 60)) minutes and $(($duration % 60)) seconds."
       exit -1
@@ -43,9 +33,9 @@ run_coldstart_phase() {
   ln -sf ../fort.14
   ln -sf ../fort.13
   ln -sf ../fort.15.coldstart ./fort.15
-  adcprep --np $SLURM_NTASKS --partmesh
-  adcprep --np $SLURM_NTASKS --prepall
-  srun padcirc 
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 padcirc 2>&1 | tee ../padcirc.log
   clean_directory
   cd ..
 }
@@ -58,9 +48,9 @@ run_hotstart_phase() {
   ln -sf ../fort.13
   ln -sf ../fort.15.hotstart ./fort.15
   ln -sf ../coldstart/fort.67.nc
-  adcprep --np $SLURM_NTASKS --partmesh
-  adcprep --np $SLURM_NTASKS --prepall
-  srun padcirc 
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 padcirc 2>&1 | tee -a ../padcirc.log
   clean_directory
   cd ..
 }

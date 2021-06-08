@@ -24,7 +24,6 @@ logging.info(f'using version {version}')
 metadata = setuptools.config.read_configuration(
     pathlib.Path(__file__).parent.absolute() / 'setup.cfg'
 )['metadata']
-
 setuptools.setup(
     name=metadata['name'],
     version=version,
@@ -63,8 +62,15 @@ setuptools.setup(
     ],
     # test and development dependencies
     extras_require={
-        'testing': ['colored_traceback', 'coverage', 'coverage-badge', 'nose', 'rednose',],
-        'development': ['dunamai', 'flake8', 'isort', 'oitnb',],
+        'testing': [
+            'colored_traceback',
+            'FileLock',
+            'pytest',
+            'pytest-mock',
+            'pytest-cov',
+            'pytest-xdist',
+        ],
+        'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
     },
     entry_points={
         'console_scripts': [
@@ -78,5 +84,4 @@ setuptools.setup(
             'tide_gen=adcircpy.cmd.tide_gen:main',
         ]
     },
-    test_suite='nose.collector',
 )

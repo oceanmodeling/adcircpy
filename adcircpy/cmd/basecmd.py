@@ -18,7 +18,11 @@ class AdcircCommand:
         # write and exit if generate only
         if self.args.generate_only:
             logger.info('Generate only is active, writting to disk.')
-            self.driver.write(self.args.output_directory, overwrite=self.args.overwrite)
+            self.driver.write(
+                self.args.output_directory,
+                nproc=self.args.nproc,
+                overwrite=self.args.overwrite,
+            )
             return
 
         outputs = self.driver.run(
