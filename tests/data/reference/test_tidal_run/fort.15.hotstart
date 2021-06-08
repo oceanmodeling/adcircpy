@@ -23,9 +23,9 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 1                                                               ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
 0.500 0.000 0.000 0.000 0.500 0.500 1.000 0.000 0.500           ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
 0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
-0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN
+0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
 -72.4759 40.7602                                                ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
-0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA
+0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA            
 -0.2                                                            ! smagorinsky coefficient             - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
 8                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
@@ -677,7 +677,7 @@ K2
 0                                                               ! NSTAV                               - TOTAL NUMBER OF VELOCITY RECORDING STATIONS
 0 0.000000 0.000000 0                                           ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE     - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)
 0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV     - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)
-0                                                               ! NFREQ
+0                                                               ! NFREQ                              
 0 0 0 0                                                         ! THAS THAF NHAINC FMV                - HARMONIC ANALYSIS PARAMETERS
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV             - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54
 0 0                                                             ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
