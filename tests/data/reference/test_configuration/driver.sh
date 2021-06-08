@@ -4,7 +4,7 @@ ulimit -s unlimited
 
 set -e
 
-NPROCS=4
+NPROCS=2
 
 main() {
   SECONDS=0
@@ -33,9 +33,9 @@ run_coldstart_phase() {
   ln -sf ../fort.14
   ln -sf ../fort.13
   ln -sf ../fort.15.coldstart ./fort.15
-  adcprep --np 4 --partmesh
-  adcprep --np 4 --prepall
-  mpiexec -n 4 punswan 2>&1 | tee ../punswan.log
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 punswan 2>&1 | tee ../punswan.log
   clean_directory
   cd ..
 }
@@ -51,9 +51,9 @@ run_hotstart_phase() {
   ln -sf ../fort.22 ./fort.22
   aswip
   mv NWS_17_fort.22 fort.22
-  adcprep --np 4 --partmesh
-  adcprep --np 4 --prepall
-  mpiexec -n 4 punswan 2>&1 | tee -a ../punswan.log
+  adcprep --np 2 --partmesh
+  adcprep --np 2 --prepall
+  mpiexec -n 2 punswan 2>&1 | tee -a ../punswan.log
   clean_directory
   cd ..
 }

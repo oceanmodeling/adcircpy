@@ -75,7 +75,7 @@ def test_configuration(shinnecock_mesh_directory):
 
     driver = AdcircRun(mesh, start_date, end_date, spinup_time,)
 
-    driver.write(output_directory, overwrite=True)
+    driver.write(output_directory, overwrite=True, nproc=2)
 
     check_reference_directory(
         output_directory, reference_directory, skip_lines={'fort.15': [0]},
