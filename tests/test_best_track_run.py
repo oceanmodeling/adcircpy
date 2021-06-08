@@ -1,53 +1,52 @@
-#!/usr/bin/env python
-import pathlib
+#! /usr/bin/env python
+
 import shutil
-import sys
-import tarfile
-import tempfile
-import unittest
-from unittest.mock import patch
-import urllib.request
 
 from adcircpy.cmd import best_track_run
 
-DATA_DIRECTORY = pathlib.Path(__file__).parent.absolute() / 'data'
-FORT14 = DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet/fort.14'
+# noinspection PyUnresolvedReferences
+from tests import (
+    check_reference_directory,
+    INPUT_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    shinnecock_mesh_directory,
+)
 
 
-class BestTrackRunCliTestCase(unittest.TestCase):
-    def setUp(self):
-        if not FORT14.is_file():
-            url = 'https://www.dropbox.com/s/1wk91r67cacf132/'
-            url += 'NetCDF_shinnecock_inlet.tar.bz2?dl=1'
-            g = urllib.request.urlopen(url)
-            tmpfile = tempfile.NamedTemporaryFile()
-            with open(tmpfile.name, 'b+w') as f:
-                f.write(g.read())
-            with tarfile.open(tmpfile.name, 'r:bz2') as tar:
-                tar.extractall(DATA_DIRECTORY / 'NetCDF_Shinnecock_Inlet')
+def test_best_track_run(shinnecock_mesh_directory, mocker):
+    input_directory = INPUT_DIRECTORY / 'test_best_track_run'
+    output_directory = OUTPUT_DIRECTORY / 'test_best_track_run'
+    reference_directory = REFERENCE_DIRECTORY / 'test_best_track_run'
 
-    def test_best_track_run(self):
-        cmd = [
-            'best_track_run',
-            f'{FORT14.resolve()}',
-            'Sandy2012',
-            '--spinup-days=0.5',
-            '--crs=EPSG:4326',
-            '--output-directory=/tmp/test',
-            '--constituents=all',
-            '--overwrite',
-            '--timestep=10.',
-            '--tau0-gen',
-            f'--stations-file={pathlib.Path(__file__).parent}/stations.txt',
-            '--elev-stat=6.',
-            '--run-days=0.5',
-            # '--nproc=1'
-        ]
-        if shutil.which('padcirc') is None:
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        'best_track_run',
+        f'{shinnecock_mesh_directory / "fort.14"}',
+        'Sandy2012',
+        '--spinup-days=0.5',
+        '--crs=EPSG:4326',
+        f'--output-directory={str(output_directory)}',
+        '--constituents=all',
+        '--overwrite',
+        '--timestep=10.',
+        '--tau0-gen',
+        f'--stations-file={input_directory / "stations.txt"}',
+        '--elev-stat=6.',
+        '--run-days=0.5',
+        '--nproc=2',
+    ]
+    if shutil.which('padcirc') is None:
+        if shutil.which('adcirc') is not None:
+            cmd.append('--nproc=1')
+        else:
             cmd.append('--skip-run')
-        with patch.object(sys, 'argv', cmd):
-            best_track_run.main()
+    mocker.patch('sys.argv', cmd)
 
+    best_track_run.main()
 
-if __name__ == '__main__':
-    unittest.main()
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -1]}
+    )

@@ -25,8 +25,7 @@ def read(path):
 def write(sms2dm, path, overwrite=False):
     path = pathlib.Path(path)
     if path.is_file() and not overwrite:
-        msg = 'File exists, pass overwrite=True to allow overwrite.'
-        raise Exception(msg)
+        raise FileExistsError('File exists, pass overwrite=True to allow overwrite.')
     with open(path, 'w') as f:
         f.write(string(sms2dm))
     return 0  # for unittests

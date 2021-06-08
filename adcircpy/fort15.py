@@ -488,6 +488,12 @@ class Fort15:
                 'SWAN_OutputTM02': 'False',
                 'SWAN_OutputTMM10': 'False',
             }
+        namelists['metControl'] = {
+            'WindDragLimit': 2.5e-03,
+            'DragLawString': 'default',
+            'outputWindDrag': 'F',
+            'invertedBarometerOnElevationBoundary': 'T',
+        }
         return namelists
 
     def set_time_weighting_factors_in_gwce(self, A00, B00, C00):

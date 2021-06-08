@@ -12,6 +12,8 @@ from pyproj import CRS
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import sms2dm
 
+import traceback
+
 # class OutputVariable(Enum):
 #     FORT63 = 'zeta'
 
@@ -19,7 +21,11 @@ from adcircpy.mesh.parsers import sms2dm
 class SurfaceOutput(metaclass=abc.ABCMeta):
     # change this for __types__
 
-    _physical_variables = {'fort.63': 'zeta', 'maxele': 'zeta_max'}
+    _physical_variables = {
+        'fort.63': 'zeta',
+        'maxele': 'zeta_max',
+        'time_of_maxele': 'time_of_zeta_max',
+    }
 
     def __init__(self, path, crs=None):
         self._path = path
@@ -101,6 +107,7 @@ class SurfaceOutput(metaclass=abc.ABCMeta):
     @_path.setter
     def _path(self, path):
         path = pathlib.Path(path)
+
         if not path.is_file():
             raise IOError(f'File not found: {str(path)}')
         self.__path = path
