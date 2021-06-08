@@ -1,9 +1,9 @@
-created on 2021-06-08 14:06                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2021-06-08 14:38                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
 100                                                             ! NSCREEN                             - UNIT 6 OUTPUT OPTION PARAMETER
-0                                                               ! IHOT                                - HOT START PARAMETER
+567                                                             ! IHOT                                - HOT START PARAMETER
 2                                                               ! ICS                                 - COORDINATE SYSTEM SELECTION PARAMETER
 511113                                                          ! IM                                  - MODEL SELECTION PARAMETER
 2                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used
@@ -13,15 +13,16 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 0                                                               ! NWP                                 - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0
 1                                                               ! NCOR                                - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER
 1                                                               ! NTIP                                - TIDAL POTENTIAL OPTION PARAMETER
-0                                                               ! NWS                                 - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER
-1                                                               ! NRAMP                               - RAMP FUNCTION OPTION
+517                                                             ! NWS                                 - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER
+8                                                               ! NRAMP                               - RAMP FUNCTION OPTION
 9.81                                                            ! G                                   - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
 0.005                                                           ! TAU0                                - WEIGHTING FACTOR IN GWCE; original, 0.005
 2.510781                                                        ! DTDP                                - TIME STEP (IN SECONDS)
 0                                                               ! STATIM                              - STARTING TIME (IN DAYS)
 0                                                               ! REFTIM                              - REFERENCE TIME (IN DAYS)
-5                                                               ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
-5                                                               ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
+3600 3600                                                       ! WTIMINC RSTIMINC                    - meteorological data time increment, wave forcing increment
+12                                                              ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
+5.000 0.000 0.000 0.000 5.000 5.000 1.000 0.000 5.000           ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
 0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
 0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
 -72.4759 40.7602                                                ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
@@ -675,12 +676,15 @@ K2
 0                                                               ! NSTAE                               - TOTAL NUMBER OF ELEVATION RECORDING STATIONS
 0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV         - VELOCITY STATION OUTPUT INFO (UNIT 62)
 0                                                               ! NSTAV                               - TOTAL NUMBER OF VELOCITY RECORDING STATIONS
+0 0 0 0                                                         ! NOUTM TOUTSM TOUTFM NSPOOLM         - METEOROLOGICAL STATION OUTPUT INFO (UNITS 71/72)
+0                                                               ! NSTAM                               - TOTAL NUMBER OF METEOROLOGICAL RECORDING STATIONS
 0 0.000000 0.000000 0                                           ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE     - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)
 0 0.000000 0.000000 0                                           ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV     - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)
+0 0.000000 0.000000 0                                           ! NOUTGM TOUTSGM TOUTFGM NSPOOLGM     - GLOBAL METEOROLOGICAL OUTPUT INFO
 0                                                               ! NFREQ                              
 0 0 0 0                                                         ! THAS THAF NHAINC FMV                - HARMONIC ANALYSIS PARAMETERS
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV             - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54
-5 172058                                                        ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
+0 0                                                             ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
 1 0 1E-08 25                                                    ! ITITER ISLDIA CONVCR ITMAX          - ALGEBRAIC SOLUTION PARAMETERS
                                                                 ! NCPROJ                              - PROJECT TITLE
                                                                 ! NCINST                              - PROJECT INSTITUTION
@@ -691,5 +695,6 @@ K2
                                                                 ! NCHOST                              - PROJECT HOST
                                                                 ! NCONV                               - CONVENTIONS
                                                                 ! NCCONT                              - CONTACT INFORMATION
-2021-06-03 14:06                                                ! NCDATE                              - forcing start date
+2021-06-03 14:35                                                ! NCDATE                              - forcing start date
+&SWANOutputControl SWAN_OutputHS=False, SWAN_OutputDIR=False, SWAN_OutputTM01=False, SWAN_OutputTPS=False, SWAN_OutputWIND=False, SWAN_OutputTM02=False, SWAN_OutputTMM10=False \
 &metControl WindDragLimit=0.0025, DragLawString=default, outputWindDrag=F, invertedBarometerOnElevationBoundary=T \
