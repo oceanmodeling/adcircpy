@@ -1,37 +1,52 @@
-from pathlib import Path
-import unittest
+from tests import (
+    DATA_DIRECTORY,
+    OUTPUT_DIRECTORY,
+    REFERENCE_DIRECTORY,
+    check_reference_directory,
+)
 
-from examples.example_3 import main, PARENT
-
-
-class TestExamples(unittest.TestCase):
-    def test_example_3(self):
-        main()
-
-        reference_fort15_coldstart = (
-            Path(__file__) / '../reference/test_examples/example_3/fort.15.coldstart'
-        )
-        output_fort15_coldstart = PARENT / 'outputs/example_3/fort.15.coldstart'
-
-        reference_fort15_hotstart = (
-            Path(__file__) / '../reference/test_examples/example_3/fort.15.hotstart'
-        )
-        output_fort15_hotstart = PARENT / 'outputs/example_3/fort.15.hotstart'
-
-        with open(output_fort15_coldstart) as output_fort15, open(
-            reference_fort15_coldstart
-        ) as reference_fort15:
-            output_lines = output_fort15.readlines()
-            reference_lines = reference_fort15.readlines()
-            self.assertEqual(reference_lines[1:-1], output_lines[1:-1])
-
-        with open(output_fort15_hotstart) as output_fort15, open(
-            reference_fort15_hotstart
-        ) as reference_fort15:
-            output_lines = output_fort15.readlines()
-            reference_lines = reference_fort15.readlines()
-            self.assertEqual(reference_lines[1:-1], output_lines[1:-1])
+EXAMPLES_DIRECTORY = DATA_DIRECTORY.parent.parent / 'examples'
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_example_1():
+    exec(open(EXAMPLES_DIRECTORY / 'example_1.py').read())
+
+    reference_directory = REFERENCE_DIRECTORY / 'test_example_1'
+    output_directory = OUTPUT_DIRECTORY / 'test_example_1'
+
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -2]}
+    )
+
+
+def test_example_2():
+    exec(open(EXAMPLES_DIRECTORY / 'example_2.py').read())
+
+    reference_directory = REFERENCE_DIRECTORY / 'test_example_2'
+    output_directory = OUTPUT_DIRECTORY / 'test_example_2'
+
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -2]}
+    )
+
+
+def test_example_3():
+    exec(open(EXAMPLES_DIRECTORY / 'example_3.py').read())
+
+    reference_directory = REFERENCE_DIRECTORY / 'test_example_3'
+    output_directory = OUTPUT_DIRECTORY / 'test_example_3'
+
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -2]}
+    )
+
+
+def test_example_4():
+    exec(open(EXAMPLES_DIRECTORY / 'example_4.py').read())
+
+    reference_directory = REFERENCE_DIRECTORY / 'test_example_4'
+    output_directory = OUTPUT_DIRECTORY / 'test_example_4'
+
+    check_reference_directory(
+        output_directory, reference_directory, skip_lines={'fort.15': [0, -2]}
+    )

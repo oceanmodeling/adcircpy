@@ -8,18 +8,19 @@ import numpy
 from adcircpy import AdcircMesh, AdcircRun, Tides
 from adcircpy.utilities import download_mesh
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
-
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
-INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'NetCDF_Shinnecock_Inlet'
+INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_2'
 
+MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
+MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
+
 download_mesh(
-    url=MESH_URL, directory=INPUT_DIRECTORY,
+    url=MESH_URL, directory=MESH_DIRECTORY,
 )
 
 # open mesh file
-mesh = AdcircMesh.open(INPUT_DIRECTORY / 'fort.14', crs=4326)
+mesh = AdcircMesh.open(MESH_DIRECTORY / 'fort.14', crs=4326)
 
 # generate tau0 factor
 mesh.generate_tau0()
