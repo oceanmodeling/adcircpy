@@ -8,7 +8,7 @@ import sys
 
 import setuptools
 
-CONDA_PACKAGES = {
+BUILT_PACKAGES = {
     'fiona': ['gdal'],
     'matplotlib': [],
     'netCDF4': [],
@@ -19,40 +19,39 @@ CONDA_PACKAGES = {
 is_conda = (Path(sys.prefix) / 'conda-meta').exists()
 
 if is_conda:
-    packages = []
-    for required_package in CONDA_PACKAGES:
+    conda_packages = []
+    for conda_package in BUILT_PACKAGES:
         try:
-            importlib.import_module(required_package)
+            importlib.import_module(conda_package)
         except:
-            packages.append(required_package)
-    if len(packages) > 0:
-        subprocess.check_call(['conda', 'install', '-y', *packages])
+            conda_packages.append(conda_package)
+    if len(conda_packages) > 0:
+        subprocess.check_call(['conda', 'install', '-y', *conda_packages])
 
 if os.name == 'nt':
-    for required_package, dependencies in CONDA_PACKAGES.items():
+    for required_package, pipwin_dependencies in BUILT_PACKAGES.items():
         try:
             importlib.import_module(required_package)
         except:
             try:
                 import pipwin
             except:
-                subprocess.check_call(
-                        [sys.executable, '-m', 'pip', 'install', 'pipwin'])
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
 
-            failed_packages = []
-            for package in dependencies + [required_package]:
+            failed_pipwin_packages = []
+            for pipwin_package in pipwin_dependencies + [required_package]:
                 try:
                     subprocess.check_call(
-                            [sys.executable, '-m', 'pipwin', 'install',
-                             package.lower()])
+                        [sys.executable, '-m', 'pipwin', 'install', pipwin_package.lower()]
+                    )
                 except subprocess.CalledProcessError:
-                    failed_packages.append(package)
+                    failed_pipwin_packages.append(pipwin_package)
 
-            if len(failed_packages) > 0:
+            if len(failed_pipwin_packages) > 0:
                 raise RuntimeError(
-                        f'failed to download or install non-conda Windows build(s) of {" and ".join(failed_packages)}; you can either\n'
-                        '1) install within an Anaconda environment, or\n'
-                        f'2) `pip install <file>.whl`, with `<file>.whl` downloaded from {" and ".join("https://www.lfd.uci.edu/~gohlke/pythonlibs/#" + value.lower() for value in failed_packages)} for your Python version'
+                    f'failed to download or install non-conda Windows build(s) of {" and ".join(failed_pipwin_packages)}; you can either\n'
+                    '1) install within an Anaconda environment, or\n'
+                    f'2) `pip install <file>.whl`, with `<file>.whl` downloaded from {" and ".join("https://www.lfd.uci.edu/~gohlke/pythonlibs/#" + value.lower() for value in failed_pipwin_packages)} for your Python version'
                 )
 
 try:
