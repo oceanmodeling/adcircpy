@@ -13,7 +13,7 @@ BUILT_PACKAGES = {
     'matplotlib': [],
     'netCDF4': [],
     'numpy': [],
-    'pyproj': ['proj'],
+    'pyproj': ['gdal'],
     'scipy': [],
 }
 is_conda = (Path(sys.prefix) / 'conda-meta').exists()
