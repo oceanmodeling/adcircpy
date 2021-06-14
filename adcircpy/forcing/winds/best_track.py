@@ -515,7 +515,7 @@ class BestTrackForcing(WindForcing):
         if _found_start_date is False:
             raise Exception(f'No data within mesh bounding box for storm {self.storm_id}.')
 
-    def plot_track(self, axes=None, show=False, color='k', **kwargs):
+    def plot_track(self, axes=None, show=False, color='k', annotate=True, **kwargs):
         kwargs.update({'color': color})
         if axes is None:
             fig = plt.figure()
@@ -525,11 +525,12 @@ class BestTrackForcing(WindForcing):
             U = self.speed.iloc[i] * np.sin(np.deg2rad(self.direction.iloc[i]))
             V = self.speed.iloc[i] * np.cos(np.deg2rad(self.direction.iloc[i]))
             axes.quiver(self.longitude.iloc[i], self.latitude.iloc[i], U, V, **kwargs)
-            if i % 6 == 0:
-                axes.annotate(
-                    self.df['datetime'].iloc[i],
-                    (self.longitude.iloc[i], self.latitude.iloc[i]),
-                )
+            if annotate:
+                if i % 6 == 0:
+                    axes.annotate(
+                        self.df['datetime'].iloc[i],
+                        (self.longitude.iloc[i], self.latitude.iloc[i]),
+                    )
         if show:
             axes.axis('scaled')
         _fetch_and_plot_coastline(axes, show)
