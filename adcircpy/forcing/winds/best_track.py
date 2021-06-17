@@ -18,13 +18,13 @@ import geopandas
 from haversine import haversine
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
+import numpy
 import numpy as np
 from pandas import DataFrame, read_csv
 import pyproj
 from pyproj import CRS, Proj
 from shapely import ops
 from shapely.geometry import Point, Polygon
-import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 
@@ -646,6 +646,8 @@ class BestTrackForcing(WindForcing):
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
     if value is not None and value != "":
+        if not isinstance(value, str) and numpy.isinf(value):
+            return value
         if round_digits is not None and issubclass(to_type, (int, float)):
             if isinstance(value, str):
                 value = float(value)
