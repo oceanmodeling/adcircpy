@@ -719,11 +719,8 @@ def atcf_id(storm_id):
 
 
 def read_atcf(track: PathLike) -> DataFrame:
-    try:
-        with open(track) as track_file:
-            track = track_file.readlines()
-    except:
-        track = str(track).splitlines()
+    with open(track) as track_file:
+        track = track_file.readlines()
 
     data = {
         'basin': [],
