@@ -25,7 +25,6 @@ import pyproj
 from pyproj import CRS, Proj
 from shapely import ops
 from shapely.geometry import Point, Polygon
-from math import sin, cos, sqrt, atan2, radians
 
 
 from adcircpy.forcing.winds.base import WindForcing
@@ -33,20 +32,20 @@ from adcircpy.forcing.winds.base import WindForcing
 logger = logging.getLogger(__name__)
 
 
-def _dist(point1, point2) -> float:
-    lon1, lat1 = point1
-    lon2, lat2 = point2
-    R = 6373.0  # radius of earth (maybe this is in pint?)
-    lat1 = radians(lat1)
-    lon1 = radians(lon1)
-    lat2 = radians(lat2)
-    lon2 = radians(lon2)
+def _dist(points1, points2) -> np.ndarray:
+    R = 6373.0  # radius of earth
+    lons1, lats1 = np.hsplit(points1, 2)
+    lons2, lats2 = np.hsplit(points2, 2)
+    lats1 = np.radians(lats1)
+    lons1 = np.radians(lons1)
+    lats2 = np.radians(lats2)
+    lons2 = np.radians(lons2)
 
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
+    dlons = lons2 - lons1
+    dlats = lats2 - lats1
 
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    a = np.sin(dlats / 2) ** 2 + np.cos(lats1) * np.cos(lats2) * np.sin(dlons / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
     return R * c
 
 
@@ -345,13 +344,11 @@ class BestTrackForcing(WindForcing):
     def track_length(self) -> float:
         if not hasattr(self, "_track_length"):
             lons, lats = self.df["longitude"], self.df["latitude"]
-            distances = []
-            for index, _ in enumerate(lons):
-                prev = (lons.iloc[index - 1], lats.iloc[index - 1])
-                curr = (lons.iloc[index], lats.iloc[index])
-                distances.append(_dist(prev, curr))
-            self._track_lenghts = np.sum(np.asarray(distances))
-        return self._track_lenghts
+            prev = np.asarray([lons.iloc[:-1], lats.iloc[:-1]]).T
+            curr = np.asarray([lons.iloc[1:], lats.iloc[1:]]).T
+            distances = _dist(prev, curr)
+            self._track_length = np.sum(distances)
+        return self._track_length
 
     @property
     def start_date(self) -> datetime:
