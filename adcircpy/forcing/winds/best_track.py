@@ -113,7 +113,7 @@ class BestTrackForcing(WindForcing):
 
         super().__init__(nws=nws, interval_seconds=interval_seconds)
 
-    def summary(self):
+    def summary(self, output: Union[str, os.PathLike] = None):
         min_storm_speed = np.min(self.speed)
         max_storm_speed = np.max(self.speed)
         track_length = self.track_length
@@ -131,7 +131,11 @@ class BestTrackForcing(WindForcing):
             f'Total track length: {track_length:.2f} km',
             f'Total track duration: {duration:.2f} days',
         ]
-        return '\n'.join(f)
+        summary = '\n'.join(f)
+        if output is not None:
+            with open(pathlib.Path(output)) as fh:
+                fh.write(summary)
+        return summary
 
     def __str__(self):
         record_number = self._generate_record_numbers()
