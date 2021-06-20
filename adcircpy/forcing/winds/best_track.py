@@ -113,7 +113,7 @@ class BestTrackForcing(WindForcing):
 
         super().__init__(nws=nws, interval_seconds=interval_seconds)
 
-    def summary(self, output: Union[str, PathLike] = None):
+    def summary(self):
         min_storm_speed = np.min(self.speed)
         max_storm_speed = np.max(self.speed)
         track_length = self.track_length
@@ -131,10 +131,7 @@ class BestTrackForcing(WindForcing):
             f'Total track length: {track_length:.2f} km',
             f'Total track duration: {duration:.2f} days',
         ]
-        if output is None:
-            print('\n'.join([*f]), flush=True)
-        else:
-            raise NotImplementedError('Track summary output to file not yet implemented')
+        return '\n'.join(f)
 
     def __str__(self):
         record_number = self._generate_record_numbers()
@@ -324,13 +321,15 @@ class BestTrackForcing(WindForcing):
 
     @property
     def track_length(self) -> float:
-        lons, lats = self.df['longitude'], self.df['latitude']
-        distances = []
-        for index, _ in enumerate(lons):
-            prev = (lons.iloc[index - 1], lats.iloc[index - 1])
-            curr = (lons.iloc[index], lats.iloc[index])
-            distances.append(_dist(prev, curr))
-        return np.sum(np.asarray(distances))
+        if not hasattr(self, '_track_length'):
+            lons, lats = self.df['longitude'], self.df['latitude']
+            distances = []
+            for index, _ in enumerate(lons):
+                prev = (lons.iloc[index - 1], lats.iloc[index - 1])
+                curr = (lons.iloc[index], lats.iloc[index])
+                distances.append(_dist(prev, curr))
+            self._track_lenghts = np.sum(np.asarray(distances))
+        return self._track_lenghts
 
     @property
     def start_date(self) -> datetime:
