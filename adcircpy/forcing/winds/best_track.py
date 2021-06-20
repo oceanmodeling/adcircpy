@@ -122,19 +122,21 @@ class BestTrackForcing(WindForcing):
         max_wind_speed = np.max(self.df["max_sustained_wind_speed"])
         start_loc = (self.df["longitude"][0], self.df["latitude"][0])
         end_loc = (self.df["longitude"].iloc[-1], self.df["latitude"].iloc[-1])
+        f = [
+            f"Summary of storm: {self.storm_id}",
+            f"min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s",
+            f"min. central pressure: {min_central_pressure} hPa",
+            f"max. wind speed: {max_wind_speed} kts",
+            f"Starting at: {start_loc} and ended at: {end_loc}",
+            f"Total track length: {track_length:.2f} km",
+            f"Total track duration: {duration:.2f} days",
+        ]
         if output is None:
-            _storm = f"Summary of storm: {self.storm_id}"
-            print(_storm.upper())
-            print(
-                f"min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s"
-            )
-            print(f"min. central pressure: {min_central_pressure} hPa")
-            print(f"max. wind speed: {max_wind_speed} kts")
-            print(f"Starting at: {start_loc} and ended at: {end_loc}")
-            print(f"Total track length: {track_length:.2f} km")
-            print(f"Total track duration: {duration:.2f} days")
+            print("\n".join([*f]), flush=True)
         else:
-            print("not completed")
+            raise NotImplementedError(
+                "Track summary output to file not yet implemented"
+            )
 
     def __str__(self):
         record_number = self._generate_record_numbers()
