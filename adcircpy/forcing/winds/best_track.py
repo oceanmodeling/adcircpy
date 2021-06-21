@@ -26,9 +26,27 @@ from pyproj import CRS, Proj
 from shapely import ops
 from shapely.geometry import Point, Polygon
 
+
 from adcircpy.forcing.winds.base import WindForcing
 
 logger = logging.getLogger(__name__)
+
+
+def _dist(points1, points2) -> np.ndarray:
+    R = 6373.0  # radius of earth
+    lons1, lats1 = np.hsplit(points1, 2)
+    lons2, lats2 = np.hsplit(points2, 2)
+    lats1 = np.radians(lats1)
+    lons1 = np.radians(lons1)
+    lats2 = np.radians(lats2)
+    lons2 = np.radians(lons2)
+
+    dlons = lons2 - lons1
+    dlats = lats2 - lats1
+
+    a = np.sin(dlats / 2) ** 2 + np.cos(lats1) * np.cos(lats2) * np.sin(dlons / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    return R * c
 
 
 def _fetch_and_plot_coastline(_ax, show, filename='BestTrack.png'):
@@ -93,6 +111,34 @@ class BestTrackForcing(WindForcing):
         self._dst_crs = dst_crs
 
         super().__init__(nws=nws, interval_seconds=interval_seconds)
+
+    def summary(self, output: Union[str, os.PathLike] = None, overwrite: bool = False):
+        min_storm_speed = np.min(self.speed)
+        max_storm_speed = np.max(self.speed)
+        track_length = self.track_length
+        duration = self.duration
+        min_central_pressure = np.min(self.central_pressure)
+        max_wind_speed = np.max(self.df['max_sustained_wind_speed'])
+        start_loc = (self.df['longitude'][0], self.df['latitude'][0])
+        end_loc = (self.df['longitude'].iloc[-1], self.df['latitude'].iloc[-1])
+        f = [
+            f'Summary of storm: {self.storm_id}',
+            f'min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s',
+            f'min. central pressure: {min_central_pressure} hPa',
+            f'max. wind speed: {max_wind_speed} kts',
+            f'Starting at: {start_loc} and ended at: {end_loc}',
+            f'Total track length: {track_length:.2f} km',
+            f'Total track duration: {duration:.2f} days',
+        ]
+        summary = '\n'.join(f)
+        if output is not None:
+            if not isinstance(output, pathlib.Path):
+                path = pathlib.Path(output)
+            if path.exists() and overwrite is False:
+                raise Exception('File exist, set overwrite=True to allow overwrite.')
+            with open(path, 'w+') as fh:
+                fh.write(summary)
+        return summary
 
     def __str__(self):
         record_number = self._generate_record_numbers()
@@ -281,6 +327,16 @@ class BestTrackForcing(WindForcing):
             self.__atcf = io.BytesIO(response.read())
 
     @property
+    def track_length(self) -> float:
+        if not hasattr(self, '_track_length'):
+            lons, lats = self.df['longitude'], self.df['latitude']
+            prev = np.asarray([lons.iloc[:-1], lats.iloc[:-1]]).T
+            curr = np.asarray([lons.iloc[1:], lats.iloc[1:]]).T
+            distances = _dist(prev, curr)
+            self._track_length = np.sum(distances)
+        return self._track_length
+
+    @property
     def start_date(self) -> datetime:
         return self._start_date
 
@@ -337,6 +393,11 @@ class BestTrackForcing(WindForcing):
         self.__end_date = end_date
 
     @property
+    def duration(self) -> float:
+        d = (self.__end_date - self.__start_date).days
+        return d
+
+    @property
     def name(self) -> str:
         return self.df['name'].value_counts()[:].index.tolist()[0]
 
@@ -355,6 +416,10 @@ class BestTrackForcing(WindForcing):
     @property
     def datetime(self):
         return self.df['datetime']
+
+    @property
+    def central_pressure(self):
+        return self.df['central_pressure']
 
     @property
     def speed(self):

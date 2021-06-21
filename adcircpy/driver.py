@@ -853,6 +853,7 @@ class AdcircRun(Fort15):
         if start_date is None:
             if isinstance(self.mesh.forcings.wind, BestTrackForcing):
                 start_date = self.mesh.forcings.wind.start_date
+                self.mesh.forcings.tides.start_date = self.mesh.forcings.wind.start_date
         else:
             if isinstance(self.mesh.forcings.tides, Tides):
                 self.mesh.forcings.tides.start_date = start_date
@@ -872,6 +873,7 @@ class AdcircRun(Fort15):
         if end_date is None:
             if isinstance(self.wind_forcing, BestTrackForcing):
                 end_date = self.wind_forcing.end_date
+                self.mesh.forcings.tides.end_date = self.mesh.forcings.wind.end_date
         else:
             if isinstance(self.mesh.forcings.tides, Tides):
                 self.mesh.forcings.tides.end_date = end_date
