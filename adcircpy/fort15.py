@@ -825,18 +825,19 @@ class Fort15:
         """ https://wiki.adcirc.org/wiki/ICS """
         crs = self.mesh.crs
         if crs.is_geographic:
-            if 'EQUAL AREA' in crs.coordinate_operation.name.upper():
-                ics = 20
-            elif 'CPP' in crs.coordinate_operation.name.upper():
-                ics = 21
-            elif 'MERCATOR' in crs.coordinate_operation.name.upper():
-                ics = 22
-            elif 'MILLER' in crs.coordinate_operation.name.upper():
-                ics = 23
-            elif 'GALL STEREOGRAPHIC' in crs.coordinate_operation.name.upper():
-                ics = 24
-            else:
-                ics = 2
+            ics = 2
+            if crs.coordinate_operation is not None:
+                coordinate_operation = crs.coordinate_operation.name.upper()
+                if 'EQUAL AREA' in coordinate_operation:
+                    ics = 20
+                elif 'CPP' in coordinate_operation:
+                    ics = 21
+                elif 'MERCATOR' in coordinate_operation:
+                    ics = 22
+                elif 'MILLER' in coordinate_operation:
+                    ics = 23
+                elif 'GALL STEREOGRAPHIC' in coordinate_operation:
+                    ics = 24
         else:
             ics = 1
         return ics
