@@ -830,7 +830,7 @@ class Fort15:
                 coordinate_operation = crs.coordinate_operation.name.upper()
                 if 'EQUAL AREA' in coordinate_operation:
                     ics = 20
-                elif 'CPP' in coordinate_operation:
+                elif 'EQUIDISTANT CYLINDRICAL' in coordinate_operation:
                     ics = 21
                 elif 'MERCATOR' in coordinate_operation:
                     ics = 22
