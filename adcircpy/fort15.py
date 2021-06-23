@@ -823,24 +823,32 @@ class Fort15:
     @property
     def ICS(self) -> int:
         """ https://wiki.adcirc.org/wiki/ICS """
-        crs = self.mesh.crs
-        if crs.is_geographic:
-            ics = 2
-            if crs.coordinate_operation is not None:
-                coordinate_operation = crs.coordinate_operation.name.upper()
-                if 'EQUAL AREA' in coordinate_operation:
-                    ics = 20
-                elif 'EQUIDISTANT CYLINDRICAL' in coordinate_operation:
-                    ics = 21
-                elif 'MERCATOR' in coordinate_operation:
-                    ics = 22
-                elif 'MILLER' in coordinate_operation:
-                    ics = 23
-                elif 'GALL STEREOGRAPHIC' in coordinate_operation:
-                    ics = 24
-        else:
-            ics = 1
+        try:
+            ics = self.__ICS
+        except AttributeError:
+            crs = self.mesh.crs
+            if crs.is_geographic:
+                ics = 2
+                if crs.coordinate_operation is not None:
+                    coordinate_operation = crs.coordinate_operation.name.upper()
+                    if 'EQUAL AREA' in coordinate_operation:
+                        ics = 20
+                    elif 'EQUIDISTANT CYLINDRICAL' in coordinate_operation:
+                        ics = 21
+                    elif 'MERCATOR' in coordinate_operation:
+                        ics = 22
+                    elif 'MILLER' in coordinate_operation:
+                        ics = 23
+                    elif 'GALL STEREOGRAPHIC' in coordinate_operation:
+                        ics = 24
+            else:
+                ics = 1
+            self.__ICS = ics
         return ics
+
+    @ICS.setter
+    def ICS(self, ics: int):
+        self.__ICS = ics
 
     @property
     def IM(self):
