@@ -821,11 +821,25 @@ class Fort15:
         return nrs
 
     @property
-    def ICS(self):
-        if self.mesh.crs.is_geographic:
-            return 2
+    def ICS(self) -> int:
+        """ https://wiki.adcirc.org/wiki/ICS """
+        crs = self.mesh.crs
+        if crs.is_geographic:
+            if 'EQUAL AREA' in crs.coordinate_operation.name.upper():
+                ics = 20
+            elif 'CPP' in crs.coordinate_operation.name.upper():
+                ics = 21
+            elif 'MERCATOR' in crs.coordinate_operation.name.upper():
+                ics = 22
+            elif 'MILLER' in crs.coordinate_operation.name.upper():
+                ics = 23
+            elif 'GALL STEREOGRAPHIC' in crs.coordinate_operation.name.upper():
+                ics = 24
+            else:
+                ics = 2
         else:
-            return 1
+            ics = 1
+        return ics
 
     @property
     def IM(self):
