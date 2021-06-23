@@ -848,6 +848,9 @@ class Fort15:
 
     @ICS.setter
     def ICS(self, ics: int):
+        """ https://wiki.adcirc.org/wiki/ICS """
+        ics = int(ics)
+        assert ics in [1, 2, 20, 21, 22, 23, 24]
         self.__ICS = ics
 
     @property
