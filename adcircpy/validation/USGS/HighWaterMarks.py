@@ -130,7 +130,7 @@ class HighWaterMarks(OrderedDict):
             eventNames = [event.capitalize() for event in list(events_dict.keys())]
             raise Exception(
                 '\nEvent name not Found!\n \
-                                Valid event names are:\n{}'.format(
+                                    Valid event names are:\n{}'.format(
                     eventNames
                 )
             )

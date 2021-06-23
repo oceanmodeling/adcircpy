@@ -26,7 +26,6 @@ from pyproj import CRS, Proj
 from shapely import ops
 from shapely.geometry import Point, Polygon
 
-
 from adcircpy.forcing.winds.base import WindForcing
 
 logger = logging.getLogger(__name__)
@@ -867,7 +866,6 @@ def read_atcf(track: PathLike) -> DataFrame:
 
 
 def get_circle_of_radius(lon, lat, radius):
-
     local_azimuthal_projection = '+proj=aeqd +R=6371000 +units=m ' f'+lat_0={lat} +lon_0={lon}'
     wgs84_to_aeqd = partial(
         pyproj.transform,
