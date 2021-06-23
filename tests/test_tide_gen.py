@@ -4,9 +4,9 @@ from adcircpy.cmd import tide_gen
 
 # noinspection PyUnresolvedReferences
 from tests import (
+    check_reference_directory,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
-    check_reference_directory,
     shinnecock_mesh_directory,
 )
 

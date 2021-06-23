@@ -12,8 +12,6 @@ from pyproj import CRS
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import sms2dm
 
-import traceback
-
 # class OutputVariable(Enum):
 #     FORT63 = 'zeta'
 

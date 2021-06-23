@@ -2,9 +2,10 @@ import codecs
 import json
 import os
 
-from AdcircPy import utils
 from bs4 import BeautifulSoup
 import requests
+
+from AdcircPy import utils
 
 
 class HarmonicConstituents(dict):
