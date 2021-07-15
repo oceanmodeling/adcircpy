@@ -612,11 +612,7 @@ class VortexForcing:
             lat = records['latitude'].iloc[0]
             _, _, number, letter = utm.from_latlon(lat, lon)
             df_crs = CRS.from_epsg(4326)
-            utm_crs = CRS(
-                proj='utm',
-                zone=f'{number}{letter}',
-                ellps={'GRS 1980': 'GRS80', 'WGS 84': 'WGS84'}[df_crs.ellipsoid.name],
-            )
+            utm_crs = CRS.from_epsg(f'326{number}')
             transformer = Transformer.from_crs(df_crs, utm_crs, always_xy=True)
             p = Point(*transformer.transform(lon, lat))
             pol = p.buffer(radii)
