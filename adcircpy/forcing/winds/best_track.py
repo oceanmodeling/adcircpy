@@ -20,7 +20,7 @@ from matplotlib import pyplot
 from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import numpy as numpy
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, Series
 from pyproj import CRS, Geod, Transformer
 import requests
 from shapely import ops
@@ -81,8 +81,8 @@ class FileDeck(Enum):
 
 
 class Mode(Enum):
-    historical = 'historical'
-    realtime = 'real-time'
+    historical = 'ARCHIVE'
+    realtime = 'aid_public'
 
 
 class VortexForcing:
@@ -234,10 +234,13 @@ class VortexForcing:
     def storm_id(self) -> str:
         if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
-                storm_id = f'{self.__dataframe["name"][0]}{self.__dataframe["datetime"][0]:%Y}'
+                storm_id = get_atcf_id(
+                    storm_name=self.__dataframe['name'][0],
+                    year=self.__dataframe['datetime'][0].year,
+                )
                 try:
                     get_atcf_file(storm_id, self.file_deck, self.mode)
-                    self.__storm_id = storm_id
+                    self.storm_id = storm_id
                 except:
                     self.__invalid_storm_name = True
         return self.__storm_id
@@ -248,7 +251,7 @@ class VortexForcing:
             digits = sum([1 for character in storm_id if character.isdigit()])
 
             if digits == 4:
-                atcf_id = get_atcf_id(storm_id)
+                atcf_id = get_atcf_id(storm_name=storm_id[:4], year=int(storm_id[4:]))
                 if atcf_id is None:
                     raise ValueError(f'No storm with id: {storm_id}')
                 storm_id = atcf_id
@@ -969,17 +972,37 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
     return deco_retry
 
 
-def get_atcf_id(storm_id: str):
+def get_atcf_entry(
+    year: int, basin: str = None, storm_number: int = None, storm_name: str = None,
+) -> Series:
     url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
+    storm_table = read_csv(url, header=None)
 
-    dataframe = read_csv(url, header=None)
-    name = storm_id[:-4]
-    year = storm_id[-4:]
-    entry = dataframe[(dataframe[0] == name.upper().rjust(10)) & (dataframe[8] == int(year))]
-    if len(entry) == 0:
+    if basin is not None and storm_number is not None:
+        row = storm_table[
+            (storm_table[1] == f'{basin.upper():>3}')
+            & (storm_table[7] == storm_number)
+            & (storm_table[8] == int(year))
+        ]
+    elif storm_name is not None:
+        row = storm_table[
+            (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
+        ]
+    else:
+        raise ValueError('need either storm name or basin + storm number')
+
+    if len(row) == 0:
         return None
     else:
-        return entry[20].tolist()[0].strip()
+        return list(row.iterrows())[0][1]
+
+
+def get_atcf_id(storm_name: str, year: int) -> str:
+    entry = get_atcf_entry(storm_name=storm_name, year=year)
+    if entry is None:
+        return None
+    else:
+        return entry[20].strip()
 
 
 def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
@@ -1083,13 +1106,15 @@ def read_atcf(track: PathLike) -> DataFrame:
     return DataFrame(data=data)
 
 
-def atcf_url(file_deck: FileDeck = None, storm_id: str = None, mode: Mode = None):
+def atcf_url(file_deck: FileDeck = None, storm_id: str = None, mode: Mode = None,) -> str:
     if storm_id is not None:
-        if file_deck is None:
-            file_deck = storm_id[0]
         year = int(storm_id[4:])
     else:
         year = None
+
+    if mode is None:
+        entry = get_atcf_entry(basin=storm_id[:2], storm_number=int(storm_id[2:4]), year=year)
+        mode = entry[18].strip()
 
     if file_deck is not None and not isinstance(file_deck, FileDeck):
         try:
@@ -1097,7 +1122,7 @@ def atcf_url(file_deck: FileDeck = None, storm_id: str = None, mode: Mode = None
         except ValueError:
             file_deck = None
     if file_deck is None:
-        file_deck = FileDeck.b
+        file_deck = FileDeck.a
 
     if mode is not None and not isinstance(mode, Mode):
         try:

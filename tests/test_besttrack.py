@@ -2,10 +2,10 @@
 
 from adcircpy.forcing.winds import BestTrackForcing
 from tests import (
+    check_reference_directory,
     INPUT_DIRECTORY,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
-    check_reference_directory,
 )
 
 
