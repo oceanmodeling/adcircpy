@@ -2,10 +2,10 @@
 
 from adcircpy.forcing.winds import BestTrackForcing
 from tests import (
-    check_reference_directory,
     INPUT_DIRECTORY,
     OUTPUT_DIRECTORY,
     REFERENCE_DIRECTORY,
+    check_reference_directory,
 )
 
 
@@ -41,7 +41,7 @@ def test_from_atcf(mocker):
         atcf=input_directory / 'florence2018_atcf.trk', nws=8,
     )
 
-    assert best_track.storm_id == 'BT02008'
+    assert best_track.storm_id is None
     assert best_track.name == 'WRT00001'
 
     best_track.write(output_directory / 'florence2018_fort.22', overwrite=True)
