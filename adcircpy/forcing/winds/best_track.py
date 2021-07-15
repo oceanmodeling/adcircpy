@@ -91,8 +91,8 @@ class VortexForcing:
         storm: Union[str, PathLike, DataFrame, io.BytesIO],
         start_date: datetime = None,
         end_date: datetime = None,
-        file_deck: FileDeck = FileDeck.b,
-        mode: Mode = Mode.historical,
+        file_deck: FileDeck = None,
+        mode: Mode = None,
         requested_record_type: str = None,
     ):
         self.__dataframe = None
@@ -235,8 +235,8 @@ class VortexForcing:
         if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
                 storm_id = get_atcf_id(
-                    storm_name=self.__dataframe['name'][0],
-                    year=self.__dataframe['datetime'][0].year,
+                    storm_name=self.__dataframe['name'].tolist()[-1],
+                    year=self.__dataframe['datetime'].tolist()[-1].year,
                 )
                 try:
                     get_atcf_file(storm_id, self.file_deck, self.mode)
@@ -251,7 +251,7 @@ class VortexForcing:
             digits = sum([1 for character in storm_id if character.isdigit()])
 
             if digits == 4:
-                atcf_id = get_atcf_id(storm_name=storm_id[:4], year=int(storm_id[4:]))
+                atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
                 if atcf_id is None:
                     raise ValueError(f'No storm with id: {storm_id}')
                 storm_id = atcf_id
@@ -363,7 +363,9 @@ class VortexForcing:
 
     @file_deck.setter
     def file_deck(self, file_deck: FileDeck):
-        if file_deck is not None and not isinstance(file_deck, FileDeck):
+        if file_deck is None:
+            file_deck = FileDeck.a
+        elif not isinstance(file_deck, FileDeck):
             file_deck = convert_value(file_deck, FileDeck)
         self.__file_deck = file_deck
 
@@ -373,9 +375,10 @@ class VortexForcing:
 
     @mode.setter
     def mode(self, mode: Mode):
-        if mode is not None and not isinstance(mode, Mode):
-            if not isinstance(mode, Mode):
-                mode = convert_value(mode, Mode)
+        if mode is None:
+            mode = Mode.historical
+        elif not isinstance(mode, Mode):
+            mode = convert_value(mode, Mode)
         self.__mode = mode
 
     @property
@@ -393,7 +396,7 @@ class VortexForcing:
             elif self.file_deck == FileDeck.b:
                 record_types_list = ['BEST']
             else:
-                raise ValueError('invalid file deck')
+                raise NotImplementedError(f'file deck {self.file_deck.value} not implemented')
             if requested_record_type not in record_types_list:
                 raise ValueError(
                     f'request_record_type = {requested_record_type} not allowed, select from {record_types_list}'
