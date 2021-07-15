@@ -768,9 +768,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
-        file_deck: FileDeck = FileDeck.b,
-        mode: Mode = Mode.historical,
-        requested_record_type: str = None,
+        mode: Mode = None,
     ):
         if nws is None:
             nws = 20
@@ -788,9 +786,9 @@ class BestTrackForcing(VortexForcing, WindForcing):
             storm=storm,
             start_date=start_date,
             end_date=end_date,
-            file_deck=file_deck,
+            file_deck=FileDeck.b,
             mode=mode,
-            requested_record_type=requested_record_type,
+            requested_record_type='BEST',
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
@@ -886,9 +884,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
             end_date=end_date,
             nws=nws,
             interval_seconds=interval_seconds,
-            file_deck=None,
             mode=None,
-            requested_record_type=None,
         )
 
     @classmethod
@@ -906,9 +902,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
             end_date=end_date,
             nws=nws,
             interval_seconds=interval_seconds,
-            file_deck=None,
             mode=None,
-            requested_record_type=None,
         )
 
 
