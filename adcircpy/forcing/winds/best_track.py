@@ -834,7 +834,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
     def WTIMINC(self) -> str:
         return (
             f'{self.start_date:%Y %m %d %H} '
-            f'{self.df["storm_number"].iloc[0]} '
+            f'{self.data["storm_number"].iloc[0]} '
             f'{self.BLADj} '
             f'{self.geofactor}'
         )
