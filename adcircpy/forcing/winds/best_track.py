@@ -105,6 +105,8 @@ class VortexForcing:
         self.__mode = None
         self.__requested_record_type = None
 
+        self.__invalid_storm_name = False
+
         self.file_deck = file_deck
         self.mode = mode
         self.requested_record_type = requested_record_type
@@ -230,14 +232,14 @@ class VortexForcing:
 
     @property
     def storm_id(self) -> str:
-        if self.__storm_id is None:
+        if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
                 storm_id = f'{self.__dataframe["name"][0]}{self.__dataframe["datetime"][0]:%Y}'
                 try:
                     get_atcf_file(storm_id, self.file_deck, self.mode)
                     self.__storm_id = storm_id
                 except:
-                    pass
+                    self.__invalid_storm_name = True
         return self.__storm_id
 
     @storm_id.setter
