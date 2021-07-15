@@ -769,7 +769,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
         mode: Mode = None,
-    ):
+    ) -> 'BestTrackForcing':
         if nws is None:
             nws = 20
 
