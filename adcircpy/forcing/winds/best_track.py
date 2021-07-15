@@ -566,12 +566,12 @@ class VortexForcing:
                 else:
                     record.update(
                         {
-                            'background_pressure': record['background_pressure'][-1],
-                            'radius_of_last_closed_isobar': record[
+                            'background_pressure': records[-1]['background_pressure'],
+                            'radius_of_last_closed_isobar': records[-1][
                                 'radius_of_last_closed_isobar'
-                            ][-1],
-                            'radius_of_maximum_winds': record['radius_of_maximum_winds'][-1],
-                            'name': '',
+                            ],
+                            'radius_of_maximum_winds': records[-1]['radius_of_maximum_winds'],
+                            'name': records[-1]['name'],
                         }
                     )
 
