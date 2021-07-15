@@ -71,6 +71,7 @@ def plot_coastline(axis: Axes = None, show: bool = False, save_filename: PathLik
 
 class FileDeck(Enum):
     """ http://hurricanes.ral.ucar.edu/realtime/ """
+
     a = 'a'
     b = 'b'
     c = 'c'
