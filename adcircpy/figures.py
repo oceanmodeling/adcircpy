@@ -1,16 +1,7 @@
-import io
-from os import PathLike
-from pathlib import Path
-import zipfile
-
-import appdirs
-import geopandas
 from matplotlib import rcParams
-from matplotlib.axes import Axes
 from matplotlib.colors import LinearSegmentedColormap, Normalize
 import matplotlib.pyplot as plt
 import numpy as np
-import requests
 
 
 def get_topobathy_kwargs(values, vmin, vmax, colors=256):
