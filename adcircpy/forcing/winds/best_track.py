@@ -903,6 +903,8 @@ class BestTrackForcing(VortexForcing, WindForcing):
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
+    if type(value).__name__ == 'Quantity':
+        value = value.magnitude
     if issubclass(to_type, Enum):
         try:
             value = to_type[value]
