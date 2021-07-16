@@ -93,7 +93,7 @@ class VortexForcing:
         end_date: datetime = None,
         file_deck: FileDeck = None,
         mode: Mode = None,
-        requested_record_type: str = None,
+        record_type: str = None,
     ):
         self.__dataframe = None
         self.__atcf = None
@@ -103,13 +103,13 @@ class VortexForcing:
         self.__previous_configuration = None
         self.__file_deck = None
         self.__mode = None
-        self.__requested_record_type = None
+        self.__record_type = None
 
         self.__invalid_storm_name = False
 
         self.file_deck = file_deck
         self.mode = mode
-        self.requested_record_type = requested_record_type
+        self.record_type = record_type
 
         if isinstance(storm, DataFrame):
             self.dataframe = storm
@@ -382,13 +382,13 @@ class VortexForcing:
         self.__mode = mode
 
     @property
-    def requested_record_type(self) -> str:
-        return self.__requested_record_type
+    def record_type(self) -> str:
+        return self.__record_type
 
-    @requested_record_type.setter
-    def requested_record_type(self, requested_record_type: str):
+    @record_type.setter
+    def record_type(self, record_type: str):
         # e.g. BEST, OFCL, HWRF, etc.
-        if requested_record_type is not None:
+        if record_type is not None:
             if self.file_deck == FileDeck.a:
                 # see ftp://ftp.nhc.noaa.gov/atcf/docs/nhc_techlist.dat
                 # there are more but they may not have enough columns
@@ -397,11 +397,11 @@ class VortexForcing:
                 record_types_list = ['BEST']
             else:
                 raise NotImplementedError(f'file deck {self.file_deck.value} not implemented')
-            if requested_record_type not in record_types_list:
+            if record_type not in record_types_list:
                 raise ValueError(
-                    f'request_record_type = {requested_record_type} not allowed, select from {record_types_list}'
+                    f'request_record_type = {record_type} not allowed, select from {record_types_list}'
                 )
-        self.__requested_record_type = requested_record_type
+        self.__record_type = record_type
 
     @property
     def data(self):
@@ -473,7 +473,7 @@ class VortexForcing:
             start_date = self.start_date
             # Only accept request record type or
             # BEST track or OFCL (official) advisory by default
-            allowed_record_types = self.requested_record_type
+            allowed_record_types = self.record_type
             if allowed_record_types is None:
                 allowed_record_types = ['BEST', 'OFCL']
             records = []
@@ -678,7 +678,7 @@ class VortexForcing:
             start_date=self.start_date,
             end_date=self.end_date,
             file_deck=self.file_deck,
-            requested_record_type=self.requested_record_type,
+            record_type=self.record_type,
         )
         instance.dataframe = self.dataframe.copy()
         return instance
@@ -739,7 +739,7 @@ class VortexForcing:
             end_date=end_date,
             file_deck=None,
             mode=None,
-            requested_record_type=None,
+            record_type=None,
         )
 
     @classmethod
@@ -752,7 +752,7 @@ class VortexForcing:
             end_date=end_date,
             file_deck=None,
             mode=None,
-            requested_record_type=None,
+            record_type=None,
         )
 
 
@@ -784,7 +784,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
             end_date=end_date,
             file_deck=FileDeck.b,
             mode=mode,
-            requested_record_type='BEST',
+            record_type='BEST',
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
