@@ -970,26 +970,32 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
 def get_atcf_entry(
     year: int, basin: str = None, storm_number: int = None, storm_name: str = None,
 ) -> Series:
-    url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
-    storm_table = read_csv(url, header=None)
+    entry = None
 
-    if basin is not None and storm_number is not None:
-        row = storm_table[
-            (storm_table[1] == f'{basin.upper():>3}')
-            & (storm_table[7] == storm_number)
-            & (storm_table[8] == int(year))
-        ]
-    elif storm_name is not None:
-        row = storm_table[
-            (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
-        ]
-    else:
-        raise ValueError('need either storm name or basin + storm number')
+    try:
+        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
+        storm_table = read_csv(url, header=None)
+    except:
+        storm_table = None
 
-    if len(row) == 0:
-        return None
-    else:
-        return list(row.iterrows())[0][1]
+    if storm_table is not None:
+        if basin is not None and storm_number is not None:
+            row = storm_table[
+                (storm_table[1] == f'{basin.upper():>3}')
+                & (storm_table[7] == storm_number)
+                & (storm_table[8] == int(year))
+            ]
+        elif storm_name is not None:
+            row = storm_table[
+                (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
+            ]
+        else:
+            raise ValueError('need either storm name or basin + storm number')
+
+        if len(row) > 0:
+            entry = list(row.iterrows())[0][1]
+
+    return entry
 
 
 def get_atcf_id(storm_name: str, year: int) -> str:
