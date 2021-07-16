@@ -100,7 +100,6 @@ class VortexForcing:
         self.__storm_id = None
         self.__start_date = start_date  # initially used to filter A-deck here
         self.__end_date = None
-        self.__previous_configuration = None
         self.__file_deck = None
         self.__mode = None
         self.__record_type = None
@@ -113,11 +112,6 @@ class VortexForcing:
 
         if isinstance(storm, DataFrame):
             self.dataframe = storm
-            self.__previous_configuration = {
-                'storm_id': self.storm_id,
-                'file_deck': self.file_deck,
-                'mode': self.mode,
-            }
         elif isinstance(storm, io.BytesIO):
             self.__atcf = storm
         elif isinstance(storm, (str, PathLike, pathlib.Path)):
@@ -125,6 +119,12 @@ class VortexForcing:
                 self.__atcf = io.open(storm, 'rb')
             else:
                 self.storm_id = storm
+
+        self.__previous_configuration = {
+            'storm_id': self.storm_id,
+            'file_deck': self.file_deck,
+            'mode': self.mode,
+        }
 
         # use start and end dates to mask dataframe here
         self.start_date = start_date
