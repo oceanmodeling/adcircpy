@@ -115,8 +115,8 @@ class VortexForcing:
             self.dataframe = storm
             self.__previous_configuration = {
                 'storm_id': self.storm_id,
-                'mode': self.mode,
                 'file_deck': self.file_deck,
+                'mode': self.mode,
             }
         elif isinstance(storm, io.BytesIO):
             self.__atcf = storm
@@ -415,7 +415,17 @@ class VortexForcing:
 
     @property
     def atcf(self) -> open:
-        if self.storm_id is not None:
+        configuration = {
+            'storm_id': self.storm_id,
+            'file_deck': self.file_deck,
+            'mode': self.mode,
+        }
+
+        if (
+            self.storm_id is not None
+            and self.__atcf is None
+            or configuration != self.__previous_configuration
+        ):
             self.__atcf = get_atcf_file(self.storm_id, self.file_deck, self.mode)
 
         return self.__atcf
@@ -424,8 +434,8 @@ class VortexForcing:
     def dataframe(self):
         configuration = {
             'storm_id': self.storm_id,
-            'mode': self.mode,
             'file_deck': self.file_deck,
+            'mode': self.mode,
         }
 
         # only download new file if the configuration has changed since the last download
@@ -674,13 +684,13 @@ class VortexForcing:
 
     def __copy__(self) -> 'VortexForcing':
         instance = self.__class__(
-            storm=self.storm_id,
+            storm=self.dataframe.copy(),
             start_date=self.start_date,
             end_date=self.end_date,
             file_deck=self.file_deck,
             record_type=self.record_type,
         )
-        instance.dataframe = self.dataframe.copy()
+        instance.storm_id = self.storm_id
         return instance
 
     @staticmethod
