@@ -140,7 +140,7 @@ class VortexForcing:
 
         for column in dataframe.select_dtypes(include=['float']):
             if column not in ['latitude', 'longitude']:
-                dataframe[column] = dataframe[column].round(0).astype('Int64', copy=False)
+                dataframe.loc[:, column] = dataframe[column].round(0).astype('Int64', copy=False)
 
         for i, (_, row) in enumerate(dataframe.iterrows()):
             line = []
