@@ -1,6 +1,6 @@
 # ! /usr/bin/env python
 
-from adcircpy.forcing.winds import BestTrackForcing
+from adcircpy.forcing.winds.best_track import BestTrackForcing
 from tests import (
     check_reference_directory,
     INPUT_DIRECTORY,
@@ -50,3 +50,20 @@ def test_from_atcf(mocker):
 
     mocker.patch('matplotlib.pyplot.show')
     best_track.plot_track(show=True)
+
+
+def test_recompute_velocity():
+    output_directory = OUTPUT_DIRECTORY / 'test_recompute_velocity'
+    reference_directory = REFERENCE_DIRECTORY / 'test_recompute_velocity'
+
+    if not output_directory.exists():
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    best_track = BestTrackForcing('irma2017', nws=8)
+
+    best_track.dataframe['latitude'][5] += 0.1
+    best_track.dataframe['longitude'][5] -= 0.1
+
+    best_track.write(output_directory / 'irma2017_fort.22', overwrite=True)
+
+    check_reference_directory(output_directory, reference_directory)
