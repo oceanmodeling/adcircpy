@@ -21,6 +21,7 @@ from matplotlib.axes import Axes
 from matplotlib.transforms import Bbox
 import numpy as numpy
 from pandas import DataFrame, read_csv, Series
+import pandas.util
 from pyproj import CRS, Geod, Transformer
 import requests
 from shapely import ops
@@ -105,6 +106,7 @@ class VortexForcing:
         self.__record_type = None
 
         self.__invalid_storm_name = False
+        self.__location_hash = None
 
         self.file_deck = file_deck
         self.mode = mode
@@ -590,14 +592,22 @@ class VortexForcing:
             if len(records) == 0:
                 raise ValueError(f'no records found with type(s) "{allowed_record_types}"')
 
-            self.dataframe = DataFrame.from_records(data=records, columns=columns)
+            self.__dataframe = DataFrame.from_records(data=records, columns=columns)
             self.__previous_configuration = configuration
+
+        # if location values have changed, recompute velocity
+        location_hash = pandas.util.hash_pandas_object(
+            self.__dataframe[['longitude', 'latitude']]
+        ).sum()
+        if self.__location_hash is None or location_hash != self.__location_hash:
+            self.__dataframe = self.__compute_velocity(self.__dataframe)
+            self.__location_hash = location_hash
 
         return self.__dataframe
 
     @dataframe.setter
     def dataframe(self, dataframe: DataFrame):
-        self.__dataframe = self.__compute_velocity(dataframe)
+        self.__dataframe = dataframe
 
     def clip_to_bbox(self, bbox, bbox_crs):
         msg = f'bbox must be a {Bbox} instance.'
