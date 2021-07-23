@@ -32,6 +32,10 @@ from adcircpy.forcing.winds.base import WindForcing
 
 logger = logging.getLogger(__name__)
 
+# suppress `SettingWithCopyWarning` when instantiating `VortexForcing`
+# TODO: figure out why that is happening
+pandas.options.mode.chained_assignment = None  # default='warn'
+
 
 def download_coastline(overwrite: bool = False) -> pathlib.Path:
     data_directory = pathlib.Path(appdirs.user_data_dir('ne_coastline'))
