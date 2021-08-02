@@ -37,9 +37,9 @@ DEPENDENCIES = {
 def installed_packages() -> [str]:
     return [
         re.split('#egg=', re.split('==| @ ', package.decode())[0])[-1].lower()
-        for package in subprocess.check_output(
-            [sys.executable, '-m', 'pip', 'freeze']
-        ).splitlines()
+        for package in subprocess.run(
+            f'{sys.executable} -m pip freeze', capture_output=True
+        ).stdout.splitlines()
     ]
 
 
@@ -61,24 +61,66 @@ def missing_packages(required_packages: {str: [str]}) -> {str: [str]}:
         ]
 
 
+try:
+    if 'dunamai' not in installed_packages():
+        subprocess.run(
+            f'{sys.executable} -m pip install dunamai',
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+    from dunamai import Version
+
+    version = Version.from_any_vcs().serialize()
+except RuntimeError as error:
+    logging.exception(error)
+    version = '0.0.0'
+
+logging.info(f'using version {version}')
+
 MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
+    conda_packages = []
+    for dependency in list(MISSING_DEPENDENCIES):
+        try:
+            process = subprocess.run(
+                f'conda search {dependency}', shell=True, check=True, capture_output=True,
+            )
+            if 'No match found for:' not in process.stdout.decode():
+                conda_packages.append(dependency)
+        except subprocess.CalledProcessError:
+            continue
+
     try:
-        subprocess.check_call(['conda', 'install', '-y', list(MISSING_DEPENDENCIES)])
-    except:
-        for dependency in list(MISSING_DEPENDENCIES):
+        subprocess.run(
+            f'conda install -y {" ".join(conda_packages)}',
+            check=True,
+            shell=True,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        for dependency in conda_packages:
             try:
-                subprocess.check_call(['conda', 'install', '-y', dependency])
-            except:
+                subprocess.run(
+                    f'conda install -y {dependency}',
+                    check=True,
+                    shell=True,
+                    stderr=subprocess.DEVNULL,
+                )
+            except subprocess.CalledProcessError:
                 continue
 
     MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
     if 'pipwin' not in installed_packages():
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pipwin'])
-    subprocess.check_call([sys.executable, '-m', 'pipwin', 'refresh'])
+        subprocess.run(
+            f'{sys.executable} -m pip install pipwin',
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    subprocess.run(f'{sys.executable} -m pipwin refresh',)
 
     for dependency, subdependencies in MISSING_DEPENDENCIES.items():
         failed_pipwin_packages = []
@@ -88,15 +130,19 @@ if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
                     DEPENDENCIES
                 ) or package_name in missing_packages(subdependencies):
                     try:
-                        subprocess.check_call(
-                            [sys.executable, '-m', 'pipwin', 'install', package_name.lower()]
+                        subprocess.run(
+                            f'{sys.executable} -m pipwin install {package_name.lower()}',
+                            check=True,
+                            stderr=subprocess.DEVNULL,
                         )
                         if package_name in failed_pipwin_packages:
                             failed_pipwin_packages.remove(package_name)
                     except subprocess.CalledProcessError:
                         try:
-                            subprocess.check_call(
-                                [sys.executable, '-m', 'pip', 'install', package_name.lower()]
+                            subprocess.run(
+                                f'{sys.executable} -m pip install {package_name.lower()}',
+                                check=True,
+                                stderr=subprocess.DEVNULL,
                             )
                         except subprocess.CalledProcessError:
                             failed_pipwin_packages.append(package_name)
@@ -107,19 +153,6 @@ if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
                 break
 
     MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
-
-try:
-    if 'dunamai' not in installed_packages():
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'dunamai'])
-
-    from dunamai import Version
-
-    version = Version.from_any_vcs().serialize()
-except RuntimeError as error:
-    logging.exception(error)
-    version = '0.0.0'
-
-logging.info(f'using version {version}')
 
 metadata = config.read_configuration('setup.cfg')['metadata']
 
