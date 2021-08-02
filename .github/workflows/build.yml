@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
           restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
       - name: Install dependencies
-        run: pip install --upgrade pip setuptools wheel
+        run: pip install --user --upgrade pip setuptools wheel
       - name: Build wheel
         run: python setup.py bdist_wheel
       - name: Save wheel
