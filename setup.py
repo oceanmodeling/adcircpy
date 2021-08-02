@@ -133,7 +133,7 @@ if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
                 ) or package_name in missing_packages(subdependencies):
                     try:
                         subprocess.run(
-                            f'{sys.executable} -m pipwin install {package_name.lower()}',
+                            f'{sys.executable} -m pip install {package_name.lower()}',
                             check=True,
                             shell=True,
                             stderr=subprocess.DEVNULL,
@@ -143,7 +143,7 @@ if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
                     except subprocess.CalledProcessError:
                         try:
                             subprocess.run(
-                                f'{sys.executable} -m pip install {package_name.lower()}',
+                                f'{sys.executable} -m pipwin install {package_name.lower()}',
                                 check=True,
                                 shell=True,
                                 stderr=subprocess.DEVNULL,
