@@ -76,7 +76,7 @@ if os.name == 'nt' and len(missing_dependencies) > 0:
     for dependency, subdependencies in missing_dependencies.items():
         failed_pipwin_packages = []
         for _ in range(1 + len(subdependencies)):
-            for package_name in [dependency] + subdependencies:
+            for package_name in subdependencies + [dependency]:
                 if package_name in missing_packages(DEPENDENCIES):
                     try:
                         subprocess.check_call(
