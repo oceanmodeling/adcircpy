@@ -24,15 +24,6 @@ class Fort15:
         # model options
         # ----------------
         f = []
-        try:
-            __NFOVER = self.__NFOVER
-            _NFOVER = f'{__NFOVER[0]}'
-            _NFOVER += f' {__NFOVER[1]}'
-            _NFOVER += f' {__NFOVER[2]}'
-            _NFOVER += f' {__NFOVER[3]}'
-            _NFOVER += f' {__NFOVER[4]}'
-        except:
-            _NFOVER = self.NFOVER
         f.extend(
             [
                 fort15_line(
@@ -41,7 +32,7 @@ class Fort15:
                 fort15_line(
                     self.RUNID, 'RUNID', '24 CHARACTER ALPANUMERIC RUN IDENTIFICATION'
                 ),
-                fort15_line(f'{_NFOVER}', 'NFOVER', 'NONFATAL ERROR OVERRIDE OPTION'),
+                fort15_line(f'{self.NFOVER}', 'NFOVER', 'NONFATAL ERROR OVERRIDE OPTION'),
                 fort15_line(
                     f'{self.NABOUT:d}', 'NABOUT', 'ABREVIATED OUTPUT OPTION PARAMETER'
                 ),
@@ -738,9 +729,12 @@ class Fort15:
     @property
     def NFOVER(self):
         try:
-            self.__NFOVER
+            NFOVER = self.__NFOVER
         except AttributeError:
             return 1
+        if isinstance(NFOVER, (list, tuple)):
+            return ' '.join(NFOVER)
+        return NFOVER
 
     @property
     def WarnElev(self):
@@ -1959,9 +1953,9 @@ class Fort15:
 
     @NFOVER.setter
     def NFOVER(self, NFOVER):
-        if len(NFOVER) == 1:
+        if isinstance(NFOVER, (int, float)):
             assert NFOVER in [0, 1]
-        else:
+        elif isinstance(NFOVER, (list, tuple))
             assert len(NFOVER) == 5
             assert all(v >= 0 for v in NFOVER)
         self.__NFOVER = NFOVER
