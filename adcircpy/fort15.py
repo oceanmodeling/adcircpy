@@ -1953,11 +1953,11 @@ class Fort15:
 
     @NFOVER.setter
     def NFOVER(self, NFOVER):
-        if isinstance(NFOVER, (int, float)):
+        if isinstance(NFOVER, int):
             assert NFOVER in [0, 1]
         elif isinstance(NFOVER, (list, tuple)):
             assert len(NFOVER) == 5
-            assert all(v >= 0 for v in NFOVER)
+            assert all(isinstance(v, int) and v >= 0 for v in NFOVER)
         self.__NFOVER = NFOVER
 
     @WarnElev.setter
