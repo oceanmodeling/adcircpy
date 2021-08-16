@@ -10,7 +10,7 @@ import os
 from os import PathLike
 import pathlib
 import time
-from typing import Any, Union
+from typing import Any, TextIO, Union
 import zipfile
 
 import appdirs
@@ -1049,10 +1049,14 @@ def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) 
 
 def read_atcf(track: PathLike) -> DataFrame:
     try:
-        with open(track) as track_file:
-            track = track_file.readlines()
-    except:
+        if not isinstance(track, TextIO):
+            track = open(track)
+        track = track.readlines()
+    except FileNotFoundError:
+        # check if the entire track file was passed as a string
         track = str(track).splitlines()
+        if len(track) == 1:
+            raise
 
     data = {
         'basin': [],
