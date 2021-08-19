@@ -10,7 +10,7 @@ import os
 from os import PathLike
 import pathlib
 import time
-from typing import Any, Union
+from typing import Any, TextIO, Union
 import zipfile
 
 import appdirs
@@ -101,6 +101,8 @@ class VortexForcing:
         record_type: str = None,
     ):
         self.__dataframe = None
+        self.__filename = None
+
         self.__atcf = None
         self.__storm_id = None
         self.__start_date = start_date  # initially used to filter A-deck here
@@ -135,6 +137,10 @@ class VortexForcing:
         # use start and end dates to mask dataframe here
         self.start_date = start_date
         self.end_date = end_date
+
+    @property
+    def filename(self) -> pathlib.Path:
+        return pathlib.Path(self.__filename)
 
     def __str__(self):
         record_number = self.__generate_record_numbers()
@@ -709,6 +715,9 @@ class VortexForcing:
         instance.storm_id = self.storm_id
         return instance
 
+    def __eq__(self, other: 'VortexForcing') -> bool:
+        return numpy.all(self.dataframe == other.dataframe) and self.storm_id == other.storm_id
+
     @staticmethod
     def __compute_velocity(data: DataFrame) -> DataFrame:
         """ Output has units of meters per second. """
@@ -759,7 +768,7 @@ class VortexForcing:
     def from_fort22(
         cls, fort22: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
-        return cls(
+        instance = cls(
             storm=read_atcf(fort22),
             start_date=start_date,
             end_date=end_date,
@@ -767,12 +776,18 @@ class VortexForcing:
             mode=None,
             record_type=None,
         )
+        try:
+            if pathlib.Path(fort22).exists():
+                instance.__filename = fort22
+        except:
+            pass
+        return instance
 
     @classmethod
     def from_atcf_file(
         cls, atcf: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
-        return cls(
+        instance = cls(
             storm=atcf,
             start_date=start_date,
             end_date=end_date,
@@ -780,6 +795,12 @@ class VortexForcing:
             mode=None,
             record_type=None,
         )
+        try:
+            if pathlib.Path(atcf).exists():
+                instance.__filename = atcf
+        except:
+            pass
+        return instance
 
 
 class BestTrackForcing(VortexForcing, WindForcing):
@@ -900,7 +921,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
-        return cls(
+        instance = cls(
             storm=read_atcf(fort22),
             start_date=start_date,
             end_date=end_date,
@@ -908,6 +929,12 @@ class BestTrackForcing(VortexForcing, WindForcing):
             interval_seconds=interval_seconds,
             mode=None,
         )
+        try:
+            if pathlib.Path(fort22).exists():
+                instance.__filename = fort22
+        except:
+            pass
+        return instance
 
     @classmethod
     def from_atcf_file(
@@ -918,7 +945,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
-        return cls(
+        instance = cls(
             storm=atcf,
             start_date=start_date,
             end_date=end_date,
@@ -926,6 +953,12 @@ class BestTrackForcing(VortexForcing, WindForcing):
             interval_seconds=interval_seconds,
             mode=None,
         )
+        try:
+            if pathlib.Path(atcf).exists():
+                instance.__filename = atcf
+        except:
+            pass
+        return instance
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
@@ -1049,10 +1082,14 @@ def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) 
 
 def read_atcf(track: PathLike) -> DataFrame:
     try:
-        with open(track) as track_file:
-            track = track_file.readlines()
-    except:
+        if not isinstance(track, TextIO):
+            track = open(track)
+        track = track.readlines()
+    except FileNotFoundError:
+        # check if the entire track file was passed as a string
         track = str(track).splitlines()
+        if len(track) == 1:
+            raise
 
     data = {
         'basin': [],

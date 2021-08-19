@@ -1,4 +1,6 @@
 # ! /usr/bin/env python
+from copy import copy
+
 from dateutil.parser import parse as parse_date
 import pytest
 import pytest_socket
@@ -121,7 +123,16 @@ def test_no_internet():
     with pytest.raises(pytest_socket.SocketBlockedError):
         VortexForcing(storm='al062018', start_date='20180911', end_date=None)
 
-    vortex = VortexForcing.from_fort22(input_directory / 'fort.22')
-    vortex.write(output_directory / 'fort.22', overwrite=True)
+    vortex_1 = VortexForcing.from_fort22(input_directory / 'fort.22')
+    vortex_1.write(output_directory / 'vortex_1.22', overwrite=True)
+
+    vortex_2 = VortexForcing.from_fort22(vortex_1.filename)
+    vortex_2.write(output_directory / 'vortex_2.22', overwrite=True)
+
+    vortex_3 = copy(vortex_1)
+    vortex_3.write(output_directory / 'vortex_3.22', overwrite=True)
+
+    assert vortex_1 == vortex_2
+    assert vortex_1 == vortex_3
 
     check_reference_directory(output_directory, reference_directory)
