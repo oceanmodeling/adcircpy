@@ -411,12 +411,13 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15):
+    def import_stations(self, fort15: os.PathLike):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
-        for station_type in station_types:
-            stations = Fort15.parse_stations(fort15, station_type)
-            for name, vertices in stations.items():
-                if not Point(vertices).within(self.mesh.hull.multipolygon()):
+        envelope = self.mesh.hull.multipolygon()
+        stations = Fort15.parse_stations(fort15, station_types)
+        for station_type, station_vertices in stations.items():
+            for name, vertices in station_vertices.items():
+                if not Point(vertices).within(envelope):
                     continue
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
