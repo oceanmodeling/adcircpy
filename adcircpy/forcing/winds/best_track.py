@@ -99,6 +99,7 @@ class VortexForcing:
         file_deck: FileDeck = None,
         mode: Mode = None,
         record_type: str = None,
+        filename: PathLike = None,
     ):
         self.__dataframe = None
         self.__filename = None
@@ -117,6 +118,7 @@ class VortexForcing:
         self.file_deck = file_deck
         self.mode = mode
         self.record_type = record_type
+        self.filename = filename
 
         if isinstance(storm, DataFrame):
             self.dataframe = storm
@@ -132,6 +134,7 @@ class VortexForcing:
             'storm_id': self.storm_id,
             'file_deck': self.file_deck,
             'mode': self.mode,
+            'filename': self.filename,
         }
 
         # use start and end dates to mask dataframe here
@@ -140,7 +143,13 @@ class VortexForcing:
 
     @property
     def filename(self) -> pathlib.Path:
-        return pathlib.Path(self.__filename)
+        return self.__filename
+
+    @filename.setter
+    def filename(self, filename: PathLike):
+        if filename is not None and not isinstance(filename, pathlib.Path):
+            filename = pathlib.Path(filename)
+        self.__filename = filename
 
     def __str__(self):
         record_number = self.__generate_record_numbers()
@@ -433,6 +442,7 @@ class VortexForcing:
             'storm_id': self.storm_id,
             'file_deck': self.file_deck,
             'mode': self.mode,
+            'filename': self.filename,
         }
 
         if (
@@ -450,6 +460,7 @@ class VortexForcing:
             'storm_id': self.storm_id,
             'file_deck': self.file_deck,
             'mode': self.mode,
+            'filename': self.filename,
         }
 
         # only download new file if the configuration has changed since the last download
@@ -458,153 +469,162 @@ class VortexForcing:
             or len(self.__dataframe) == 0
             or configuration != self.__previous_configuration
         ):
-            # https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt
+            if configuration['filename'] is not None:
+                dataframe = read_atcf(configuration['filename'])
+            else:
+                # https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt
 
-            columns = [
-                'basin',
-                'storm_number',
-                'datetime',
-                'record_type',
-                'latitude',
-                'longitude',
-                'max_sustained_wind_speed',
-                'central_pressure',
-                'development_level',
-                'isotach',
-                'quadrant',
-                'radius_for_NEQ',
-                'radius_for_SEQ',
-                'radius_for_SWQ',
-                'radius_for_NWQ',
-                'background_pressure',
-                'radius_of_last_closed_isobar',
-                'radius_of_maximum_winds',
-                'name',
-                'direction',
-                'speed',
-            ]
+                columns = [
+                    'basin',
+                    'storm_number',
+                    'datetime',
+                    'record_type',
+                    'latitude',
+                    'longitude',
+                    'max_sustained_wind_speed',
+                    'central_pressure',
+                    'development_level',
+                    'isotach',
+                    'quadrant',
+                    'radius_for_NEQ',
+                    'radius_for_SEQ',
+                    'radius_for_SWQ',
+                    'radius_for_NWQ',
+                    'background_pressure',
+                    'radius_of_last_closed_isobar',
+                    'radius_of_maximum_winds',
+                    'name',
+                    'direction',
+                    'speed',
+                ]
 
-            atcf = self.atcf
-            if isinstance(atcf, io.BytesIO):
-                # test if Gzip file
-                atcf.seek(0)  # rewind
-                if atcf.read(2) == b'\x1f\x8b':
+                atcf = self.atcf
+                if isinstance(atcf, io.BytesIO):
+                    # test if Gzip file
                     atcf.seek(0)  # rewind
-                    atcf = gzip.GzipFile(fileobj=atcf)
-                else:
-                    atcf.seek(0)  # rewind
-
-            start_date = self.start_date
-            # Only accept request record type or
-            # BEST track or OFCL (official) advisory by default
-            allowed_record_types = self.record_type
-            if allowed_record_types is None:
-                allowed_record_types = ['BEST', 'OFCL']
-            records = []
-
-            for line_index, line in enumerate(atcf):
-                line = line.decode('UTF-8').split(',')
-
-                record = {
-                    'basin': line[0],
-                    'storm_number': line[1].strip(' '),
-                }
-
-                record['record_type'] = line[4].strip(' ')
-
-                if record['record_type'] not in allowed_record_types:
-                    continue
-
-                # computing the actual datetime based on record_type
-                if record['record_type'] == 'BEST':
-                    # Add minutes line to base datetime
-                    minutes = line[3].strip(' ')
-                    if minutes == "":
-                        minutes = '00'
-                    record['datetime'] = parse_date(line[2].strip(' ') + minutes)
-                else:
-                    # Add validation time to base datetime
-                    minutes = '00'
-                    record['datetime'] = parse_date(line[2].strip(' ') + minutes)
-                    if start_date is not None:
-                        # Only keep records where base date == start time for advisories
-                        if start_date != record['datetime']:
-                            continue
-                    validation_time = int(line[5].strip(' '))
-                    record['datetime'] = record['datetime'] + timedelta(hours=validation_time)
-
-                latitude = line[6]
-                if 'N' in latitude:
-                    latitude = float(latitude.strip('N '))
-                elif 'S' in latitude:
-                    latitude = float(latitude.strip('S ')) * -1
-                latitude *= 0.1
-                record['latitude'] = latitude
-
-                longitude = line[7]
-                if 'E' in longitude:
-                    longitude = float(longitude.strip('E ')) * 0.1
-                elif 'W' in longitude:
-                    longitude = float(longitude.strip('W ')) * -0.1
-                record['longitude'] = longitude
-
-                record.update(
-                    {
-                        'max_sustained_wind_speed': float(line[8].strip(' ')),
-                        'central_pressure': float(line[9].strip(' ')),
-                        'development_level': line[10].strip(' '),
-                    }
-                )
-
-                try:
-                    record['isotach'] = int(line[11].strip(' '))
-                except ValueError:
-                    raise Exception(
-                        'Error: No radial wind information for this storm; '
-                        'parametric wind model cannot be built.'
-                    )
-
-                record.update(
-                    {
-                        'quadrant': line[12].strip(' '),
-                        'radius_for_NEQ': int(line[13].strip(' ')),
-                        'radius_for_SEQ': int(line[14].strip(' ')),
-                        'radius_for_SWQ': int(line[15].strip(' ')),
-                        'radius_for_NWQ': int(line[16].strip(' ')),
-                    }
-                )
-
-                if len(line) > 18:
-                    record.update(
-                        {
-                            'background_pressure': int(line[17].strip(' ')),
-                            'radius_of_last_closed_isobar': int(line[18].strip(' ')),
-                            'radius_of_maximum_winds': int(line[19].strip(' ')),
-                        }
-                    )
-
-                    if len(line) > 23:
-                        record['name'] = line[27].strip(' ')
+                    if atcf.read(2) == b'\x1f\x8b':
+                        atcf.seek(0)  # rewind
+                        atcf = gzip.GzipFile(fileobj=atcf)
                     else:
-                        record['name'] = ''
-                else:
+                        atcf.seek(0)  # rewind
+
+                start_date = self.start_date
+                # Only accept request record type or
+                # BEST track or OFCL (official) advisory by default
+                allowed_record_types = self.record_type
+                if allowed_record_types is None:
+                    allowed_record_types = ['BEST', 'OFCL']
+                records = []
+
+                for line_index, line in enumerate(atcf):
+                    line = line.decode('UTF-8').split(',')
+
+                    record = {
+                        'basin': line[0],
+                        'storm_number': line[1].strip(' '),
+                    }
+
+                    record['record_type'] = line[4].strip(' ')
+
+                    if record['record_type'] not in allowed_record_types:
+                        continue
+
+                    # computing the actual datetime based on record_type
+                    if record['record_type'] == 'BEST':
+                        # Add minutes line to base datetime
+                        minutes = line[3].strip(' ')
+                        if minutes == "":
+                            minutes = '00'
+                        record['datetime'] = parse_date(line[2].strip(' ') + minutes)
+                    else:
+                        # Add validation time to base datetime
+                        minutes = '00'
+                        record['datetime'] = parse_date(line[2].strip(' ') + minutes)
+                        if start_date is not None:
+                            # Only keep records where base date == start time for advisories
+                            if start_date != record['datetime']:
+                                continue
+                        validation_time = int(line[5].strip(' '))
+                        record['datetime'] = record['datetime'] + timedelta(
+                            hours=validation_time
+                        )
+
+                    latitude = line[6]
+                    if 'N' in latitude:
+                        latitude = float(latitude.strip('N '))
+                    elif 'S' in latitude:
+                        latitude = float(latitude.strip('S ')) * -1
+                    latitude *= 0.1
+                    record['latitude'] = latitude
+
+                    longitude = line[7]
+                    if 'E' in longitude:
+                        longitude = float(longitude.strip('E ')) * 0.1
+                    elif 'W' in longitude:
+                        longitude = float(longitude.strip('W ')) * -0.1
+                    record['longitude'] = longitude
+
                     record.update(
                         {
-                            'background_pressure': records[-1]['background_pressure'],
-                            'radius_of_last_closed_isobar': records[-1][
-                                'radius_of_last_closed_isobar'
-                            ],
-                            'radius_of_maximum_winds': records[-1]['radius_of_maximum_winds'],
-                            'name': records[-1]['name'],
+                            'max_sustained_wind_speed': float(line[8].strip(' ')),
+                            'central_pressure': float(line[9].strip(' ')),
+                            'development_level': line[10].strip(' '),
                         }
                     )
 
-                records.append(record)
+                    try:
+                        record['isotach'] = int(line[11].strip(' '))
+                    except ValueError:
+                        raise Exception(
+                            'Error: No radial wind information for this storm; '
+                            'parametric wind model cannot be built.'
+                        )
 
-            if len(records) == 0:
-                raise ValueError(f'no records found with type(s) "{allowed_record_types}"')
+                    record.update(
+                        {
+                            'quadrant': line[12].strip(' '),
+                            'radius_for_NEQ': int(line[13].strip(' ')),
+                            'radius_for_SEQ': int(line[14].strip(' ')),
+                            'radius_for_SWQ': int(line[15].strip(' ')),
+                            'radius_for_NWQ': int(line[16].strip(' ')),
+                        }
+                    )
 
-            self.__dataframe = DataFrame.from_records(data=records, columns=columns)
+                    if len(line) > 18:
+                        record.update(
+                            {
+                                'background_pressure': int(line[17].strip(' ')),
+                                'radius_of_last_closed_isobar': int(line[18].strip(' ')),
+                                'radius_of_maximum_winds': int(line[19].strip(' ')),
+                            }
+                        )
+
+                        if len(line) > 23:
+                            record['name'] = line[27].strip(' ')
+                        else:
+                            record['name'] = ''
+                    else:
+                        record.update(
+                            {
+                                'background_pressure': records[-1]['background_pressure'],
+                                'radius_of_last_closed_isobar': records[-1][
+                                    'radius_of_last_closed_isobar'
+                                ],
+                                'radius_of_maximum_winds': records[-1][
+                                    'radius_of_maximum_winds'
+                                ],
+                                'name': records[-1]['name'],
+                            }
+                        )
+
+                    records.append(record)
+
+                if len(records) == 0:
+                    raise ValueError(f'no records found with type(s) "{allowed_record_types}"')
+
+                dataframe = DataFrame.from_records(data=records, columns=columns)
+
+            self.__dataframe = dataframe
             self.__previous_configuration = configuration
 
         # if location values have changed, recompute velocity
@@ -768,39 +788,41 @@ class VortexForcing:
     def from_fort22(
         cls, fort22: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
-        instance = cls(
+        filename = None
+        try:
+            if pathlib.Path(fort22).exists():
+                filename = fort22
+        except:
+            pass
+        return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
             end_date=end_date,
             file_deck=None,
             mode=None,
             record_type=None,
+            filename=filename,
         )
-        try:
-            if pathlib.Path(fort22).exists():
-                instance.__filename = fort22
-        except:
-            pass
-        return instance
 
     @classmethod
     def from_atcf_file(
         cls, atcf: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
-        instance = cls(
+        filename = None
+        try:
+            if pathlib.Path(atcf).exists():
+                filename = atcf
+        except:
+            pass
+        return cls(
             storm=atcf,
             start_date=start_date,
             end_date=end_date,
             file_deck=None,
             mode=None,
             record_type=None,
+            filename=filename,
         )
-        try:
-            if pathlib.Path(atcf).exists():
-                instance.__filename = atcf
-        except:
-            pass
-        return instance
 
 
 class BestTrackForcing(VortexForcing, WindForcing):
@@ -812,6 +834,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
         mode: Mode = None,
+        filename: PathLike = None,
     ) -> 'BestTrackForcing':
         if nws is None:
             nws = 20
@@ -832,6 +855,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
             file_deck=FileDeck.b,
             mode=mode,
             record_type='BEST',
+            filename=filename,
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
@@ -921,20 +945,21 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
-        instance = cls(
+        filename = None
+        try:
+            if pathlib.Path(fort22).exists():
+                filename = fort22
+        except:
+            pass
+        return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
             end_date=end_date,
             nws=nws,
             interval_seconds=interval_seconds,
             mode=None,
+            filename=filename,
         )
-        try:
-            if pathlib.Path(fort22).exists():
-                instance.__filename = fort22
-        except:
-            pass
-        return instance
 
     @classmethod
     def from_atcf_file(
@@ -945,20 +970,21 @@ class BestTrackForcing(VortexForcing, WindForcing):
         start_date: datetime = None,
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
-        instance = cls(
+        filename = None
+        try:
+            if pathlib.Path(atcf).exists():
+                filename = atcf
+        except:
+            pass
+        return cls(
             storm=atcf,
             start_date=start_date,
             end_date=end_date,
             nws=nws,
             interval_seconds=interval_seconds,
             mode=None,
+            filename=filename,
         )
-        try:
-            if pathlib.Path(atcf).exists():
-                instance.__filename = atcf
-        except:
-            pass
-        return instance
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
