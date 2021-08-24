@@ -1930,10 +1930,6 @@ class Fort15:
     def TOUTSGE(self, TOUTSGE: float):
         self.__TOUTSGE = float(np.abs(TOUTSGE))
 
-    @TOUTFGE.setter
-    def TOUTFGE(self, TOUTFGE: float):
-        self.__TOUTFGE = float(np.abs(TOUTFGE))
-
     @property
     def TOUTFGE(self) -> float:
         try:
@@ -1943,6 +1939,10 @@ class Fort15:
                 self._get_TOUTS__('surface', 'elevation'),
                 self._get_TOUTF__('surface', 'elevation'),
             )
+
+    @TOUTFGE.setter
+    def TOUTFGE(self, TOUTFGE: float):
+        self.__TOUTFGE = float(np.abs(TOUTFGE))
 
     @property
     def NSPOOLGE(self) -> int:
