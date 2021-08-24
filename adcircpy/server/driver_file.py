@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 from textwrap import indent
 
@@ -30,7 +31,7 @@ class DriverFile:
 
         f += '\n'
 
-        if self._driver.spinup_time.total_seconds() == 0:
+        if self._driver.spinup_time == timedelta(seconds=0):
             f += self._single_phase_run + '\n'
         else:
             f += self._dual_phase_run + '\n'

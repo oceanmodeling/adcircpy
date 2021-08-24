@@ -570,7 +570,7 @@ class Tides(bctypes.EtaBc):
     @property
     def hour_middle(self):
         return self.forcing_start_date.hour + (
-            (self.end_date - self.forcing_start_date).total_seconds() / 3600 / 2
+            (self.end_date - self.forcing_start_date) / timedelta(hours=1) / 2
         )
 
     @property

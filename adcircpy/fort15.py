@@ -1041,7 +1041,7 @@ class Fort15:
 
     @property
     def NRAMP(self):
-        if self.spinup_time.total_seconds() == 0:
+        if self.spinup_time == timedelta(seconds=0):
             return 1
         if self._runtype == 'coldstart':
             return 1
@@ -1139,7 +1139,7 @@ class Fort15:
                 return self.horizontal_mixing_coefficient
 
     @property
-    def STATIM(self):
+    def STATIM(self) -> float:
         try:
             return self.__STATIM
         except AttributeError:
@@ -1149,9 +1149,8 @@ class Fort15:
                 # Looks like this has always to be zero!
                 # the following makes adcirc crash with not enough time
                 # in meteorological inputs.
-                # return (
-                #     (self.start_date - self.forcing_start_date).total_seconds()
-                #     / (60.*60.*24))
+                # return (self.start_date - self.forcing_start_date) / timedelta(
+                #     days=1)
                 return 0
 
     @property
@@ -1162,7 +1161,7 @@ class Fort15:
             return 0.0
 
     @property
-    def WTIMINC(self):
+    def WTIMINC(self) -> int:
         if self.NWS in [8, 19, 20]:
             return self.wind_forcing.WTIMINC
         elif self.NWS not in [0, 1, 9, 11]:
@@ -1171,7 +1170,7 @@ class Fort15:
             return 0
 
     @property
-    def RSTIMINC(self):
+    def RSTIMINC(self) -> int:
         if self.NRS in [1, 3, 4, 5]:
             if self.wave_forcing is not None:
                 return int(self.wave_forcing.interval / timedelta(seconds=1))
@@ -1181,32 +1180,28 @@ class Fort15:
             return 0
 
     @property
-    def RNDAY(self):
+    def RNDAY(self) -> int:
         if self._runtype == 'coldstart':
-            if self.spinup_time.total_seconds() > 0.0:
+            if self.spinup_time > timedelta(seconds=0):
                 RNDAY = self.start_date - self.forcing_start_date
             else:
                 RNDAY = self.end_date - self.start_date
-            return RNDAY.total_seconds() / (60.0 * 60.0 * 24.0)
         else:
             RNDAY = self.end_date - self.forcing_start_date
-            return RNDAY.total_seconds() / (60.0 * 60.0 * 24.0)
+        return RNDAY / timedelta(days=1)
 
     @property
-    def DRAMP(self):
+    def DRAMP(self) -> str:
         try:
             DRAMP = '{:<.16G}'.format(self.__DRAMP)
             DRAMP += 10 * ' '
-            return DRAMP
         except AttributeError:
             DRAMP = self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date) / timedelta(days=1)
             )
             if self.NRAMP in [0, 1]:
                 DRAMP = '{:<.16G}'.format(DRAMP)
                 DRAMP += 10 * ' '
-                return DRAMP
             else:
                 DRAMP = '{:<.3f} '.format(DRAMP)
                 DRAMP += '{:<.3f} '.format(self.DRAMPExtFlux)
@@ -1217,7 +1212,7 @@ class Fort15:
                 DRAMP += '{:<.3f} '.format(self.DRAMPMete)
                 DRAMP += '{:<.3f} '.format(self.DRAMPWRad)
                 DRAMP += '{:<.3f} '.format(self.DUnRampMete)
-                return DRAMP
+        return DRAMP
 
     @property
     def DRAMPExtFlux(self):
@@ -1241,23 +1236,21 @@ class Fort15:
             return 0.0
 
     @property
-    def DRAMPElev(self):
+    def DRAMPElev(self) -> float:
         try:
             return self.__DRAMPElev
         except AttributeError:
             return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date) / timedelta(days=1)
             )
 
     @property
-    def DRAMPTip(self):
+    def DRAMPTip(self) -> float:
         try:
             return self.__DRAMPTip
         except AttributeError:
             return self.spinup_factor * (
-                (self.start_date - self.forcing_start_date).total_seconds()
-                / (60.0 * 60.0 * 24.0)
+                (self.start_date - self.forcing_start_date) / timedelta(days=1)
             )
 
     @property
@@ -1275,12 +1268,12 @@ class Fort15:
             return 0.0
 
     @property
-    def DUnRampMete(self):
+    def DUnRampMete(self) -> float:
         try:
             return self.__DUnRampMete
         except AttributeError:
             dt = self.start_date - self.forcing_start_date
-            return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
+            return (timedelta(days=self.STATIM) + dt) / timedelta(days=1)
 
     @property
     def A00(self):
@@ -1730,7 +1723,7 @@ class Fort15:
         return 0
 
     @property
-    def THAS(self):
+    def THAS(self) -> float:
         try:
             return self.__THAS
         except AttributeError:
@@ -1740,7 +1733,7 @@ class Fort15:
                         return self.STATIM + float(self.DRAMP)
                     else:
                         dt = self.start_date - self.forcing_start_date
-                        return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
+                        return (timedelta(days=self.STATIM) + dt) / timedelta(days=1)
                 except TypeError:
                     #  if self.DRAMP is not castable to float()
                     raise
@@ -1748,7 +1741,7 @@ class Fort15:
                 return 0
 
     @property
-    def THAF(self):
+    def THAF(self) -> float:
         try:
             return self.__THAF
         except AttributeError:
@@ -1756,17 +1749,15 @@ class Fort15:
                 return 0
             dt = self.start_date - self.forcing_start_date
             if self._runtype == 'coldstart':
-                if dt.total_seconds() == 0:
+                if dt == timedelta(seconds=0):
                     dt = self.end_date - self.start_date
-                    return dt.total_seconds() / (24.0 * 60.0 * 60.0)
-                else:
-                    return dt.days
+                return dt / timedelta(days=1)
             else:
                 dt = self.start_date - self.forcing_start_date
-                return (self.STATIM + dt.total_seconds()) / (24.0 * 60.0 * 60.0)
+                return (timedelta(days=self.STATIM) + dt) / timedelta(days=1)
 
     @property
-    def NHAINC(self):
+    def NHAINC(self) -> float:
         try:
             return self.__NHAINC
         except AttributeError:
@@ -1776,10 +1767,10 @@ class Fort15:
                     if self._runtype == 'coldstart':
                         if _output['spinup']:
                             fs = _output['sampling_rate']
-                            NHAINC = np.min([NHAINC, fs.total_seconds()])
+                            NHAINC = np.min([NHAINC, fs / timedelta(seconds=1)])
                     else:  # consider a "metonly" run?
                         fs = _output['sampling_rate']
-                        NHAINC = np.min([NHAINC, fs.total_seconds()])
+                        NHAINC = np.min([NHAINC, fs / timedelta(seconds=1)])
             if NHAINC == float('inf'):
                 NHAINC = 0
             return int(NHAINC / self.DTDP)
@@ -1835,7 +1826,7 @@ class Fort15:
                 return 0
 
     @property
-    def NHSINC(self):
+    def NHSINC(self) -> int:
         try:
             return self.__NHSINC
         except AttributeError:
@@ -1843,11 +1834,9 @@ class Fort15:
                 return 0
             else:
                 dt = self.start_date - self.forcing_start_date
-                if dt.total_seconds() == 0:
+                if dt == timedelta(seconds=0):
                     dt = self.end_date - self.forcing_start_date
-                    return int(dt.total_seconds() / np.around(self.DTDP, 6))
-                else:
-                    return int(dt.total_seconds() / np.around(self.DTDP, 6))
+                return int(dt / timedelta(seconds=1) / np.around(self.DTDP, 6))
 
     @property
     def ITITER(self):
@@ -2467,7 +2456,7 @@ class Fort15:
             else:
                 return 0
 
-    def _get_TOUTS__(self, output_type, physical_var):
+    def _get_TOUTS__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         if self._runtype == 'coldstart':
             # coldstart
@@ -2537,18 +2526,22 @@ class Fort15:
 
         return time / timedelta(days=1)
 
-    def _get_NSPOOL__(self, output_type, physical_var):
+    def _get_NSPOOL__(self, output_type, physical_var) -> int:
         output = self._container[output_type][physical_var]
         if self._runtype == 'coldstart':
             if output['spinup']:
-                return int(round(output['spinup'].total_seconds() / self.DTDP))
+                return int(round(output['spinup'] / timedelta(seconds=1) / self.DTDP))
             else:
                 return 0
         else:
             if output['sampling_rate'] is not None:
-                if output_type == 'surface' and output['sampling_rate'].total_seconds() == 0:
-                    return int((self.end_date - self.start_date).total_seconds() / self.DTDP)
-                return int(round((output['sampling_rate'].total_seconds() / self.DTDP)))
+                if output_type == 'surface' and output['sampling_rate'] == timedelta(
+                    seconds=0
+                ):
+                    return int(
+                        (self.end_date - self.start_date) / timedelta(seconds=1) / self.DTDP
+                    )
+                return int(round((output['sampling_rate'] / timedelta(seconds=1) / self.DTDP)))
             else:
                 return 0
 

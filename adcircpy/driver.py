@@ -381,7 +381,7 @@ class AdcircRun(Fort15):
         # For this reason, no spiunp time given means a single phase run
         # which at the current stage implies tides only.
         # In this case we set IHOT=0 but call the hotstart writer.
-        if self.spinup_time.total_seconds() == 0:
+        if self.spinup_time == timedelta(seconds=0):
             # easiest way is to override IHOT to 0
             # IHOT depends on _runtype which is not set on this case.
             self._IHOT = 0
@@ -642,7 +642,7 @@ class AdcircRun(Fort15):
 
     def _run_local(self, nproc, outdir, overwrite, coldstart, hotstart):
         self.write(outdir, overwrite, driver=None)
-        if self.spinup_time.total_seconds() != 0:
+        if self.spinup_time > timedelta(seconds=0):
             if coldstart:
                 self._run_coldstart(nproc, outdir)
             if hotstart:
