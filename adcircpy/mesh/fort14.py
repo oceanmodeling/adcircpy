@@ -86,8 +86,8 @@ class BarrierBaseBoundaries(BaseBoundaries):
                     {
                         'geometry': MultiLineString(
                             [
-                                LineString(self._mesh.coords[front_face, :]),
-                                LineString(self._mesh.coords[back_face, :]),
+                                LineString(self._mesh.coords.iloc[front_face, :].values),
+                                LineString(self._mesh.coords.iloc[back_face, :].values),
                             ]
                         ),
                         'key': f'{boundary.get("ibtype")}:{id}',
