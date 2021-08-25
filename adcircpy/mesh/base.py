@@ -408,12 +408,16 @@ class Grd(ABC):
     def invert_sign(self):
         self.nodes.values[:] = -self.nodes.values
 
-    def transform_to(self, dst_crs):
+    def transform_to(self, dst_crs: CRS):
         """Transforms coordinate system of mesh in-place."""
-        self.nodes.transform_to(dst_crs)
 
-    def vertices_around_vertex(self, index):
-        return self.nodes.vertices_around_vertex(index)
+        dst_crs = CRS.from_user_input(dst_crs)
+        if not self.crs.equals(dst_crs):
+            self._coords = self.get_xy(dst_crs)
+            self._crs = dst_crs
+
+        if hasattr(self, '_gdf'):
+            del self._gdf
 
     def copy(self):
         return self.__class__(**self.to_dict())

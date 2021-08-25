@@ -162,7 +162,7 @@ class NodalAttributes:
 
     def import_fort13(self, fort13):
         fort13 = parse_fort13(fort13)
-        if fort13.pop('NumOfNodes') != len(self._fort14.nodes.id):
+        if fort13.pop('NumOfNodes') != len(self._fort14.nodes.index):
             raise Exception('fort.13 file does not match the mesh.')
         self._AGRID = fort13.pop('AGRID')
         for attribute, data in fort13.items():

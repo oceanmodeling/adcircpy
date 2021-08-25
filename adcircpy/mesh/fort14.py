@@ -77,21 +77,6 @@ class InflowBoundaries(BaseBoundaries):
 
 class BarrierBaseBoundaries(BaseBoundaries):
     @property
-    def indexes(self):
-        if not hasattr(self, '_indexes'):
-            self._indexes = list()
-            for data in self._data.values():
-                self._indexes.append(
-                    np.array(
-                        [
-                            list(map(self._mesh.nodes.get_index_by_id, geom))
-                            for geom in data['node_id']
-                        ]
-                    )
-                )
-        return self._indexes
-
-    @property
     def gdf(self):
         if not hasattr(self, '_gdf'):
             data = []
