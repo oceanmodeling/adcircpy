@@ -1,5 +1,4 @@
 from io import StringIO
-import numbers
 import os
 import pathlib
 from typing import Iterable, Union
@@ -161,20 +160,26 @@ def to_string(description, nodes, elements, boundaries=None, crs=None):
     """
     NE, NP = len(elements), len(nodes)
     out = [f'{description}', f'{NE} {NP}']
-    # TODO: Probably faster if using np.array2string
-    for id, (coords, values) in nodes.items():
-        if isinstance(values, numbers.Number):
-            values = [values]
-        line = [f'{id}']
-        line.extend([f'{x:<.16E}' for x in coords])
-        line.extend([f'{x:<.16E}' for x in values])
-        out.append(' '.join(line))
 
-    for id, element in elements.items():
-        line = [f'{id}']
-        line.append(f'{len(element)}')
-        line.extend([f'{e}' for e in element])
-        out.append(' '.join(line))
+    # TODO: Probably faster if using np.array2string
+    def float_format(value: float):
+        return f'{value:<.16E}'
+
+    out.append(
+        nodes.to_string(
+            None, header=False, index_names=False, justify='left', float_format=float_format
+        )
+    )
+    out.append(
+        elements.to_string(
+            None,
+            header=False,
+            index_names=False,
+            justify='left',
+            float_format=float_format,
+            na_rep='',
+        )
+    )
 
     # ocean boundaries
     if boundaries is not None:
@@ -182,13 +187,13 @@ def to_string(description, nodes, elements, boundaries=None, crs=None):
         out.append(f'{len(ocean_boundaries):d} ' '! total number of ocean boundaries')
         # count total number of ocean boundaries
         _sum = 0
-        for bnd in ocean_boundaries.values():
+        for bnd in ocean_boundaries:
             _sum += len(bnd['node_id'])
         out.append(f'{int(_sum):d} ! total number of ocean boundary nodes')
         # write ocean boundary indexes
-        for i, boundary in ocean_boundaries.items():
+        for i, boundary in enumerate(ocean_boundaries):
             out.append(
-                f"{len(boundary['node_id']):d}" f' ! number of nodes for ocean_boundary_{i}'
+                f'{len(boundary["node_id"]):d} ! number of nodes for ocean_boundary_{i + 1}'
             )
             for idx in boundary['node_id']:
                 out.append(f'{idx}')
@@ -207,18 +212,18 @@ def to_string(description, nodes, elements, boundaries=None, crs=None):
     _cnt = 0
     for ibtype in boundaries:
         if ibtype is not None:
-            for bnd in boundaries[ibtype].values():
+            for bnd in boundaries[ibtype]:
                 _cnt += np.asarray(bnd['node_id']).shape[0]
     out.append(f'{_cnt:d} ! Total number of non-ocean boundary nodes')
     # all additional boundaries
-    for ibtype, boundaries in boundaries.items():
+    for ibtype, type_boundaries in boundaries.items():
         if ibtype is None:
             continue
-        for id, boundary in boundaries.items():
+        for index, boundary in enumerate(type_boundaries):
             line = [
                 f"{len(boundary['node_id']):d}",
                 f'{ibtype}',
-                f'! boundary {ibtype}:{id}',
+                f'! boundary {ibtype}:{index + 1}',
             ]
             out.append(' '.join(line))
             for i, node_id in enumerate(boundary['node_id']):

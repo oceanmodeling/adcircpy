@@ -5,7 +5,7 @@ from itertools import permutations
 import logging
 import os
 import pathlib
-from typing import Hashable, Union
+from typing import Hashable, Mapping, Union
 
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
@@ -13,6 +13,7 @@ from matplotlib.path import Path
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
+import numpy
 import numpy as np
 import pandas
 from pandas import DataFrame
@@ -136,7 +137,7 @@ class Elements:
     def triangles(self):
         if not hasattr(self, '_triangles'):
             num_nodes = 3
-            self._triangles = self.elements.loc[self.elements.loc[:, 'n'] == num_nodes].iloc[
+            self._triangles = self.elements.loc[self.elements.iloc[:, 0] == num_nodes].iloc[
                 :, 1 : num_nodes + 1
             ]
         return self._triangles
@@ -149,7 +150,7 @@ class Elements:
     def quads(self):
         if not hasattr(self, '_quads'):
             num_nodes = 4
-            self._quads = self.elements.loc[self.elements.loc[:, 'n'] == num_nodes].iloc[
+            self._quads = self.elements.loc[self.elements.iloc[:, 0] == num_nodes].iloc[
                 :, 1 : num_nodes + 1
             ]
         return self._quads
@@ -157,12 +158,18 @@ class Elements:
     @property
     def triangulation(self):
         if not hasattr(self, '_triangulation'):
-            triangles = self.triangles.tolist()
-            for quad in self.quads:
-                triangles.append([quad[0], quad[1], quad[3]])
-                triangles.append([quad[1], quad[2], quad[3]])
+            triangles = self.triangles.values
+            quads = []
+            for quad in self.quads.values:
+                quads.append([quad[0], quad[1], quad[3]])
+                quads.append([quad[1], quad[2], quad[3]])
+            if len(quads) > 0:
+                triangles = numpy.concatenate([triangles, numpy.array(quads)])
+            triangles -= 1
             self._triangulation = Triangulation(
-                self.nodes.iloc[:, 0], self.nodes.iloc[:, 1], triangles
+                x=self.nodes.iloc[:, 0].values,
+                y=self.nodes.iloc[:, 1].values,
+                triangles=triangles,
             )
         return self._triangulation
 
@@ -218,12 +225,11 @@ class Rings:
     def __call__(self) -> gpd.GeoDataFrame:
         data = []
         for bnd_id, rings in self.sorted().items():
-            coords = self._grd.nodes.coord[rings['exterior'][:, 0], :]
-            geometry = LinearRing(coords)
+            geometry = LinearRing(
+                self._grd.coords.iloc[rings['exterior'][:, 0], :].values)
             data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'exterior'})
             for interior in rings['interiors']:
-                coords = self._grd.nodes.coord[interior[:, 0], :]
-                geometry = LinearRing(coords)
+                geometry = LinearRing(self._grd.coords.iloc[interior[:, 0], :].values)
                 data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'interior'})
         return gpd.GeoDataFrame(data, crs=self._grd.crs)
 
@@ -307,7 +313,18 @@ class Hull:
 
 
 class Grd(ABC):
-    def __init__(self, nodes, elements=None, description=None, crs=None):
+    def __init__(
+        self,
+        nodes: DataFrame,
+        elements: DataFrame = None,
+        description: str = None,
+        crs: CRS = None,
+    ):
+        if isinstance(nodes, Mapping):
+            nodes = DataFrame.from_dict(nodes, orient='index')
+        if isinstance(elements, Mapping):
+            elements = DataFrame.from_dict(elements, orient='index')
+
         if crs is not None and not isinstance(crs, CRS):
             crs = CRS.from_user_input(crs)
 
@@ -350,20 +367,30 @@ class Grd(ABC):
             nodes = self.nodes.copy()
             nodes[pandas.isna(nodes)] = -99999
             sms2dm.write(
-                {'ND': nodes, 'E3T': self.triangles, 'E4Q': self.quads,}, path, overwrite
+                {'ND': nodes, 'E3T': self.triangles, 'E4Q': self.quads}, path, overwrite
             )
         else:
             raise ValueError(f'Unknown format {format} for hgrid output.')
 
     def get_xy(self, crs: Union[CRS, str] = None):
-        return self.nodes.get_xy(crs)
+        projected_coordinates = self.coords
+        if crs is not None:
+            crs = CRS.from_user_input(crs)
+            if not crs.equals(self.crs):
+                transformer = Transformer.from_crs(self.crs, crs, always_xy=True)
+                x, y = transformer.transform(
+                    projected_coordinates.iloc[:, 0].values,
+                    projected_coordinates.iloc[:, 1].values,
+                )
+                projected_coordinates = np.vstack([x, y]).T
+        return projected_coordinates
 
     def get_bbox(
         self, crs: Union[str, CRS] = None, output_type: str = None
     ) -> Union[Polygon, Bbox]:
         output_type = 'polygon' if output_type is None else output_type
-        xmin, xmax = np.min(self.coord[:, 0]), np.max(self.coord[:, 0])
-        ymin, ymax = np.min(self.coord[:, 1]), np.max(self.coord[:, 1])
+        xmin, xmax = np.min(self.coords.iloc[:, 0]), np.max(self.coords.iloc[:, 0])
+        ymin, ymax = np.min(self.coords.iloc[:, 1]), np.max(self.coords.iloc[:, 1])
         crs = self.crs if crs is None else crs
         if crs is not None:
             if not self.crs.equals(crs):
@@ -485,11 +512,11 @@ class Grd(ABC):
 
     @property
     def x(self):
-        return self.coords[:, 0]
+        return self.coords.iloc[:, 0]
 
     @property
     def y(self):
-        return self.coords[:, 1]
+        return self.coords.iloc[:, 1]
 
     @property
     def triangles(self):
@@ -557,7 +584,7 @@ def sort_rings(index_rings, vertices):
     areas = list()
     for index_ring in index_rings:
         e0, e1 = [list(t) for t in zip(*index_ring)]
-        areas.append(float(Polygon(vertices[e0, :]).area))
+        areas.append(float(Polygon(vertices.iloc[e0, :].values).area))
 
     # maximum area must be main mesh
     idx = areas.index(np.max(areas))
@@ -567,13 +594,13 @@ def sort_rings(index_rings, vertices):
     _index_rings = dict()
     _index_rings[_id] = {'exterior': np.asarray(exterior), 'interiors': []}
     e0, e1 = [list(t) for t in zip(*exterior)]
-    path = Path(vertices[e0 + [e0[0]], :], closed=True)
+    path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
     while len(index_rings) > 0:
         # find all internal rings
         potential_interiors = list()
         for i, index_ring in enumerate(index_rings):
             e0, e1 = [list(t) for t in zip(*index_ring)]
-            if path.contains_point(vertices[e0[0], :]):
+            if path.contains_point(vertices.iloc[e0[0], :].values):
                 potential_interiors.append(i)
         # filter out nested rings
         real_interiors = list()
@@ -587,8 +614,8 @@ def sort_rings(index_rings, vertices):
             has_parent = False
             for _path in check:
                 e0, e1 = [list(t) for t in zip(*_path)]
-                _path = Path(vertices[e0 + [e0[0]], :], closed=True)
-                if _path.contains_point(vertices[_p_interior[0][0], :]):
+                _path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
+                if _path.contains_point(vertices.iloc[_p_interior[0][0], :].values):
                     has_parent = True
             if not has_parent:
                 real_interiors.append(p_interior)
@@ -604,7 +631,7 @@ def sort_rings(index_rings, vertices):
             _id += 1
             _index_rings[_id] = {'exterior': np.asarray(exterior), 'interiors': []}
             e0, e1 = [list(t) for t in zip(*exterior)]
-            path = Path(vertices[e0 + [e0[0]], :], closed=True)
+            path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
     return _index_rings
 
 

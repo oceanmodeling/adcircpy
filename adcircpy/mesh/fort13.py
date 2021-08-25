@@ -18,7 +18,7 @@ class NodalAttributes:
     def __str__(self):
         fort13 = [
             f'{self._fort14.description} nodal attributes',
-            f'{len(self._fort14.nodes.id)}',
+            f'{len(self._fort14.nodes.index)}',
             f'{len(self.get_attribute_names())}',
         ]
 
@@ -40,9 +40,7 @@ class NodalAttributes:
             for i, values in enumerate(
                 attribute['values'][attribute['non_default_indexes'], :]
             ):
-                node_id = self._fort14.nodes.get_id_by_index(
-                    attribute['non_default_indexes'][i]
-                )
+                node_id = self._fort14.nodes.index[attribute['non_default_indexes'][i]]
                 line = [f'{node_id}']
                 for value in values:
                     line.append(f'{value}')

@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+from pandas import DataFrame
 import pytest
 
 from adcircpy import AdcircMesh
@@ -9,17 +9,17 @@ from tests import OUTPUT_DIRECTORY
 @pytest.fixture
 def nodes() -> {int: ((float, float), float)}:
     return {
-        '1': ((0.0, 0.0), -5.0),
-        '2': ((0.5, 0.0), -4.0),
-        '3': ((1.0, 0.0), -3.0),
-        '4': ((1.0, 1.0), -2.0),
-        '5': ((0.0, 1.0), -1.0),
-        '6': ((0.5, 1.5), 0.0),
-        '7': ((0.33, 0.33), 1.0),
-        '8': ((0.66, 0.33), 2.0),
-        '9': ((0.5, 0.66), 3.0),
-        '10': ((-1.0, 1.0), 4.0),
-        '11': ((-1.0, 0.0), 5.0),
+        '1': (0.0, 0.0, -5.0),
+        '2': (0.5, 0.0, -4.0),
+        '3': (1.0, 0.0, -3.0),
+        '4': (1.0, 1.0, -2.0),
+        '5': (0.0, 1.0, -1.0),
+        '6': (0.5, 1.5, 0.0),
+        '7': (0.33, 0.33, 1.0),
+        '8': (0.66, 0.33, 2.0),
+        '9': (0.5, 0.66, 3.0),
+        '10': (-1.0, 1.0, 4.0),
+        '11': (-1.0, 0.0, 5.0),
     }
 
 
@@ -55,7 +55,7 @@ def boundaries() -> {int: {int: {str: [int]}}}:
 def fort14(elements, nodes) -> str:
     lines = [
         f'\n{len(elements):d} {len(nodes):d}',
-        *(f'{id} {x} {y} {z}' for id, ((x, y), z) in nodes.items()),
+        *(f'{id} {x} {y} {z}' for id, (x, y, z) in nodes.items()),
         *(
             f'{id} {len(geometry)} {" ".join(idx for idx in geometry)}'
             for id, geometry in elements.items()
@@ -67,11 +67,11 @@ def fort14(elements, nodes) -> str:
 @pytest.fixture
 def wet_nodes() -> {int: ((float, float), float)}:
     return {
-        0: ((0.0, 0.0), 0.0),
-        1: ((1.0, 0.0), -1.0),
-        2: ((1.0, 1.0), -2.0),
-        3: ((0.0, 1.0), -3.0),
-        4: ((0.5, 1.5), -4.0),
+        0: (0.0, 0.0, 0.0),
+        1: (1.0, 0.0, -1.0),
+        2: (1.0, 1.0, -2.0),
+        3: (0.0, 1.0, -3.0),
+        4: (0.5, 1.5, -4.0),
     }
 
 
@@ -163,7 +163,7 @@ def test_triplot(nodes, elements, boundaries, mocker):
 
 
 def test_make_plot_flat_domain(nodes, elements, boundaries, mocker):
-    nodes = {id: (coord, 0.0) for id, (coord, _) in nodes.items()}
+    nodes = {id: (*coord[:2], 0.0) for id, coord in nodes.items()}
     mesh = AdcircMesh(nodes, elements, boundaries)
 
     mocker.patch('matplotlib.pyplot.show')

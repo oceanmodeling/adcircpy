@@ -23,24 +23,20 @@ class BaseBoundaries:
     @property
     def ids(self):
         if not hasattr(self, '_ids'):
-            self._ids = list(self._data.keys())
+            self._ids = range(len(self._data))
         return self._ids
 
     @property
     def indexes(self):
         if not hasattr(self, '_indexes'):
-            self._indexes = list()
-            for data in self._data.values():
-                self._indexes.append(
-                    list(map(self._mesh.nodes.get_index_by_id, data['node_id']))
-                )
+            self._indexes = [self._mesh.nodes.index[data['node_id']] for data in self._data]
         return np.array(self._indexes)
 
     @property
     def node_id(self):
         if not hasattr(self, '_node_id'):
             self._node_id = list()
-            for data in self._data.values():
+            for data in self._data:
                 self._node_id.append(data['node_id'])
         return self._node_id
 
@@ -48,10 +44,12 @@ class BaseBoundaries:
     def gdf(self):
         if not hasattr(self, '_gdf'):
             data = []
-            for i, (id, boundary) in enumerate(self._data.items()):
+            for i, boundary in enumerate(self._data):
                 data.append(
                     {
-                        'geometry': LineString(self._mesh.coords[self.indexes[i], :]),
+                        'geometry': LineString(
+                            self._mesh.coords.loc[self.indexes[i], :].values
+                        ),
                         'key': f'{boundary.get("ibtype")}:{id}',
                         'indexes': self.indexes[i],
                         **boundary,
@@ -228,13 +226,10 @@ class Fort14(Grd):
     def to_dict(self, boundaries=True):
         _grd = super().to_dict()
         if boundaries is True:
+            nodes = self.nodes.copy()
+            nodes.iloc[:, 2:] *= -1
             _grd.update(
-                {
-                    'nodes': {
-                        id: (coord, -val) for id, (coord, val) in self.nodes.to_dict().items()
-                    },
-                    'boundaries': self.boundaries.to_dict(),
-                }
+                {'nodes': nodes, 'boundaries': self.boundaries.to_dict(),}
             )
         return _grd
 
@@ -252,9 +247,9 @@ class Fort14(Grd):
         **kwargs,
     ):
         if vmin is None:
-            vmin = np.min(self.values)
+            vmin = np.min(self.values.values)
         if vmax is None:
-            vmax = np.max(self.values)
+            vmax = np.max(self.values.values)
         kwargs.update(**get_topobathy_kwargs(self.values, vmin, vmax))
         kwargs.pop('col_val')
         levels = kwargs.pop('levels')

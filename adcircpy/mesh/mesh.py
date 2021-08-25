@@ -192,7 +192,7 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                 distances.append(np.sqrt((x0 - x1) ** 2 + (y0 - y1) ** 2))
             distance = np.mean(distances)
             if distance >= threshold_distance:
-                if self.values[k] >= threshold_depth:
+                if self.values.iloc[k, :].values[0] >= threshold_depth:
                     values[k] = shallow_tau0
                 else:
                     values[k] = deep_tau0
@@ -216,10 +216,10 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
             points = self.get_xy('EPSG:4326')
             self._node_distances_in_meters = {}
             for k, v in self.node_neighbors.items():
-                x0, y0 = points[k]
+                x0, y0 = points.iloc[k].values
                 self._node_distances_in_meters[k] = {}
                 for idx in v:
-                    x1, y1 = points[idx]
+                    x1, y1 = points.iloc[idx].values
                     self._node_distances_in_meters[k][idx] = haversine(
                         (x0, y0), (x1, y1), unit=Unit.METERS
                     )
