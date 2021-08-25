@@ -1,7 +1,10 @@
 from datetime import datetime
 from enum import Enum
+import logging
 from os import PathLike
 import pathlib
+
+_logger = logging.getLogger(__name__)
 
 
 class MeshGeometryType(Enum):
@@ -63,32 +66,32 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
         f.write('MESH2D\n')
 
         if len(triangles) > 0:
-            print('writing triangles')
+            _logger.info('writing triangles')
             start_time = datetime.now()
             triangles.to_string(f, header=False, index=False, justify='left')
             f.write('\n')
-            print(f'wrote triangles in {datetime.now() - start_time}')
+            _logger.info(f'wrote triangles in {datetime.now() - start_time}')
 
         if len(quadrilaterals) > 0:
-            print('writing quadrilaterals')
+            _logger.info('writing quadrilaterals')
             start_time = datetime.now()
             quadrilaterals.to_string(f, header=False, index=False, justify='left')
             f.write('\n')
-            print(f'wrote quadrilaterals in {datetime.now() - start_time}')
+            _logger.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
 
-        print('writing nodes')
+        _logger.info('writing nodes')
         start_time = datetime.now()
         nodes.to_string(
             f, header=False, index=False, justify='left', float_format=float_format
         )
         f.write('\n')
-        print(f'wrote nodes in {datetime.now() - start_time}')
+        _logger.info(f'wrote nodes in {datetime.now() - start_time}')
 
         if boundaries in mesh:
-            print('writing boundaries')
+            _logger.info('writing boundaries')
             start_time = datetime.now()
             boundaries.to_string(f, header=False, index=False, justify='left')
             f.write('\n')
-            print(f'wrote boundaries in {datetime.now() - start_time}')
+            _logger.info(f'wrote boundaries in {datetime.now() - start_time}')
 
     return 0  # for unittests

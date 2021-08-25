@@ -35,7 +35,7 @@ class Elements:
         check_elements: bool = False,
     ):
         if check_elements:
-            print('validating elements...')
+            _logger.info('validating elements...')
             vertex_id_set = nodes.index
             for id, geom in elements.iterrows():
                 if not np.all(np.in1d(geom[1:][~pandas.isna(geom[1:])].values, vertex_id_set)):
