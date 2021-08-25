@@ -5,7 +5,7 @@ from itertools import permutations
 import logging
 import os
 import pathlib
-from typing import Dict, Hashable, List, Sequence, Union
+from typing import Hashable, Union
 
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
@@ -14,8 +14,10 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
 import numpy as np
+import pandas
+from pandas import DataFrame
 from pyproj import CRS, Transformer
-from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Point, Polygon
+from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Polygon
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm
@@ -23,122 +25,31 @@ from adcircpy.mesh.parsers import grd, sms2dm
 _logger = logging.getLogger(__name__)
 
 
-class Nodes:
-    def __init__(self, nodes: Dict[Hashable, List[List]], crs=None):
-        """Setter for the nodes attribute.
-
-        Argument nodes must be of the form:
-            {id: [(x0, y0), z0]}
-            or
-            {id: [(x0, y0), [z0, ..., zn]}
-
-        Grd format is assumed to be exclusively a 2D format that can hold
-        triangles or quads.
-
-        """
-
-        for coords, _ in nodes.values():
-            if len(coords) != 2:
-                raise ValueError(
-                    'Coordinate vertices for a gr3 type must be 2D, but got '
-                    f'coordinates {coords}.'
-                )
-
-        self._id = list(nodes.keys())
-        self._coords = np.array([coords for coords, _ in nodes.values()])
-        self._crs = CRS.from_user_input(crs) if crs is not None else crs
-        self._values = np.array([value for _, value in nodes.values()])
-
-    def transform_to(self, dst_crs):
-        dst_crs = CRS.from_user_input(dst_crs)
-        if not self.crs.equals(dst_crs):
-            self._coords = self.get_xy(dst_crs)
-            self._crs = dst_crs
-
-        if hasattr(self, '_gdf'):
-            del self._gdf
-
-    def get_xy(self, crs: Union[CRS, str] = None):
-        if crs is not None:
-            crs = CRS.from_user_input(crs)
-            if not crs.equals(self.crs):
-                transformer = Transformer.from_crs(self.crs, crs, always_xy=True)
-                x, y = transformer.transform(self.coord[:, 0], self.coord[:, 1])
-                return np.vstack([x, y]).T
-        return self.coord
-
-    @property
-    def gdf(self):
-        if not hasattr(self, '_gdf'):
-            data = []
-            for id, coord, values in zip(self._id, self._coords, self.values):
-                data.append({'geometry': Point(coord), 'id': id, 'values': values})
-            self._gdf = gpd.GeoDataFrame(data, crs=self.crs)
-        return self._gdf
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def index(self):
-        if not hasattr(self, '_index'):
-            self._index = np.arange(len(self._id))
-        return self._index
-
-    @property
-    def crs(self):
-        return self._crs
-
-    @property
-    def values(self):
-        return self._values
-
-    @property
-    def coords(self):
-        return self._coords
-
-    @property
-    def coord(self):
-        return self.coords
-
-    def get_index_by_id(self, id: Hashable):
-        if not hasattr(self, 'node_id_to_index'):
-            self.node_id_to_index = {self.id[i]: i for i in range(len(self.id))}
-        return self.node_id_to_index[id]
-
-    def get_id_by_index(self, index: int):
-        if not hasattr(self, 'node_index_to_id'):
-            self.node_index_to_id = {i: self.id[i] for i in range(len(self.id))}
-        return self.node_index_to_id[index]
-
-    def to_dict(self):
-        nodes = {nid: (coo, val) for nid, coo, val in zip(self._id, self._coords, self.values)}
-        return nodes
-
-
 class Elements:
-    def __init__(self, nodes: Nodes, elements: Dict[Hashable, Sequence]):
-        if not isinstance(elements, dict):
-            raise TypeError('Argument elements must be a dict.')
+    def __init__(
+        self,
+        nodes: DataFrame,
+        elements: DataFrame,
+        crs: CRS = None,
+        check_elements: bool = False,
+    ):
+        if check_elements:
+            print('validating elements...')
+            vertex_id_set = nodes.index
+            for id, geom in elements.iterrows():
+                if not np.all(np.in1d(geom[1:][~pandas.isna(geom[1:])].values, vertex_id_set)):
+                    ValueError(
+                        f'element "{id}" references nodes that do not exist ("{geom[1:].values}")'
+                    )
 
-        vertex_id_set = set(nodes.id)
-        for id, geom in elements.items():
-            if not isinstance(geom, Sequence):
-                raise TypeError(
-                    f'Element with id {id} of the elements '
-                    f'argument must be of type {Sequence}, not '
-                    f'type {type(geom)}.'
-                )
-            if not set(geom).issubset(vertex_id_set):
-                ValueError(f'Element with id {id} is not a subset of the ' "coordinate id's.")
         self.nodes = nodes
         self.elements = elements
+        self.crs = crs
 
     @property
     def id(self):
         if not hasattr(self, '_id'):
-            self._id = list(self.elements.keys())
+            self._id = self.elements.index.values
         return self._id
 
     @property
@@ -211,25 +122,23 @@ class Elements:
     @property
     def array(self):
         if not hasattr(self, '_array'):
-            rank = int(max(map(len, self.elements.values())))
-            array = np.full((len(self.elements), rank), -1)
-            for i, element in enumerate(self.elements.values()):
-                row = np.array(list(map(self.nodes.get_index_by_id, element)))
-                array[i, : len(row)] = row
-            array = np.ma.masked_equal(array, -1)
-            self._array = array
+            self._array = self.nodes.values
+            # rank = int(max(map(len, self.elements.values())))
+            # array = np.full((len(self.elements), rank), -1)
+            # for i, element in enumerate(self.elements.values()):
+            #     row = np.array(list(map(self.nodes.get_index_by_id, element)))
+            #     array[i, : len(row)] = row
+            # array = np.ma.masked_equal(array, -1)
+            # self._array = array
         return self._array
 
     @property
     def triangles(self):
         if not hasattr(self, '_triangles'):
-            self._triangles = np.array(
-                [
-                    list(map(self.nodes.get_index_by_id, element))
-                    for element in self.elements.values()
-                    if len(element) == 3
-                ]
-            )
+            num_nodes = 3
+            self._triangles = self.elements.loc[self.elements.loc[:, 'n'] == num_nodes].iloc[
+                :, 1 : num_nodes + 1
+            ]
         return self._triangles
 
     @property
@@ -239,13 +148,10 @@ class Elements:
     @property
     def quads(self):
         if not hasattr(self, '_quads'):
-            self._quads = np.array(
-                [
-                    list(map(self.nodes.get_index_by_id, element))
-                    for element in self.elements.values()
-                    if len(element) == 4
-                ]
-            )
+            num_nodes = 4
+            self._quads = self.elements.loc[self.elements.loc[:, 'n'] == num_nodes].iloc[
+                :, 1 : num_nodes + 1
+            ]
         return self._quads
 
     @property
@@ -256,24 +162,25 @@ class Elements:
                 triangles.append([quad[0], quad[1], quad[3]])
                 triangles.append([quad[1], quad[2], quad[3]])
             self._triangulation = Triangulation(
-                self.nodes.coord[:, 0], self.nodes.coord[:, 1], triangles
+                self.nodes.iloc[:, 0], self.nodes.iloc[:, 1], triangles
             )
         return self._triangulation
 
     @property
     def gdf(self):
         if not hasattr(self, '_gdf'):
-            data = []
-            for id, element in self.elements.items():
-                data.append(
-                    {
-                        'geometry': Polygon(
-                            self.nodes.coord[list(map(self.get_index_by_id, element))]
-                        ),
-                        'id': id,
-                    }
-                )
-            self._gdf = gpd.GeoDataFrame(data, crs=self.nodes.crs)
+            data = [
+                {
+                    'geometry': Polygon(
+                        self.nodes.coord.iloc[
+                            element[1:][~pandas.isna(element[1:])].astype(int)
+                        ]
+                    ),
+                    'id': id,
+                }
+                for id, element in self.elements.iterrows()
+            ]
+            self._gdf = gpd.GeoDataFrame(data, crs=self.crs)
         return self._gdf
 
 
@@ -401,9 +308,27 @@ class Hull:
 
 class Grd(ABC):
     def __init__(self, nodes, elements=None, description=None, crs=None):
+        if crs is not None and not isinstance(crs, CRS):
+            crs = CRS.from_user_input(crs)
 
-        self.nodes = Nodes(nodes, crs)
-        self.elements = Elements(self.nodes, elements)
+        records_with_extra_values = np.any(~pandas.isna(nodes.iloc[:, 3:]), axis=1)
+        if np.any(records_with_extra_values):
+            raise ValueError(
+                f'Coordinate vertices for a gr3 type must be 2D, but got coordinates {nodes[records_with_extra_values]}.'
+            )
+
+        nodes = nodes.loc[
+            :,
+            nodes.columns[:2].to_list()
+            + nodes.columns[2:][np.any(~pandas.isna(nodes.iloc[:, 2:]), axis=0)].to_list(),
+        ]
+
+        self._coords = nodes.iloc[:, :2]
+        self._crs = crs
+        self._values = nodes.iloc[:, 2:]
+
+        self.nodes = nodes
+        self.elements = Elements(self.nodes, elements, crs)
         self.description = "" if description is None else str(description)
         self.hull = Hull(self)
 
@@ -413,7 +338,7 @@ class Grd(ABC):
     def to_dict(self):
         return {
             'description': self.description,
-            'nodes': self.nodes.to_dict(),
+            'nodes': self.nodes,
             'elements': self.elements.elements,
             'crs': self.crs,
         }
@@ -422,21 +347,10 @@ class Grd(ABC):
         if format in ['gr3', 'grd']:
             grd.write(self.to_dict(), path, overwrite)
         elif format in ['sms', '2dm', 'sms2dm']:
+            nodes = self.nodes.copy()
+            nodes[pandas.isna(nodes)] = -99999
             sms2dm.write(
-                {
-                    'ND': {
-                        i
-                        + 1: (
-                            coord,
-                            -self.values[i] if not np.isnan(self.values[i]) else -99999,
-                        )
-                        for i, coord in enumerate(self.coords)
-                    },
-                    'E3T': {i + 1: index + 1 for i, index in enumerate(self.triangles)},
-                    'E4Q': {i + 1: index + 1 for i, index in enumerate(self.quads)},
-                },
-                path,
-                overwrite,
+                {'ND': nodes, 'E3T': self.triangles, 'E4Q': self.quads,}, path, overwrite
             )
         else:
             raise ValueError(f'Unknown format {format} for hgrid output.')
@@ -543,39 +457,39 @@ class Grd(ABC):
 
     @property
     def coords(self):
-        return self.nodes.coord
+        return self._coords
 
     @property
     def coord(self):
-        return self.nodes.coord
+        return self.coords
 
     @property
     def vertices(self):
-        return self.nodes.coord
+        return self.coords
 
     @property
     def vertex_id(self):
-        return self.nodes.id
+        return self.nodes.index
 
     @property
     def element_id(self):
-        return self.elements.id
+        return self.elements.index
 
     @property
     def values(self):
-        return self.nodes.values
+        return self._values
 
     @property
     def crs(self):
-        return self.nodes.crs
+        return self._crs
 
     @property
     def x(self):
-        return self.nodes.coord[:, 0]
+        return self.coords[:, 0]
 
     @property
     def y(self):
-        return self.nodes.coord[:, 1]
+        return self.coords[:, 1]
 
     @property
     def triangles(self):

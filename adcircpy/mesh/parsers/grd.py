@@ -1,131 +1,150 @@
-from collections import defaultdict
+from io import StringIO
 import numbers
 import os
 import pathlib
-from typing import Dict, Iterable, TextIO, Union
+from typing import Iterable, Union
 import warnings
 
 import numpy as np  # type: ignore[import]
+import pandas
 from pyproj import CRS  # type: ignore[import]
 from pyproj.exceptions import CRSError  # type: ignore[import]
 
 
-def buffer_to_dict(buf: TextIO):
-    description = buf.readline().strip()
-    NE, NP = map(int, buf.readline().split())
-    nodes = {}
-    for _ in range(NP):
-        line = buf.readline().strip('\n').split()
-        # Gr3/fort.14 format cannot distinguish between a 2D mesh with one
-        # vector value (e.g. velocity, which uses 2 columns) or a 3D mesh with
-        # one scalar value. This is a design problem of the mesh format, which
-        # renders it ambiguous, and the main reason why the use of fort.14/grd
-        # formats is discouraged, in favor of UGRID.
-        # Here, we assume the input mesh is strictly a 2D mesh, and the data
-        # that follows is an array of values.
-        if len(line[3:]) == 1:
-            nodes[line[0]] = [(float(line[1]), float(line[2])), float(line[3])]
-        else:
-            nodes[line[0]] = [
-                (float(line[1]), float(line[2])),
-                [float(line[i]) for i in range(3, len(line[3:]))],
-            ]
-    elements = {}
-    for _ in range(NE):
-        line = buf.readline().split()
-        elements[line[0]] = line[2:]
-    # Assume EOF if NOPE is empty.
-    try:
-        NOPE = int(buf.readline().split()[0])
-    except IndexError:
-        return {'description': description, 'nodes': nodes, 'elements': elements}
-    # let NOPE=-1 mean an ellipsoidal-mesh
-    # reassigning NOPE to 0 until further implementation is applied.
-    boundaries: Dict = defaultdict(dict)
-    _bnd_id = 0
-    buf.readline()
-    while _bnd_id < NOPE:
-        NETA = int(buf.readline().split()[0])
-        _cnt = 0
-        boundaries[None][_bnd_id] = dict()
-        boundaries[None][_bnd_id]['node_id'] = list()
-        while _cnt < NETA:
-            boundaries[None][_bnd_id]['node_id'].append(buf.readline().split()[0].strip())
-            _cnt += 1
-        _bnd_id += 1
-    NBOU = int(buf.readline().split()[0])
-    _nbnd_cnt = 0
-    buf.readline()
-    while _nbnd_cnt < NBOU:
-        npts, ibtype = buf.readline().split()[:2]
-        _pnt_cnt = 0
-        if ibtype not in boundaries:
-            _bnd_id = 0
-        else:
-            _bnd_id = len(boundaries[ibtype])
-        boundaries[ibtype][_bnd_id] = dict()
-        boundaries[ibtype][_bnd_id]['node_id'] = list()
-        if ibtype.endswith('3'):  # outflow
-            boundaries[ibtype][_bnd_id]['barrier_height'] = list()
-            boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'] = list()
-        elif ibtype.endswith('4'):  # weir
-            boundaries[ibtype][_bnd_id]['barrier_height'] = list()
-            boundaries[ibtype][_bnd_id]['subcritical_flow_coefficient'] = list()
-            boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'] = list()
-        elif ibtype.endswith('5'):  # culvert
-            boundaries[ibtype][_bnd_id]['barrier_height'] = list()
-            boundaries[ibtype][_bnd_id]['subcritical_flow_coefficient'] = list()
-            boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'] = list()
-            boundaries[ibtype][_bnd_id]['cross_barrier_pipe_height'] = list()
-            boundaries[ibtype][_bnd_id]['friction_factor'] = list()
-            boundaries[ibtype][_bnd_id]['pipe_diameter'] = list()
+def read_fort14(filename: os.PathLike):
+    output = {'description': None, 'nodes': None, 'elements': None}
+    with open(filename, 'r') as file:
+        output['description'] = file.readline().strip()
+        num_elements, num_nodes = [int(value) for value in file.readline().split()]
 
-        while _pnt_cnt < int(npts):
-            line = buf.readline().split()
-            if ibtype.endswith('3'):
-                boundaries[ibtype][_bnd_id]['node_id'].append((line[0],))
-                boundaries[ibtype][_bnd_id]['barrier_height'].append(float(line[1]))
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[2])
-                )
-            elif ibtype.endswith('4'):
-                boundaries[ibtype][_bnd_id]['node_id'].append((line[0], line[1]))
-                boundaries[ibtype][_bnd_id]['barrier_height'].append(float(line[2]))
-                boundaries[ibtype][_bnd_id]['subcritical_flow_coefficient'].append(
-                    float(line[3])
-                )
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[4])
-                )
-            elif ibtype.endswith('5'):
-                boundaries[ibtype][_bnd_id]['node_id'].append((line[0], line[1]))
-                boundaries[ibtype][_bnd_id]['barrier_height'].append(float(line[2]))
-                boundaries[ibtype][_bnd_id]['subcritical_flow_coefficient'].append(
-                    float(line[3])
-                )
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[4])
-                )
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[4])
-                )
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[4])
-                )
-                boundaries[ibtype][_bnd_id]['supercritical_flow_coefficient'].append(
-                    float(line[4])
-                )
+        # Gr3/fort.14 format cannot distinguish between a 2D mesh with one vector value (e.g. velocity, which uses 2 columns) or a 3D mesh with one scalar value. This is a design problem of the mesh format, which renders it ambiguous, and the main reason why the use of fort.14/grd formats is discouraged, in favor of UGRID. Here, we assume the input mesh is strictly a 2D mesh, and the data that follows is an array of values.
+        with StringIO('\n'.join(file.readline() for _ in range(num_nodes))) as nodes_stream:
+            output['nodes'] = pandas.read_csv(
+                nodes_stream,
+                delim_whitespace=True,
+                index_col=0,
+                names=[
+                    'id',
+                    'x',
+                    'y',
+                    *(f'value_{value_index}' for value_index in range(1, 5)),
+                ],
+            )
 
-            else:
-                boundaries[ibtype][_bnd_id]['node_id'].append(line[0])
-            _pnt_cnt += 1
-        _nbnd_cnt += 1
-    return {
-        'description': description,
-        'nodes': nodes,
-        'elements': elements,
-        'boundaries': boundaries,
-    }
+        with StringIO(
+            '\n'.join(file.readline() for _ in range(num_elements))
+        ) as elements_stream:
+            output['elements'] = pandas.read_csv(
+                elements_stream,
+                delim_whitespace=True,
+                index_col=0,
+                names=['id', 'n', *(f'node_{node_index}' for node_index in range(1, 10))],
+            )
+
+        boundaries = {}
+
+        # return on EOF
+        try:
+            num_open_boundaries = int(file.readline().split(maxsplit=1)[0])
+        except IndexError:
+            return output
+        # num_open_boundary_nodes
+        file.readline()
+
+        # let NOPE=-1 mean an ellipsoidal-mesh
+        # reassigning NOPE to 0 until further implementation is applied.
+        if num_open_boundaries > 0:
+            boundaries[None] = []
+            for _ in range(num_open_boundaries):
+                num_boundary_nodes = int(file.readline().split(maxsplit=1)[0])
+                boundary = {
+                    'node_id': [
+                        int(file.readline().split(maxsplit=1)[0].strip())
+                        for _ in range(num_boundary_nodes)
+                    ]
+                }
+                boundaries[None].append(boundary)
+
+        # return on EOF
+        try:
+            num_land_boundaries = int(file.readline().split(maxsplit=1)[0])
+        except IndexError:
+            return output
+        # num_land_boundary_nodes
+        file.readline()
+
+        if num_land_boundaries > 0:
+            for _ in range(num_land_boundaries):
+                num_boundary_nodes, boundary_type = file.readline().split(maxsplit=2)[:2]
+                num_boundary_nodes = int(num_boundary_nodes)
+                boundary = {'node_id': []}
+
+                last_digit = int(boundary_type[-1])
+
+                if last_digit == 3:  # outflow
+                    boundary.update(
+                        {'barrier_height': [], 'supercritical_flow_coefficient': [],}
+                    )
+                elif last_digit == 4:  # weir
+                    boundary.update(
+                        {
+                            'barrier_height': [],
+                            'subcritical_flow_coefficient': [],
+                            'supercritical_flow_coefficient': [],
+                        }
+                    )
+                elif last_digit == 5:  # culvert
+                    boundary.update(
+                        {
+                            'barrier_height': [],
+                            'subcritical_flow_coefficient': [],
+                            'supercritical_flow_coefficient': [],
+                            'cross_barrier_pipe_height': [],
+                            'friction_factor': [],
+                            'pipe_diameter': [],
+                        }
+                    )
+
+                for _ in range(num_boundary_nodes):
+                    line = file.readline().split()
+                    if last_digit == 3:
+                        node = {
+                            'node_id': (line[0],),
+                            'barrier_height': float(line[1]),
+                            'supercritical_flow_coefficient': float(line[2]),
+                        }
+                    elif last_digit == 4:
+                        node = {
+                            'node_id': (line[0], line[1]),
+                            'barrier_height': float(line[2]),
+                            'subcritical_flow_coefficient': float(line[3]),
+                            'supercritical_flow_coefficient': float(line[4]),
+                        }
+                    elif last_digit == 5:
+                        node = {
+                            'node_id': (line[0], line[1]),
+                            'barrier_height': float(line[2]),
+                            'subcritical_flow_coefficient': float(line[3]),
+                            'supercritical_flow_coefficient': float(line[4]),
+                            'cross_barrier_pipe_height': float(line[5]),
+                            'friction_factor': float(line[6]),
+                            'pipe_diameter': float(line[7]),
+                        }
+                    else:
+                        node = {
+                            'node_id': line[0],
+                        }
+
+                    for key, value in node.items():
+                        boundary[key].append(value)
+
+                if boundary_type not in boundaries:
+                    boundaries[boundary_type] = []
+
+                boundaries[boundary_type].append(boundary)
+
+        output['boundaries'] = boundaries
+        return output
 
 
 def to_string(description, nodes, elements, boundaries=None, crs=None):
@@ -233,9 +252,10 @@ def read(resource: Union[str, os.PathLike], boundaries: bool = True, crs=True):
         resource: Path to file on disk or file-like object such as
             :class:`io.StringIO`
     """
-    resource = pathlib.Path(resource)
-    with open(resource, 'r') as stream:
-        grd = buffer_to_dict(stream)
+
+    if not isinstance(resource, pathlib.Path):
+        resource = pathlib.Path(resource)
+    grd = read_fort14(resource)
     if boundaries is False:
         grd.pop('boundaries', None)
     if crs is True:
@@ -249,7 +269,7 @@ def read(resource: Union[str, os.PathLike], boundaries: bool = True, crs=True):
                 pass
     if crs is None:
         warnings.warn(
-            f'File {str(resource)} does not contain CRS ' 'information and no CRS was given.'
+            f'File does not contain CRS information and no CRS was given: "{str(resource)}"'
         )
     if crs is not False:
         grd.update({'crs': crs})

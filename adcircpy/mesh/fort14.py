@@ -222,7 +222,7 @@ class Fort14(Grd):
     @classmethod
     def open(cls, path, crs=None):
         _grd = grd.read(path, crs=crs)
-        _grd['nodes'] = {id: (coords, -val) for id, (coords, val) in _grd['nodes'].items()}
+        _grd['nodes'].iloc[:, 2:] *= -1
         return cls(**_grd)
 
     def to_dict(self, boundaries=True):
