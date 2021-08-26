@@ -7,6 +7,7 @@ import os
 import pathlib
 from typing import Hashable, Mapping, Union
 
+from geopandas import GeoDataFrame
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
@@ -18,7 +19,15 @@ import numpy as np
 import pandas
 from pandas import DataFrame
 from pyproj import CRS, Transformer
-from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Polygon
+from shapely.geometry import (
+    LineString,
+    LinearRing,
+    MultiLineString,
+    MultiPolygon,
+    Polygon,
+    box,
+)
+from shapely.ops import polygonize
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm
@@ -191,14 +200,14 @@ class Elements:
         return self._gdf
 
 
-class Edges:
+class Hull:
     def __init__(self, grd: 'Grd'):
         self._grd = grd
 
-    @lru_cache(maxsize=1)
-    def __call__(self) -> gpd.GeoDataFrame:
+    @property
+    def edges(self) -> GeoDataFrame:
         data = []
-        for ring in self._grd.hull.rings().itertuples():
+        for ring in self.rings.itertuples():
             coords = ring.geometry.coords
             for i in range(1, len(coords)):
                 data.append(
@@ -208,14 +217,7 @@ class Edges:
                         'type': ring.type,
                     }
                 )
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
-
-    def exterior(self):
-        return self().loc[self()['type'] == 'exterior']
-
-    def interior(self):
-        return self().loc[self()['type'] == 'interior']
-
+        return GeoDataFrame(data, crs=self._grd.crs)
 
 class Rings:
     def __init__(self, grd: 'Grd'):
@@ -231,7 +233,7 @@ class Rings:
             for interior in rings['interiors']:
                 geometry = LinearRing(self._grd.coords.iloc[interior[:, 0], :].values)
                 data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'interior'})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
     def exterior(self):
         return self().loc[self()['type'] == 'exterior']
@@ -249,22 +251,13 @@ class Rings:
         return sort_rings(edges_to_rings(boundary_edges), self._grd.nodes.coord)
 
 
-class Hull:
-    def __init__(self, grd: 'Grd'):
-        self._grd = grd
-        self.edges = Edges(grd)
-        self.rings = Rings(grd)
-
-    @lru_cache(maxsize=1)
-    def __call__(self) -> gpd.GeoDataFrame:
+    @property
+    def geodataframe(self) -> GeoDataFrame:
         data = []
-        for bnd_id in np.unique(self.rings()['bnd_id'].tolist()):
-            exterior = self.rings().loc[
-                (self.rings()['bnd_id'] == bnd_id) & (self.rings()['type'] == 'exterior')
-            ]
-            interiors = self.rings().loc[
-                (self.rings()['bnd_id'] == bnd_id) & (self.rings()['type'] == 'interior')
-            ]
+        rings = self.rings
+        for bnd_id in np.unique(rings['bnd_id'].tolist()):
+            exterior = rings.loc[(rings['bnd_id'] == bnd_id) & (rings['type'] == 'exterior')]
+            interiors = rings.loc[(rings['bnd_id'] == bnd_id) & (rings['type'] == 'interior')]
             data.append(
                 {
                     'geometry': Polygon(
@@ -274,42 +267,51 @@ class Hull:
                     'bnd_id': bnd_id,
                 }
             )
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def exterior(self):
+    @property
+    def exterior(self) -> GeoDataFrame:
         data = []
         for exterior in self.rings().loc[self.rings()['type'] == 'exterior'].itertuples():
             data.append({'geometry': Polygon(exterior.geometry.coords)})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def interior(self):
+    @property
+    def interior(self) -> GeoDataFrame:
         data = []
         for interior in self.rings().loc[self.rings()['type'] == 'interior'].itertuples():
             data.append({'geometry': Polygon(interior.geometry.coords)})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def implode(self) -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame(
-            {'geometry': MultiPolygon([polygon.geometry for polygon in self().itertuples()])},
+    @property
+    def implode(self) -> GeoDataFrame:
+        return GeoDataFrame(
+            {
+                'geometry': MultiPolygon(
+                    [polygon.geometry for polygon in self.geodataframe.itertuples()]
+                )
+            },
             crs=self._grd.crs,
         )
 
-    @lru_cache(maxsize=1)
+    @property
     def multipolygon(self) -> MultiPolygon:
-        polygon_collection = []
-        for rings in self.rings.sorted().values():
-            exterior = self._grd.nodes.coord[rings['exterior'][:, 0], :]
-            interiors = []
-            for interior in rings['interiors']:
-                interiors.append(self._grd.nodes.coord[interior[:, 0], :])
-            polygon_collection.append(Polygon(exterior, interiors))
-        mp = MultiPolygon(polygon_collection)
-        if isinstance(mp, Polygon):
-            mp = MultiPolygon([mp])
-        return mp
+        triangles = self._grd.elements.triangulation.triangles
+
+        triangle_edges, counts = numpy.unique(
+            numpy.sort(
+                numpy.concatenate(
+                    [triangles[:, :2], triangles[:, 1:], triangles[:, [0, 2]]], axis=0
+                ),
+                axis=1,
+            ),
+            axis=0,
+            return_counts=True,
+        )
+        boundary_edges = triangle_edges[counts == 1]
+        boundary_edges = self._grd.nodes.iloc[:, :2].values[boundary_edges]
+
+        return MultiPolygon(polygonize(MultiLineString(boundary_edges.tolist())))
 
 
 class Grd(ABC):
@@ -539,38 +541,60 @@ class Grd(ABC):
         return self.get_bbox()
 
 
-def edges_to_rings(edges):
+def edges_to_rings(edges: numpy.ndarray) -> numpy.ndarray:
     if len(edges) == 0:
         return edges
+
     # start ordering the edges into linestrings
-    edge_collection = list()
-    ordered_edges = [edges.pop(-1)]
-    e0, e1 = [list(t) for t in zip(*edges)]
-    while len(edges) > 0:
-        if ordered_edges[-1][1] in e0:
-            idx = e0.index(ordered_edges[-1][1])
-            ordered_edges.append(edges.pop(idx))
-        elif ordered_edges[0][0] in e1:
-            idx = e1.index(ordered_edges[0][0])
-            ordered_edges.insert(0, edges.pop(idx))
-        elif ordered_edges[-1][1] in e1:
-            idx = e1.index(ordered_edges[-1][1])
-            ordered_edges.append(list(reversed(edges.pop(idx))))
-        elif ordered_edges[0][0] in e0:
-            idx = e0.index(ordered_edges[0][0])
-            ordered_edges.insert(0, list(reversed(edges.pop(idx))))
+    edges = edges[:-1]
+
+    rings = []
+    unconnected_indices = list(range(len(edges)))
+    ring = [edges[None, -1]]
+    while len(unconnected_indices) > 0:
+        unconnected_edges = edges[unconnected_indices, :]
+        starting_vertices = unconnected_edges[:, 0]
+        ending_vertices = unconnected_edges[:, 1]
+
+        first_vertex = ring[0][-1]
+        last_vertex = ring[-1][-1]
+
+        # connect edge to an existing ring
+        if last_vertex[1] in starting_vertices:
+            connected_edge_indices = numpy.where(starting_vertices == last_vertex[1])
+            ring.append(unconnected_edges[connected_edge_indices])
+        elif first_vertex[0] in ending_vertices:
+            connected_edge_indices = numpy.where(ending_vertices == first_vertex[0])
+            ring.insert(0, unconnected_edges[connected_edge_indices])
+        elif last_vertex[1] in ending_vertices:
+            connected_edge_indices = numpy.where(ending_vertices == last_vertex[1])
+            ring.append(numpy.flip(unconnected_edges[connected_edge_indices]))
+        elif first_vertex[0] in starting_vertices:
+            connected_edge_indices = numpy.where(starting_vertices == first_vertex[0])
+            ring.insert(0, numpy.flip(unconnected_edges[connected_edge_indices]))
         else:
-            edge_collection.append(tuple(ordered_edges))
-            idx = -1
-            ordered_edges = [edges.pop(idx)]
-        e0.pop(idx)
-        e1.pop(idx)
+            connected_edge_indices = None
+
+        if connected_edge_indices is not None:
+            for connected_index in connected_edge_indices[0]:
+                connected_edge = unconnected_edges[connected_index]
+                connected_indices = numpy.where(numpy.all(edges == connected_edge, axis=1))
+                for index in connected_indices:
+                    unconnected_indices.remove(index)
+        else:
+            # if no edges connect to the current edge, close off the ring and start a new one
+            for index, edge in enumerate(ring):
+                if len(edge.shape) == 1:
+                    ring[index] = edge[None, :]
+            rings.append(numpy.unique(numpy.concatenate(ring, axis=0), axis=0))
+            ring = [unconnected_edges[-1]]
+
     # finalize
-    if len(edge_collection) == 0 and len(edges) == 0:
-        edge_collection.append(tuple(ordered_edges))
+    if len(rings) == 0 and len(edges) == 0:
+        rings.append(tuple(ring))
     else:
-        edge_collection.append(tuple(ordered_edges))
-    return edge_collection
+        rings.append(tuple(ring))
+    return rings
 
 
 def sort_rings(index_rings, vertices):
@@ -585,10 +609,10 @@ def sort_rings(index_rings, vertices):
     """
 
     # sort index_rings into corresponding "polygons"
-    areas = list()
-    for index_ring in index_rings:
-        e0, e1 = [list(t) for t in zip(*index_ring)]
-        areas.append(float(Polygon(vertices.iloc[e0, :].values).area))
+    areas = [
+        float(Polygon(vertices.iloc[next(zip(*index_ring)), :].values).area)
+        for index_ring in index_rings
+    ]
 
     # maximum area must be main mesh
     idx = areas.index(np.max(areas))
