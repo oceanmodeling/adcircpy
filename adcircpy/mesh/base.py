@@ -7,6 +7,8 @@ import os
 import pathlib
 from typing import Hashable, Mapping, Union
 
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import grd, sms2dm
 from geopandas import GeoDataFrame
 import geopandas as gpd
 from matplotlib.collections import PolyCollection
@@ -23,14 +25,12 @@ from shapely.geometry import (
     LineString,
     LinearRing,
     MultiLineString,
+    MultiPoint,
     MultiPolygon,
     Polygon,
     box,
 )
 from shapely.ops import polygonize
-
-from adcircpy.figures import figure
-from adcircpy.mesh.parsers import grd, sms2dm
 
 _logger = logging.getLogger(__name__)
 
@@ -295,6 +295,7 @@ class Rings:
         )
 
     @property
+    @lru_cache(maxsize=1)
     def multipolygon(self) -> MultiPolygon:
         triangles = self._grd.elements.triangulation.triangles
 
@@ -309,9 +310,48 @@ class Rings:
             return_counts=True,
         )
         boundary_edges = triangle_edges[counts == 1]
-        boundary_edges = self._grd.nodes.iloc[:, :2].values[boundary_edges]
 
-        return MultiPolygon(polygonize(MultiLineString(boundary_edges.tolist())))
+        boundary_edge_points = self._grd.nodes.iloc[:, :2].values[boundary_edges]
+
+        lines = MultiLineString(boundary_edge_points.tolist())
+
+        polygons = list(polygonize(lines))
+        polygons.append(
+            MultiPoint(
+                numpy.reshape(
+                    boundary_edge_points,
+                    (
+                        boundary_edge_points.shape[0] * boundary_edge_points.shape[1],
+                        boundary_edge_points.shape[2],
+                    ),
+                )
+            ).convex_hull
+        )
+
+        exterior_indices = set()
+        interior_indices = set()
+        visited_indices = set()
+        for polygon_index, polygon in (
+            (polygon_index, polygon)
+            for polygon_index, polygon in enumerate(polygons)
+            if polygon_index not in visited_indices
+        ):
+            for other_index, other in (
+                (other_index, other)
+                for other_index, other in enumerate(polygons)
+                if other_index != polygon_index and other_index not in visited_indices
+            ):
+                if polygon.within(other):
+                    exterior_indices.add(other_index)
+                    interior_indices.add(polygon_index)
+                    visited_indices.add(polygon_index)
+
+                    polygons[other_index] = Polygon(
+                        other.exterior.coords,
+                        holes=list(other.interiors) + [list(polygon.exterior.coords)],
+                    )
+
+        return MultiPolygon([polygons[index] for index in exterior_indices])
 
 
 class Grd(ABC):
@@ -550,28 +590,32 @@ def edges_to_rings(edges: numpy.ndarray) -> numpy.ndarray:
 
     rings = []
     unconnected_indices = list(range(len(edges)))
-    ring = [edges[None, -1]]
+    ring = edges[None, -1]
     while len(unconnected_indices) > 0:
         unconnected_edges = edges[unconnected_indices, :]
         starting_vertices = unconnected_edges[:, 0]
         ending_vertices = unconnected_edges[:, 1]
 
-        first_vertex = ring[0][-1]
-        last_vertex = ring[-1][-1]
+        first_vertex = ring[0]
+        last_vertex = ring[-1]
 
         # connect edge to an existing ring
         if last_vertex[1] in starting_vertices:
             connected_edge_indices = numpy.where(starting_vertices == last_vertex[1])
-            ring.append(unconnected_edges[connected_edge_indices])
+            ring = numpy.concatenate([ring, unconnected_edges[connected_edge_indices]], axis=0)
         elif first_vertex[0] in ending_vertices:
             connected_edge_indices = numpy.where(ending_vertices == first_vertex[0])
-            ring.insert(0, unconnected_edges[connected_edge_indices])
+            ring = numpy.concatenate([unconnected_edges[connected_edge_indices], ring], axis=0)
         elif last_vertex[1] in ending_vertices:
             connected_edge_indices = numpy.where(ending_vertices == last_vertex[1])
-            ring.append(numpy.flip(unconnected_edges[connected_edge_indices]))
+            ring = numpy.concatenate(
+                [ring, numpy.flip(unconnected_edges[connected_edge_indices])], axis=0
+            )
         elif first_vertex[0] in starting_vertices:
             connected_edge_indices = numpy.where(starting_vertices == first_vertex[0])
-            ring.insert(0, numpy.flip(unconnected_edges[connected_edge_indices]))
+            ring = numpy.concatenate(
+                [numpy.flip(unconnected_edges[connected_edge_indices]), ring], axis=0
+            )
         else:
             connected_edge_indices = None
 
@@ -583,17 +627,11 @@ def edges_to_rings(edges: numpy.ndarray) -> numpy.ndarray:
                     unconnected_indices.remove(index)
         else:
             # if no edges connect to the current edge, close off the ring and start a new one
-            for index, edge in enumerate(ring):
-                if len(edge.shape) == 1:
-                    ring[index] = edge[None, :]
-            rings.append(numpy.unique(numpy.concatenate(ring, axis=0), axis=0))
-            ring = [unconnected_edges[-1]]
-
-    # finalize
-    if len(rings) == 0 and len(edges) == 0:
-        rings.append(tuple(ring))
+            rings.append(numpy.unique(ring, axis=0))
+            ring = unconnected_edges[None, -1]
     else:
-        rings.append(tuple(ring))
+        rings.append(numpy.unique(ring, axis=0))
+
     return rings
 
 
