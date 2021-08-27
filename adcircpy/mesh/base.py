@@ -7,10 +7,8 @@ import os
 import pathlib
 from typing import Hashable, Mapping, Union
 
-from adcircpy.figures import figure
-from adcircpy.mesh.parsers import grd, sms2dm
-from geopandas import GeoDataFrame
 import geopandas as gpd
+from geopandas import GeoDataFrame
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
 import matplotlib.pyplot as plt
@@ -22,15 +20,18 @@ import pandas
 from pandas import DataFrame
 from pyproj import CRS, Transformer
 from shapely.geometry import (
-    LineString,
+    box,
     LinearRing,
+    LineString,
     MultiLineString,
     MultiPoint,
     MultiPolygon,
     Polygon,
-    box,
 )
 from shapely.ops import polygonize
+
+from adcircpy.figures import figure
+from adcircpy.mesh.parsers import grd, sms2dm
 
 _logger = logging.getLogger(__name__)
 
@@ -316,42 +317,24 @@ class Rings:
         lines = MultiLineString(boundary_edge_points.tolist())
 
         polygons = list(polygonize(lines))
-        polygons.append(
-            MultiPoint(
-                numpy.reshape(
-                    boundary_edge_points,
-                    (
-                        boundary_edge_points.shape[0] * boundary_edge_points.shape[1],
-                        boundary_edge_points.shape[2],
-                    ),
-                )
-            ).convex_hull
-        )
 
-        exterior_indices = set()
-        interior_indices = set()
-        visited_indices = set()
-        for polygon_index, polygon in (
-            (polygon_index, polygon)
-            for polygon_index, polygon in enumerate(polygons)
-            if polygon_index not in visited_indices
-        ):
-            for other_index, other in (
-                (other_index, other)
-                for other_index, other in enumerate(polygons)
-                if other_index != polygon_index and other_index not in visited_indices
-            ):
-                if polygon.within(other):
-                    exterior_indices.add(other_index)
-                    interior_indices.add(polygon_index)
-                    visited_indices.add(polygon_index)
+        exterior_polygons = collect_interiors(polygons)
 
-                    polygons[other_index] = Polygon(
-                        other.exterior.coords,
-                        holes=list(other.interiors) + [list(polygon.exterior.coords)],
-                    )
+        convex_hull = MultiPoint(
+            numpy.reshape(
+                boundary_edge_points,
+                (
+                    boundary_edge_points.shape[0] * boundary_edge_points.shape[1],
+                    boundary_edge_points.shape[2],
+                ),
+            )
+        ).convex_hull
 
-        return MultiPolygon([polygons[index] for index in exterior_indices])
+        if exterior_polygons[-1].area < convex_hull.area / 2:
+            polygons.append(convex_hull)
+            exterior_polygons = collect_interiors(polygons)
+
+        return MultiPolygon(exterior_polygons)
 
 
 class Grd(ABC):
@@ -710,3 +693,83 @@ def signed_polygon_area(vertices):
         area += vertices[i][0] * vertices[j][1]
         area -= vertices[j][0] * vertices[i][1]
         return area / 2.0
+
+
+def collect_interiors(polygons: [Polygon]) -> [Polygon]:
+    multipolygon_indices = []
+    for polygon_index in range(len(polygons)):
+        if isinstance(polygons[polygon_index], MultiPolygon):
+            polygons.extend(polygons[polygon_index])
+            multipolygon_indices.append(polygon_index)
+    for index in reversed(multipolygon_indices):
+        polygons.remove(index)
+
+    polygon_areas = {
+        polygon_index: polygon.area for polygon_index, polygon in enumerate(polygons)
+    }
+    polygons = [polygons[index] for index in sorted(polygon_areas, key=polygon_areas.get)]
+
+    containers = {polygon_index: None for polygon_index in range(len(polygons))}
+    for polygon_index, polygon in (
+        (polygon_index, polygon) for polygon_index, polygon in enumerate(polygons)
+    ):
+        container_index = containers[polygon_index]
+        for other_index, other in (
+            (other_index, other)
+            for other_index, other in enumerate(polygons)
+            if other_index != polygon_index and other_index != container_index
+        ):
+            # find the smallest polygon containing this
+            if polygon.within(other):
+                if container_index is None or other.area < polygons[container_index].area:
+                    container_index = other_index
+        containers[polygon_index] = container_index
+
+    return create_polygons(
+        hierarchy=container_hierarchy(containers=containers), polygons=polygons,
+    )
+
+
+def container_hierarchy(
+    containers: {int: int}, global_container_index: int = None,
+) -> {int: {}}:
+    hierarchy = {}
+
+    for interior_index, container_index in containers.items():
+        if container_index is None:
+            hierarchy[interior_index] = container_hierarchy(
+                containers={
+                    k: v if v != interior_index else None
+                    for k, v in containers.items()
+                    if v is not None
+                },
+                global_container_index=interior_index,
+            )
+        elif container_index == global_container_index:
+            hierarchy[container_index] = interior_index
+
+    return hierarchy
+
+
+def create_polygons(hierarchy: {int: {}}, polygons: [Polygon]) -> [Polygon]:
+    exteriors = []
+    for exterior_index, interior_indices in hierarchy.items():
+        # construct polygon from exterior and holes
+        exteriors.append(
+            Polygon(
+                polygons[exterior_index].exterior.coords,
+                holes=list(polygons[exterior_index].interiors)
+                + [
+                    polygons[interior_index].exterior.coords
+                    for interior_index in interior_indices
+                ],
+            )
+        )
+
+        # invert interior holes into islands
+        for internal_exterior_indices in interior_indices.values():
+            exteriors.extend(
+                create_polygons(hierarchy=internal_exterior_indices, polygons=polygons)
+            )
+
+    return exteriors
