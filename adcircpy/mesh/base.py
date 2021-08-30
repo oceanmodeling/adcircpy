@@ -309,14 +309,8 @@ class Rings:
 
     @lru_cache(maxsize=1)
     def __call__(self) -> gpd.GeoDataFrame:
-        tri = self._grd.elements.triangulation
-        idxs = np.vstack(list(np.where(tri.neighbors == -1))).T
-        boundary_edges = []
-        for i, j in idxs:
-            boundary_edges.append((tri.triangles[i, j], tri.triangles[i, (j + 1) % 3]))
-        sorted_rings = sort_rings(edges_to_rings(boundary_edges), self._grd.nodes.coord)
         data = []
-        for bnd_id, rings in sorted_rings.items():
+        for bnd_id, rings in self.sorted().items():
             coords = self._grd.nodes.coord[rings['exterior'][:, 0], :]
             geometry = LinearRing(coords)
             data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'exterior'})
@@ -331,6 +325,15 @@ class Rings:
 
     def interior(self):
         return self().loc[self()['type'] == 'interior']
+
+    @lru_cache(maxsize=1)
+    def sorted(self):
+        tri = self._grd.elements.triangulation
+        idxs = np.vstack(list(np.where(tri.neighbors == -1))).T
+        boundary_edges = []
+        for i, j in idxs:
+            boundary_edges.append((tri.triangles[i, j], tri.triangles[i, (j + 1) % 3]))
+        return sort_rings(edges_to_rings(boundary_edges), self._grd.nodes.coord)
 
 
 class Hull:
@@ -383,10 +386,18 @@ class Hull:
 
     @lru_cache(maxsize=1)
     def multipolygon(self) -> MultiPolygon:
-        geometry = self.implode().iloc[0].geometry
-        if not isinstance(geometry, MultiPolygon):
-            geometry = MultiPolygon([geometry])
-        return geometry
+        polygon_collection = []
+        for rings in self.rings.sorted().values():
+            exterior = self._grd.nodes.coord[rings['exterior'][:, 0], :]
+            interiors = []
+            for interior in rings['interiors']:
+                interiors.append(self._grd.nodes.coord[interior[:, 0], :])
+            polygon_collection.append(Polygon(exterior, interiors))
+        mp = MultiPolygon(polygon_collection)
+        if isinstance(mp, Polygon):
+            mp = MultiPolygon([mp])
+        return mp
+
 
 
 class Grd(ABC):
