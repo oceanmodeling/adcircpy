@@ -19,15 +19,7 @@ import numpy as np
 import pandas
 from pandas import DataFrame
 from pyproj import CRS, Transformer
-from shapely.geometry import (
-    box,
-    LinearRing,
-    LineString,
-    MultiLineString,
-    MultiPoint,
-    MultiPolygon,
-    Polygon,
-)
+from shapely.geometry import box, LinearRing, LineString, MultiPoint, MultiPolygon, Polygon
 from shapely.ops import polygonize
 
 from adcircpy.figures import figure
