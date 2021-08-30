@@ -314,11 +314,7 @@ class Rings:
 
         boundary_edge_points = self._grd.nodes.iloc[:, :2].values[boundary_edges]
 
-        lines = MultiLineString(boundary_edge_points.tolist())
-
-        polygons = list(polygonize(lines))
-
-        exterior_polygons = collect_interiors(polygons)
+        exterior_polygons = collect_interiors(list(polygonize(boundary_edge_points.tolist())))
 
         convex_hull = MultiPoint(
             numpy.reshape(
@@ -331,8 +327,8 @@ class Rings:
         ).convex_hull
 
         if exterior_polygons[-1].area < convex_hull.area / 2:
-            polygons.append(convex_hull)
-            exterior_polygons = collect_interiors(polygons)
+            exterior_polygons.insert(0, convex_hull)
+            exterior_polygons = collect_interiors(exterior_polygons)
 
         return MultiPolygon(exterior_polygons)
 
