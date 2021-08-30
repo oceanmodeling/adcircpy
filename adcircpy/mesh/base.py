@@ -710,9 +710,7 @@ def collect_interiors(polygons: [Polygon]) -> [Polygon]:
     polygons = [polygons[index] for index in sorted(polygon_areas, key=polygon_areas.get)]
 
     containers = {polygon_index: None for polygon_index in range(len(polygons))}
-    for polygon_index, polygon in (
-        (polygon_index, polygon) for polygon_index, polygon in enumerate(polygons)
-    ):
+    for polygon_index, polygon in enumerate(polygons):
         container_index = containers[polygon_index]
         for other_index, other in (
             (other_index, other)
