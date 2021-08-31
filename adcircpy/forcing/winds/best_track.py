@@ -707,6 +707,73 @@ class VortexForcing:
         if show:
             axis.axis('scaled')
         plot_coastline(axis, show)
+    
+    def get_wind_swath(self, isotach: int, num_segments: int = 19, plot_swath: bool = False):
+
+        # parameter
+        nm2m = 1852.0 # nautical miles to meters 
+        #isotach should be one of 34, 50, 64
+        valid_isotach_values = [34, 50, 64]
+        assert (
+            isotach in valid_isotach_values
+        ), f'`isotach` value in `get_wind_swath` must be one of {valid_isotach_values}'
+ 
+        ## Collect the attributes needed from the forcing to generate swath
+        mask = self.data['isotach'] == isotach 
+        c_lat = self.data['latitude'][mask]
+        c_lon = self.data['longitude'][mask]
+        direc = self.data['direction'][mask]
+        # append quadrants in counter-clockwise direction from NEQ
+        quadrants = list()
+        quadrants.append(self.data['radius_for_NEQ'][mask] * nm2m) 
+        quadrants.append(self.data['radius_for_NWQ'][mask] * nm2m)
+        quadrants.append(self.data['radius_for_SWQ'][mask] * nm2m)
+        quadrants.append(self.data['radius_for_SEQ'][mask] * nm2m)
+        
+        geodetic = Geod(ellps='WGS84')
+    
+        ## Generate overall swath based on the desired isotach
+        swath = Polygon()
+        for pts_index in range(0,len(c_lon)):
+            # get the starting angle range for NEQ based on storm direction
+            rot_angle = 360 - direc.iloc[pts_index] 
+            start_angle = 0  + rot_angle
+            end_angle   = 90 + rot_angle
+            for idx,rad in enumerate(quadrants):
+                # enter the angle range for this quadrant
+                theta = numpy.linspace(start_angle,end_angle, num_segments)
+                # move angle to next quadrant    
+                start_angle = start_angle + 90 
+                end_angle = end_angle + 90 
+                # skip if quadrant radius is zero
+                if rad.iloc[pts_index] <= 1.0: 
+                   continue 
+                # make the lon, lat arrays for this quadrant
+                ## entering origin 
+                lon = [c_lon.iloc[pts_index]]
+                lat = [c_lat.iloc[pts_index]]
+		# using forward geodetic (origin,angle,dist)
+                for az12 in theta:
+                    lont, latt, backaz = geodetic.fwd(lon[0],lat[0],az12,rad.iloc[pts_index])
+                    lon.append(lont)
+                    lat.append(latt)
+                ## start point equals last point 
+                lon.append(lon[0])
+                lat.append(lat[0])
+                # enter quadrant as polygon
+                arc = Polygon(numpy.column_stack([lon, lat]))
+                # add quadrant to overall swath
+                swath = swath.union(arc)
+
+        if plot_swath:
+            fig = pyplot.figure()
+            axis = fig.add_subplot(111)
+            for poly in swath:
+                x,y = poly.exterior.coords.xy
+                axis.plot(x,y)
+            pyplot.show()
+ 
+        return swath
 
     def __generate_record_numbers(self):
         record_number = [1]
