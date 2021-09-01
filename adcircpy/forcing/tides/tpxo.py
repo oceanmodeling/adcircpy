@@ -95,29 +95,27 @@ class TPXO(TidalDataset):
         self._assert_vertices(vertices)
         constituents = list(map(lambda x: x.lower(), self.constituents))
         constituent = constituents.index(constituent.lower())
-        array = tpxo_array[constituent, :, :].flatten()
-        _x = np.asarray([x + 360.0 for x in vertices[:, 0] if x < 0]).flatten()
-        _y = vertices[:, 1].flatten()
-        x, y = np.meshgrid(self.x, self.y, indexing='ij')
-        x = x.flatten()
-        y = y.flatten()
+        zi = tpxo_array[constituent, :, :].flatten()
+        xo = np.asarray([x + 360.0 for x in vertices[:, 0] if x < 0]).flatten()
+        yo = vertices[:, 1].flatten()
+        xi, yi = np.meshgrid(self.x, self.y, indexing='ij')
+        xi = xi.flatten()
+        yi = yi.flatten()
         dx = np.mean(np.diff(self.x))
         dy = np.mean(np.diff(self.y))
-
-        # buffer the bbox by 2 difference units
-        _idx = np.where(
-            np.logical_and(
-                np.logical_and(x >= np.min(_x) - 2 * dx, x <= np.max(_x) + 2 * dx),
-                np.logical_and(y >= np.min(_y) - 2 * dy, y <= np.max(_y) + 2 * dy),
-            )
+        # buffer window by 2 pixel units
+        mask1 = np.logical_and(
+            np.logical_and(xi >= np.min(xo) - 2 * dx, xi <= np.max(xo) + 2 * dx),
+            np.logical_and(yi >= np.min(yo) - 2 * dy, yi <= np.max(yo) + 2 * dy),
         )
-
-        # "method" can be 'spline' or any string accepted by griddata()'s method kwarg.
+        # remove junk values from input array
+        mask2 = np.ma.masked_where(zi != 0.0, zi)
+        iidx = np.where(np.logical_and(mask1, mask2))
         values = griddata(
-            (x[_idx], y[_idx]), array[_idx], (_x, _y), method='linear', fill_value=np.nan,
+            (xi[iidx], yi[iidx]), zi[iidx], (xo, yo), method='linear', fill_value=np.nan,
         )
         nan_idxs = np.where(np.isnan(values))
         values[nan_idxs] = griddata(
-            (x[_idx], y[_idx]), array[_idx], (_x[nan_idxs], _y[nan_idxs]), method='nearest',
+            (xi[iidx], yi[iidx]), zi[iidx], (xo[nan_idxs], yo[nan_idxs]), method='nearest',
         )
         return values

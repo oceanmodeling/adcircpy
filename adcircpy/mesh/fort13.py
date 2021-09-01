@@ -175,7 +175,8 @@ class NodalAttributes:
                 (self._fort14.values.size, np.asarray(data['defaults']).flatten().size),
                 np.nan,
             )
-            for i, idx in enumerate(data['indexes']):
+            for i, node_id in enumerate(data['node_id']):
+                idx = self.fort14.nodes.get_index_by_id(node_id)
                 for j, value in enumerate(values[i, :].tolist()):
                     full_values[idx, j] = value
             idxs = np.where(np.isnan(full_values).all(axis=1))[0]
@@ -200,6 +201,10 @@ class NodalAttributes:
         else:
             print(str(self))
 
+    @property
+    def fort14(self):
+        return self._fort14
+
 
 def parse_fort13(path):
     fort13 = {}
@@ -218,22 +223,18 @@ def parse_fort13(path):
             fort13[attribute_name] = {
                 'units': units,
                 'defaults': defaults,
-                'indexes': [],
+                'node_id': [],
             }
             i += 1
         for i in range(NAttr):
             attribute_name = f.readline().strip()
             numOfNodes = int(f.readline())
-            values = np.zeros((NP, len(fort13[attribute_name]['defaults'])))
-            values[:] = np.nan
-            j = 0
-            while j < numOfNodes:
-                str = f.readline().split()
-                index = int(str[0]) - 1
-                fort13[attribute_name]['indexes'].append(index)
-                node_values = [float(x) for x in str[1:]]
-                values[index, :] = node_values
-                j += 1
+            # values = np.zeros((NP, len(fort13[attribute_name]["defaults"])))
+            values = np.full((NP, len(fort13[attribute_name]['defaults'])), np.nan)
+            for j in range(numOfNodes):
+                line = f.readline().split()
+                fort13[attribute_name]['node_id'].append(line[0])
+                values[j, :] = [float(x) for x in line[1:]]
             values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13

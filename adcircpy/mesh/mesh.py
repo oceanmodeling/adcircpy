@@ -127,8 +127,11 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
     def has_nodal_attribute(self, name, runtype=None):
         return self.nodal_attributes.has_attribute(name, runtype)
 
-    def import_nodal_attributes(self, fort13):
+    def import_nodal_attributes(self, fort13, enable: bool = False):
         self.nodal_attributes.import_fort13(fort13)
+        if bool(enable) is True:
+            for attribute in self.get_nodal_attribute_names():
+                self.set_nodal_attribute_state(attribute, True, True)
 
     def generate_constant_mannings_n(self, value: float):
         self.mannings_n_at_sea_floor = self.coords.shape[0] * [value]
