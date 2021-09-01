@@ -138,7 +138,7 @@ class Fort15:
                     f'{self.H0:G} 0 0 {self.VELMIN:G}', 'H0 NODEDRYMIN NODEWETRMP VELMIN',
                 ),
                 fort15_line(
-                    f'{self.SLAM0:G} {self.SFEA0:G}',
+                    f'{self.SLAM0} {self.SFEA0}',
                     'SLAM0 SFEA0',
                     'CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)',
                 ),
@@ -211,14 +211,15 @@ class Fort15:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     f.extend(
-                        fort15_line(f'{x:G} {y:G}', station_id)
+                        fort15_line(f'{x} {y}', station_id)
                         for station_id, (x, y) in stations['collection'].items()
                     )
             else:
                 f.extend(
-                    fort15_line(f'{x:G} {y:G}', station_id)
+                    fort15_line(f'{x} {y}', station_id)
                     for station_id, (x, y) in stations['collection'].items()
                 )
+
         # velocity out stations
         f.extend(
             [
@@ -239,12 +240,12 @@ class Fort15:
             if self._runtype == 'coldstart':
                 if stations['spinup']:
                     f.extend(
-                        fort15_line(f'{x:G} {y:G}', station_id)
+                        fort15_line(f'{x} {y}', station_id)
                         for station_id, (x, y) in stations['collection'].items()
                     )
             else:
                 f.extend(
-                    fort15_line(f'{x:G} {y:G}', station_id)
+                    fort15_line(f'{x} {y}', station_id)
                     for station_id, (x, y) in stations['collection'].items()
                 )
         if self.IM == 10:
@@ -268,12 +269,12 @@ class Fort15:
                 if self._runtype == 'coldstart':
                     if stations['spinup']:
                         f.extend(
-                            fort15_line(f'{x:G} {y:G}', station_id)
+                            fort15_line(f'{x} {y}', station_id)
                             for station_id, (x, y) in stations['collection'].items()
                         )
                 else:
                     f.extend(
-                        fort15_line(f'{x:G} {y:G}', station_id)
+                        fort15_line(f'{x} {y}', station_id)
                         for station_id, (x, y) in stations['collection'].items()
                     )
         if self.NWS > 0:
@@ -298,12 +299,12 @@ class Fort15:
                     if self._runtype == 'coldstart':
                         if stations['spinup']:
                             f.extend(
-                                fort15_line(f'{x:G} {y:G}', station_id)
+                                fort15_line(f'{x} {y}', station_id)
                                 for station_id, (x, y) in stations['collection'].items()
                             )
                     else:
                         f.extend(
-                            fort15_line(f'{x:G} {y:G}', station_id)
+                            fort15_line(f'{x} {y}', station_id)
                             for station_id, (x, y) in stations['collection'].items()
                         )
         # elevation global outputs
@@ -506,47 +507,28 @@ class Fort15:
         self.__C00 = C00
 
     @staticmethod
-    def parse_stations(
-        path: PathLike, station_types: [str] = None
-    ) -> {str: {str: (float, float)}}:
-        if station_types is None:
-            station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
-
-        stations = {}
-        with open(path, 'r') as stations_file:
-            while True:
-                line = stations_file.readline()
-                if len(line) == 0:
-                    # end of file
-                    break
-                line = line.strip()
-
-                # find stations header for the current type
-                current_station_types = [
-                    station_type for station_type in station_types if station_type in line
-                ]
-                if len(current_station_types) > 0:
-                    num_stations = line.split('!')[0]
-                    if len(num_stations) == 0:
-                        continue
-                    num_stations = int(num_stations)
-
-                    # iterate over stations, reading vertices into dictionary
-                    station_vertices = {}
-                    for station_index in range(num_stations):
-                        line = stations_file.readline().split('!')
-                        if len(line) > 0:
-                            station_name = line[1].strip()
+    def parse_stations(path, station_type):
+        stations = dict()
+        with open(path, 'r') as f:
+            for line in f:
+                if station_type in line:
+                    line = f.readline().split('!')[0]
+                    num = int(line)
+                    for i in range(num):
+                        line = f.readline().split('!')
+                        if len(line) > 1:
+                            station_name = line[1].strip(' \n')
                         else:
-                            station_name = str(station_index)
-                        station_vertices[station_name] = tuple(
-                            float(vertex) for vertex in line[0].split(' ') if len(vertex) > 0
-                        )
-
-                    for station_type in current_station_types:
-                        if station_type not in stations:
-                            stations[station_type] = {}
-                        stations[station_type].update(station_vertices)
+                            station_name = str(i)
+                        vertices = line[0].split(' ')
+                        vertices = [float(x) for x in vertices if x != ""]
+                        x = float(vertices[0])
+                        y = float(vertices[1])
+                        try:
+                            z = float(vertices[2])
+                            stations[station_name] = (x, y, z)
+                        except IndexError:
+                            stations[station_name] = (x, y)
         return stations
 
     @property

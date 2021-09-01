@@ -411,13 +411,13 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15: os.PathLike):
+    def import_stations(self, fort15):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
-        envelope = self.mesh.hull.multipolygon()
-        stations = Fort15.parse_stations(fort15, station_types)
-        for station_type, station_vertices in stations.items():
-            for name, vertices in station_vertices.items():
-                if not Point(vertices).within(envelope):
+        for station_type in station_types:
+            stations = Fort15.parse_stations(fort15, station_type)
+            mp = self.mesh.hull.multipolygon()
+            for name, vertices in stations.items():
+                if not Point(vertices).within(mp):
                     continue
                 if station_type == 'NOUTE':
                     self.add_elevation_output_station(name, vertices)
@@ -427,7 +427,6 @@ class AdcircRun(Fort15):
                     self.add_meteorological_output_station(name, vertices)
                 if station_type == 'NOUTC':
                     self.add_concentration_output_station(name, vertices)
-
     def run(
         self,
         outdir=None,
