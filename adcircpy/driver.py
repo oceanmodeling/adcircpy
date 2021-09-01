@@ -413,7 +413,7 @@ class AdcircRun(Fort15):
 
     def import_stations(self, fort15: os.PathLike):
         station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
-        envelope = self.mesh.hull.multipolygon
+        envelope = self.mesh.hull.rings.multipolygon
         stations = Fort15.parse_stations(fort15, station_types)
         for station_type, station_vertices in stations.items():
             for name, vertices in station_vertices.items():

@@ -196,6 +196,7 @@ class Elements:
 class Hull:
     def __init__(self, grd: 'Grd'):
         self._grd = grd
+        self.rings = Rings(self._grd)
 
     @property
     def edges(self) -> GeoDataFrame:
