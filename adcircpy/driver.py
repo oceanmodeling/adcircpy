@@ -427,6 +427,7 @@ class AdcircRun(Fort15):
                     self.add_meteorological_output_station(name, vertices)
                 if station_type == 'NOUTC':
                     self.add_concentration_output_station(name, vertices)
+
     def run(
         self,
         outdir=None,
