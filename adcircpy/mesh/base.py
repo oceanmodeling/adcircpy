@@ -212,6 +212,7 @@ class Hull:
                 )
         return GeoDataFrame(data, crs=self._grd.crs)
 
+
 class Rings:
     def __init__(self, grd: 'Grd'):
         self._grd = grd
@@ -220,8 +221,7 @@ class Rings:
     def __call__(self) -> gpd.GeoDataFrame:
         data = []
         for bnd_id, rings in self.sorted().items():
-            geometry = LinearRing(
-                self._grd.coords.iloc[rings['exterior'][:, 0], :].values)
+            geometry = LinearRing(self._grd.coords.iloc[rings['exterior'][:, 0], :].values)
             data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'exterior'})
             for interior in rings['interiors']:
                 geometry = LinearRing(self._grd.coords.iloc[interior[:, 0], :].values)
@@ -242,7 +242,6 @@ class Rings:
         for i, j in idxs:
             boundary_edges.append((tri.triangles[i, j], tri.triangles[i, (j + 1) % 3]))
         return sort_rings(edges_to_rings(boundary_edges), self._grd.nodes.coord)
-
 
     @property
     def geodataframe(self) -> GeoDataFrame:
