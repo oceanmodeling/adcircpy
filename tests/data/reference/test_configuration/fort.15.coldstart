@@ -1,4 +1,4 @@
-created on 2021-06-08 12:20                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2021-09-02 09:40                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -24,7 +24,7 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 2                                                               ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
 0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
 0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
--72.4759 40.7602                                                ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
+-72.47588186015 40.7602221247                                   ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
 0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA            
 -0.2                                                            ! smagorinsky coefficient             - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1

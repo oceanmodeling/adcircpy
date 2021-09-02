@@ -54,7 +54,7 @@ def test_from_atcf(mocker):
     check_reference_directory(output_directory, reference_directory)
 
     mocker.patch('matplotlib.pyplot.show')
-    best_track.plot_track(show=True)
+    best_track.plot_track(show=True, coastline=False)
 
 
 def test_recompute_velocity():
