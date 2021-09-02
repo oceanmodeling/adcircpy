@@ -422,16 +422,15 @@ class AdcircRun(Fort15):
         stations = Fort15.parse_stations(path=fort15, station_types=station_types)
         for station_type, station_vertices in stations.items():
             for name, vertex in station_vertices.items():
-                if not Point(vertex).within(envelope):
-                    continue
-                if station_type == StationType.ELEVATION:
-                    self.add_elevation_output_station(name, vertex)
-                if station_type == StationType.VELOCITY:
-                    self.add_velocity_output_station(name, vertex)
-                if station_type == StationType.CONCENTRATION:
-                    self.add_concentration_output_station(name, vertex)
-                if station_type == StationType.METEOROLOGICAL:
-                    self.add_meteorological_output_station(name, vertex)
+                if Point(vertex).within(envelope):
+                    if station_type == StationType.ELEVATION:
+                        self.add_elevation_output_station(name, vertex)
+                    elif station_type == StationType.VELOCITY:
+                        self.add_velocity_output_station(name, vertex)
+                    elif station_type == StationType.CONCENTRATION:
+                        self.add_concentration_output_station(name, vertex)
+                    elif station_type == StationType.METEOROLOGICAL:
+                        self.add_meteorological_output_station(name, vertex)
 
     def run(
         self,
