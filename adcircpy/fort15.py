@@ -542,7 +542,9 @@ class Fort15:
 
                 # find stations header for the current type
                 current_station_types = [
-                    station_type for station_type in station_types if station_type.value in line
+                    station_type
+                    for station_type in station_types
+                    if station_type.value in line
                 ]
                 if len(current_station_types) > 0:
                     num_stations = line.split('!')[0]
