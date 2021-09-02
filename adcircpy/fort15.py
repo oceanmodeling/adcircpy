@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from enum import Enum
 import math
 from os import PathLike
 import pathlib
@@ -7,6 +8,13 @@ from typing import Any
 import numpy as np
 
 from adcircpy.mesh.mesh import AdcircMesh
+
+
+class StationType(Enum):
+    ELEVATION = 'NSTAE'
+    VELOCITY = 'NSTAV'
+    CONCENTRATION = 'NSTAC'
+    METEOROLOGICAL = 'NSTAM'
 
 
 class Fort15:
@@ -508,6 +516,21 @@ class Fort15:
 
     @staticmethod
     def parse_stations(path: PathLike, station_types: [str] = None):
+        if station_types is None:
+            station_types = StationType
+        else:
+            for index, station_type in enumerate(station_types):
+                if not isinstance(station_type, StationType):
+                    station_type = str(station_type).upper()
+                    try:
+                        station_type = StationType[station_type]
+                    except (KeyError, ValueError):
+                        try:
+                            station_type = StationType(station_type)
+                        except (KeyError, ValueError):
+                            pass
+                station_types[index] = station_type
+
         stations = {}
         with open(path, 'r') as stations_file:
             while True:
@@ -519,7 +542,7 @@ class Fort15:
 
                 # find stations header for the current type
                 current_station_types = [
-                    station_type for station_type in station_types if station_type in line
+                    station_type for station_type in station_types if station_type.value in line
                 ]
                 if len(current_station_types) > 0:
                     num_stations = line.split('!')[0]

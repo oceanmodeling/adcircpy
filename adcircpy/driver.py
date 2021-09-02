@@ -14,7 +14,7 @@ from shapely.geometry import Point
 
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.forcing.winds.best_track import BestTrackForcing
-from adcircpy.fort15 import Fort15
+from adcircpy.fort15 import Fort15, StationType
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server import SlurmConfig, SSHConfig
@@ -410,27 +410,27 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15: os.PathLike, station_types: [str] = None):
+    def import_stations(self, fort15: os.PathLike, station_types: [StationType] = None):
         if station_types is None:
-            station_types = ['NSTAE', 'NSTAV']
+            station_types = [StationType.ELEVATION, StationType.VELOCITY]
             if self.IM == 10:
-                station_types.append('NSTAC')
+                station_types.append(StationType.CONCENTRATION)
             if self.NWS > 0:
-                station_types.append('NSTAM')
+                station_types.append(StationType.METEOROLOGICAL)
 
         envelope = self.mesh.hull.multipolygon()
-        stations = Fort15.parse_stations(fort15, station_types)
+        stations = Fort15.parse_stations(path=fort15, station_types=station_types)
         for station_type, station_vertices in stations.items():
             for name, vertex in station_vertices.items():
                 if not Point(vertex).within(envelope):
                     continue
-                if station_type == 'NSTAE':
+                if station_type == StationType.ELEVATION:
                     self.add_elevation_output_station(name, vertex)
-                if station_type == 'NSTAV':
+                if station_type == StationType.VELOCITY:
                     self.add_velocity_output_station(name, vertex)
-                if station_type == 'NSTAC':
+                if station_type == StationType.CONCENTRATION:
                     self.add_concentration_output_station(name, vertex)
-                if station_type == 'NSTAM':
+                if station_type == StationType.METEOROLOGICAL:
                     self.add_meteorological_output_station(name, vertex)
 
     def run(

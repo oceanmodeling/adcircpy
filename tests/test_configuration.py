@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
 from adcircpy.forcing.winds.atmesh import AtmosphericMeshForcing
+from adcircpy.fort15 import StationType
 from adcircpy.server import SlurmConfig
 from adcircpy.server.driver_file import DriverFile
 
@@ -103,7 +104,8 @@ def test_import_stations(shinnecock_mesh_directory):
 
     driver_4 = AdcircRun(copy(mesh), start_date, end_date, spinup_time)
     driver_4.import_stations(
-        input_directory / 'stations_3.txt', station_types=['NSTAE', 'NSTAC', 'NSTAM']
+        input_directory / 'stations_3.txt',
+        station_types=['elevation', 'NSTAC', StationType.METEOROLOGICAL],
     )
 
     assert driver_1.elevation_stations == {'8512769': (-72.5772, 40.823)}
