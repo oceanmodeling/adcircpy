@@ -910,15 +910,6 @@ class BestTrackForcing(VortexForcing, WindForcing):
         self.__NWS = int(NWS)
 
     @property
-    def WTIMINC(self) -> str:
-        return (
-            f'{self.start_date:%Y %m %d %H} '
-            f'{self.data["storm_number"].iloc[0]} '
-            f'{self.BLADj} '
-            f'{self.geofactor}'
-        )
-
-    @property
     def BLADj(self) -> float:
         try:
             return self.__BLADj

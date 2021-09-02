@@ -1422,9 +1422,14 @@ class Fort15:
         self.__REFTIM = float(REFTIM)
 
     @property
-    def WTIMINC(self) -> int:
+    def WTIMINC(self):
         if self.NWS in [8, 19, 20]:
-            return self.wind_forcing.WTIMINC
+            return (
+                f'{self.forcing_start_date:%Y %m %d %H} '
+                f'{self.wind_forcing.data["storm_number"].iloc[0]} '
+                f'{self.wind_forcing.BLADj} '
+                f'{self.wind_forcing.geofactor}'
+            )
         elif self.NWS not in [0, 1, 9, 11]:
             return int(self.wind_forcing.interval / timedelta(seconds=1))
         else:
