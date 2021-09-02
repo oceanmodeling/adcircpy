@@ -712,7 +712,16 @@ class VortexForcing:
     def get_wind_swath(
         self, isotach: int, num_segments: int = 91, alpha: float = 2.0, plot_swath: bool = False
         ):
+        """extracts the wind swath of the BestTrackForcing class object as a Polygon object
 
+        :param isotach [required]: the wind swath to extract (34-kt, 50-kt, or 64-kt)
+        :param num_segments: number of discretization points per quadrant (default = 91)
+        :param alpha: maximum allowable alpha value for alphashape of the TC swath 
+        (default = 2.0). Code will find the largest value <= alpha that returns a single Polygon
+        object. Set alpha to None to skip the alphashape operation and return the union of all
+        quadrants which may be either a MultiPolygon or Polygon object. 
+        :param plot_swath: plot the swath before returning? (default = False)
+        """
         # parameter
         nm2m = 1852.0 # nautical miles to meters 
         #isotach should be one of 34, 50, 64
@@ -770,8 +779,24 @@ class VortexForcing:
         # get the union of polygons
         swath = ops.unary_union(arcs)
 
+        # return swath here if alpha is none
+        if alpha is None:
+            if plot_swath:
+                fig = pyplot.figure()
+                axis = fig.add_subplot(111)
+                if isinstance(swath,MultiPolygon):
+                    for p in swath:
+                        x,y = p.exterior.coords.xy
+                        axis.plot(x,y)
+                else:
+                    x,y = swath.exterior.coords.xy
+                    axis.plot(x,y,'k-')
+                pyplot.show()
+            return swath
+        
         # swath may have jagged edges and may be a MultiPolygon 
-        # so instead we try to find the alphashape of swath
+        # so instead we try to find the single Polygon representation
+        # of swath using alphashape
 
         # first get the exterior points of swath as a coordinate list
         if isinstance(swath,MultiPolygon):
