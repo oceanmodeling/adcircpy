@@ -75,7 +75,7 @@ def plot_coastline(axis: Axes = None, show: bool = False, save_filename: PathLik
 
 
 class FileDeck(Enum):
-    """ http://hurricanes.ral.ucar.edu/realtime/ """
+    """http://hurricanes.ral.ucar.edu/realtime/"""
 
     a = 'a'
     b = 'b'
@@ -337,7 +337,7 @@ class VortexForcing:
 
     @property
     def duration(self) -> float:
-        d = (self.end_date - self.start_date).days
+        d = (self.end_date - self.start_date) / timedelta(days=1)
         return d
 
     @property
@@ -602,7 +602,7 @@ class VortexForcing:
                         if len(line) > 23:
                             record['name'] = line[27].strip(' ')
                         else:
-                            record['name'] = ''
+                            record['name'] = ""
                     else:
                         record.update(
                             {
@@ -689,7 +689,14 @@ class VortexForcing:
         if _found_start_date is False:
             raise Exception(f'No data within mesh bounding box for storm {self.storm_id}.')
 
-    def plot_track(self, axis: Axes = None, show: bool = False, color: str = 'k', **kwargs):
+    def plot_track(
+        self,
+        axis: Axes = None,
+        show: bool = False,
+        color: str = 'k',
+        coastline: bool = True,
+        **kwargs,
+    ):
         kwargs.update({'color': color})
         if axis is None:
             fig = pyplot.figure()
@@ -706,7 +713,8 @@ class VortexForcing:
                 )
         if show:
             axis.axis('scaled')
-        plot_coastline(axis, show)
+        if bool(coastline) is True:
+            plot_coastline(axis, show)
 
     def __generate_record_numbers(self):
         record_number = [1]
@@ -740,7 +748,7 @@ class VortexForcing:
 
     @staticmethod
     def __compute_velocity(data: DataFrame) -> DataFrame:
-        """ Output has units of meters per second. """
+        """Output has units of meters per second."""
 
         geodetic = Geod(ellps='WGS84')
 
@@ -1092,14 +1100,14 @@ def get_atcf_id(storm_name: str, year: int) -> str:
 
 
 def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
-    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', '')
+    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', "")
     logger.info(f'Downloading storm data from {url}')
 
     hostname, filename = url.split('/', 1)
 
     handle = io.BytesIO()
 
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
+    ftp = ftplib.FTP(hostname, 'anonymous', "")
     ftp.encoding = 'utf-8'
     ftp.retrbinary(f'RETR {filename}', handle.write)
 
@@ -1247,9 +1255,9 @@ def atcf_storm_ids(file_deck: FileDeck = None, mode: Mode = None) -> [str]:
     elif not isinstance(file_deck, FileDeck):
         file_deck = convert_value(file_deck, FileDeck)
 
-    url = atcf_url(file_deck=file_deck, mode=mode).replace('ftp://', '')
+    url = atcf_url(file_deck=file_deck, mode=mode).replace('ftp://', "")
     hostname, directory = url.split('/', 1)
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
+    ftp = ftplib.FTP(hostname, 'anonymous', "")
 
     filenames = [
         filename for filename, metadata in ftp.mlsd(directory) if metadata['type'] == 'file'

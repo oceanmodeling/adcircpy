@@ -1,6 +1,8 @@
+from datetime import timedelta
 import os
 from textwrap import indent
 
+from adcircpy.server.base_config import BaseServerConfig
 from adcircpy.server.slurm_config import SlurmConfig
 
 
@@ -16,7 +18,7 @@ class DriverFile:
             # os.chmod(path, 744)
 
     @property
-    def _script(self):
+    def _script(self) -> str:
         f = f'{self._shebang}\n'
 
         if not isinstance(self._server_config, int):
@@ -30,7 +32,7 @@ class DriverFile:
 
         f += '\n'
 
-        if self._driver.spinup_time.total_seconds() == 0:
+        if self._driver.spinup_time == timedelta(seconds=0):
             f += self._single_phase_run + '\n'
         else:
             f += self._dual_phase_run + '\n'
@@ -40,14 +42,14 @@ class DriverFile:
         return f
 
     @property
-    def _shebang(self):
+    def _shebang(self) -> str:
         f = '#!/bin/bash'
         if not isinstance(self._server_config, int):
             f += ' --login'
         return f
 
     @property
-    def _single_phase_run(self):
+    def _single_phase_run(self) -> str:
         f = (
             'rm -rf work\n'
             'mkdir work\n'
@@ -71,7 +73,7 @@ class DriverFile:
         return bash_function('main', f)
 
     @property
-    def _dual_phase_run(self):
+    def _dual_phase_run(self) -> str:
         return (
             self._bash_main_dual_phase
             + '\n'
@@ -81,7 +83,7 @@ class DriverFile:
         )
 
     @property
-    def _bash_main_dual_phase(self):
+    def _bash_main_dual_phase(self) -> str:
         error_exit_code = -1
 
         f = 'SECONDS=0\n' 'run_coldstart_phase\n'
@@ -109,7 +111,7 @@ class DriverFile:
         return bash_function('main', f)
 
     @property
-    def _run_coldstart_phase(self):
+    def _run_coldstart_phase(self) -> str:
         f = (
             'rm -rf coldstart\n'
             'mkdir coldstart\n'
@@ -140,7 +142,7 @@ class DriverFile:
         return bash_function('run_coldstart_phase', f)
 
     @property
-    def _run_hotstart_phase(self):
+    def _run_hotstart_phase(self) -> str:
         f = (
             'rm -rf hotstart\n'
             'mkdir hotstart\n'
@@ -188,7 +190,7 @@ class DriverFile:
         return bash_function('run_hotstart_phase', f)
 
     @property
-    def _clean_directory(self):
+    def _clean_directory(self) -> str:
         return bash_function(
             'clean_directory',
             '\n'.join(
@@ -208,7 +210,7 @@ class DriverFile:
         )
 
     @property
-    def _logfile(self):
+    def _logfile(self) -> str:
         if isinstance(self._server_config, int):
             return f'{self._executable}.log'
 
@@ -219,7 +221,7 @@ class DriverFile:
                 return f'{self._executable}.log'
 
     @property
-    def _executable(self):
+    def _executable(self) -> str:
         if self._nprocs == 1:
             if self._driver.wave_forcing is not None:
                 return 'adcswan'
@@ -235,18 +237,18 @@ class DriverFile:
                 return 'padcirc'
 
     @property
-    def _mpi(self):
+    def _mpi(self) -> str:
         if isinstance(self._server_config, SlurmConfig):
             return self._server_config._launcher
         else:
             return f'mpiexec -n {self._nprocs}'
 
     @property
-    def _server_config(self):
+    def _server_config(self) -> BaseServerConfig:
         return self._driver._server_config
 
     @property
-    def _nprocs(self):
+    def _nprocs(self) -> int:
         if self.__nprocs is not None:
             return self.__nprocs
         elif isinstance(self._server_config, int):

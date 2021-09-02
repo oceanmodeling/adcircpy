@@ -1,4 +1,4 @@
-created on 2021-06-08 12:07                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2021-09-02 09:40                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -24,44 +24,44 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 0.5                                                             ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
 0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
 0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
--72.4759 40.7602                                                ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
+-72.47588186015 40.7602221247                                   ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
 0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA            
 -0.2                                                            ! smagorinsky coefficient             - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
 8                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
 Q1
-0.019256 6.49585E-05 0.695 1.082 296.486
+0.019256 6.49585E-05 0.695 1.09411 190.694
 O1
-0.100514 6.75977E-05 0.695 1.082 119.433
+0.100514 6.75977E-05 0.695 1.09411 55.5974
 P1
-0.046843 7.25229E-05 0.706 1 72.7374
+0.046843 7.25229E-05 0.706 1 303.095
 K1
-0.141565 7.29212E-05 0.736 1.05083 39.3673
+0.141565 7.29212E-05 0.736 1.0583 79.3351
 N2
-0.046398 0.00013788 0.693 0.987678 332.472
+0.046398 0.00013788 0.693 0.984949 266.817
 M2
-0.242334 0.000140519 0.693 0.987678 155.419
+0.242334 0.000140519 0.693 0.984949 131.721
 S2
-0.112841 0.000145444 0.693 1 120
+0.112841 0.000145444 0.693 1 30
 K2
-0.030704 0.000145842 0.693 1.11503 258.231
+0.030704 0.000145842 0.693 1.1371 338.127
 8
 Q1
-6.49585E-05 1.082 296.486
+6.49585E-05 1.09411 190.694
 O1
-6.75977E-05 1.082 119.433
+6.75977E-05 1.09411 55.5974
 P1
-7.25229E-05 1 72.7374
+7.25229E-05 1 303.095
 K1
-7.29212E-05 1.05083 39.3673
+7.29212E-05 1.0583 79.3351
 N2
-0.00013788 0.987678 332.472
+0.00013788 0.984949 266.817
 M2
-0.000140519 0.987678 155.419
+0.000140519 0.984949 131.721
 S2
-0.000145444 1 120
+0.000145444 1 30
 K2
-0.000145842 1.11503 258.231
+0.000145842 1.1371 338.127
 Q1
 1.13893401e-02 1.83698935e+02
 1.21085823e-02 1.73352953e+02
@@ -691,5 +691,5 @@ K2
                                                                 ! NCHOST                              - PROJECT HOST
                                                                 ! NCONV                               - CONVENTIONS
                                                                 ! NCCONT                              - CONTACT INFORMATION
-2021-06-08 04:07                                                ! NCDATE                              - forcing start date
+2021-09-02 01:40                                                ! NCDATE                              - forcing start date
 &metControl WindDragLimit=0.0025, DragLawString=default, outputWindDrag=F, invertedBarometerOnElevationBoundary=T \
