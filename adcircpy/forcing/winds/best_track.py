@@ -25,8 +25,9 @@ import pandas.util
 from pyproj import CRS, Geod, Transformer
 import requests
 from shapely import ops
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, MultiPolygon, MultiPoint
 import utm
+from alphashape import alphashape
 
 from adcircpy.forcing.winds.base import WindForcing
 
@@ -708,7 +709,9 @@ class VortexForcing:
             axis.axis('scaled')
         plot_coastline(axis, show)
     
-    def get_wind_swath(self, isotach: int, num_segments: int = 19, plot_swath: bool = False):
+    def get_wind_swath(
+        self, isotach: int, num_segments: int = 91, alpha: float = 2.0, plot_swath: bool = False
+        ):
 
         # parameter
         nm2m = 1852.0 # nautical miles to meters 
@@ -733,7 +736,7 @@ class VortexForcing:
         geodetic = Geod(ellps='WGS84')
     
         ## Generate overall swath based on the desired isotach
-        swath = Polygon()
+        arcs = list()
         for pts_index in range(0,len(c_lon)):
             # get the starting angle range for NEQ based on storm direction
             rot_angle = 360 - direc.iloc[pts_index] 
@@ -748,32 +751,59 @@ class VortexForcing:
                 # skip if quadrant radius is zero
                 if rad.iloc[pts_index] <= 1.0: 
                    continue 
-                # make the lon, lat arrays for this quadrant
+                # make the coordinate list for this quadrant
                 ## entering origin 
-                lon = [c_lon.iloc[pts_index]]
-                lat = [c_lat.iloc[pts_index]]
+                coords = [(c_lon.iloc[pts_index],c_lat.iloc[pts_index])]
 		# using forward geodetic (origin,angle,dist)
                 for az12 in theta:
-                    lont, latt, backaz = geodetic.fwd(lon[0],lat[0],az12,rad.iloc[pts_index])
-                    lon.append(lont)
-                    lat.append(latt)
+                    lont, latt, backaz = geodetic.fwd(
+                        c_lon.iloc[pts_index],
+                        c_lat.iloc[pts_index],
+                        az12,rad.iloc[pts_index]
+                    )
+                    coords.append((lont,latt))
                 ## start point equals last point 
-                lon.append(lon[0])
-                lat.append(lat[0])
-                # enter quadrant as polygon
-                arc = Polygon(numpy.column_stack([lon, lat]))
-                # add quadrant to overall swath
-                swath = swath.union(arc)
+                coords.append(coords[0])
+                # enter quadrant as new polygon
+                arcs.append(Polygon(coords))
+ 
+        # get the union of polygons
+        swath = ops.unary_union(arcs)
+
+        # swath may have jagged edges and may be a MultiPolygon 
+        # so instead we try to find the alphashape of swath
+
+        # first get the exterior points of swath as a coordinate list
+        if isinstance(swath,MultiPolygon):
+            coords = [point for polygon in swath for point in polygon.exterior.coords]
+        else:
+            coords = swath.exterior.coords
+        coords = list(coords)
+       
+        # fill in the polygon with other points 
+        xmin, ymin, xmax, ymax = swath.bounds 
+        xv = numpy.linspace(xmin,xmax,100)
+        yv = numpy.linspace(ymin,ymax,100)
+        for x in xv:
+            for y in yv:
+                if swath.contains(Point((x,y))):
+                   coords.append((x,y))
+ 
+        # find tightest alphashape that returns a single polygon
+        # starting from default or prescribed input alpha
+        swath_alpha = MultiPolygon()
+        while isinstance(swath_alpha,MultiPolygon):
+            swath_alpha = alphashape(coords,alpha)
+            alpha = alpha*0.95
 
         if plot_swath:
             fig = pyplot.figure()
             axis = fig.add_subplot(111)
-            for poly in swath:
-                x,y = poly.exterior.coords.xy
-                axis.plot(x,y)
+            x,y = swath_alpha.exterior.coords.xy
+            axis.plot(x,y,'k-')
             pyplot.show()
  
-        return swath
+        return swath_alpha
 
     def __generate_record_numbers(self):
         record_number = [1]
