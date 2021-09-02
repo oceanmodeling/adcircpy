@@ -337,7 +337,7 @@ class VortexForcing:
 
     @property
     def duration(self) -> float:
-        d = (self.end_date - self.start_date).days
+        d = (self.end_date - self.start_date) / timedelta(days=1)
         return d
 
     @property
