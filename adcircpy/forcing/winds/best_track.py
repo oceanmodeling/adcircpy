@@ -38,27 +38,29 @@ pandas.options.mode.chained_assignment = None  # default='warn'
 
 
 def download_coastline(overwrite: bool = False) -> pathlib.Path:
-    data_directory = pathlib.Path(appdirs.user_data_dir('ne_coastline'))
+    data_directory = pathlib.Path(appdirs.user_data_dir("ne_coastline"))
     if not data_directory.exists():
         data_directory.mkdir(exist_ok=True, parents=True)
 
-    coastline_filename = data_directory / 'ne_110m_coastline.shp'
+    coastline_filename = data_directory / "ne_110m_coastline.shp"
 
     if not coastline_filename.exists() or overwrite:
         # download and save if not present
-        url = 'http://naciscdn.org/naturalearth/110m/physical/ne_110m_coastline.zip'
+        url = "http://naciscdn.org/naturalearth/110m/physical/ne_110m_coastline.zip"
         response = requests.get(url, stream=True)
         with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
             for member_filename in zip_file.namelist():
                 file_data = zip_file.read(member_filename)
-                with open(data_directory / member_filename, 'wb') as output_file:
+                with open(data_directory / member_filename, "wb") as output_file:
                     output_file.write(file_data)
-        assert coastline_filename.exists(), 'coastline file not downloaded'
+        assert coastline_filename.exists(), "coastline file not downloaded"
 
     return coastline_filename
 
 
-def plot_coastline(axis: Axes = None, show: bool = False, save_filename: PathLike = None):
+def plot_coastline(
+    axis: Axes = None, show: bool = False, save_filename: PathLike = None
+):
     if axis is None:
         figure = pyplot.figure()
         axis = figure.add_subplot(1, 1, 1)
@@ -75,19 +77,19 @@ def plot_coastline(axis: Axes = None, show: bool = False, save_filename: PathLik
 
 
 class FileDeck(Enum):
-    """ http://hurricanes.ral.ucar.edu/realtime/ """
+    """http://hurricanes.ral.ucar.edu/realtime/"""
 
-    a = 'a'
-    b = 'b'
-    c = 'c'
-    d = 'd'
-    e = 'e'
-    f = 'f'
+    a = "a"
+    b = "b"
+    c = "c"
+    d = "d"
+    e = "e"
+    f = "f"
 
 
 class Mode(Enum):
-    historical = 'ARCHIVE'
-    realtime = 'aid_public'
+    historical = "ARCHIVE"
+    realtime = "aid_public"
 
 
 class VortexForcing:
@@ -126,15 +128,15 @@ class VortexForcing:
             self.__atcf = storm
         elif isinstance(storm, (str, PathLike, pathlib.Path)):
             if os.path.exists(storm):
-                self.__atcf = io.open(storm, 'rb')
+                self.__atcf = io.open(storm, "rb")
             else:
                 self.storm_id = storm
 
         self.__previous_configuration = {
-            'storm_id': self.storm_id,
-            'file_deck': self.file_deck,
-            'mode': self.mode,
-            'filename': self.filename,
+            "storm_id": self.storm_id,
+            "file_deck": self.file_deck,
+            "mode": self.mode,
+            "filename": self.filename,
         }
 
         # use start and end dates to mask dataframe here
@@ -157,10 +159,10 @@ class VortexForcing:
 
         dataframe = self.data
 
-        for column in dataframe.select_dtypes(include=['float']):
-            if column not in ['latitude', 'longitude']:
+        for column in dataframe.select_dtypes(include=["float"]):
+            if column not in ["latitude", "longitude"]:
                 dataframe.loc[:, column] = (
-                    dataframe[column].round(0).astype('Int64', copy=False)
+                    dataframe[column].round(0).astype("Int64", copy=False)
                 )
 
         for i, (_, row) in enumerate(dataframe.iterrows()):
@@ -177,17 +179,19 @@ class VortexForcing:
                 ]
             )
 
-            latitude = convert_value(row['latitude'] / 0.1, to_type=int, round_digits=1)
+            latitude = convert_value(row["latitude"] / 0.1, to_type=int, round_digits=1)
             if latitude >= 0:
-                line.append(f'{latitude:>4}N')
+                line.append(f"{latitude:>4}N")
             else:
-                line.append(f'{latitude * -.1:>4}S')
+                line.append(f"{latitude * -.1:>4}S")
 
-            longitude = convert_value(row['longitude'] / 0.1, to_type=int, round_digits=1)
+            longitude = convert_value(
+                row["longitude"] / 0.1, to_type=int, round_digits=1
+            )
             if longitude >= 0:
-                line.append(f'{longitude:>5}E')
+                line.append(f"{longitude:>5}E")
             else:
-                line.append(f'{longitude * -1:>5}W')
+                line.append(f"{longitude * -1:>5}W")
 
             line.extend(
                 [
@@ -203,25 +207,31 @@ class VortexForcing:
                 ]
             )
 
-            if row['background_pressure'] is None:
-                row['background_pressure'] = self.data['background_pressure'].iloc[i - 1]
+            if row["background_pressure"] is None:
+                row["background_pressure"] = self.data["background_pressure"].iloc[
+                    i - 1
+                ]
             if (
-                row['background_pressure'] <= row['central_pressure']
-                and 1013 > row['central_pressure']
+                row["background_pressure"] <= row["central_pressure"]
+                and 1013 > row["central_pressure"]
             ):
                 background_pressure = 1013
             elif (
-                row['background_pressure'] <= row['central_pressure']
-                and 1013 <= row['central_pressure']
+                row["background_pressure"] <= row["central_pressure"]
+                and 1013 <= row["central_pressure"]
             ):
                 background_pressure = convert_value(
-                    row['central_pressure'] + 1, to_type=int, round_digits=0,
+                    row["central_pressure"] + 1,
+                    to_type=int,
+                    round_digits=0,
                 )
             else:
                 background_pressure = convert_value(
-                    row['background_pressure'], to_type=int, round_digits=0,
+                    row["background_pressure"],
+                    to_type=int,
+                    round_digits=0,
                 )
-            line.append(f'{background_pressure:>5}')
+            line.append(f"{background_pressure:>5}")
 
             line.extend(
                 [
@@ -239,18 +249,18 @@ class VortexForcing:
             )
 
             # from this point forwards it's all aswip
-            line.append(f'{record_number[i]:>4}')
+            line.append(f"{record_number[i]:>4}")
 
-            lines.append(','.join(line))
+            lines.append(",".join(line))
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
         if path.exists() and overwrite is False:
-            raise Exception('File exist, set overwrite=True to allow overwrite.')
-        with open(path, 'w') as f:
+            raise Exception("File exist, set overwrite=True to allow overwrite.")
+        with open(path, "w") as f:
             f.write(str(self))
 
     @property
@@ -258,8 +268,8 @@ class VortexForcing:
         if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
                 storm_id = get_atcf_id(
-                    storm_name=self.__dataframe['name'].tolist()[-1],
-                    year=self.__dataframe['datetime'].tolist()[-1].year,
+                    storm_name=self.__dataframe["name"].tolist()[-1],
+                    year=self.__dataframe["datetime"].tolist()[-1].year,
                 )
                 try:
                     get_atcf_file(storm_id, self.file_deck, self.mode)
@@ -276,19 +286,19 @@ class VortexForcing:
             if digits == 4:
                 atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
                 if atcf_id is None:
-                    raise ValueError(f'No storm with id: {storm_id}')
+                    raise ValueError(f"No storm with id: {storm_id}")
                 storm_id = atcf_id
         self.__storm_id = storm_id
 
     @property
     def track_length(self) -> float:
-        geodetic = Geod(ellps='WGS84')
+        geodetic = Geod(ellps="WGS84")
 
         forward_azimuths, inverse_azimuths, distances = geodetic.inv(
-            self.data['longitude'].iloc[:-1],
-            self.data['latitude'].iloc[:-1],
-            self.data['longitude'].iloc[1:],
-            self.data['latitude'].iloc[1:],
+            self.data["longitude"].iloc[:-1],
+            self.data["latitude"].iloc[:-1],
+            self.data["longitude"].iloc[1:],
+            self.data["latitude"].iloc[1:],
         )
 
         return numpy.sum(distances)
@@ -300,13 +310,13 @@ class VortexForcing:
     @start_date.setter
     def start_date(self, start_date: datetime):
         if start_date is None:
-            start_date = self.dataframe['datetime'][0]
+            start_date = self.dataframe["datetime"][0]
         else:
             if not isinstance(start_date, datetime):
                 start_date = parse_date(start_date)
             if (
-                start_date < self.dataframe['datetime'].iloc[0]
-                or start_date > self.dataframe['datetime'].iloc[-1]
+                start_date < self.dataframe["datetime"].iloc[0]
+                or start_date > self.dataframe["datetime"].iloc[-1]
             ):
                 raise ValueError(
                     f'given start date is outside of data bounds ({self.dataframe["datetime"].iloc[0]} - {self.dataframe["datetime"].iloc[-1]})'
@@ -320,19 +330,21 @@ class VortexForcing:
     @end_date.setter
     def end_date(self, end_date: datetime):
         if end_date is None:
-            end_date = self.dataframe['datetime'].iloc[-1]
+            end_date = self.dataframe["datetime"].iloc[-1]
         else:
             if not isinstance(end_date, datetime):
                 end_date = parse_date(end_date)
             if (
-                end_date < self.dataframe['datetime'].iloc[0]
-                or end_date > self.dataframe['datetime'].iloc[-1]
+                end_date < self.dataframe["datetime"].iloc[0]
+                or end_date > self.dataframe["datetime"].iloc[-1]
             ):
                 raise ValueError(
                     f'given end date is outside of data bounds ({self.dataframe["datetime"].iloc[0]} - {self.dataframe["datetime"].iloc[-1]})'
                 )
             if end_date <= self.start_date:
-                raise ValueError(f'end date must be after start date ({self.start_date})')
+                raise ValueError(
+                    f"end date must be after start date ({self.start_date})"
+                )
         self.__end_date = end_date
 
     @property
@@ -346,43 +358,43 @@ class VortexForcing:
 
     @property
     def name(self) -> str:
-        return self.data['name'].value_counts()[:].index.tolist()[0]
+        return self.data["name"].value_counts()[:].index.tolist()[0]
 
     @property
     def basin(self) -> str:
-        return self.data['basin'].iloc[0]
+        return self.data["basin"].iloc[0]
 
     @property
     def storm_number(self) -> str:
-        return self.data['storm_number'].iloc[0]
+        return self.data["storm_number"].iloc[0]
 
     @property
     def year(self) -> int:
-        return self.data['datetime'].iloc[0].year
+        return self.data["datetime"].iloc[0].year
 
     @property
     def datetime(self):
-        return self.data['datetime']
+        return self.data["datetime"]
 
     @property
     def central_pressure(self):
-        return self.data['central_pressure']
+        return self.data["central_pressure"]
 
     @property
     def speed(self):
-        return self.data['speed']
+        return self.data["speed"]
 
     @property
     def direction(self):
-        return self.data['direction']
+        return self.data["direction"]
 
     @property
     def longitude(self):
-        return self.data['longitude']
+        return self.data["longitude"]
 
     @property
     def latitude(self):
-        return self.data['latitude']
+        return self.data["latitude"]
 
     @file_deck.setter
     def file_deck(self, file_deck: FileDeck):
@@ -415,34 +427,36 @@ class VortexForcing:
             if self.file_deck == FileDeck.a:
                 # see ftp://ftp.nhc.noaa.gov/atcf/docs/nhc_techlist.dat
                 # there are more but they may not have enough columns
-                record_types_list = ['OFCL', 'OFCP', 'HWRF', 'HMON', 'CARQ']
+                record_types_list = ["OFCL", "OFCP", "HWRF", "HMON", "CARQ"]
             elif self.file_deck == FileDeck.b:
-                record_types_list = ['BEST']
+                record_types_list = ["BEST"]
             else:
-                raise NotImplementedError(f'file deck {self.file_deck.value} not implemented')
+                raise NotImplementedError(
+                    f"file deck {self.file_deck.value} not implemented"
+                )
             if record_type not in record_types_list:
                 raise ValueError(
-                    f'request_record_type = {record_type} not allowed, select from {record_types_list}'
+                    f"request_record_type = {record_type} not allowed, select from {record_types_list}"
                 )
         self.__record_type = record_type
 
     @property
     def data(self):
-        start_date_mask = self.dataframe['datetime'] >= self.start_date
+        start_date_mask = self.dataframe["datetime"] >= self.start_date
         if self.end_date is None:
             return self.dataframe[start_date_mask]
         else:
             return self.dataframe[
-                start_date_mask & (self.dataframe['datetime'] <= self.__file_end_date)
+                start_date_mask & (self.dataframe["datetime"] <= self.__file_end_date)
             ]
 
     @property
     def atcf(self) -> open:
         configuration = {
-            'storm_id': self.storm_id,
-            'file_deck': self.file_deck,
-            'mode': self.mode,
-            'filename': self.filename,
+            "storm_id": self.storm_id,
+            "file_deck": self.file_deck,
+            "mode": self.mode,
+            "filename": self.filename,
         }
 
         if (
@@ -457,10 +471,10 @@ class VortexForcing:
     @property
     def dataframe(self):
         configuration = {
-            'storm_id': self.storm_id,
-            'file_deck': self.file_deck,
-            'mode': self.mode,
-            'filename': self.filename,
+            "storm_id": self.storm_id,
+            "file_deck": self.file_deck,
+            "mode": self.mode,
+            "filename": self.filename,
         }
 
         # only download new file if the configuration has changed since the last download
@@ -469,40 +483,40 @@ class VortexForcing:
             or len(self.__dataframe) == 0
             or configuration != self.__previous_configuration
         ):
-            if configuration['filename'] is not None:
-                dataframe = read_atcf(configuration['filename'])
+            if configuration["filename"] is not None:
+                dataframe = read_atcf(configuration["filename"])
             else:
                 # https://www.nrlmry.navy.mil/atcf_web/docs/database/new/abdeck.txt
 
                 columns = [
-                    'basin',
-                    'storm_number',
-                    'datetime',
-                    'record_type',
-                    'latitude',
-                    'longitude',
-                    'max_sustained_wind_speed',
-                    'central_pressure',
-                    'development_level',
-                    'isotach',
-                    'quadrant',
-                    'radius_for_NEQ',
-                    'radius_for_SEQ',
-                    'radius_for_SWQ',
-                    'radius_for_NWQ',
-                    'background_pressure',
-                    'radius_of_last_closed_isobar',
-                    'radius_of_maximum_winds',
-                    'name',
-                    'direction',
-                    'speed',
+                    "basin",
+                    "storm_number",
+                    "datetime",
+                    "record_type",
+                    "latitude",
+                    "longitude",
+                    "max_sustained_wind_speed",
+                    "central_pressure",
+                    "development_level",
+                    "isotach",
+                    "quadrant",
+                    "radius_for_NEQ",
+                    "radius_for_SEQ",
+                    "radius_for_SWQ",
+                    "radius_for_NWQ",
+                    "background_pressure",
+                    "radius_of_last_closed_isobar",
+                    "radius_of_maximum_winds",
+                    "name",
+                    "direction",
+                    "speed",
                 ]
 
                 atcf = self.atcf
                 if isinstance(atcf, io.BytesIO):
                     # test if Gzip file
                     atcf.seek(0)  # rewind
-                    if atcf.read(2) == b'\x1f\x8b':
+                    if atcf.read(2) == b"\x1f\x8b":
                         atcf.seek(0)  # rewind
                         atcf = gzip.GzipFile(fileobj=atcf)
                     else:
@@ -513,114 +527,120 @@ class VortexForcing:
                 # BEST track or OFCL (official) advisory by default
                 allowed_record_types = self.record_type
                 if allowed_record_types is None:
-                    allowed_record_types = ['BEST', 'OFCL']
+                    allowed_record_types = ["BEST", "OFCL"]
                 records = []
 
                 for line_index, line in enumerate(atcf):
-                    line = line.decode('UTF-8').split(',')
+                    line = line.decode("UTF-8").split(",")
 
                     record = {
-                        'basin': line[0],
-                        'storm_number': line[1].strip(' '),
+                        "basin": line[0],
+                        "storm_number": line[1].strip(" "),
                     }
 
-                    record['record_type'] = line[4].strip(' ')
+                    record["record_type"] = line[4].strip(" ")
 
-                    if record['record_type'] not in allowed_record_types:
+                    if record["record_type"] not in allowed_record_types:
                         continue
 
                     # computing the actual datetime based on record_type
-                    if record['record_type'] == 'BEST':
+                    if record["record_type"] == "BEST":
                         # Add minutes line to base datetime
-                        minutes = line[3].strip(' ')
+                        minutes = line[3].strip(" ")
                         if minutes == "":
-                            minutes = '00'
-                        record['datetime'] = parse_date(line[2].strip(' ') + minutes)
+                            minutes = "00"
+                        record["datetime"] = parse_date(line[2].strip(" ") + minutes)
                     else:
                         # Add validation time to base datetime
-                        minutes = '00'
-                        record['datetime'] = parse_date(line[2].strip(' ') + minutes)
+                        minutes = "00"
+                        record["datetime"] = parse_date(line[2].strip(" ") + minutes)
                         if start_date is not None:
                             # Only keep records where base date == start time for advisories
-                            if start_date != record['datetime']:
+                            if start_date != record["datetime"]:
                                 continue
-                        validation_time = int(line[5].strip(' '))
-                        record['datetime'] = record['datetime'] + timedelta(
+                        validation_time = int(line[5].strip(" "))
+                        record["datetime"] = record["datetime"] + timedelta(
                             hours=validation_time
                         )
 
                     latitude = line[6]
-                    if 'N' in latitude:
-                        latitude = float(latitude.strip('N '))
-                    elif 'S' in latitude:
-                        latitude = float(latitude.strip('S ')) * -1
+                    if "N" in latitude:
+                        latitude = float(latitude.strip("N "))
+                    elif "S" in latitude:
+                        latitude = float(latitude.strip("S ")) * -1
                     latitude *= 0.1
-                    record['latitude'] = latitude
+                    record["latitude"] = latitude
 
                     longitude = line[7]
-                    if 'E' in longitude:
-                        longitude = float(longitude.strip('E ')) * 0.1
-                    elif 'W' in longitude:
-                        longitude = float(longitude.strip('W ')) * -0.1
-                    record['longitude'] = longitude
+                    if "E" in longitude:
+                        longitude = float(longitude.strip("E ")) * 0.1
+                    elif "W" in longitude:
+                        longitude = float(longitude.strip("W ")) * -0.1
+                    record["longitude"] = longitude
 
                     record.update(
                         {
-                            'max_sustained_wind_speed': float(line[8].strip(' ')),
-                            'central_pressure': float(line[9].strip(' ')),
-                            'development_level': line[10].strip(' '),
+                            "max_sustained_wind_speed": float(line[8].strip(" ")),
+                            "central_pressure": float(line[9].strip(" ")),
+                            "development_level": line[10].strip(" "),
                         }
                     )
 
                     try:
-                        record['isotach'] = int(line[11].strip(' '))
+                        record["isotach"] = int(line[11].strip(" "))
                     except ValueError:
                         raise Exception(
-                            'Error: No radial wind information for this storm; '
-                            'parametric wind model cannot be built.'
+                            "Error: No radial wind information for this storm; "
+                            "parametric wind model cannot be built."
                         )
 
                     record.update(
                         {
-                            'quadrant': line[12].strip(' '),
-                            'radius_for_NEQ': int(line[13].strip(' ')),
-                            'radius_for_SEQ': int(line[14].strip(' ')),
-                            'radius_for_SWQ': int(line[15].strip(' ')),
-                            'radius_for_NWQ': int(line[16].strip(' ')),
+                            "quadrant": line[12].strip(" "),
+                            "radius_for_NEQ": int(line[13].strip(" ")),
+                            "radius_for_SEQ": int(line[14].strip(" ")),
+                            "radius_for_SWQ": int(line[15].strip(" ")),
+                            "radius_for_NWQ": int(line[16].strip(" ")),
                         }
                     )
 
                     if len(line) > 18:
                         record.update(
                             {
-                                'background_pressure': int(line[17].strip(' ')),
-                                'radius_of_last_closed_isobar': int(line[18].strip(' ')),
-                                'radius_of_maximum_winds': int(line[19].strip(' ')),
+                                "background_pressure": int(line[17].strip(" ")),
+                                "radius_of_last_closed_isobar": int(
+                                    line[18].strip(" ")
+                                ),
+                                "radius_of_maximum_winds": int(line[19].strip(" ")),
                             }
                         )
 
                         if len(line) > 23:
-                            record['name'] = line[27].strip(' ')
+                            record["name"] = line[27].strip(" ")
                         else:
-                            record['name'] = ''
+                            record["name"] = ""
                     else:
                         record.update(
                             {
-                                'background_pressure': records[-1]['background_pressure'],
-                                'radius_of_last_closed_isobar': records[-1][
-                                    'radius_of_last_closed_isobar'
+                                "background_pressure": records[-1][
+                                    "background_pressure"
                                 ],
-                                'radius_of_maximum_winds': records[-1][
-                                    'radius_of_maximum_winds'
+                                "radius_of_last_closed_isobar": records[-1][
+                                    "radius_of_last_closed_isobar"
                                 ],
-                                'name': records[-1]['name'],
+                                "radius_of_maximum_winds": records[-1][
+                                    "radius_of_maximum_winds"
+                                ],
+                                "name": records[-1]["name"],
                             }
                         )
 
                     records.append(record)
 
                 if len(records) == 0:
-                    raise ValueError(f'no records found with type(s) "{allowed_record_types}"')
+                    raise ValueError(
+                        f'no records found with type(s) "{allowed_record_types}"'
+                    )
 
                 dataframe = DataFrame.from_records(data=records, columns=columns)
 
@@ -629,7 +649,7 @@ class VortexForcing:
 
         # if location values have changed, recompute velocity
         location_hash = pandas.util.hash_pandas_object(
-            self.__dataframe[['longitude', 'latitude']]
+            self.__dataframe[["longitude", "latitude"]]
         ).sum()
         if self.__location_hash is None or location_hash != self.__location_hash:
             self.__dataframe = self.__compute_velocity(self.__dataframe)
@@ -642,7 +662,7 @@ class VortexForcing:
         self.__dataframe = dataframe
 
     def clip_to_bbox(self, bbox, bbox_crs):
-        msg = f'bbox must be a {Bbox} instance.'
+        msg = f"bbox must be a {Bbox} instance."
         assert isinstance(bbox, Bbox), msg
         bbox_pol = Polygon(
             [
@@ -654,17 +674,17 @@ class VortexForcing:
             ]
         )
         _switch = True
-        unique_dates = numpy.unique(self.dataframe['datetime'])
+        unique_dates = numpy.unique(self.dataframe["datetime"])
         _found_start_date = False
         for _datetime in unique_dates:
-            records = self.dataframe[self.dataframe['datetime'] == _datetime]
-            radii = records['radius_of_last_closed_isobar'].iloc[0]
+            records = self.dataframe[self.dataframe["datetime"] == _datetime]
+            radii = records["radius_of_last_closed_isobar"].iloc[0]
             radii = 1852.0 * radii  # convert to meters
-            lon = records['longitude'].iloc[0]
-            lat = records['latitude'].iloc[0]
+            lon = records["longitude"].iloc[0]
+            lat = records["latitude"].iloc[0]
             _, _, number, letter = utm.from_latlon(lat, lon)
             df_crs = CRS.from_epsg(4326)
-            utm_crs = CRS.from_epsg(f'326{number}')
+            utm_crs = CRS.from_epsg(f"326{number}")
             transformer = Transformer.from_crs(df_crs, utm_crs, always_xy=True)
             p = Point(*transformer.transform(lon, lat))
             pol = p.buffer(radii)
@@ -674,7 +694,7 @@ class VortexForcing:
                 if not pol.intersects(bbox_pol):
                     continue
                 else:
-                    self.start_date = records['datetime'].iloc[0]
+                    self.start_date = records["datetime"].iloc[0]
                     _found_start_date = True
                     _switch = False
                     continue
@@ -683,14 +703,23 @@ class VortexForcing:
                 if pol.intersects(bbox_pol):
                     continue
                 else:
-                    self.end_date = records['datetime'].iloc[0]
+                    self.end_date = records["datetime"].iloc[0]
                     break
 
         if _found_start_date is False:
-            raise Exception(f'No data within mesh bounding box for storm {self.storm_id}.')
+            raise Exception(
+                f"No data within mesh bounding box for storm {self.storm_id}."
+            )
 
-    def plot_track(self, axis: Axes = None, show: bool = False, color: str = 'k', **kwargs):
-        kwargs.update({'color': color})
+    def plot_track(
+        self,
+        axis: Axes = None,
+        show: bool = False,
+        color: str = "k",
+        coastline: bool = True,
+        **kwargs,
+    ):
+        kwargs.update({"color": color})
         if axis is None:
             fig = pyplot.figure()
             axis = fig.add_subplot(111)
@@ -701,12 +730,13 @@ class VortexForcing:
             axis.quiver(self.longitude.iloc[i], self.latitude.iloc[i], U, V, **kwargs)
             if i % 6 == 0:
                 axis.annotate(
-                    self.data['datetime'].iloc[i],
+                    self.data["datetime"].iloc[i],
                     (self.longitude.iloc[i], self.latitude.iloc[i]),
                 )
         if show:
-            axis.axis('scaled')
-        plot_coastline(axis, show)
+            axis.axis("scaled")
+        if bool(coastline) is True:
+            plot_coastline(axis, show)
 
     def __generate_record_numbers(self):
         record_number = [1]
@@ -719,12 +749,12 @@ class VortexForcing:
 
     @property
     def __file_end_date(self):
-        unique_dates = numpy.unique(self.dataframe['datetime'])
+        unique_dates = numpy.unique(self.dataframe["datetime"])
         for date in unique_dates:
             if date >= numpy.datetime64(self.end_date):
                 return date
 
-    def __copy__(self) -> 'VortexForcing':
+    def __copy__(self) -> "VortexForcing":
         instance = self.__class__(
             storm=self.dataframe.copy(),
             start_date=self.start_date,
@@ -735,59 +765,65 @@ class VortexForcing:
         instance.storm_id = self.storm_id
         return instance
 
-    def __eq__(self, other: 'VortexForcing') -> bool:
-        return numpy.all(self.dataframe == other.dataframe) and self.storm_id == other.storm_id
+    def __eq__(self, other: "VortexForcing") -> bool:
+        return (
+            numpy.all(self.dataframe == other.dataframe)
+            and self.storm_id == other.storm_id
+        )
 
     @staticmethod
     def __compute_velocity(data: DataFrame) -> DataFrame:
-        """ Output has units of meters per second. """
+        """Output has units of meters per second."""
 
-        geodetic = Geod(ellps='WGS84')
+        geodetic = Geod(ellps="WGS84")
 
-        unique_datetimes = numpy.unique(data['datetime'])
+        unique_datetimes = numpy.unique(data["datetime"])
         for datetime_index, unique_datetime in enumerate(unique_datetimes):
             unique_datetime_indices = numpy.where(
-                numpy.asarray(data['datetime']) == unique_datetime
+                numpy.asarray(data["datetime"]) == unique_datetime
             )[0]
             for unique_datetime_index in unique_datetime_indices:
-                if unique_datetime_indices[-1] + 1 < len(data['datetime']):
+                if unique_datetime_indices[-1] + 1 < len(data["datetime"]):
                     dt = (
-                        data['datetime'].iloc[unique_datetime_indices[-1] + 1]
-                        - data['datetime'].iloc[unique_datetime_index]
+                        data["datetime"].iloc[unique_datetime_indices[-1] + 1]
+                        - data["datetime"].iloc[unique_datetime_index]
                     )
                     forward_azimuth, inverse_azimuth, distance = geodetic.inv(
-                        data['longitude'].iloc[unique_datetime_indices[-1] + 1],
-                        data['latitude'].iloc[unique_datetime_indices[-1] + 1],
-                        data['longitude'].iloc[unique_datetime_index],
-                        data['latitude'].iloc[unique_datetime_index],
+                        data["longitude"].iloc[unique_datetime_indices[-1] + 1],
+                        data["latitude"].iloc[unique_datetime_indices[-1] + 1],
+                        data["longitude"].iloc[unique_datetime_index],
+                        data["latitude"].iloc[unique_datetime_index],
                     )
                 else:
                     dt = (
-                        data['datetime'].iloc[unique_datetime_index]
-                        - data['datetime'].iloc[unique_datetime_indices[0] - 1]
+                        data["datetime"].iloc[unique_datetime_index]
+                        - data["datetime"].iloc[unique_datetime_indices[0] - 1]
                     )
                     forward_azimuth, inverse_azimuth, distance = geodetic.inv(
-                        data['longitude'].iloc[unique_datetime_indices[0] - 1],
-                        data['latitude'].iloc[unique_datetime_indices[0] - 1],
-                        data['longitude'].iloc[unique_datetime_index],
-                        data['latitude'].iloc[unique_datetime_index],
+                        data["longitude"].iloc[unique_datetime_indices[0] - 1],
+                        data["latitude"].iloc[unique_datetime_indices[0] - 1],
+                        data["longitude"].iloc[unique_datetime_index],
+                        data["latitude"].iloc[unique_datetime_index],
                     )
 
                 speed = distance / (dt / timedelta(seconds=1))
                 bearing = inverse_azimuth % 360
 
-                data['speed'].iloc[unique_datetime_index] = speed
-                data['direction'].iloc[unique_datetime_index] = bearing
+                data["speed"].iloc[unique_datetime_index] = speed
+                data["direction"].iloc[unique_datetime_index] = bearing
 
-                data['speed'] = data['speed'].astype('float', copy=False)
-                data['direction'] = data['direction'].astype('float', copy=False)
+                data["speed"] = data["speed"].astype("float", copy=False)
+                data["direction"] = data["direction"].astype("float", copy=False)
 
         return data
 
     @classmethod
     def from_fort22(
-        cls, fort22: PathLike, start_date: datetime = None, end_date: datetime = None,
-    ) -> 'VortexForcing':
+        cls,
+        fort22: PathLike,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ) -> "VortexForcing":
         filename = None
         try:
             if pathlib.Path(fort22).exists():
@@ -806,8 +842,11 @@ class VortexForcing:
 
     @classmethod
     def from_atcf_file(
-        cls, atcf: PathLike, start_date: datetime = None, end_date: datetime = None,
-    ) -> 'VortexForcing':
+        cls,
+        atcf: PathLike,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ) -> "VortexForcing":
         filename = None
         try:
             if pathlib.Path(atcf).exists():
@@ -835,14 +874,14 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
         mode: Mode = None,
         filename: PathLike = None,
-    ) -> 'BestTrackForcing':
+    ) -> "BestTrackForcing":
         if nws is None:
             nws = 20
 
         valid_nws_values = [8, 19, 20]
         assert (
             nws in valid_nws_values
-        ), f'ATCF BestTrack can only use `nws` values in {valid_nws_values}'
+        ), f"ATCF BestTrack can only use `nws` values in {valid_nws_values}"
 
         if interval_seconds is None:
             interval_seconds = 3600
@@ -854,38 +893,40 @@ class BestTrackForcing(VortexForcing, WindForcing):
             end_date=end_date,
             file_deck=FileDeck.b,
             mode=mode,
-            record_type='BEST',
+            record_type="BEST",
             filename=filename,
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
     def summary(
-        self, output: Union[str, os.PathLike] = None, overwrite: bool = False,
+        self,
+        output: Union[str, os.PathLike] = None,
+        overwrite: bool = False,
     ):
         min_storm_speed = numpy.min(self.speed)
         max_storm_speed = numpy.max(self.speed)
         track_length = self.track_length
         duration = self.duration
         min_central_pressure = numpy.min(self.central_pressure)
-        max_wind_speed = numpy.max(self.data['max_sustained_wind_speed'])
-        start_loc = (self.data['longitude'][0], self.data['latitude'][0])
-        end_loc = (self.data['longitude'].iloc[-1], self.data['latitude'].iloc[-1])
+        max_wind_speed = numpy.max(self.data["max_sustained_wind_speed"])
+        start_loc = (self.data["longitude"][0], self.data["latitude"][0])
+        end_loc = (self.data["longitude"].iloc[-1], self.data["latitude"].iloc[-1])
         f = [
-            f'Summary of storm: {self.storm_id}',
-            f'min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s',
-            f'min. central pressure: {min_central_pressure} hPa',
-            f'max. wind speed: {max_wind_speed} kts',
-            f'Starting at: {start_loc} and ended at: {end_loc}',
-            f'Total track length: {track_length:.2f} km',
-            f'Total track duration: {duration:.2f} days',
+            f"Summary of storm: {self.storm_id}",
+            f"min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s",
+            f"min. central pressure: {min_central_pressure} hPa",
+            f"max. wind speed: {max_wind_speed} kts",
+            f"Starting at: {start_loc} and ended at: {end_loc}",
+            f"Total track length: {track_length:.2f} km",
+            f"Total track duration: {duration:.2f} days",
         ]
-        summary = '\n'.join(f)
+        summary = "\n".join(f)
         if output is not None:
             if not isinstance(output, pathlib.Path):
                 path = pathlib.Path(output)
             if path.exists() and overwrite is False:
-                raise Exception('File exist, set overwrite=True to allow overwrite.')
-            with open(path, 'w+') as fh:
+                raise Exception("File exist, set overwrite=True to allow overwrite.")
+            with open(path, "w+") as fh:
                 fh.write(summary)
         return summary
 
@@ -904,10 +945,10 @@ class BestTrackForcing(VortexForcing, WindForcing):
     @property
     def WTIMINC(self) -> str:
         return (
-            f'{self.start_date:%Y %m %d %H} '
+            f"{self.start_date:%Y %m %d %H} "
             f'{self.data["storm_number"].iloc[0]} '
-            f'{self.BLADj} '
-            f'{self.geofactor}'
+            f"{self.BLADj} "
+            f"{self.geofactor}"
         )
 
     @property
@@ -944,7 +985,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
-    ) -> 'BestTrackForcing':
+    ) -> "BestTrackForcing":
         filename = None
         try:
             if pathlib.Path(fort22).exists():
@@ -969,7 +1010,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
-    ) -> 'BestTrackForcing':
+    ) -> "BestTrackForcing":
         filename = None
         try:
             if pathlib.Path(atcf).exists():
@@ -988,7 +1029,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
 
 
 def convert_value(value: Any, to_type: type, round_digits: int = None) -> Any:
-    if type(value).__name__ == 'Quantity':
+    if type(value).__name__ == "Quantity":
         value = value.magnitude
     if issubclass(to_type, Enum):
         try:
@@ -1037,7 +1078,7 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
                 try:
                     return f(*args, **kwargs)
                 except ExceptionToCheck as e:
-                    msg = '%s, Retrying in %d seconds...' % (str(e), mdelay)
+                    msg = "%s, Retrying in %d seconds..." % (str(e), mdelay)
                     if logger:
                         logger.warning(msg)
                     # else:
@@ -1053,12 +1094,15 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
 
 
 def get_atcf_entry(
-    year: int, basin: str = None, storm_number: int = None, storm_name: str = None,
+    year: int,
+    basin: str = None,
+    storm_number: int = None,
+    storm_name: str = None,
 ) -> Series:
     entry = None
 
     try:
-        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
+        url = "ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table"
         storm_table = read_csv(url, header=None)
     except:
         storm_table = None
@@ -1066,16 +1110,17 @@ def get_atcf_entry(
     if storm_table is not None:
         if basin is not None and storm_number is not None:
             row = storm_table[
-                (storm_table[1] == f'{basin.upper():>3}')
+                (storm_table[1] == f"{basin.upper():>3}")
                 & (storm_table[7] == storm_number)
                 & (storm_table[8] == int(year))
             ]
         elif storm_name is not None:
             row = storm_table[
-                (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
+                (storm_table[0] == f"{storm_name.upper():>10}")
+                & (storm_table[8] == int(year))
             ]
         else:
-            raise ValueError('need either storm name or basin + storm number')
+            raise ValueError("need either storm name or basin + storm number")
 
         if len(row) > 0:
             entry = list(row.iterrows())[0][1]
@@ -1091,17 +1136,21 @@ def get_atcf_id(storm_name: str, year: int) -> str:
         return entry[20].strip()
 
 
-def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
-    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', '')
-    logger.info(f'Downloading storm data from {url}')
+def get_atcf_file(
+    storm_id: str, file_deck: FileDeck = None, mode: Mode = None
+) -> io.BytesIO:
+    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace(
+        "ftp://", ""
+    )
+    logger.info(f"Downloading storm data from {url}")
 
-    hostname, filename = url.split('/', 1)
+    hostname, filename = url.split("/", 1)
 
     handle = io.BytesIO()
 
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
-    ftp.encoding = 'utf-8'
-    ftp.retrbinary(f'RETR {filename}', handle.write)
+    ftp = ftplib.FTP(hostname, "anonymous", "")
+    ftp.encoding = "utf-8"
+    ftp.retrbinary(f"RETR {filename}", handle.write)
 
     return handle
 
@@ -1118,74 +1167,84 @@ def read_atcf(track: PathLike) -> DataFrame:
             raise
 
     data = {
-        'basin': [],
-        'storm_number': [],
-        'datetime': [],
-        'record_type': [],
-        'latitude': [],
-        'longitude': [],
-        'max_sustained_wind_speed': [],
-        'central_pressure': [],
-        'development_level': [],
-        'isotach': [],
-        'quadrant': [],
-        'radius_for_NEQ': [],
-        'radius_for_SEQ': [],
-        'radius_for_SWQ': [],
-        'radius_for_NWQ': [],
-        'background_pressure': [],
-        'radius_of_last_closed_isobar': [],
-        'radius_of_maximum_winds': [],
-        'name': [],
-        'direction': [],
-        'speed': [],
+        "basin": [],
+        "storm_number": [],
+        "datetime": [],
+        "record_type": [],
+        "latitude": [],
+        "longitude": [],
+        "max_sustained_wind_speed": [],
+        "central_pressure": [],
+        "development_level": [],
+        "isotach": [],
+        "quadrant": [],
+        "radius_for_NEQ": [],
+        "radius_for_SEQ": [],
+        "radius_for_SWQ": [],
+        "radius_for_NWQ": [],
+        "background_pressure": [],
+        "radius_of_last_closed_isobar": [],
+        "radius_of_maximum_winds": [],
+        "name": [],
+        "direction": [],
+        "speed": [],
     }
 
     for index, row in enumerate(track):
-        row = [value.strip() for value in row.split(',')]
+        row = [value.strip() for value in row.split(",")]
 
         row_data = {key: None for key in data}
 
-        row_data['basin'] = row[0]
-        row_data['storm_number'] = row[1]
-        row_data['datetime'] = datetime.strptime(row[2], '%Y%m%d%H')
-        row_data['record_type'] = row[4]
+        row_data["basin"] = row[0]
+        row_data["storm_number"] = row[1]
+        row_data["datetime"] = datetime.strptime(row[2], "%Y%m%d%H")
+        row_data["record_type"] = row[4]
 
         latitude = row[6]
-        if 'N' in latitude:
+        if "N" in latitude:
             latitude = float(latitude[:-1]) * 0.1
-        elif 'S' in latitude:
+        elif "S" in latitude:
             latitude = float(latitude[:-1]) * -0.1
-        row_data['latitude'] = latitude
+        row_data["latitude"] = latitude
 
         longitude = row[7]
-        if 'E' in longitude:
+        if "E" in longitude:
             longitude = float(longitude[:-1]) * 0.1
-        elif 'W' in longitude:
+        elif "W" in longitude:
             longitude = float(longitude[:-1]) * -0.1
-        row_data['longitude'] = longitude
+        row_data["longitude"] = longitude
 
-        row_data['max_sustained_wind_speed'] = convert_value(
-            row[8], to_type=int, round_digits=0,
+        row_data["max_sustained_wind_speed"] = convert_value(
+            row[8],
+            to_type=int,
+            round_digits=0,
         )
-        row_data['central_pressure'] = convert_value(row[9], to_type=int, round_digits=0)
-        row_data['development_level'] = row[10]
-        row_data['isotach'] = convert_value(row[11], to_type=int, round_digits=0)
-        row_data['quadrant'] = row[12]
-        row_data['radius_for_NEQ'] = convert_value(row[13], to_type=int, round_digits=0)
-        row_data['radius_for_SEQ'] = convert_value(row[14], to_type=int, round_digits=0)
-        row_data['radius_for_SWQ'] = convert_value(row[15], to_type=int, round_digits=0)
-        row_data['radius_for_NWQ'] = convert_value(row[16], to_type=int, round_digits=0)
-        row_data['background_pressure'] = convert_value(row[17], to_type=int, round_digits=0)
-        row_data['radius_of_last_closed_isobar'] = convert_value(
-            row[18], to_type=int, round_digits=0,
+        row_data["central_pressure"] = convert_value(
+            row[9], to_type=int, round_digits=0
         )
-        row_data['radius_of_maximum_winds'] = convert_value(
-            row[19], to_type=int, round_digits=0,
+        row_data["development_level"] = row[10]
+        row_data["isotach"] = convert_value(row[11], to_type=int, round_digits=0)
+        row_data["quadrant"] = row[12]
+        row_data["radius_for_NEQ"] = convert_value(row[13], to_type=int, round_digits=0)
+        row_data["radius_for_SEQ"] = convert_value(row[14], to_type=int, round_digits=0)
+        row_data["radius_for_SWQ"] = convert_value(row[15], to_type=int, round_digits=0)
+        row_data["radius_for_NWQ"] = convert_value(row[16], to_type=int, round_digits=0)
+        row_data["background_pressure"] = convert_value(
+            row[17], to_type=int, round_digits=0
         )
-        row_data['direction'] = row[25]
-        row_data['speed'] = row[26]
-        row_data['name'] = row[27]
+        row_data["radius_of_last_closed_isobar"] = convert_value(
+            row[18],
+            to_type=int,
+            round_digits=0,
+        )
+        row_data["radius_of_maximum_winds"] = convert_value(
+            row[19],
+            to_type=int,
+            round_digits=0,
+        )
+        row_data["direction"] = row[25]
+        row_data["speed"] = row[26]
+        row_data["name"] = row[27]
 
         for key, value in row_data.items():
             if isinstance(data[key], Collection):
@@ -1196,14 +1255,20 @@ def read_atcf(track: PathLike) -> DataFrame:
     return DataFrame(data=data)
 
 
-def atcf_url(file_deck: FileDeck = None, storm_id: str = None, mode: Mode = None,) -> str:
+def atcf_url(
+    file_deck: FileDeck = None,
+    storm_id: str = None,
+    mode: Mode = None,
+) -> str:
     if storm_id is not None:
         year = int(storm_id[4:])
     else:
         year = None
 
     if mode is None:
-        entry = get_atcf_entry(basin=storm_id[:2], storm_number=int(storm_id[2:4]), year=year)
+        entry = get_atcf_entry(
+            basin=storm_id[:2], storm_number=int(storm_id[2:4]), year=year
+        )
         mode = entry[18].strip()
 
     if file_deck is not None and not isinstance(file_deck, FileDeck):
@@ -1223,20 +1288,20 @@ def atcf_url(file_deck: FileDeck = None, storm_id: str = None, mode: Mode = None
         mode = Mode.realtime
 
     if mode == Mode.historical:
-        nhc_dir = f'archive/{year}'
-        suffix = '.dat.gz'
+        nhc_dir = f"archive/{year}"
+        suffix = ".dat.gz"
     elif mode == Mode.realtime:
         if file_deck == FileDeck.a:
-            nhc_dir = 'aid_public'
-            suffix = '.dat.gz'
+            nhc_dir = "aid_public"
+            suffix = ".dat.gz"
         elif file_deck == FileDeck.b:
-            nhc_dir = 'btk'
-            suffix = '.dat'
+            nhc_dir = "btk"
+            suffix = ".dat"
 
-    url = f'ftp://ftp.nhc.noaa.gov/atcf/{nhc_dir}/'
+    url = f"ftp://ftp.nhc.noaa.gov/atcf/{nhc_dir}/"
 
     if storm_id is not None:
-        url += f'{file_deck.value}{storm_id.lower()}{suffix}'
+        url += f"{file_deck.value}{storm_id.lower()}{suffix}"
 
     return url
 
@@ -1247,14 +1312,18 @@ def atcf_storm_ids(file_deck: FileDeck = None, mode: Mode = None) -> [str]:
     elif not isinstance(file_deck, FileDeck):
         file_deck = convert_value(file_deck, FileDeck)
 
-    url = atcf_url(file_deck=file_deck, mode=mode).replace('ftp://', '')
-    hostname, directory = url.split('/', 1)
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
+    url = atcf_url(file_deck=file_deck, mode=mode).replace("ftp://", "")
+    hostname, directory = url.split("/", 1)
+    ftp = ftplib.FTP(hostname, "anonymous", "")
 
     filenames = [
-        filename for filename, metadata in ftp.mlsd(directory) if metadata['type'] == 'file'
+        filename
+        for filename, metadata in ftp.mlsd(directory)
+        if metadata["type"] == "file"
     ]
     if file_deck is not None:
-        filenames = [filename for filename in filenames if filename[0] == file_deck.value]
+        filenames = [
+            filename for filename in filenames if filename[0] == file_deck.value
+        ]
 
-    return sorted((filename.split('.')[0] for filename in filenames), reverse=True)
+    return sorted((filename.split(".")[0] for filename in filenames), reverse=True)
