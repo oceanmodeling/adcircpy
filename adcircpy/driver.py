@@ -411,22 +411,28 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15):
-        station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
-        for station_type in station_types:
-            stations = Fort15.parse_stations(fort15, station_type)
-            mp = self.mesh.hull.multipolygon()
-            for name, vertices in stations.items():
-                if not Point(vertices).within(mp):
+    def import_stations(self, fort15: os.PathLike, station_types: [str] = None):
+        if station_types is None:
+            station_types = ['NSTAE', 'NSTAV']
+            if self.IM == 10:
+                station_types.append('NSTAC')
+            if self.NWS > 0:
+                station_types.append('NSTAM')
+
+        envelope = self.mesh.hull.multipolygon()
+        stations = Fort15.parse_stations(fort15, station_types)
+        for station_type, station_vertices in stations.items():
+            for name, vertex in station_vertices.items():
+                if not Point(vertex).within(envelope):
                     continue
-                if station_type == 'NOUTE':
-                    self.add_elevation_output_station(name, vertices)
-                if station_type == 'NOUTV':
-                    self.add_velocity_output_station(name, vertices)
-                if station_type == 'NOUTM':
-                    self.add_meteorological_output_station(name, vertices)
-                if station_type == 'NOUTC':
-                    self.add_concentration_output_station(name, vertices)
+                if station_type == 'NSTAE':
+                    self.add_elevation_output_station(name, vertex)
+                if station_type == 'NSTAV':
+                    self.add_velocity_output_station(name, vertex)
+                if station_type == 'NSTAC':
+                    self.add_concentration_output_station(name, vertex)
+                if station_type == 'NSTAM':
+                    self.add_meteorological_output_station(name, vertex)
 
     def run(
         self,
