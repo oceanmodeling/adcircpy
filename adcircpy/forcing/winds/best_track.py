@@ -2,7 +2,7 @@ from collections.abc import Collection
 from datetime import datetime, timedelta
 from enum import Enum
 import ftplib
-from functools import lru_cache, wraps
+from functools import wraps
 import gzip
 import io
 import logging
@@ -709,7 +709,6 @@ class VortexForcing:
             axis.axis('scaled')
         plot_coastline(axis, show)
 
-    @lru_cache
     def isotachs(self, wind_speed: float, segments: int = 91) -> [Polygon]:
         """
         Get the isotach at the given speed at every time in the dataset.
