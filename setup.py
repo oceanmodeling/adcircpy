@@ -28,7 +28,6 @@ DEPENDENCIES = {
     'scipy': [],
     'seaborn': [],
     'shapely': [],
-    'alphashape': [],
     'tropycal': [],
     'utm': [],
     'wget': [],
