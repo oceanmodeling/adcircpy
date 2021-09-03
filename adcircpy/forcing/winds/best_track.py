@@ -29,6 +29,7 @@ from shapely.geometry import Point, Polygon
 import utm
 
 from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.plotting import plot_polygon, plot_polygons
 
 logger = logging.getLogger(__name__)
 
@@ -715,6 +716,101 @@ class VortexForcing:
             axis.axis('scaled')
         if bool(coastline) is True:
             plot_coastline(axis, show)
+
+    def isotachs(self, wind_speed: float, segments: int = 91) -> [Polygon]:
+        """
+        Get the isotach at the given speed at every time in the dataset.
+
+        :param wind_speed: wind speed to extract (in knots)
+        :param segments: number of discretization points per quadrant
+        :return: list of isotachs as polygons
+        """
+
+        ## Collect the attributes needed from the forcing to generate swath
+        data = self.data[self.data['isotach'] == wind_speed]
+
+        # convert quadrant radii from nautical miles to meters
+        quadrants = ['radius_for_NEQ', 'radius_for_NWQ', 'radius_for_SWQ', 'radius_for_SEQ']
+        data[quadrants] *= 1852.0  # nautical miles to meters
+
+        geodetic = Geod(ellps='WGS84')
+
+        ## Generate overall swath based on the desired isotach
+        polygons = []
+        for index, row in data.iterrows():
+            # get the starting angle range for NEQ based on storm direction
+            rot_angle = 360 - row['direction']
+            start_angle = 0 + rot_angle
+            end_angle = 90 + rot_angle
+
+            # append quadrants in counter-clockwise direction from NEQ
+            arcs = []
+            for quadrant in quadrants:
+                # enter the angle range for this quadrant
+                theta = numpy.linspace(start_angle, end_angle, segments)
+                # move angle to next quadrant
+                start_angle = start_angle + 90
+                end_angle = end_angle + 90
+                # skip if quadrant radius is zero
+                if row[quadrant] <= 1.0:
+                    continue
+                # make the coordinate list for this quadrant
+                ## entering origin
+                coords = [row[['longitude', 'latitude']].tolist()]
+                # using forward geodetic (origin,angle,dist)
+                for az12 in theta:
+                    lont, latt, backaz = geodetic.fwd(
+                        lons=row['longitude'],
+                        lats=row['latitude'],
+                        az=az12,
+                        dist=row[quadrant],
+                    )
+                    coords.append((lont, latt))
+                ## start point equals last point
+                coords.append(coords[0])
+                # enter quadrant as new polygon
+                arcs.append(Polygon(coords))
+            polygons.append(ops.unary_union(arcs))
+        return polygons
+
+    def wind_swath(
+        self, isotach: int, segments: int = 91, plot_swath: bool = False,
+    ) -> Polygon:
+        """
+        extracts the wind swath of the BestTrackForcing class object as a Polygon object
+
+        :param isotach: the wind swath to extract (34-kt, 50-kt, or 64-kt)
+        :param segments: number of discretization points per quadrant (default = 91)
+        :param plot_swath: plot the swath before returning? (default = False)
+        """
+
+        # parameter
+        # isotach should be one of 34, 50, 64
+        valid_isotach_values = [34, 50, 64]
+        assert (
+            isotach in valid_isotach_values
+        ), f'`isotach` value in `get_wind_swath` must be one of {valid_isotach_values}'
+
+        isotachs = self.isotachs(wind_speed=isotach, segments=segments)
+
+        convex_hulls = []
+        for index in range(len(isotachs) - 1):
+            convex_hulls.append(
+                ops.unary_union([isotachs[index], isotachs[index + 1]]).convex_hull
+            )
+
+        # get the union of polygons
+        swath = ops.unary_union(convex_hulls)
+
+        if plot_swath:
+            plot_polygons(isotachs)
+            plot_polygon(swath)
+            pyplot.suptitle(
+                f'{self.storm_id} - isotach {isotach} kt ({self.start_date} - {self.end_date})'
+            )
+            pyplot.show()
+
+        return swath
 
     def __generate_record_numbers(self):
         record_number = [1]
