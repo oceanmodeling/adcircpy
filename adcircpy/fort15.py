@@ -3,7 +3,7 @@ from enum import Enum
 import math
 from os import PathLike
 import pathlib
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 
@@ -1422,7 +1422,7 @@ class Fort15:
         self.__REFTIM = float(REFTIM)
 
     @property
-    def WTIMINC(self):
+    def WTIMINC(self) -> Union[int, str]:
         if self.NWS in [8, 19, 20]:
             return (
                 f'{self.forcing_start_date:%Y %m %d %H} '
