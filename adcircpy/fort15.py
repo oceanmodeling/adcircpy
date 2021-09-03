@@ -1430,10 +1430,10 @@ class Fort15:
                 f'{self.wind_forcing.BLADj} '
                 f'{self.wind_forcing.geofactor}'
             )
-        elif self.NWS not in [0, 1, 9, 11]:
-            return int(self.wind_forcing.interval / timedelta(seconds=1))
-        else:
+        elif self.NWS in [0, 1, 9, 11]:
             return 0
+        else:
+            return int(self.wind_forcing.interval / timedelta(seconds=1))
 
     @property
     def RSTIMINC(self) -> int:
