@@ -168,3 +168,14 @@ def test_make_plot_flat_domain(nodes, elements, boundaries, mocker):
 
     mocker.patch('matplotlib.pyplot.show')
     mesh.make_plot()
+
+
+def test_mesh_equality(nodes, elements, boundaries, wet_nodes, wet_elements):
+    mesh_1 = AdcircMesh(nodes, elements, boundaries)
+    mesh_2 = AdcircMesh(nodes, elements, boundaries)
+    mesh_3 = mesh_1
+    mesh_4 = AdcircMesh(wet_nodes, wet_elements)
+
+    assert mesh_1 == mesh_2
+    assert mesh_1 == mesh_3
+    assert mesh_1 != mesh_4
