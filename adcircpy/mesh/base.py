@@ -593,6 +593,9 @@ class Grd(ABC):
     def bbox(self):
         return self.get_bbox()
 
+    def __eq__(self, other: 'Grd') -> bool:
+        return self.nodes == other.nodes and self.values == other.values
+
 
 def edges_to_rings(edges):
     if len(edges) == 0:
