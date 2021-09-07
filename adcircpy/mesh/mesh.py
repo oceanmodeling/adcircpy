@@ -38,6 +38,9 @@ class ModelForcings:
             msg = f'Unrecognized forcing type {forcing}.'
             raise Exception(msg)
 
+    def __eq__(self, other: 'ModelForcings') -> bool:
+        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
+
 
 class NodalAttributeDescriptor:
     def __init__(self, name):
@@ -233,3 +236,6 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                 for i, j in permutations(simplex, 2):
                     self._node_neighbors[i].add(j)
         return self._node_neighbors
+
+    def __eq__(self, other: 'AdcircMesh') -> bool:
+        return super().__eq__(other) and self.forcings == other.forcings

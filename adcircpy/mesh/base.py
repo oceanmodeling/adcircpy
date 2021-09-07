@@ -481,7 +481,7 @@ class Grd(ABC):
         return self.nodes.vertices_around_vertex(index)
 
     def copy(self):
-        return self.__class__(**self.to_dict())
+        return self.__copy__()
 
     @classmethod
     def open(cls, file: Union[str, os.PathLike], crs: Union[str, CRS] = None):
@@ -598,6 +598,9 @@ class Grd(ABC):
     @property
     def bbox(self):
         return self.get_bbox()
+
+    def __copy__(self) -> 'Grd':
+        return self.__class__(**self.to_dict())
 
     def __eq__(self, other: 'Grd') -> bool:
         return self.nodes == other.nodes
