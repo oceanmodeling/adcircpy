@@ -116,6 +116,12 @@ class Nodes:
         nodes = {nid: (coo, val) for nid, coo, val in zip(self._id, self._coords, self.values)}
         return nodes
 
+    def __eq__(self, other: 'Nodes') -> bool:
+        try:
+            return np.all(self.coords == other.coords) and np.all(self.values == other.values)
+        except:
+            return False
+
 
 class Elements:
     def __init__(self, nodes: Nodes, elements: Dict[Hashable, Sequence]):
@@ -594,7 +600,7 @@ class Grd(ABC):
         return self.get_bbox()
 
     def __eq__(self, other: 'Grd') -> bool:
-        return self.nodes == other.nodes and self.values == other.values
+        return self.nodes == other.nodes
 
 
 def edges_to_rings(edges):
