@@ -60,6 +60,9 @@ class BaseBoundaries:
             self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
+    def __eq__(self, other: 'BaseBoundaries') -> bool:
+        return self._data == other._data
+
 
 class OceanBoundaries(BaseBoundaries):
     pass
@@ -207,6 +210,9 @@ class Fort14Boundaries:
                     boundaries.update({len(boundaries) + 1: {'ibtype': ibtype, **bdata,}})
         return boundaries
 
+    def __eq__(self, other: 'Fort14Boundaries') -> bool:
+        return self._data == other._data
+
 
 class Fort14(Grd):
     """
@@ -311,3 +317,6 @@ class Fort14(Grd):
     @property
     def culvert_boundaries(self):
         return self.boundaries.culvert
+
+    def __eq__(self, other: 'Fort14') -> bool:
+        return super().__eq__(other) and self.boundaries == other.boundaries

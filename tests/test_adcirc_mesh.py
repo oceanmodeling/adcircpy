@@ -156,7 +156,7 @@ def test_write(nodes, elements):
 
 
 def test_triplot(nodes, elements, boundaries, mocker):
-    mesh = AdcircMesh(nodes, elements, boundaries)
+    mesh = AdcircMesh(nodes, elements, boundaries=boundaries)
 
     mocker.patch('matplotlib.pyplot.show')
     mesh.triplot()
@@ -164,17 +164,18 @@ def test_triplot(nodes, elements, boundaries, mocker):
 
 def test_make_plot_flat_domain(nodes, elements, boundaries, mocker):
     nodes = {id: (coord, 0.0) for id, (coord, _) in nodes.items()}
-    mesh = AdcircMesh(nodes, elements, boundaries)
+    mesh = AdcircMesh(nodes, elements, boundaries=boundaries)
 
     mocker.patch('matplotlib.pyplot.show')
     mesh.make_plot()
 
 
 def test_mesh_equality(nodes, elements, boundaries, wet_nodes, wet_elements):
-    mesh_1 = AdcircMesh(nodes, elements, boundaries)
-    mesh_2 = AdcircMesh(nodes, elements, boundaries)
+    mesh_1 = AdcircMesh(nodes, elements, boundaries=boundaries)
+    mesh_2 = AdcircMesh(nodes, elements, boundaries=boundaries)
     mesh_3 = mesh_1
     mesh_4 = AdcircMesh(wet_nodes, wet_elements)
+    mesh_5 = AdcircMesh(nodes, elements)
 
     assert mesh_1 is not mesh_2
     assert mesh_1 is mesh_3
@@ -182,3 +183,4 @@ def test_mesh_equality(nodes, elements, boundaries, wet_nodes, wet_elements):
     assert mesh_1 == mesh_2
     assert mesh_1 == mesh_3
     assert mesh_1 != mesh_4
+    assert mesh_1 != mesh_5
