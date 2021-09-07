@@ -237,5 +237,11 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                     self._node_neighbors[i].add(j)
         return self._node_neighbors
 
+    def __copy__(self) -> bool:
+        instance = super().__copy__()
+        instance.forcings = self.forcings
+        instance.nodal_attributes = self.nodal_attributes
+        return instance
+
     def __eq__(self, other: 'AdcircMesh') -> bool:
         return super().__eq__(other) and self.forcings == other.forcings
