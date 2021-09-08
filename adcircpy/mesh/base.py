@@ -118,9 +118,7 @@ class Nodes:
 
     def __eq__(self, other: 'Nodes') -> bool:
         try:
-            return np.all(self.coords == other.coords) and np.all(
-                np.abs(self.values) == np.abs(other.values)
-            )
+            return np.all(self.coords == other.coords) and np.all(self.values == other.values)
         except:
             return False
 

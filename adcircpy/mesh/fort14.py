@@ -235,12 +235,7 @@ class Fort14(Grd):
         _grd = super().to_dict()
         if boundaries is True:
             _grd.update(
-                {
-                    'nodes': {
-                        id: (coord, -val) for id, (coord, val) in self.nodes.to_dict().items()
-                    },
-                    'boundaries': self.boundaries.to_dict(),
-                }
+                {'nodes': self.nodes.to_dict(), 'boundaries': self.boundaries.to_dict(),}
             )
         return _grd
 
