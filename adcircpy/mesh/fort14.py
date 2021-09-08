@@ -231,12 +231,15 @@ class Fort14(Grd):
         _grd['nodes'] = {id: (coords, -val) for id, (coords, val) in _grd['nodes'].items()}
         return cls(**_grd)
 
-    def write(self, path, overwrite=False, format='gr3'):
+    def write(self, path, overwrite=False, format='fort.14'):
         if format in ['fort.14']:
+            _grd = self.to_dict()
+            _grd['nodes'] = {
+                id: (coord, -val) for id, (coord, val) in self.nodes.to_dict().items()
+            }
+
             grd.write(
-                grd={id: (coords, -val) for id, (coords, val) in self.nodes.to_dict().items()},
-                path=path,
-                overwrite=overwrite,
+                grd=_grd, path=path, overwrite=overwrite,
             )
         else:
             super().write(path=path, overwrite=overwrite, format=format)
@@ -245,7 +248,7 @@ class Fort14(Grd):
         _grd = super().to_dict()
         if boundaries is True:
             _grd.update(
-                {'nodes': self.nodes.to_dict(), 'boundaries': self.boundaries.to_dict(),}
+                {'nodes': self.nodes.to_dict(), 'boundaries': self.boundaries.to_dict()}
             )
         return _grd
 
