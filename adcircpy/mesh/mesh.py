@@ -244,4 +244,8 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
         return instance
 
     def __eq__(self, other: 'AdcircMesh') -> bool:
-        return super().__eq__(other) and self.forcings == other.forcings
+        return (
+            super().__eq__(other)
+            and self.forcings == other.forcings
+            and self.nodal_attributes == other.nodal_attributes
+        )
