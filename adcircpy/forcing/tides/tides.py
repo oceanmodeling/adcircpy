@@ -1,7 +1,5 @@
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from enum import Enum
-from functools import lru_cache
 from os import PathLike
 from typing import Union
 
@@ -31,6 +29,8 @@ class Tides(bctypes.EtaBc):
                     f'tidal source {tidal_source} not recognized; '
                     f'must be one of {[entry.__name__ for entry in TidalSource]}'
                 )
+
+        self._active_constituents = {}
 
         self.tidal_source = tidal_source
         self.tidal_dataset = tidal_source.value(resource)
@@ -771,14 +771,12 @@ class Tides(bctypes.EtaBc):
         return len(self.get_active_forcing_constituents())
 
     @property
-    @lru_cache(maxsize=None)
-    def _active_constituents(self) -> {}:
-        return OrderedDict()
-
-    @property
     def btype(self) -> str:
         return 'iettype'
 
     @property
     def iettype(self) -> int:
         return 3
+
+    def __eq__(self, other: 'Tides') -> bool:
+        return self.tidal_dataset == other.tidal_dataset
