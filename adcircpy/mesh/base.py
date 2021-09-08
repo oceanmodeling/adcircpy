@@ -116,6 +116,12 @@ class Nodes:
         nodes = {nid: (coo, val) for nid, coo, val in zip(self._id, self._coords, self.values)}
         return nodes
 
+    def __eq__(self, other: 'Nodes') -> bool:
+        try:
+            return np.all(self.coords == other.coords) and np.all(self.values == other.values)
+        except:
+            return False
+
 
 class Elements:
     def __init__(self, nodes: Nodes, elements: Dict[Hashable, Sequence]):
@@ -475,7 +481,7 @@ class Grd(ABC):
         return self.nodes.vertices_around_vertex(index)
 
     def copy(self):
-        return self.__class__(**self.to_dict())
+        return self.__copy__()
 
     @classmethod
     def open(cls, file: Union[str, os.PathLike], crs: Union[str, CRS] = None):
@@ -592,6 +598,12 @@ class Grd(ABC):
     @property
     def bbox(self):
         return self.get_bbox()
+
+    def __copy__(self) -> 'Grd':
+        return self.__class__(**self.to_dict())
+
+    def __eq__(self, other: 'Grd') -> bool:
+        return self.nodes == other.nodes
 
 
 def edges_to_rings(edges):

@@ -205,6 +205,9 @@ class NodalAttributes:
     def fort14(self):
         return self._fort14
 
+    def __eq__(self, other: 'NodalAttributes') -> bool:
+        return self._attributes == other._attributes
+
 
 def parse_fort13(path):
     fort13 = {}
