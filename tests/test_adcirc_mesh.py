@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+from copy import copy
 
 import pytest
 
@@ -174,13 +175,16 @@ def test_mesh_equality(nodes, elements, boundaries, wet_nodes, wet_elements):
     mesh_1 = AdcircMesh(nodes, elements, boundaries=boundaries)
     mesh_2 = AdcircMesh(nodes, elements, boundaries=boundaries)
     mesh_3 = mesh_1
-    mesh_4 = AdcircMesh(wet_nodes, wet_elements)
-    mesh_5 = AdcircMesh(nodes, elements)
+    mesh_4 = copy(mesh_1)
+    mesh_5 = AdcircMesh(wet_nodes, wet_elements)
+    mesh_6 = AdcircMesh(nodes, elements)
 
     assert mesh_1 is not mesh_2
     assert mesh_1 is mesh_3
+    assert mesh_1 is not mesh_4
 
     assert mesh_1 == mesh_2
     assert mesh_1 == mesh_3
-    assert mesh_1 != mesh_4
+    assert mesh_1 == mesh_4
     assert mesh_1 != mesh_5
+    assert mesh_1 != mesh_6
