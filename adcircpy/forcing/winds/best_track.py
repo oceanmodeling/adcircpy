@@ -267,7 +267,14 @@ class VortexForcing:
                 try:
                     self.storm_id = storm_id
                 except:
-                    self.__invalid_storm_name = True
+                    try:
+                        storm_id = get_atcf_id(
+                            storm_name=self.__dataframe['name'].tolist()[-1],
+                            year=self.__dataframe['datetime'].tolist()[-1].year,
+                        )
+                        self.storm_id = storm_id
+                    except:
+                        self.__invalid_storm_name = True
         return self.__storm_id
 
     @storm_id.setter
@@ -276,7 +283,10 @@ class VortexForcing:
             digits = sum([1 for character in storm_id if character.isdigit()])
 
             if digits == 4:
-                atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
+                try:
+                    atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
+                except:
+                    atcf_id = None
                 if atcf_id is None:
                     raise ValueError(f'No storm with id: {storm_id}')
                 storm_id = atcf_id
