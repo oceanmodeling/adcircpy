@@ -129,7 +129,10 @@ class VortexForcing:
             if os.path.exists(storm):
                 self.__atcf = io.open(storm, 'rb')
             else:
-                self.storm_id = storm
+                try:
+                    self.storm_id = storm
+                except:
+                    self.filename = storm
 
         self.__previous_configuration = {
             'storm_id': self.storm_id,
@@ -840,18 +843,16 @@ class VortexForcing:
                 return date
 
     def __copy__(self) -> 'VortexForcing':
-        instance = self.__class__(
+        return self.__class__(
             storm=self.dataframe.copy(),
             start_date=self.start_date,
             end_date=self.end_date,
             file_deck=self.file_deck,
             record_type=self.record_type,
         )
-        instance.storm_id = self.storm_id
-        return instance
 
     def __eq__(self, other: 'VortexForcing') -> bool:
-        return numpy.all(self.dataframe == other.dataframe) and self.storm_id == other.storm_id
+        return numpy.all(self.dataframe == other.dataframe)
 
     @staticmethod
     def __compute_velocity(data: DataFrame) -> DataFrame:
