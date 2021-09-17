@@ -259,9 +259,10 @@ class VortexForcing:
     def storm_id(self) -> str:
         if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
-                storm_id = get_atcf_id(
-                    storm_name=self.__dataframe['name'].tolist()[-1],
-                    year=self.__dataframe['datetime'].tolist()[-1].year,
+                storm_id = (
+                    f'{self.__dataframe["basin"].iloc[-1]}'
+                    f'{self.__dataframe["storm_number"].iloc[-1]}'
+                    f'{self.__dataframe["datetime"].iloc[-1].year}'
                 )
                 try:
                     get_atcf_file(storm_id, self.file_deck, self.mode)
