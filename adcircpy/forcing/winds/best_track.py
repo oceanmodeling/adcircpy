@@ -265,7 +265,6 @@ class VortexForcing:
                     f'{self.__dataframe["datetime"].iloc[-1].year}'
                 )
                 try:
-                    get_atcf_file(storm_id, self.file_deck, self.mode)
                     self.storm_id = storm_id
                 except:
                     self.__invalid_storm_name = True
