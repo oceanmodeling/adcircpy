@@ -1280,8 +1280,8 @@ def read_atcf(track: PathLike) -> DataFrame:
         row_data['radius_of_maximum_winds'] = convert_value(
             row[19], to_type=int, round_digits=0,
         )
-        row_data['direction'] = row[25]
-        row_data['speed'] = row[26]
+        row_data['direction'] = convert_value(row[25], to_type=int)
+        row_data['speed'] = convert_value(row[26], to_type=int)
         row_data['name'] = row[27]
 
         for key, value in row_data.items():
