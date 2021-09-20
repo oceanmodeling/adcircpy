@@ -149,9 +149,6 @@ def test_write(nodes, elements):
     mesh.write(output_directory / 'test_AdcircMesh.gr3', overwrite=True)
     mesh.write(output_directory / 'test_AdcircMesh.2dm', format='2dm', overwrite=True)
 
-    with pytest.raises(FileExistsError):
-        mesh.write(output_directory / 'test_AdcircMesh.2dm', format='2dm')
-
     with pytest.raises(ValueError):
         mesh.write(output_directory / 'test_AdcircMesh.txt', format='txt', overwrite=True)
 
