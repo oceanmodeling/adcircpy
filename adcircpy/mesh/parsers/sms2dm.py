@@ -1,3 +1,4 @@
+import logging
 import pathlib
 
 
@@ -23,12 +24,15 @@ def read(path):
 
 
 def write(sms2dm, path, overwrite=False):
-    path = pathlib.Path(path)
-    if path.is_file() and not overwrite:
-        raise FileExistsError('File exists, pass overwrite=True to allow overwrite.')
-    with open(path, 'w') as f:
-        f.write(string(sms2dm))
-    return 0  # for unittests
+    if not isinstance(path, pathlib.Path):
+        path = pathlib.Path(path)
+    if overwrite or not path.exists():
+        with open(path, 'w') as f:
+            f.write(string(sms2dm))
+        return 0  # for unittests
+    else:
+        logging.warning(f'skipping existing file "{path}"')
+        return 1
 
 
 def string(sms2dm):

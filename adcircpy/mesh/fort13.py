@@ -191,13 +191,13 @@ class NodalAttributes:
 
     def write(self, path, overwrite=False):
         if path is not None:
-            path = pathlib.Path(path)
-            if path.is_file() and not overwrite:
-                msg = 'File exists, pass overwrite=True to allow overwrite.'
-                raise Exception(msg)
-            else:
+            if not isinstance(path, pathlib.Path):
+                path = pathlib.Path(path)
+            if overwrite or not path.exists():
                 with open(path, 'w') as f:
                     f.write(str(self))
+            else:
+                logger.warning(f'skipping existing file "{path}"')
         else:
             print(str(self))
 
