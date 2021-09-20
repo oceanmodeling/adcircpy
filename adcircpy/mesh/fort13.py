@@ -186,7 +186,10 @@ class NodalAttributes:
             # converts from column major to row major, leave it column major.
             # if full_values.shape[1] == 1:
             #     full_values = full_values.flatten()
-            self.add_attribute(attribute, data['units'])
+            if attribute not in self._attributes:
+                self.add_attribute(attribute, data['units'])
+            else:
+                logger.warning(f'overwriting existing attribute "{attribute}"')
             self.set_attribute(attribute, full_values)
 
     def write(self, path, overwrite=False):
