@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 import math
 from os import PathLike
 import pathlib
@@ -433,11 +434,13 @@ class Fort15:
 
     def write(self, runtype: str, path: PathLike, overwrite: bool = False):
         assert runtype in ['coldstart', 'hotstart']
-        fort15 = pathlib.Path(path)
-        if fort15.exists() and not overwrite:
-            raise Exception(f'{fort15} exists. ' f'Pass `overwrite=True` to overwrite.')
-        with open(fort15, 'w', newline='\n') as f:
-            f.write(self.fort15(runtype))
+        if not isinstance(path, pathlib.Path):
+            path = pathlib.Path(path)
+        if overwrite or not path.exists():
+            with open(path, 'w', newline='\n') as f:
+                f.write(self.fort15(runtype))
+        else:
+            logging.warning(f'skipping existing file "{path}"')
 
     def get_tidal_forcing(self) -> str:
         f = []
