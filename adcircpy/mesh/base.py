@@ -2,7 +2,6 @@ from abc import ABC
 from collections import defaultdict
 from functools import lru_cache
 from itertools import permutations
-import logging
 import os
 import pathlib
 from typing import Dict, Hashable, List, Sequence, Union
@@ -19,8 +18,6 @@ from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Point, P
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm
-
-_logger = logging.getLogger(__name__)
 
 
 class Nodes:

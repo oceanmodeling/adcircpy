@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
 import math
 from os import PathLike
 import pathlib
@@ -9,6 +8,9 @@ from typing import Any, Union
 import numpy as np
 
 from adcircpy.mesh.mesh import AdcircMesh
+from adcircpy.utilities import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 class StationType(Enum):
@@ -440,7 +442,7 @@ class Fort15:
             with open(path, 'w', newline='\n') as f:
                 f.write(self.fort15(runtype))
         else:
-            logging.warning(f'skipping existing file "{path}"')
+            LOGGER.warning(f'skipping existing file "{path}"')
 
     def get_tidal_forcing(self) -> str:
         f = []

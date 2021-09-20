@@ -1,5 +1,4 @@
 from collections import defaultdict
-import logging
 import numbers
 import os
 import pathlib
@@ -9,6 +8,10 @@ import warnings
 import numpy as np  # type: ignore[import]
 from pyproj import CRS  # type: ignore[import]
 from pyproj.exceptions import CRSError  # type: ignore[import]
+
+from adcircpy.utilities import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def buffer_to_dict(buf: TextIO):
@@ -264,4 +267,4 @@ def write(grd, path, overwrite=False):
         with open(path, 'w') as f:
             f.write(to_string(**grd))
     else:
-        logging.warning(f'skipping existing file "{path}"')
+        LOGGER.warning(f'skipping existing file "{path}"')

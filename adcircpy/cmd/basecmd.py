@@ -1,12 +1,12 @@
 # import abc
 from datetime import timedelta
 from functools import lru_cache
-import logging
 import pathlib
 
 from adcircpy import AdcircMesh, AdcircRun, server, Tides
+from adcircpy.utilities import get_logger
 
-logger = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class AdcircCommand:
@@ -14,10 +14,10 @@ class AdcircCommand:
         self.args = args
 
     def run(self):
-        logger.info('AdcircCommand.run()')
+        LOGGER.info('AdcircCommand.run()')
         # write and exit if generate only
         if self.args.generate_only:
-            logger.info('Generate only is active, writting to disk.')
+            LOGGER.info('Generate only is active, writting to disk.')
             self.driver.write(
                 self.args.output_directory,
                 nproc=self.args.nproc,

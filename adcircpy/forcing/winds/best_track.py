@@ -5,7 +5,6 @@ import ftplib
 from functools import wraps
 import gzip
 import io
-import logging
 import os
 from os import PathLike
 import pathlib
@@ -30,8 +29,9 @@ import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.plotting import plot_polygon, plot_polygons
+from adcircpy.utilities import get_logger
 
-logger = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 # suppress `SettingWithCopyWarning` when instantiating `VortexForcing`
 # TODO: figure out why that is happening
@@ -253,7 +253,7 @@ class VortexForcing:
             with open(path, 'w') as f:
                 f.write(str(self))
         else:
-            logger.warning(f'skipping existing file "{path}"')
+            LOGGER.warning(f'skipping existing file "{path}"')
 
     @property
     def storm_id(self) -> str:
@@ -992,7 +992,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
                 with open(output, 'w+') as fh:
                     fh.write(summary)
             else:
-                logger.warning(f'skipping existing file "{output}"')
+                LOGGER.warning(f'skipping existing file "{output}"')
         return summary
 
     @property
@@ -1190,7 +1190,7 @@ def get_atcf_id(storm_name: str, year: int) -> str:
 
 def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
     url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', "")
-    logger.info(f'Downloading storm data from {url}')
+    LOGGER.info(f'Downloading storm data from {url}')
 
     hostname, filename = url.split('/', 1)
 

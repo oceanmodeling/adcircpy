@@ -1,5 +1,8 @@
-import logging
 import pathlib
+
+from adcircpy.utilities import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 def read(path):
@@ -31,7 +34,7 @@ def write(sms2dm, path, overwrite=False):
             f.write(string(sms2dm))
         return 0  # for unittests
     else:
-        logging.warning(f'skipping existing file "{path}"')
+        LOGGER.warning(f'skipping existing file "{path}"')
         return 1
 
 
