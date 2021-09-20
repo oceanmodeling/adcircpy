@@ -249,10 +249,11 @@ class VortexForcing:
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
-        if path.exists() and overwrite is False:
-            raise Exception('File exist, set overwrite=True to allow overwrite.')
-        with open(path, 'w') as f:
-            f.write(str(self))
+        if overwrite or not path.exists():
+            with open(path, 'w') as f:
+                f.write(str(self))
+        else:
+            logger.warning(f'skipping existing file "{path}"')
 
     @property
     def storm_id(self) -> str:
@@ -986,11 +987,12 @@ class BestTrackForcing(VortexForcing, WindForcing):
         summary = '\n'.join(f)
         if output is not None:
             if not isinstance(output, pathlib.Path):
-                path = pathlib.Path(output)
-            if path.exists() and overwrite is False:
-                raise Exception('File exist, set overwrite=True to allow overwrite.')
-            with open(path, 'w+') as fh:
-                fh.write(summary)
+                output = pathlib.Path(output)
+            if overwrite or not output.exists():
+                with open(output, 'w+') as fh:
+                    fh.write(summary)
+            else:
+                logger.warning(f'skipping existing file "{output}"')
         return summary
 
     @property
