@@ -3,7 +3,6 @@ from copy import copy
 
 from dateutil.parser import parse as parse_date
 import pytest
-import pytest_socket
 
 from adcircpy.forcing.winds.best_track import BestTrackForcing, VortexForcing
 from tests import (
@@ -128,7 +127,10 @@ def test_no_internet():
     if not output_directory.exists():
         output_directory.mkdir(parents=True, exist_ok=True)
 
-    with pytest.raises(pytest_socket.SocketBlockedError):
+    with pytest.raises(ConnectionError):
+        VortexForcing(storm='florence2018')
+
+    with pytest.raises(ConnectionError):
         VortexForcing(storm='al062018', start_date='20180911', end_date=None)
 
     vortex_1 = VortexForcing.from_fort22(input_directory / 'fort.22')

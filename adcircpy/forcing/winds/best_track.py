@@ -9,8 +9,10 @@ import logging
 import os
 from os import PathLike
 import pathlib
+import socket
 import time
 from typing import Any, TextIO, Union
+from urllib.error import URLError
 import zipfile
 
 import appdirs
@@ -131,8 +133,11 @@ class VortexForcing:
             else:
                 try:
                     self.storm_id = storm
-                except:
-                    self.filename = storm
+                except ValueError:
+                    if pathlib.Path(storm).exists():
+                        self.filename = storm
+                    else:
+                        raise
 
         self.__previous_configuration = {
             'storm_id': self.storm_id,
@@ -269,14 +274,14 @@ class VortexForcing:
                 )
                 try:
                     self.storm_id = storm_id
-                except:
+                except ValueError:
                     try:
                         storm_id = get_atcf_id(
                             storm_name=self.__dataframe['name'].tolist()[-1],
                             year=self.__dataframe['datetime'].tolist()[-1].year,
                         )
                         self.storm_id = storm_id
-                    except:
+                    except ValueError:
                         self.__invalid_storm_name = True
         return self.__storm_id
 
@@ -286,10 +291,7 @@ class VortexForcing:
             digits = sum([1 for character in storm_id if character.isdigit()])
 
             if digits == 4:
-                try:
-                    atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
-                except:
-                    atcf_id = None
+                atcf_id = get_atcf_id(storm_name=storm_id[:-4], year=int(storm_id[-4:]))
                 if atcf_id is None:
                     raise ValueError(f'No storm with id: {storm_id}')
                 storm_id = atcf_id
@@ -905,11 +907,8 @@ class VortexForcing:
         cls, fort22: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
         filename = None
-        try:
-            if pathlib.Path(fort22).exists():
-                filename = fort22
-        except:
-            pass
+        if pathlib.Path(fort22).exists():
+            filename = fort22
         return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
@@ -925,11 +924,8 @@ class VortexForcing:
         cls, atcf: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
         filename = None
-        try:
-            if pathlib.Path(atcf).exists():
-                filename = atcf
-        except:
-            pass
+        if pathlib.Path(atcf).exists():
+            filename = atcf
         return cls(
             storm=atcf,
             start_date=start_date,
@@ -1054,11 +1050,8 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
         filename = None
-        try:
-            if pathlib.Path(fort22).exists():
-                filename = fort22
-        except:
-            pass
+        if pathlib.Path(fort22).exists():
+            filename = fort22
         return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
@@ -1079,11 +1072,8 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
         filename = None
-        try:
-            if pathlib.Path(atcf).exists():
-                filename = atcf
-        except:
-            pass
+        if pathlib.Path(atcf).exists():
+            filename = atcf
         return cls(
             storm=atcf,
             start_date=start_date,
@@ -1163,40 +1153,32 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
 def get_atcf_entry(
     year: int, basin: str = None, storm_number: int = None, storm_name: str = None,
 ) -> Series:
-    entry = None
+    url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
 
     try:
-        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
         storm_table = read_csv(url, header=None)
-    except:
-        storm_table = None
+    except URLError:
+        raise ConnectionError(f'cannot connect to "{url}"')
 
-    if storm_table is not None:
-        if basin is not None and storm_number is not None:
-            row = storm_table[
-                (storm_table[1] == f'{basin.upper():>3}')
-                & (storm_table[7] == storm_number)
-                & (storm_table[8] == int(year))
-            ]
-        elif storm_name is not None:
-            row = storm_table[
-                (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
-            ]
-        else:
-            raise ValueError('need either storm name or basin + storm number')
+    if basin is not None and storm_number is not None:
+        row = storm_table[
+            (storm_table[1] == f'{basin.upper():>3}')
+            & (storm_table[7] == storm_number)
+            & (storm_table[8] == int(year))
+        ]
+    elif storm_name is not None:
+        row = storm_table[
+            (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
+        ]
+    else:
+        raise ValueError('need either storm name or basin + storm number')
 
-        if len(row) > 0:
-            entry = list(row.iterrows())[0][1]
-
-    return entry
+    if len(row) > 0:
+        return list(row.iterrows())[0][1]
 
 
 def get_atcf_id(storm_name: str, year: int) -> str:
-    entry = get_atcf_entry(storm_name=storm_name, year=year)
-    if entry is None:
-        return None
-    else:
-        return entry[20].strip()
+    return get_atcf_entry(storm_name=storm_name, year=year)[20].strip()
 
 
 def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
@@ -1207,9 +1189,12 @@ def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) 
 
     handle = io.BytesIO()
 
-    ftp = ftplib.FTP(hostname, 'anonymous', "")
-    ftp.encoding = 'utf-8'
-    ftp.retrbinary(f'RETR {filename}', handle.write)
+    try:
+        ftp = ftplib.FTP(hostname, 'anonymous', "")
+        ftp.encoding = 'utf-8'
+        ftp.retrbinary(f'RETR {filename}', handle.write)
+    except socket.gaierror:
+        raise ConnectionError(f'cannot connect to {hostname}')
 
     return handle
 
