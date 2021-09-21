@@ -3,7 +3,6 @@ from copy import copy
 
 from dateutil.parser import parse as parse_date
 import pytest
-import pytest_socket
 
 from adcircpy.forcing.winds.best_track import BestTrackForcing, VortexForcing
 from tests import (
@@ -34,7 +33,7 @@ def test_from_fort22():
     check_reference_directory(output_directory, reference_directory)
 
 
-def test_from_atcf(mocker):
+def test_from_atcf():
     input_directory = INPUT_DIRECTORY / 'test_from_atcf'
     output_directory = OUTPUT_DIRECTORY / 'test_from_atcf'
     reference_directory = REFERENCE_DIRECTORY / 'test_from_atcf'
@@ -46,12 +45,20 @@ def test_from_atcf(mocker):
         atcf=input_directory / 'florence2018_atcf.trk', nws=8,
     )
 
-    assert best_track.storm_id is None
+    assert best_track.storm_id == 'BT02008'
     assert best_track.name == 'WRT00001'
 
     best_track.write(output_directory / 'florence2018_fort.22', overwrite=True)
 
     check_reference_directory(output_directory, reference_directory)
+
+
+def test_plot_besttrack(mocker):
+    input_directory = INPUT_DIRECTORY / 'test_plot_besttrack'
+
+    best_track = BestTrackForcing.from_atcf_file(
+        atcf=input_directory / 'florence2018_atcf.trk', nws=8,
+    )
 
     mocker.patch('matplotlib.pyplot.show')
     best_track.plot_track(show=True, coastline=False)
@@ -120,7 +127,10 @@ def test_no_internet():
     if not output_directory.exists():
         output_directory.mkdir(parents=True, exist_ok=True)
 
-    with pytest.raises(pytest_socket.SocketBlockedError):
+    with pytest.raises(ConnectionError):
+        VortexForcing(storm='florence2018')
+
+    with pytest.raises(ConnectionError):
         VortexForcing(storm='al062018', start_date='20180911', end_date=None)
 
     vortex_1 = VortexForcing.from_fort22(input_directory / 'fort.22')
