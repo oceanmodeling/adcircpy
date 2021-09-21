@@ -1,3 +1,4 @@
+from collections import Mapping
 import logging
 import pathlib
 
@@ -209,7 +210,7 @@ class NodalAttributes:
         return self._fort14
 
     def __eq__(self, other: 'NodalAttributes') -> bool:
-        return self._attributes == other._attributes
+        return equal_mappings(self._attributes, other._attributes)
 
 
 def parse_fort13(path):
@@ -244,3 +245,21 @@ def parse_fort13(path):
             values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13
+
+
+def equal_mappings(mapping_1: Mapping, mapping_2: Mapping) -> bool:
+    for key, value_1 in mapping_1.items():
+        if key in mapping_2:
+            value_2 = mapping_2[key]
+            if isinstance(value_1, Mapping):
+                if isinstance(value_2, Mapping):
+                    if not equal_mappings(value_1, value_2):
+                        return False
+                else:
+                    return False
+            elif np.any(value_1 != value_2):
+                return False
+        else:
+            return False
+    else:
+        return True
