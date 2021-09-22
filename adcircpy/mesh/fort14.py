@@ -217,9 +217,9 @@ class Fort14(Grd):
     def write(self, path, overwrite=False, format='fort.14'):
         if format in ['fort.14']:
             _grd = self.to_dict()
-            _grd['nodes'] = {
-                id: (coord, -val) for id, (coord, val) in self.nodes.to_dict().items()
-            }
+            nodes = self.nodes
+            nodes.iloc[:, -1] *= -1
+            _grd['nodes'] = nodes
 
             grd.write(
                 grd=_grd, path=path, overwrite=overwrite,
@@ -230,9 +230,7 @@ class Fort14(Grd):
     def to_dict(self, boundaries=True):
         _grd = super().to_dict()
         if boundaries is True:
-            nodes = self.nodes.copy()
-            nodes.iloc[:, 2:] *= -1
-            _grd.update({'nodes': nodes, 'boundaries': self.boundaries.to_dict()})
+            _grd.update({'nodes': self.nodes, 'boundaries': self.boundaries.to_dict()})
         return _grd
 
     @figure

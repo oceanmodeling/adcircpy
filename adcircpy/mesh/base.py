@@ -555,7 +555,7 @@ class Grd(ABC):
         return self.__class__(**self.to_dict())
 
     def __eq__(self, other: 'Grd') -> bool:
-        return self.nodes == other.nodes
+        return self.nodes.equals(other.nodes)
 
 
 def edges_to_rings(edges: numpy.ndarray) -> numpy.ndarray:
