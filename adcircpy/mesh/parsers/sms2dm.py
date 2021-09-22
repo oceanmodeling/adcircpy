@@ -39,8 +39,6 @@ def read(path):
 def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = False):
     if not isinstance(path, pathlib.Path):
         path = pathlib.Path(path)
-    if path.exists() and not overwrite:
-        raise FileExistsError('File exists, pass overwrite=True to allow overwrite.')
 
     triangles = mesh[MeshGeometryType.TRIANGLE.value]
     triangles.insert(0, 'type', MeshGeometryType.TRIANGLE.value)
@@ -62,36 +60,40 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
     def float_format(value: float):
         return f'{value:<.16E}'
 
-    with open(path, 'w') as f:
-        f.write('MESH2D\n')
+    if overwrite or not path.exists():
+        with open(path, 'w') as f:
+            f.write('MESH2D\n')
 
-        if len(triangles) > 0:
-            _logger.info('writing triangles')
+            if len(triangles) > 0:
+                _logger.info('writing triangles')
+                start_time = datetime.now()
+                triangles.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote triangles in {datetime.now() - start_time}')
+
+            if len(quadrilaterals) > 0:
+                _logger.info('writing quadrilaterals')
+                start_time = datetime.now()
+                quadrilaterals.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
+
+            _logger.info('writing nodes')
             start_time = datetime.now()
-            triangles.to_string(f, header=False, index=False, justify='left')
+            nodes.to_string(
+                f, header=False, index=False, justify='left', float_format=float_format
+            )
             f.write('\n')
-            _logger.info(f'wrote triangles in {datetime.now() - start_time}')
+            _logger.info(f'wrote nodes in {datetime.now() - start_time}')
 
-        if len(quadrilaterals) > 0:
-            _logger.info('writing quadrilaterals')
-            start_time = datetime.now()
-            quadrilaterals.to_string(f, header=False, index=False, justify='left')
-            f.write('\n')
-            _logger.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
+            if boundaries in mesh:
+                _logger.info('writing boundaries')
+                start_time = datetime.now()
+                boundaries.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote boundaries in {datetime.now() - start_time}')
 
-        _logger.info('writing nodes')
-        start_time = datetime.now()
-        nodes.to_string(
-            f, header=False, index=False, justify='left', float_format=float_format
-        )
-        f.write('\n')
-        _logger.info(f'wrote nodes in {datetime.now() - start_time}')
-
-        if boundaries in mesh:
-            _logger.info('writing boundaries')
-            start_time = datetime.now()
-            boundaries.to_string(f, header=False, index=False, justify='left')
-            f.write('\n')
-            _logger.info(f'wrote boundaries in {datetime.now() - start_time}')
-
-    return 0  # for unittests
+        return 0  # for unittests
+    else:
+        logging.warning(f'skipping existing file "{path}"')
+        return 1

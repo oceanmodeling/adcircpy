@@ -1,3 +1,6 @@
+from collections import defaultdict
+import logging
+import numbers
 from io import StringIO
 import os
 import pathlib
@@ -282,8 +285,10 @@ def read(resource: Union[str, os.PathLike], boundaries: bool = True, crs=True):
 
 
 def write(grd, path, overwrite=False):
-    path = pathlib.Path(path)
-    if path.is_file() and not overwrite:
-        raise FileExistsError('File exists, pass overwrite=True to allow overwrite.')
-    with open(path, 'w') as f:
-        f.write(to_string(**grd))
+    if not isinstance(path, pathlib.Path):
+        path = pathlib.Path(path)
+    if overwrite or not path.exists():
+        with open(path, 'w') as f:
+            f.write(to_string(**grd))
+    else:
+        logging.warning(f'skipping existing file "{path}"')

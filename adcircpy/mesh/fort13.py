@@ -1,3 +1,4 @@
+from collections import Mapping
 import logging
 import pathlib
 
@@ -184,24 +185,30 @@ class NodalAttributes:
             # converts from column major to row major, leave it column major.
             # if full_values.shape[1] == 1:
             #     full_values = full_values.flatten()
-            self.add_attribute(attribute, data['units'])
+            if attribute not in self._attributes:
+                self.add_attribute(attribute, data['units'])
+            else:
+                logger.warning(f'overwriting existing attribute "{attribute}"')
             self.set_attribute(attribute, full_values)
 
     def write(self, path, overwrite=False):
         if path is not None:
-            path = pathlib.Path(path)
-            if path.is_file() and not overwrite:
-                msg = 'File exists, pass overwrite=True to allow overwrite.'
-                raise Exception(msg)
-            else:
+            if not isinstance(path, pathlib.Path):
+                path = pathlib.Path(path)
+            if overwrite or not path.exists():
                 with open(path, 'w') as f:
                     f.write(str(self))
+            else:
+                logger.warning(f'skipping existing file "{path}"')
         else:
             print(str(self))
 
     @property
     def fort14(self):
         return self._fort14
+
+    def __eq__(self, other: 'NodalAttributes') -> bool:
+        return equal_mappings(self._attributes, other._attributes)
 
 
 def parse_fort13(path):
@@ -236,3 +243,21 @@ def parse_fort13(path):
             values[np.where(np.isnan(values[:, 0])), :] = fort13[attribute_name]['defaults']
             fort13[attribute_name]['values'] = values
         return fort13
+
+
+def equal_mappings(mapping_1: Mapping, mapping_2: Mapping) -> bool:
+    for key, value_1 in mapping_1.items():
+        if key in mapping_2:
+            value_2 = mapping_2[key]
+            if isinstance(value_1, Mapping):
+                if isinstance(value_2, Mapping):
+                    if not equal_mappings(value_1, value_2):
+                        return False
+                else:
+                    return False
+            elif np.any(value_1 != value_2):
+                return False
+        else:
+            return False
+    else:
+        return True

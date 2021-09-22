@@ -9,8 +9,10 @@ import logging
 import os
 from os import PathLike
 import pathlib
+import socket
 import time
 from typing import Any, TextIO, Union
+from urllib.error import URLError
 import zipfile
 
 import appdirs
@@ -29,6 +31,7 @@ from shapely.geometry import Point, Polygon
 import utm
 
 from adcircpy.forcing.winds.base import WindForcing
+from adcircpy.plotting import plot_polygon, plot_polygons
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +78,7 @@ def plot_coastline(axis: Axes = None, show: bool = False, save_filename: PathLik
 
 
 class FileDeck(Enum):
-    """ http://hurricanes.ral.ucar.edu/realtime/ """
+    """http://hurricanes.ral.ucar.edu/realtime/"""
 
     a = 'a'
     b = 'b'
@@ -128,7 +131,13 @@ class VortexForcing:
             if os.path.exists(storm):
                 self.__atcf = io.open(storm, 'rb')
             else:
-                self.storm_id = storm
+                try:
+                    self.storm_id = storm
+                except ValueError:
+                    if pathlib.Path(storm).exists():
+                        self.filename = storm
+                    else:
+                        raise
 
         self.__previous_configuration = {
             'storm_id': self.storm_id,
@@ -248,24 +257,32 @@ class VortexForcing:
     def write(self, path: PathLike, overwrite: bool = False):
         if not isinstance(path, pathlib.Path):
             path = pathlib.Path(path)
-        if path.exists() and overwrite is False:
-            raise Exception('File exist, set overwrite=True to allow overwrite.')
-        with open(path, 'w') as f:
-            f.write(str(self))
+        if overwrite or not path.exists():
+            with open(path, 'w') as f:
+                f.write(str(self))
+        else:
+            logger.warning(f'skipping existing file "{path}"')
 
     @property
     def storm_id(self) -> str:
         if self.__storm_id is None and not self.__invalid_storm_name:
             if self.__dataframe is not None:
-                storm_id = get_atcf_id(
-                    storm_name=self.__dataframe['name'].tolist()[-1],
-                    year=self.__dataframe['datetime'].tolist()[-1].year,
+                storm_id = (
+                    f'{self.__dataframe["basin"].iloc[-1]}'
+                    f'{self.__dataframe["storm_number"].iloc[-1]}'
+                    f'{self.__dataframe["datetime"].iloc[-1].year}'
                 )
                 try:
-                    get_atcf_file(storm_id, self.file_deck, self.mode)
                     self.storm_id = storm_id
-                except:
-                    self.__invalid_storm_name = True
+                except ValueError:
+                    try:
+                        storm_id = get_atcf_id(
+                            storm_name=self.__dataframe['name'].tolist()[-1],
+                            year=self.__dataframe['datetime'].tolist()[-1].year,
+                        )
+                        self.storm_id = storm_id
+                    except ValueError:
+                        self.__invalid_storm_name = True
         return self.__storm_id
 
     @storm_id.setter
@@ -337,7 +354,7 @@ class VortexForcing:
 
     @property
     def duration(self) -> float:
-        d = (self.end_date - self.start_date).days
+        d = (self.end_date - self.start_date) / timedelta(days=1)
         return d
 
     @property
@@ -602,7 +619,7 @@ class VortexForcing:
                         if len(line) > 23:
                             record['name'] = line[27].strip(' ')
                         else:
-                            record['name'] = ''
+                            record['name'] = ""
                     else:
                         record.update(
                             {
@@ -689,7 +706,14 @@ class VortexForcing:
         if _found_start_date is False:
             raise Exception(f'No data within mesh bounding box for storm {self.storm_id}.')
 
-    def plot_track(self, axis: Axes = None, show: bool = False, color: str = 'k', **kwargs):
+    def plot_track(
+        self,
+        axis: Axes = None,
+        show: bool = False,
+        color: str = 'k',
+        coastline: bool = True,
+        **kwargs,
+    ):
         kwargs.update({'color': color})
         if axis is None:
             fig = pyplot.figure()
@@ -706,7 +730,103 @@ class VortexForcing:
                 )
         if show:
             axis.axis('scaled')
-        plot_coastline(axis, show)
+        if bool(coastline) is True:
+            plot_coastline(axis, show)
+
+    def isotachs(self, wind_speed: float, segments: int = 91) -> [Polygon]:
+        """
+        Get the isotach at the given speed at every time in the dataset.
+
+        :param wind_speed: wind speed to extract (in knots)
+        :param segments: number of discretization points per quadrant
+        :return: list of isotachs as polygons
+        """
+
+        ## Collect the attributes needed from the forcing to generate swath
+        data = self.data[self.data['isotach'] == wind_speed]
+
+        # convert quadrant radii from nautical miles to meters
+        quadrants = ['radius_for_NEQ', 'radius_for_NWQ', 'radius_for_SWQ', 'radius_for_SEQ']
+        data[quadrants] *= 1852.0  # nautical miles to meters
+
+        geodetic = Geod(ellps='WGS84')
+
+        ## Generate overall swath based on the desired isotach
+        polygons = []
+        for index, row in data.iterrows():
+            # get the starting angle range for NEQ based on storm direction
+            rot_angle = 360 - row['direction']
+            start_angle = 0 + rot_angle
+            end_angle = 90 + rot_angle
+
+            # append quadrants in counter-clockwise direction from NEQ
+            arcs = []
+            for quadrant in quadrants:
+                # enter the angle range for this quadrant
+                theta = numpy.linspace(start_angle, end_angle, segments)
+                # move angle to next quadrant
+                start_angle = start_angle + 90
+                end_angle = end_angle + 90
+                # skip if quadrant radius is zero
+                if row[quadrant] <= 1.0:
+                    continue
+                # make the coordinate list for this quadrant
+                ## entering origin
+                coords = [row[['longitude', 'latitude']].tolist()]
+                # using forward geodetic (origin,angle,dist)
+                for az12 in theta:
+                    lont, latt, backaz = geodetic.fwd(
+                        lons=row['longitude'],
+                        lats=row['latitude'],
+                        az=az12,
+                        dist=row[quadrant],
+                    )
+                    coords.append((lont, latt))
+                ## start point equals last point
+                coords.append(coords[0])
+                # enter quadrant as new polygon
+                arcs.append(Polygon(coords))
+            polygons.append(ops.unary_union(arcs))
+        return polygons
+
+    def wind_swath(
+        self, isotach: int, segments: int = 91, plot_swath: bool = False,
+    ) -> Polygon:
+        """
+        extracts the wind swath of the BestTrackForcing class object as a Polygon object
+
+        :param isotach: the wind swath to extract (34-kt, 50-kt, or 64-kt)
+        :param segments: number of discretization points per quadrant (default = 91)
+        :param plot_swath: plot the swath before returning? (default = False)
+        """
+
+        # parameter
+        # isotach should be one of 34, 50, 64
+        valid_isotach_values = [34, 50, 64]
+        assert (
+            isotach in valid_isotach_values
+        ), f'`isotach` value in `get_wind_swath` must be one of {valid_isotach_values}'
+
+        isotachs = self.isotachs(wind_speed=isotach, segments=segments)
+
+        convex_hulls = []
+        for index in range(len(isotachs) - 1):
+            convex_hulls.append(
+                ops.unary_union([isotachs[index], isotachs[index + 1]]).convex_hull
+            )
+
+        # get the union of polygons
+        swath = ops.unary_union(convex_hulls)
+
+        if plot_swath:
+            plot_polygons(isotachs)
+            plot_polygon(swath)
+            pyplot.suptitle(
+                f'{self.storm_id} - isotach {isotach} kt ({self.start_date} - {self.end_date})'
+            )
+            pyplot.show()
+
+        return swath
 
     def __generate_record_numbers(self):
         record_number = [1]
@@ -725,22 +845,20 @@ class VortexForcing:
                 return date
 
     def __copy__(self) -> 'VortexForcing':
-        instance = self.__class__(
+        return self.__class__(
             storm=self.dataframe.copy(),
             start_date=self.start_date,
             end_date=self.end_date,
             file_deck=self.file_deck,
             record_type=self.record_type,
         )
-        instance.storm_id = self.storm_id
-        return instance
 
     def __eq__(self, other: 'VortexForcing') -> bool:
-        return numpy.all(self.dataframe == other.dataframe) and self.storm_id == other.storm_id
+        return numpy.all(self.dataframe == other.dataframe)
 
     @staticmethod
     def __compute_velocity(data: DataFrame) -> DataFrame:
-        """ Output has units of meters per second. """
+        """Output has units of meters per second."""
 
         geodetic = Geod(ellps='WGS84')
 
@@ -789,11 +907,8 @@ class VortexForcing:
         cls, fort22: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
         filename = None
-        try:
-            if pathlib.Path(fort22).exists():
-                filename = fort22
-        except:
-            pass
+        if pathlib.Path(fort22).exists():
+            filename = fort22
         return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
@@ -809,11 +924,8 @@ class VortexForcing:
         cls, atcf: PathLike, start_date: datetime = None, end_date: datetime = None,
     ) -> 'VortexForcing':
         filename = None
-        try:
-            if pathlib.Path(atcf).exists():
-                filename = atcf
-        except:
-            pass
+        if pathlib.Path(atcf).exists():
+            filename = atcf
         return cls(
             storm=atcf,
             start_date=start_date,
@@ -882,11 +994,12 @@ class BestTrackForcing(VortexForcing, WindForcing):
         summary = '\n'.join(f)
         if output is not None:
             if not isinstance(output, pathlib.Path):
-                path = pathlib.Path(output)
-            if path.exists() and overwrite is False:
-                raise Exception('File exist, set overwrite=True to allow overwrite.')
-            with open(path, 'w+') as fh:
-                fh.write(summary)
+                output = pathlib.Path(output)
+            if overwrite or not output.exists():
+                with open(output, 'w+') as fh:
+                    fh.write(summary)
+            else:
+                logger.warning(f'skipping existing file "{output}"')
         return summary
 
     @property
@@ -900,15 +1013,6 @@ class BestTrackForcing(VortexForcing, WindForcing):
     def NWS(self, NWS: int):
         assert NWS in [8, 19, 20]
         self.__NWS = int(NWS)
-
-    @property
-    def WTIMINC(self) -> str:
-        return (
-            f'{self.start_date:%Y %m %d %H} '
-            f'{self.data["storm_number"].iloc[0]} '
-            f'{self.BLADj} '
-            f'{self.geofactor}'
-        )
 
     @property
     def BLADj(self) -> float:
@@ -946,11 +1050,8 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
         filename = None
-        try:
-            if pathlib.Path(fort22).exists():
-                filename = fort22
-        except:
-            pass
+        if pathlib.Path(fort22).exists():
+            filename = fort22
         return cls(
             storm=read_atcf(fort22),
             start_date=start_date,
@@ -971,11 +1072,8 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
     ) -> 'BestTrackForcing':
         filename = None
-        try:
-            if pathlib.Path(atcf).exists():
-                filename = atcf
-        except:
-            pass
+        if pathlib.Path(atcf).exists():
+            filename = atcf
         return cls(
             storm=atcf,
             start_date=start_date,
@@ -1055,53 +1153,48 @@ def retry(ExceptionToCheck, tries=4, delay=3, backoff=2, logger=None):
 def get_atcf_entry(
     year: int, basin: str = None, storm_number: int = None, storm_name: str = None,
 ) -> Series:
-    entry = None
+    url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
 
     try:
-        url = 'ftp://ftp.nhc.noaa.gov/atcf/archive/storm.table'
         storm_table = read_csv(url, header=None)
-    except:
-        storm_table = None
+    except URLError:
+        raise ConnectionError(f'cannot connect to "{url}"')
 
-    if storm_table is not None:
-        if basin is not None and storm_number is not None:
-            row = storm_table[
-                (storm_table[1] == f'{basin.upper():>3}')
-                & (storm_table[7] == storm_number)
-                & (storm_table[8] == int(year))
-            ]
-        elif storm_name is not None:
-            row = storm_table[
-                (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
-            ]
-        else:
-            raise ValueError('need either storm name or basin + storm number')
+    if basin is not None and storm_number is not None:
+        row = storm_table[
+            (storm_table[1] == f'{basin.upper():>3}')
+            & (storm_table[7] == storm_number)
+            & (storm_table[8] == int(year))
+        ]
+    elif storm_name is not None:
+        row = storm_table[
+            (storm_table[0] == f'{storm_name.upper():>10}') & (storm_table[8] == int(year))
+        ]
+    else:
+        raise ValueError('need either storm name or basin + storm number')
 
-        if len(row) > 0:
-            entry = list(row.iterrows())[0][1]
-
-    return entry
+    if len(row) > 0:
+        return list(row.iterrows())[0][1]
 
 
 def get_atcf_id(storm_name: str, year: int) -> str:
-    entry = get_atcf_entry(storm_name=storm_name, year=year)
-    if entry is None:
-        return None
-    else:
-        return entry[20].strip()
+    return get_atcf_entry(storm_name=storm_name, year=year)[20].strip()
 
 
 def get_atcf_file(storm_id: str, file_deck: FileDeck = None, mode: Mode = None) -> io.BytesIO:
-    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', '')
+    url = atcf_url(file_deck=file_deck, storm_id=storm_id, mode=mode).replace('ftp://', "")
     logger.info(f'Downloading storm data from {url}')
 
     hostname, filename = url.split('/', 1)
 
     handle = io.BytesIO()
 
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
-    ftp.encoding = 'utf-8'
-    ftp.retrbinary(f'RETR {filename}', handle.write)
+    try:
+        ftp = ftplib.FTP(hostname, 'anonymous', "")
+        ftp.encoding = 'utf-8'
+        ftp.retrbinary(f'RETR {filename}', handle.write)
+    except socket.gaierror:
+        raise ConnectionError(f'cannot connect to {hostname}')
 
     return handle
 
@@ -1183,8 +1276,8 @@ def read_atcf(track: PathLike) -> DataFrame:
         row_data['radius_of_maximum_winds'] = convert_value(
             row[19], to_type=int, round_digits=0,
         )
-        row_data['direction'] = row[25]
-        row_data['speed'] = row[26]
+        row_data['direction'] = convert_value(row[25], to_type=int)
+        row_data['speed'] = convert_value(row[26], to_type=int)
         row_data['name'] = row[27]
 
         for key, value in row_data.items():
@@ -1247,9 +1340,9 @@ def atcf_storm_ids(file_deck: FileDeck = None, mode: Mode = None) -> [str]:
     elif not isinstance(file_deck, FileDeck):
         file_deck = convert_value(file_deck, FileDeck)
 
-    url = atcf_url(file_deck=file_deck, mode=mode).replace('ftp://', '')
+    url = atcf_url(file_deck=file_deck, mode=mode).replace('ftp://', "")
     hostname, directory = url.split('/', 1)
-    ftp = ftplib.FTP(hostname, 'anonymous', '')
+    ftp = ftplib.FTP(hostname, 'anonymous', "")
 
     filenames = [
         filename for filename, metadata in ftp.mlsd(directory) if metadata['type'] == 'file'

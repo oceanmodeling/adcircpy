@@ -1,7 +1,5 @@
-from collections import OrderedDict
 from datetime import datetime, timedelta
 from enum import Enum
-from functools import lru_cache
 from os import PathLike
 from typing import Union
 
@@ -32,10 +30,12 @@ class Tides(bctypes.EtaBc):
                     f'must be one of {[entry.__name__ for entry in TidalSource]}'
                 )
 
+        self._active_constituents = {}
+
         self.tidal_source = tidal_source
         self.tidal_dataset = tidal_source.value(resource)
 
-    def __call__(self, constituent: str) -> ():
+    def __call__(self, constituent: str) -> (float, float, float, float, float):
         return self.get_tidal_constituent(constituent)
 
     def __iter__(self):
@@ -75,33 +75,33 @@ class Tides(bctypes.EtaBc):
         assert constituent in self.active_constituents, msg
         self._active_constituents.pop(constituent)
 
-    def get_active_constituents(self):
+    def get_active_constituents(self) -> [str]:
         return list(self.active_constituents.keys())
 
-    def get_active_forcing_constituents(self):
+    def get_active_forcing_constituents(self) -> [str]:
         fc = []
         for c, d in self.active_constituents.items():
             if d['forcing']:
                 fc.append(c)
         return fc
 
-    def get_active_potential_constituents(self):
+    def get_active_potential_constituents(self) -> [str]:
         fc = []
         for c, d in self.active_constituents.items():
             if d['potential']:
                 fc.append(c)
         return fc
 
-    def get_tidal_potential_amplitude(self, constituent):
+    def get_tidal_potential_amplitude(self, constituent) -> float:
         if constituent in self.tidal_potential_amplitudes:
             return self.tidal_potential_amplitudes[constituent]
 
-    def get_tidal_species_type(self, constituent):
+    def get_tidal_species_type(self, constituent) -> int:
         if constituent in self.tidal_species_type:
             return self.tidal_species_type[constituent]
         return 0
 
-    def get_orbital_frequency(self, constituent):
+    def get_orbital_frequency(self, constituent) -> float:
         return self.orbital_frequencies[constituent]
 
     def get_tidal_constituent(self, constituent):
@@ -113,13 +113,13 @@ class Tides(bctypes.EtaBc):
             self.get_greenwich_factor(constituent),
         )
 
-    def get_earth_tidal_potential(self, constituent):
+    def get_earth_tidal_potential(self, constituent) -> float:
         try:
             return self.earth_tidal_potentials[constituent]
         except KeyError:
             pass
 
-    def get_nodal_factor(self, constituent):
+    def get_nodal_factor(self, constituent) -> float:
         if constituent == 'M2':
             return self.EQ78
         elif constituent == 'S2':
@@ -205,7 +205,7 @@ class Tides(bctypes.EtaBc):
         return decorator
 
     @_normalize_to_360
-    def get_greenwich_factor(self, constituent):
+    def get_greenwich_factor(self, constituent) -> float:
         if constituent == 'M2':
             return 2.0 * (self.DT - self.DS + self.DH) + 2.0 * (self.DXI - self.DNU)
         elif constituent == 'S2':
@@ -338,7 +338,7 @@ class Tides(bctypes.EtaBc):
             msg = f'Unrecognized constituent {constituent}'
             raise TypeError(msg)
 
-    def get_lunar_node(self):
+    def get_lunar_node(self) -> float:
         return (
             259.1560564
             - 19.328185764 * self.DYR
@@ -346,7 +346,7 @@ class Tides(bctypes.EtaBc):
             - 0.0022064139 * self.hour_middle
         )
 
-    def get_lunar_perigee(self):
+    def get_lunar_perigee(self) -> float:
         return (
             334.3837214
             + 40.66246584 * self.DYR
@@ -354,7 +354,7 @@ class Tides(bctypes.EtaBc):
             + 0.004641834 * self.hour_middle
         )
 
-    def get_lunar_mean_longitude(self):
+    def get_lunar_mean_longitude(self) -> float:
         return (
             277.0256206
             + 129.38482032 * self.DYR
@@ -362,7 +362,7 @@ class Tides(bctypes.EtaBc):
             + 0.549016532 * self.forcing_start_date.hour
         )
 
-    def get_solar_perigee(self):
+    def get_solar_perigee(self) -> float:
         return (
             281.2208569
             + 0.01717836 * self.DYR
@@ -370,7 +370,7 @@ class Tides(bctypes.EtaBc):
             + 0.000001961 * self.start_date.hour
         )
 
-    def get_solar_mean_longitude(self):
+    def get_solar_mean_longitude(self) -> float:
         return (
             280.1895014
             - 0.238724988 * self.DYR
@@ -379,52 +379,52 @@ class Tides(bctypes.EtaBc):
         )
 
     @property
-    def EQ73(self):
+    def EQ73(self) -> float:
         """ """
         return (2.0 / 3.0 - np.sin(self.I) ** 2) / 0.5021
 
     @property
-    def EQ74(self):
+    def EQ74(self) -> float:
         """ """
         return np.sin(self.I) ** 2 / 0.1578
 
     @property
-    def EQ75(self):
+    def EQ75(self) -> float:
         """ """
         return np.sin(self.I) * np.cos(self.I / 2.0) ** 2 / 0.37988
 
     @property
-    def EQ76(self):
+    def EQ76(self) -> float:
         """ """
         return np.sin(2.0 * self.I) / 0.7214
 
     @property
-    def EQ77(self):
+    def EQ77(self) -> float:
         """ """
         return np.sin(self.I) * np.sin(self.I / 2.0) ** 2 / 0.0164
 
     @property
-    def EQ78(self):
+    def EQ78(self) -> float:
         """ """
         return (np.cos(self.I / 2) ** 4) / 0.91544
 
     @property
-    def EQ149(self):
+    def EQ149(self) -> float:
         """ """
         return np.cos(self.I / 2.0) ** 6 / 0.8758
 
     @property
-    def EQ197(self):
+    def EQ197(self) -> float:
         """ """
         return np.sqrt(2.310 + 1.435 * np.cos(2.0 * (self.P - self.XI)))
 
     @property
-    def EQ207(self):
+    def EQ207(self) -> float:
         """ """
         return self.EQ75 * self.EQ197
 
     @property
-    def EQ213(self):
+    def EQ213(self) -> float:
         """ """
         return np.sqrt(
             1.0
@@ -433,12 +433,12 @@ class Tides(bctypes.EtaBc):
         )
 
     @property
-    def EQ215(self):
+    def EQ215(self) -> float:
         """ """
         return self.EQ78 * self.EQ213
 
     @property
-    def EQ227(self):
+    def EQ227(self) -> float:
         return np.sqrt(
             0.8965 * np.sin(2.0 * self.I) ** 2
             + 0.6001 * np.sin(2.0 * self.I) * np.cos(self.NU)
@@ -461,6 +461,27 @@ class Tides(bctypes.EtaBc):
             msg = 'Must set start_date attribute.'
             raise AttributeError(msg)
 
+    @start_date.setter
+    def start_date(self, start_date: datetime):
+        if start_date is None:
+            del self.start_date
+            return
+        msg = f'start_date must be an instance of type {datetime}.'
+        assert isinstance(start_date, datetime), msg
+        try:
+            msg = 'start_date must be smaller than end_date.'
+            assert start_date < self.end_date, msg
+        except AttributeError:
+            pass
+        self.__start_date = start_date
+
+    @start_date.deleter
+    def start_date(self):
+        try:
+            del self.__start_date
+        except AttributeError:
+            pass
+
     @property
     def end_date(self) -> datetime:
         try:
@@ -468,6 +489,28 @@ class Tides(bctypes.EtaBc):
         except AttributeError:
             msg = 'Must set end_date attribute.'
             raise AttributeError(msg)
+
+    @end_date.setter
+    def end_date(self, end_date: datetime):
+        if end_date is None:
+            del self.end_date
+            return
+        msg = f'end_date must be an instance of type {datetime}.'
+        assert isinstance(end_date, datetime), msg
+        try:
+            msg = f'end_date ({end_date}) must be larger than '
+            msg += f'start_date ({self.start_date}).'
+            assert end_date > self.start_date, msg
+        except AttributeError:
+            pass
+        self.__end_date = end_date
+
+    @end_date.deleter
+    def end_date(self):
+        try:
+            del self.__end_date
+        except AttributeError:
+            pass
 
     @property
     def forcing_start_date(self) -> datetime:
@@ -479,6 +522,22 @@ class Tides(bctypes.EtaBc):
             return self.__spinup_time
         except AttributeError:
             return timedelta(0.0)
+
+    @spinup_time.setter
+    def spinup_time(self, spinup_time: timedelta):
+        if spinup_time is None:
+            del self.spinup_time
+            return
+        msg = f'spinup_time must be of and instance of type {timedelta}.'
+        assert isinstance(spinup_time, timedelta), msg
+        self.__spinup_time = np.abs(spinup_time)
+
+    @spinup_time.deleter
+    def spinup_time(self):
+        try:
+            del self.__spinup_time
+        except AttributeError:
+            pass
 
     @property
     def active_constituents(self) -> [str]:
@@ -568,29 +627,29 @@ class Tides(bctypes.EtaBc):
         }
 
     @property
-    def hour_middle(self):
+    def hour_middle(self) -> float:
         return self.forcing_start_date.hour + (
-            (self.end_date - self.forcing_start_date).total_seconds() / 3600 / 2
+            (self.end_date - self.forcing_start_date) / timedelta(hours=1) / 2
         )
 
     @property
-    def I(self):  # noqa:E743
+    def I(self) -> float:  # noqa:E743
         return np.arccos(0.9136949 - 0.0356926 * np.cos(self.N))
 
     @property
-    def N(self):
+    def N(self) -> float:
         return np.deg2rad(self.DN)
 
     @property
-    def DN(self):
+    def DN(self) -> float:
         return self.get_lunar_node()
 
     @property
-    def DYR(self):
+    def DYR(self) -> float:
         return self.forcing_start_date.year - 1900.0
 
     @property
-    def DDAY(self):
+    def DDAY(self) -> float:
         return (
             self.forcing_start_date.timetuple().tm_yday
             + int((self.forcing_start_date.year - 1901.0) / 4.0)
@@ -598,74 +657,74 @@ class Tides(bctypes.EtaBc):
         )
 
     @property
-    def NU(self):
+    def NU(self) -> float:
         return np.arcsin(0.0897056 * np.sin(self.N) / np.sin(self.I))
 
     @property
-    def DT(self):
+    def DT(self) -> float:
         return 180.0 + self.start_date.hour * (360.0 / 24)
 
     @property
-    def DS(self):
+    def DS(self) -> float:
         return self.get_lunar_mean_longitude()
 
     @property
-    def DP(self):
+    def DP(self) -> float:
         return self.get_lunar_perigee()
 
     @property
-    def P(self):
+    def P(self) -> float:
         return np.deg2rad(self.DP)
 
     @property
-    def DH(self):
+    def DH(self) -> float:
         return self.get_solar_mean_longitude()
 
     @property
-    def DP1(self):
+    def DP1(self) -> float:
         return self.get_solar_perigee()  # HR
 
     @property
-    def DNU(self):
+    def DNU(self) -> float:
         return np.rad2deg(self.NU)
 
     @property
-    def XI(self):
+    def XI(self) -> float:
         return self.N - 2.0 * np.arctan(0.64412 * np.tan(self.N / 2)) - self.NU
 
     @property
-    def DXI(self):
+    def DXI(self) -> float:
         return np.rad2deg(self.XI)
 
     @property
-    def NUP(self):
+    def NUP(self) -> float:
         return np.arctan(np.sin(self.NU) / (np.cos(self.NU) + 0.334766 / np.sin(2.0 * self.I)))
 
     @property
-    def DNUP(self):
+    def DNUP(self) -> float:
         return np.rad2deg(self.NUP)
 
     @property
-    def DPC(self):
+    def DPC(self) -> float:
         return self.DP - self.DXI
 
     @property
-    def PC(self):
+    def PC(self) -> float:
         return np.deg2rad(self.DPC)
 
     @property
-    def R(self):
+    def R(self) -> float:
         return np.arctan(
             np.sin(2.0 * self.PC)
             / ((1.0 / 6.0) * (1.0 / np.tan(0.5 * self.I)) ** 2 - np.cos(2.0 * self.PC))
         )
 
     @property
-    def DR(self):
+    def DR(self) -> float:
         return np.rad2deg(self.R)
 
     @property
-    def NUP2(self):
+    def NUP2(self) -> float:
         return (
             np.arctan(
                 np.sin(2.0 * self.NU)
@@ -675,26 +734,26 @@ class Tides(bctypes.EtaBc):
         )
 
     @property
-    def DNUP2(self):
+    def DNUP2(self) -> float:
         return np.rad2deg(self.NUP2)
 
     @property
-    def Q(self):
+    def Q(self) -> float:
         return np.arctan2(
             (5.0 * np.cos(self.I) - 1.0) * np.sin(self.PC),
             (7.0 * np.cos(self.I) + 1.0) * np.cos(self.PC),
         )
 
     @property
-    def DQ(self):
+    def DQ(self) -> float:
         return np.rad2deg(self.Q)
 
     @property
-    def ntip(self):
+    def ntip(self) -> int:
         return len(self.get_active_potential_constituents())
 
     @property
-    def cutoff_depth(self):
+    def cutoff_depth(self) -> float:
         if self.ntip == 0:
             return 0
         try:
@@ -702,83 +761,22 @@ class Tides(bctypes.EtaBc):
         except AttributeError:
             return 40.0
 
-    @property
-    def nbfr(self):
-        return len(self.get_active_forcing_constituents())
-
-    @start_date.setter
-    def start_date(self, start_date):
-        if start_date is None:
-            del self.start_date
-            return
-        msg = f'start_date must be an instance of type {datetime}.'
-        assert isinstance(start_date, datetime), msg
-        try:
-            msg = 'start_date must be smaller than end_date.'
-            assert start_date < self.end_date, msg
-        except AttributeError:
-            pass
-        self.__start_date = start_date
-
-    @end_date.setter
-    def end_date(self, end_date):
-        if end_date is None:
-            del self.end_date
-            return
-        msg = f'end_date must be an instance of type {datetime}.'
-        assert isinstance(end_date, datetime), msg
-        try:
-            msg = f'end_date ({end_date}) must be larger than '
-            msg += f'start_date ({self.start_date}).'
-            assert end_date > self.start_date, msg
-        except AttributeError:
-            pass
-        self.__end_date = end_date
-
-    @spinup_time.setter
-    def spinup_time(self, spinup_time):
-        if spinup_time is None:
-            del self.spinup_time
-            return
-        msg = f'spinup_time must be of and instance of type {timedelta}.'
-        assert isinstance(spinup_time, timedelta), msg
-        self.__spinup_time = np.abs(spinup_time)
-
     @cutoff_depth.setter
-    def cutoff_depth(self, cutoff_depth):
+    def cutoff_depth(self, cutoff_depth: float):
         assert isinstance(cutoff_depth, (int, float))
         self.__cutoff_depth = cutoff_depth
 
-    @start_date.deleter
-    def start_date(self):
-        try:
-            del self.__start_date
-        except AttributeError:
-            pass
-
-    @end_date.deleter
-    def end_date(self):
-        try:
-            del self.__end_date
-        except AttributeError:
-            pass
-
-    @spinup_time.deleter
-    def spinup_time(self):
-        try:
-            del self.__spinup_time
-        except AttributeError:
-            pass
+    @property
+    def nbfr(self) -> int:
+        return len(self.get_active_forcing_constituents())
 
     @property
-    @lru_cache(maxsize=None)
-    def _active_constituents(self):
-        return OrderedDict()
-
-    @property
-    def btype(self):
+    def btype(self) -> str:
         return 'iettype'
 
     @property
-    def iettype(self):
+    def iettype(self) -> int:
         return 3
+
+    def __eq__(self, other: 'Tides') -> bool:
+        return self.tidal_dataset == other.tidal_dataset

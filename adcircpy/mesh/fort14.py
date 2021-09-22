@@ -58,6 +58,9 @@ class BaseBoundaries:
             self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
+    def __eq__(self, other: 'BaseBoundaries') -> bool:
+        return self._data == other._data
+
 
 class OceanBoundaries(BaseBoundaries):
     pass
@@ -190,6 +193,9 @@ class Fort14Boundaries:
                     boundaries.update({len(boundaries) + 1: {'ibtype': ibtype, **bdata,}})
         return boundaries
 
+    def __eq__(self, other: 'Fort14Boundaries') -> bool:
+        return self._data == other._data
+
 
 class Fort14(Grd):
     """
@@ -208,13 +214,26 @@ class Fort14(Grd):
         _grd['nodes'].iloc[:, 2:] *= -1
         return cls(**_grd)
 
+    def write(self, path, overwrite=False, format='fort.14'):
+        if format in ['fort.14']:
+            _grd = self.to_dict()
+            _grd['nodes'] = {
+                id: (coord, -val) for id, (coord, val) in self.nodes.to_dict().items()
+            }
+
+            grd.write(
+                grd=_grd, path=path, overwrite=overwrite,
+            )
+        else:
+            super().write(path=path, overwrite=overwrite, format=format)
+
     def to_dict(self, boundaries=True):
         _grd = super().to_dict()
         if boundaries is True:
             nodes = self.nodes.copy()
             nodes.iloc[:, 2:] *= -1
             _grd.update(
-                {'nodes': nodes, 'boundaries': self.boundaries.to_dict(),}
+                {'nodes': nodes, 'boundaries': self.boundaries.to_dict()}
             )
         return _grd
 
@@ -291,3 +310,6 @@ class Fort14(Grd):
     @property
     def culvert_boundaries(self):
         return self.boundaries.culvert
+
+    def __eq__(self, other: 'Fort14') -> bool:
+        return super().__eq__(other) and self.boundaries == other.boundaries

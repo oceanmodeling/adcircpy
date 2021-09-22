@@ -78,3 +78,6 @@ class TidalDataset(ABC):
         assert (
             len(vertices.shape) == 2 and vertices.shape[1] == 2
         ), 'vertices must be of shape Mx2'
+
+    def __eq__(self, other: 'TidalDataset') -> bool:
+        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__

@@ -14,7 +14,7 @@ from shapely.geometry import Point
 
 from adcircpy.forcing import Tides  # , Winds
 from adcircpy.forcing.winds.best_track import BestTrackForcing
-from adcircpy.fort15 import Fort15
+from adcircpy.fort15 import Fort15, StationType
 from adcircpy.mesh import AdcircMesh
 from adcircpy.outputs.collection import OutputCollection
 from adcircpy.server import SlurmConfig, SSHConfig
@@ -31,8 +31,7 @@ class AdcircRun(Fort15):
         netcdf: bool = True,
         server_config: Union[int, SSHConfig, SlurmConfig] = None,
     ):
-        # super().__init__(mesh)
-        self._mesh = mesh
+        super().__init__(mesh)
         self._start_date = start_date
         self._end_date = end_date
         self._spinup_time = spinup_time
@@ -381,7 +380,7 @@ class AdcircRun(Fort15):
         # For this reason, no spiunp time given means a single phase run
         # which at the current stage implies tides only.
         # In this case we set IHOT=0 but call the hotstart writer.
-        if self.spinup_time.total_seconds() == 0:
+        if self.spinup_time == timedelta(seconds=0):
             # easiest way is to override IHOT to 0
             # IHOT depends on _runtype which is not set on this case.
             self._IHOT = 0
@@ -411,22 +410,27 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15: os.PathLike):
-        station_types = ['NOUTE', 'NOUTV', 'NOUTM', 'NOUTC']
+    def import_stations(self, fort15: os.PathLike, station_types: [StationType] = None):
+        if station_types is None:
+            station_types = [StationType.ELEVATION, StationType.VELOCITY]
+            if self.IM == 10:
+                station_types.append(StationType.CONCENTRATION)
+            if self.NWS > 0:
+                station_types.append(StationType.METEOROLOGICAL)
+
         envelope = self.mesh.hull.rings.multipolygon
-        stations = Fort15.parse_stations(fort15, station_types)
+        stations = Fort15.parse_stations(path=fort15, station_types=station_types)
         for station_type, station_vertices in stations.items():
-            for name, vertices in station_vertices.items():
-                if not Point(vertices).within(envelope):
-                    continue
-                if station_type == 'NOUTE':
-                    self.add_elevation_output_station(name, vertices)
-                if station_type == 'NOUTV':
-                    self.add_velocity_output_station(name, vertices)
-                if station_type == 'NOUTM':
-                    self.add_meteorological_output_station(name, vertices)
-                if station_type == 'NOUTC':
-                    self.add_concentration_output_station(name, vertices)
+            for name, vertex in station_vertices.items():
+                if Point(vertex).within(envelope):
+                    if station_type == StationType.ELEVATION:
+                        self.add_elevation_output_station(name, vertex)
+                    elif station_type == StationType.VELOCITY:
+                        self.add_velocity_output_station(name, vertex)
+                    elif station_type == StationType.CONCENTRATION:
+                        self.add_concentration_output_station(name, vertex)
+                    elif station_type == StationType.METEOROLOGICAL:
+                        self.add_meteorological_output_station(name, vertex)
 
     def run(
         self,
@@ -642,7 +646,7 @@ class AdcircRun(Fort15):
 
     def _run_local(self, nproc, outdir, overwrite, coldstart, hotstart):
         self.write(outdir, overwrite, driver=None)
-        if self.spinup_time.total_seconds() != 0:
+        if self.spinup_time > timedelta(seconds=0):
             if coldstart:
                 self._run_coldstart(nproc, outdir)
             if hotstart:
