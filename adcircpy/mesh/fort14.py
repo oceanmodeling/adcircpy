@@ -232,9 +232,7 @@ class Fort14(Grd):
         if boundaries is True:
             nodes = self.nodes.copy()
             nodes.iloc[:, 2:] *= -1
-            _grd.update(
-                {'nodes': nodes, 'boundaries': self.boundaries.to_dict()}
-            )
+            _grd.update({'nodes': nodes, 'boundaries': self.boundaries.to_dict()})
         return _grd
 
     @figure

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-from pandas import DataFrame
 from copy import copy
 
 import pytest
