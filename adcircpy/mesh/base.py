@@ -242,7 +242,7 @@ class Rings:
         boundary_edges = []
         for i, j in idxs:
             boundary_edges.append((tri.triangles[i, j], tri.triangles[i, (j + 1) % 3]))
-        return sort_rings(edges_to_rings(boundary_edges), self._grd.coord)
+        return sort_rings(edges_to_rings(boundary_edges), self._grd.coord.values)
 
     @property
     def geodataframe(self) -> GeoDataFrame:
