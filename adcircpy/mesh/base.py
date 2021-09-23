@@ -19,7 +19,7 @@ import numpy as np
 import pandas
 from pandas import DataFrame
 from pyproj import CRS, Transformer
-from shapely.geometry import box, LinearRing, LineString, MultiPoint, MultiPolygon, Polygon
+from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Polygon
 from shapely.ops import polygonize
 
 from adcircpy.figures import figure
@@ -308,18 +308,30 @@ class Rings:
 
         exterior_polygons = collect_interiors(list(polygonize(boundary_edge_points.tolist())))
 
-        convex_hull = MultiPoint(
-            numpy.reshape(
-                boundary_edge_points,
+        coords = self._grd.nodes.values
+        x = coords[:, 0]
+        y = coords[:, 1]
+        total_triangle_area = numpy.sum(
+            numpy.abs(
                 (
-                    boundary_edge_points.shape[0] * boundary_edge_points.shape[1],
-                    boundary_edge_points.shape[2],
-                ),
+                    x[triangles[:, 0]] * (y[triangles[:, 1]] - y[triangles[:, 2]])
+                    + x[triangles[:, 1]] * (y[triangles[:, 2]] - y[triangles[:, 0]])
+                    + x[triangles[:, 2]] * (y[triangles[:, 0]] - y[triangles[:, 1]])
+                )
+                / 2
             )
-        ).convex_hull
+        )
 
-        if exterior_polygons[-1].area < convex_hull.area / 2:
-            exterior_polygons.insert(0, convex_hull)
+        if exterior_polygons[-1].area < total_triangle_area:
+            polygon_collection = []
+            for rings in self.sorted().values():
+                exterior = self._grd.coord[rings['exterior'][:, 0], :]
+                interiors = []
+                for interior in rings['interiors']:
+                    interiors.append(self._grd.coord[interior[:, 0], :])
+                polygon_collection.append(Polygon(exterior, interiors))
+
+            exterior_polygons.extend(polygon_collection)
             exterior_polygons = collect_interiors(exterior_polygons)
 
         return MultiPolygon(exterior_polygons)
