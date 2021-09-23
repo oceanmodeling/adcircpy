@@ -175,7 +175,7 @@ class NodalAttributes:
                 np.nan,
             )
             for i, node_id in enumerate(data['node_id']):
-                idx = self.fort14.nodes.get_index_by_id(node_id)
+                idx = self.fort14.nodes.index.get_loc(int(node_id))
                 for j, value in enumerate(values[i, :].tolist()):
                     full_values[idx, j] = value
             idxs = np.where(np.isnan(full_values).all(axis=1))[0]
