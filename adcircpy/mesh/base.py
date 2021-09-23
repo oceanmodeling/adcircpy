@@ -606,38 +606,58 @@ class Grd(ABC):
         return self.nodes == other.nodes
 
 
-def edges_to_rings(edges):
+def edges_to_rings(edges: np.ndarray) -> np.ndarray:
     if len(edges) == 0:
         return edges
+
     # start ordering the edges into linestrings
-    edge_collection = list()
-    ordered_edges = [edges.pop(-1)]
-    e0, e1 = [list(t) for t in zip(*edges)]
-    while len(edges) > 0:
-        if ordered_edges[-1][1] in e0:
-            idx = e0.index(ordered_edges[-1][1])
-            ordered_edges.append(edges.pop(idx))
-        elif ordered_edges[0][0] in e1:
-            idx = e1.index(ordered_edges[0][0])
-            ordered_edges.insert(0, edges.pop(idx))
-        elif ordered_edges[-1][1] in e1:
-            idx = e1.index(ordered_edges[-1][1])
-            ordered_edges.append(list(reversed(edges.pop(idx))))
-        elif ordered_edges[0][0] in e0:
-            idx = e0.index(ordered_edges[0][0])
-            ordered_edges.insert(0, list(reversed(edges.pop(idx))))
+    edges = edges[:-1]
+
+    rings = []
+    unconnected_indices = list(range(len(edges)))
+    ring = edges[None, -1]
+    while len(unconnected_indices) > 0:
+        unconnected_edges = edges[unconnected_indices, :]
+        starting_vertices = unconnected_edges[:, 0]
+        ending_vertices = unconnected_edges[:, 1]
+
+        first_vertex = ring[0]
+        last_vertex = ring[-1]
+
+        # connect edge to an existing ring
+        if last_vertex[1] in starting_vertices:
+            connected_edge_indices = np.where(starting_vertices == last_vertex[1])
+            ring = np.concatenate([ring, unconnected_edges[connected_edge_indices]], axis=0)
+        elif first_vertex[0] in ending_vertices:
+            connected_edge_indices = np.where(ending_vertices == first_vertex[0])
+            ring = np.concatenate([unconnected_edges[connected_edge_indices], ring], axis=0)
+        elif last_vertex[1] in ending_vertices:
+            connected_edge_indices = np.where(ending_vertices == last_vertex[1])
+            ring = np.concatenate(
+                [ring, np.flip(unconnected_edges[connected_edge_indices])], axis=0
+            )
+        elif first_vertex[0] in starting_vertices:
+            connected_edge_indices = np.where(starting_vertices == first_vertex[0])
+            ring = np.concatenate(
+                [np.flip(unconnected_edges[connected_edge_indices]), ring], axis=0
+            )
         else:
-            edge_collection.append(tuple(ordered_edges))
-            idx = -1
-            ordered_edges = [edges.pop(idx)]
-        e0.pop(idx)
-        e1.pop(idx)
-    # finalize
-    if len(edge_collection) == 0 and len(edges) == 0:
-        edge_collection.append(tuple(ordered_edges))
+            connected_edge_indices = None
+
+        if connected_edge_indices is not None:
+            for connected_index in connected_edge_indices[0]:
+                connected_edge = unconnected_edges[connected_index]
+                connected_indices = np.where(np.all(edges == connected_edge, axis=1))
+                for index in connected_indices:
+                    unconnected_indices.remove(index)
+        else:
+            # if no edges connect to the current edge, close off the ring and start a new one
+            rings.append(np.unique(ring, axis=0))
+            ring = unconnected_edges[None, -1]
     else:
-        edge_collection.append(tuple(ordered_edges))
-    return edge_collection
+        rings.append(np.unique(ring, axis=0))
+
+    return rings
 
 
 def sort_rings(index_rings, vertices):
@@ -652,10 +672,11 @@ def sort_rings(index_rings, vertices):
     """
 
     # sort index_rings into corresponding "polygons"
-    areas = list()
-    for index_ring in index_rings:
-        e0, e1 = [list(t) for t in zip(*index_ring)]
-        areas.append(float(Polygon(vertices[e0, :]).area))
+    areas = [
+        float(Polygon(vertices.iloc[next(zip(*index_ring)), :].values).area)
+        for index_ring in index_rings
+        if len(index_ring) > 2
+    ]
 
     # maximum area must be main mesh
     idx = areas.index(np.max(areas))
@@ -665,13 +686,13 @@ def sort_rings(index_rings, vertices):
     _index_rings = dict()
     _index_rings[_id] = {'exterior': np.asarray(exterior), 'interiors': []}
     e0, e1 = [list(t) for t in zip(*exterior)]
-    path = Path(vertices[e0 + [e0[0]], :], closed=True)
+    path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
     while len(index_rings) > 0:
         # find all internal rings
         potential_interiors = list()
         for i, index_ring in enumerate(index_rings):
             e0, e1 = [list(t) for t in zip(*index_ring)]
-            if path.contains_point(vertices[e0[0], :]):
+            if path.contains_point(vertices.iloc[e0[0], :].values):
                 potential_interiors.append(i)
         # filter out nested rings
         real_interiors = list()
@@ -685,8 +706,8 @@ def sort_rings(index_rings, vertices):
             has_parent = False
             for _path in check:
                 e0, e1 = [list(t) for t in zip(*_path)]
-                _path = Path(vertices[e0 + [e0[0]], :], closed=True)
-                if _path.contains_point(vertices[_p_interior[0][0], :]):
+                _path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
+                if _path.contains_point(vertices.iloc[_p_interior[0][0], :].values):
                     has_parent = True
             if not has_parent:
                 real_interiors.append(p_interior)
@@ -702,7 +723,7 @@ def sort_rings(index_rings, vertices):
             _id += 1
             _index_rings[_id] = {'exterior': np.asarray(exterior), 'interiors': []}
             e0, e1 = [list(t) for t in zip(*exterior)]
-            path = Path(vertices[e0 + [e0[0]], :], closed=True)
+            path = Path(vertices.iloc[e0 + [e0[0]], :].values, closed=True)
     return _index_rings
 
 
