@@ -619,8 +619,9 @@ def sort_rings(index_rings: [[int]], vertices: numpy.ndarray):
     # sort index_rings into corresponding "polygons"
     areas = list()
     for index_ring in index_rings:
-        e0, e1 = [list(t) for t in zip(*index_ring)]
-        areas.append(float(Polygon(vertices[e0, :]).area))
+        if len(index_ring) > 2:
+            e0, e1 = [list(t) for t in zip(*index_ring)]
+            areas.append(float(Polygon(vertices[e0, :]).area))
 
     # maximum area must be main mesh
     idx = areas.index(np.max(areas))
