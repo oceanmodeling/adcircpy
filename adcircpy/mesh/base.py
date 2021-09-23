@@ -322,7 +322,7 @@ class Rings:
             )
         )
 
-        if exterior_polygons[-1].area < total_triangle_area:
+        if not numpy.isclose(exterior_polygons[-1].area, total_triangle_area):
             polygon_collection = []
             coords = self._grd.coords.values
             for rings in self.sorted().values():
