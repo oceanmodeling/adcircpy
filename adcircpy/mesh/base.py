@@ -597,11 +597,11 @@ def edges_to_rings(edges: [(int, int)]) -> numpy.ndarray:
             ordered_edges = [edges.pop(idx)]
         e0.pop(idx)
         e1.pop(idx)
-        # finalize
-        if len(edge_collection) == 0 and len(edges) == 0:
-            edge_collection.append(tuple(ordered_edges))
-        else:
-            edge_collection.append(tuple(ordered_edges))
+    # finalize
+    if len(edge_collection) == 0 and len(edges) == 0:
+        edge_collection.append(tuple(ordered_edges))
+    else:
+        edge_collection.append(tuple(ordered_edges))
     return edge_collection
 
 
