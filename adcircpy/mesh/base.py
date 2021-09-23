@@ -324,11 +324,12 @@ class Rings:
 
         if exterior_polygons[-1].area < total_triangle_area:
             polygon_collection = []
+            coords = self._grd.coords.values
             for rings in self.sorted().values():
-                exterior = self._grd.coord[rings['exterior'][:, 0], :]
+                exterior = coords[rings['exterior'][:, 0], :]
                 interiors = []
                 for interior in rings['interiors']:
-                    interiors.append(self._grd.coord[interior[:, 0], :])
+                    interiors.append(coords[interior[:, 0], :])
                 polygon_collection.append(Polygon(exterior, interiors))
 
             exterior_polygons.extend(polygon_collection)
