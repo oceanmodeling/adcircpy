@@ -53,7 +53,7 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
     if 'boundaries' in mesh:
         boundaries = mesh['boundaries']
         boundaries.insert(0, 'type', 'NS')
-        boundaries.loc[:, boundaries.columns[-1]] *= -1
+        boundaries.iloc[:, 2:] *= -1
     else:
         boundaries = None
 

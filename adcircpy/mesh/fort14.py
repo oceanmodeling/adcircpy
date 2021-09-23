@@ -218,7 +218,7 @@ class Fort14(Grd):
         if format in ['fort.14']:
             _grd = self.to_dict()
             nodes = self.nodes
-            nodes.iloc[:, -1] *= -1
+            nodes.iloc[:, 2:] *= -1
             _grd['nodes'] = nodes
 
             grd.write(
