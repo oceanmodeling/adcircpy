@@ -419,6 +419,8 @@ class AdcircRun(Fort15):
                 station_types.append(StationType.METEOROLOGICAL)
 
         envelope = self.mesh.hull.rings.multipolygon
+        if not envelope.is_valid:
+            envelope = envelope.buffer(0)
         stations = Fort15.parse_stations(path=fort15, station_types=station_types)
         for station_type, station_vertices in stations.items():
             for name, vertex in station_vertices.items():
