@@ -335,7 +335,14 @@ class Rings:
             exterior_polygons.extend(polygon_collection)
             exterior_polygons = collect_interiors(exterior_polygons)
 
-        return MultiPolygon(exterior_polygons)
+        multipolygon = MultiPolygon(exterior_polygons)
+        if not multipolygon.is_valid:
+            try:
+                multipolygon = multipolygon.buffer(0)
+            except Exception as error:
+                logging.exception(error)
+
+        return multipolygon
 
 
 class Grd(ABC):
