@@ -410,7 +410,12 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
-    def import_stations(self, fort15: os.PathLike, station_types: [StationType] = None):
+    def import_stations(
+        self,
+        fort15: os.PathLike,
+        station_types: [StationType] = None,
+        only_within: bool = False,
+    ):
         if station_types is None:
             station_types = [StationType.ELEVATION, StationType.VELOCITY]
             if self.IM == 10:
@@ -418,19 +423,19 @@ class AdcircRun(Fort15):
             if self.NWS > 0:
                 station_types.append(StationType.METEOROLOGICAL)
 
-        # envelope = self.mesh.hull.rings.multipolygon
+        envelope = self.mesh.hull.rings.multipolygon if only_within else None
         stations = Fort15.parse_stations(path=fort15, station_types=station_types)
         for station_type, station_vertices in stations.items():
             for name, vertex in station_vertices.items():
-                # if not envelope.is_valid or Point(vertex).within(envelope):
-                if station_type == StationType.ELEVATION:
-                    self.add_elevation_output_station(name, vertex)
-                elif station_type == StationType.VELOCITY:
-                    self.add_velocity_output_station(name, vertex)
-                elif station_type == StationType.CONCENTRATION:
-                    self.add_concentration_output_station(name, vertex)
-                elif station_type == StationType.METEOROLOGICAL:
-                    self.add_meteorological_output_station(name, vertex)
+                if not only_within or Point(vertex).within(envelope):
+                    if station_type == StationType.ELEVATION:
+                        self.add_elevation_output_station(name, vertex)
+                    elif station_type == StationType.VELOCITY:
+                        self.add_velocity_output_station(name, vertex)
+                    elif station_type == StationType.CONCENTRATION:
+                        self.add_concentration_output_station(name, vertex)
+                    elif station_type == StationType.METEOROLOGICAL:
+                        self.add_meteorological_output_station(name, vertex)
 
     def run(
         self,
