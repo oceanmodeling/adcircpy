@@ -1,5 +1,4 @@
 from collections import Mapping
-import logging
 import pathlib
 
 import numpy as np

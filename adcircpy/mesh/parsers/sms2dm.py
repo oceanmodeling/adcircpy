@@ -7,14 +7,13 @@ from adcircpy.utilities import get_logger
 
 LOGGER = get_logger(__name__)
 
+
 class MeshGeometryType(Enum):
     TRIANGLE = 'E3T'
     QUADRILATERAL = 'E4Q'
     HEXAGON = 'E6T'
     OCTAGON = 'E8Q'
     NONAGON = 'E9Q'
-
-
 
 
 def read(path):
