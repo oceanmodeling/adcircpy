@@ -1,111 +1,101 @@
+from datetime import datetime
+from enum import Enum
+from os import PathLike
 import pathlib
 
 from adcircpy.utilities import get_logger
 
 LOGGER = get_logger(__name__)
 
+class MeshGeometryType(Enum):
+    TRIANGLE = 'E3T'
+    QUADRILATERAL = 'E4Q'
+    HEXAGON = 'E6T'
+    OCTAGON = 'E8Q'
+    NONAGON = 'E9Q'
+
+
+
 
 def read(path):
-    sms2dm = dict()
+    mesh = {}
     with open(pathlib.Path(path), 'r') as f:
         f.readline()
-        while 1:
-            line = f.readline().split()
-            if len(line) == 0:
-                break
-            if line[0] in ['E3T', 'E4Q']:
-                if line[0] not in sms2dm:
-                    sms2dm[line[0]] = {}
-                sms2dm[line[0]].update({line[1]: line[2:]})
-            if line[0] == 'ND':
-                if line[0] not in sms2dm:
-                    sms2dm[line[0]] = {}
-                sms2dm[line[0]].update(
+
+        for line in f.readlines():
+            line = line.split()
+
+            geom_type = line[0]
+            if geom_type not in mesh:
+                mesh[geom_type] = {}
+
+            if geom_type in ['E3T', 'E4Q']:
+                mesh[geom_type].update({line[1]: line[2:]})
+            elif geom_type in ['ND']:
+                mesh[geom_type].update(
                     {line[1]: (list(map(float, line[2:-1])), float(line[-1]))}
                 )
-    return sms2dm
+    return mesh
 
 
-def write(sms2dm, path, overwrite=False):
+def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = False):
     if not isinstance(path, pathlib.Path):
         path = pathlib.Path(path)
+
+    triangles = mesh[MeshGeometryType.TRIANGLE.value]
+    triangles.insert(0, 'type', MeshGeometryType.TRIANGLE.value)
+    triangles.insert(1, 'id', triangles.index)
+    quadrilaterals = mesh[MeshGeometryType.QUADRILATERAL.value]
+    quadrilaterals.insert(0, 'type', MeshGeometryType.QUADRILATERAL.value)
+    quadrilaterals.insert(1, 'id', quadrilaterals.index)
+    nodes = mesh['ND']
+    nodes.insert(0, 'type', 'ND')
+    nodes.insert(1, 'id', nodes.index)
+
+    if 'boundaries' in mesh:
+        boundaries = mesh['boundaries']
+        boundaries.insert(0, 'type', 'NS')
+        boundaries.iloc[:, 2:] *= -1
+    else:
+        boundaries = None
+
+    def float_format(value: float):
+        return f'{value:<.16E}'
+
     if overwrite or not path.exists():
         with open(path, 'w') as f:
-            f.write(string(sms2dm))
+            f.write('MESH2D\n')
+
+            if len(triangles) > 0:
+                _logger.info('writing triangles')
+                start_time = datetime.now()
+                triangles.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote triangles in {datetime.now() - start_time}')
+
+            if len(quadrilaterals) > 0:
+                _logger.info('writing quadrilaterals')
+                start_time = datetime.now()
+                quadrilaterals.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
+
+            _logger.info('writing nodes')
+            start_time = datetime.now()
+            nodes.to_string(
+                f, header=False, index=False, justify='left', float_format=float_format
+            )
+            f.write('\n')
+            _logger.info(f'wrote nodes in {datetime.now() - start_time}')
+
+            if boundaries in mesh:
+                _logger.info('writing boundaries')
+                start_time = datetime.now()
+                boundaries.to_string(f, header=False, index=False, justify='left')
+                f.write('\n')
+                _logger.info(f'wrote boundaries in {datetime.now() - start_time}')
+
         return 0  # for unittests
     else:
         LOGGER.warning(f'skipping existing file "{path}"')
         return 1
-
-
-def string(sms2dm):
-    f = graph(sms2dm)
-    f += boundaries(sms2dm)
-    return f
-
-
-def graph(sms2dm):
-    f = 'MESH2D\n'
-    # TODO: Make faster using np.array2string
-    f += triangular_elements(sms2dm)
-    f += quadrilateral_elements(sms2dm)
-    f += nodes(sms2dm)
-    return f
-
-
-def nodes(sms2dm):
-    assert all(int(id) > 0 for id in sms2dm['ND'])
-    f = ""
-    for id, (coords, value) in sms2dm['ND'].items():
-        f += f'ND {int(id):d} '
-        f += f'{coords[0]:<.16E} '
-        f += f'{coords[1]:<.16E} '
-        f += f'{value:<.16E}\n'
-    return f
-
-
-def boundaries(sms2dm):
-    f = ""
-    if 'boundaries' in sms2dm.keys():
-        for ibtype, bnds in sms2dm['boundaries'].items():
-            for id, bnd in bnds.items():
-                f += nodestring(bnd['indexes'])
-    return f
-
-
-def geom_string(geom_type, sms2dm):
-    assert geom_type in ['E3T', 'E4Q', 'E6T', 'E8Q', 'E9Q']
-    assert all(int(id) > 0 for id in sms2dm[geom_type])
-    f = ""
-    for id, geom in sms2dm[geom_type].items():
-        f += f'{geom_type} {id} '
-        for j in range(len(geom)):
-            f += f'{geom[j]} '
-        f += '\n'
-    return f
-
-
-def nodestring(geom):
-    f = 'NS '
-    for i in range(len(geom) - 1):
-        f += f'{geom[i]} '
-    f += f'-{geom[-1]}\n'
-    return f
-
-
-def nodestrings(geom):
-    pass
-
-
-def triangular_elements(geom):
-    f = ""
-    if geom is not None:
-        f += geom_string('E3T', geom)
-    return f
-
-
-def quadrilateral_elements(geom):
-    f = ""
-    if geom is not None:
-        f += geom_string('E4Q', geom)
-    return f

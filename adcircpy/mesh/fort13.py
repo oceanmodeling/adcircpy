@@ -21,7 +21,7 @@ class NodalAttributes:
     def __str__(self):
         fort13 = [
             f'{self._fort14.description} nodal attributes',
-            f'{len(self._fort14.nodes.id)}',
+            f'{len(self._fort14.nodes.index)}',
             f'{len(self.get_attribute_names())}',
         ]
 
@@ -43,9 +43,7 @@ class NodalAttributes:
             for i, values in enumerate(
                 attribute['values'][attribute['non_default_indexes'], :]
             ):
-                node_id = self._fort14.nodes.get_id_by_index(
-                    attribute['non_default_indexes'][i]
-                )
+                node_id = self._fort14.nodes.index[attribute['non_default_indexes'][i]]
                 line = [f'{node_id}']
                 for value in values:
                     line.append(f'{value}')
@@ -167,7 +165,7 @@ class NodalAttributes:
 
     def import_fort13(self, fort13):
         fort13 = parse_fort13(fort13)
-        if fort13.pop('NumOfNodes') != len(self._fort14.nodes.id):
+        if fort13.pop('NumOfNodes') != len(self._fort14.nodes.index):
             raise Exception('fort.13 file does not match the mesh.')
         self._AGRID = fort13.pop('AGRID')
         for attribute, data in fort13.items():
@@ -179,7 +177,7 @@ class NodalAttributes:
                 np.nan,
             )
             for i, node_id in enumerate(data['node_id']):
-                idx = self.fort14.nodes.get_index_by_id(node_id)
+                idx = self.fort14.nodes.index.get_loc(int(node_id))
                 for j, value in enumerate(values[i, :].tolist()):
                     full_values[idx, j] = value
             idxs = np.where(np.isnan(full_values).all(axis=1))[0]

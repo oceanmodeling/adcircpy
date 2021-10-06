@@ -4,144 +4,52 @@ from functools import lru_cache
 from itertools import permutations
 import os
 import pathlib
-from typing import Dict, Hashable, List, Sequence, Union
+from typing import Hashable, Mapping, Union
 
 import geopandas as gpd
+from geopandas import GeoDataFrame
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Bbox
 from matplotlib.tri import Triangulation
+import numpy
 import numpy as np
+import pandas
+from pandas import DataFrame
 from pyproj import CRS, Transformer
-from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Point, Polygon
+from shapely.geometry import box, LinearRing, LineString, MultiPolygon, Polygon
+from shapely.ops import polygonize
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm
 
 
-class Nodes:
-    def __init__(self, nodes: Dict[Hashable, List[List]], crs=None):
-        """Setter for the nodes attribute.
-
-        Argument nodes must be of the form:
-            {id: [(x0, y0), z0]}
-            or
-            {id: [(x0, y0), [z0, ..., zn]}
-
-        Grd format is assumed to be exclusively a 2D format that can hold
-        triangles or quads.
-
-        """
-
-        for coords, _ in nodes.values():
-            if len(coords) != 2:
-                raise ValueError(
-                    'Coordinate vertices for a gr3 type must be 2D, but got '
-                    f'coordinates {coords}.'
-                )
-
-        self._id = list(nodes.keys())
-        self._coords = np.array([coords for coords, _ in nodes.values()])
-        self._crs = CRS.from_user_input(crs) if crs is not None else crs
-        self._values = np.array([value for _, value in nodes.values()])
-
-    def transform_to(self, dst_crs):
-        dst_crs = CRS.from_user_input(dst_crs)
-        if not self.crs.equals(dst_crs):
-            self._coords = self.get_xy(dst_crs)
-            self._crs = dst_crs
-
-        if hasattr(self, '_gdf'):
-            del self._gdf
-
-    def get_xy(self, crs: Union[CRS, str] = None):
-        if crs is not None:
-            crs = CRS.from_user_input(crs)
-            if not crs.equals(self.crs):
-                transformer = Transformer.from_crs(self.crs, crs, always_xy=True)
-                x, y = transformer.transform(self.coord[:, 0], self.coord[:, 1])
-                return np.vstack([x, y]).T
-        return self.coord
-
-    @property
-    def gdf(self):
-        if not hasattr(self, '_gdf'):
-            data = []
-            for id, coord, values in zip(self._id, self._coords, self.values):
-                data.append({'geometry': Point(coord), 'id': id, 'values': values})
-            self._gdf = gpd.GeoDataFrame(data, crs=self.crs)
-        return self._gdf
-
-    @property
-    def id(self):
-        return self._id
-
-    @property
-    def index(self):
-        if not hasattr(self, '_index'):
-            self._index = np.arange(len(self._id))
-        return self._index
-
-    @property
-    def crs(self):
-        return self._crs
-
-    @property
-    def values(self):
-        return self._values
-
-    @property
-    def coords(self):
-        return self._coords
-
-    @property
-    def coord(self):
-        return self.coords
-
-    def get_index_by_id(self, id: Hashable):
-        if not hasattr(self, 'node_id_to_index'):
-            self.node_id_to_index = {self.id[i]: i for i in range(len(self.id))}
-        return self.node_id_to_index[id]
-
-    def get_id_by_index(self, index: int):
-        if not hasattr(self, 'node_index_to_id'):
-            self.node_index_to_id = {i: self.id[i] for i in range(len(self.id))}
-        return self.node_index_to_id[index]
-
-    def to_dict(self):
-        nodes = {nid: (coo, val) for nid, coo, val in zip(self._id, self._coords, self.values)}
-        return nodes
-
-    def __eq__(self, other: 'Nodes') -> bool:
-        try:
-            return np.all(self.coords == other.coords) and np.all(self.values == other.values)
-        except:
-            return False
-
-
 class Elements:
-    def __init__(self, nodes: Nodes, elements: Dict[Hashable, Sequence]):
-        if not isinstance(elements, dict):
-            raise TypeError('Argument elements must be a dict.')
+    def __init__(
+        self,
+        nodes: DataFrame,
+        elements: DataFrame,
+        crs: CRS = None,
+        check_elements: bool = False,
+    ):
+        if check_elements:
+            _logger.info('validating elements...')
+            vertex_id_set = nodes.index
+            for id, geom in elements.iterrows():
+                if not np.all(np.in1d(geom[1:][~pandas.isna(geom[1:])].values, vertex_id_set)):
+                    ValueError(
+                        f'element "{id}" references nodes that do not exist ("{geom[1:].values}")'
+                    )
 
-        vertex_id_set = set(nodes.id)
-        for id, geom in elements.items():
-            if not isinstance(geom, Sequence):
-                raise TypeError(
-                    f'Element with id {id} of the elements '
-                    f'argument must be of type {Sequence}, not '
-                    f'type {type(geom)}.'
-                )
-            if not set(geom).issubset(vertex_id_set):
-                ValueError(f'Element with id {id} is not a subset of the ' "coordinate id's.")
         self.nodes = nodes
         self.elements = elements
+        self.crs = crs
 
     @property
     def id(self):
         if not hasattr(self, '_id'):
-            self._id = list(self.elements.keys())
+            self._id = self.elements.index.values
         return self._id
 
     @property
@@ -214,25 +122,23 @@ class Elements:
     @property
     def array(self):
         if not hasattr(self, '_array'):
-            rank = int(max(map(len, self.elements.values())))
-            array = np.full((len(self.elements), rank), -1)
-            for i, element in enumerate(self.elements.values()):
-                row = np.array(list(map(self.nodes.get_index_by_id, element)))
-                array[i, : len(row)] = row
-            array = np.ma.masked_equal(array, -1)
-            self._array = array
+            self._array = self.nodes.values
+            # rank = int(max(map(len, self.elements.values())))
+            # array = np.full((len(self.elements), rank), -1)
+            # for i, element in enumerate(self.elements.values()):
+            #     row = np.array(list(map(self.nodes.get_index_by_id, element)))
+            #     array[i, : len(row)] = row
+            # array = np.ma.masked_equal(array, -1)
+            # self._array = array
         return self._array
 
     @property
     def triangles(self):
         if not hasattr(self, '_triangles'):
-            self._triangles = np.array(
-                [
-                    list(map(self.nodes.get_index_by_id, element))
-                    for element in self.elements.values()
-                    if len(element) == 3
-                ]
-            )
+            num_nodes = 3
+            self._triangles = self.elements.loc[self.elements.iloc[:, 0] == num_nodes].iloc[
+                :, 1 : num_nodes + 1
+            ]
         return self._triangles
 
     @property
@@ -242,52 +148,57 @@ class Elements:
     @property
     def quads(self):
         if not hasattr(self, '_quads'):
-            self._quads = np.array(
-                [
-                    list(map(self.nodes.get_index_by_id, element))
-                    for element in self.elements.values()
-                    if len(element) == 4
-                ]
-            )
+            num_nodes = 4
+            self._quads = self.elements.loc[self.elements.iloc[:, 0] == num_nodes].iloc[
+                :, 1 : num_nodes + 1
+            ]
         return self._quads
 
     @property
     def triangulation(self):
         if not hasattr(self, '_triangulation'):
-            triangles = self.triangles.tolist()
-            for quad in self.quads:
-                triangles.append([quad[0], quad[1], quad[3]])
-                triangles.append([quad[1], quad[2], quad[3]])
+            triangles = self.triangles.values
+            quads = []
+            for quad in self.quads.values:
+                quads.append([quad[0], quad[1], quad[3]])
+                quads.append([quad[1], quad[2], quad[3]])
+            if len(quads) > 0:
+                triangles = numpy.concatenate([triangles, numpy.array(quads)])
+            triangles -= 1
             self._triangulation = Triangulation(
-                self.nodes.coord[:, 0], self.nodes.coord[:, 1], triangles
+                x=self.nodes.iloc[:, 0].values,
+                y=self.nodes.iloc[:, 1].values,
+                triangles=triangles,
             )
         return self._triangulation
 
     @property
     def gdf(self):
         if not hasattr(self, '_gdf'):
-            data = []
-            for id, element in self.elements.items():
-                data.append(
-                    {
-                        'geometry': Polygon(
-                            self.nodes.coord[list(map(self.get_index_by_id, element))]
-                        ),
-                        'id': id,
-                    }
-                )
-            self._gdf = gpd.GeoDataFrame(data, crs=self.nodes.crs)
+            data = [
+                {
+                    'geometry': Polygon(
+                        self.nodes.coord.iloc[
+                            element[1:][~pandas.isna(element[1:])].astype(int)
+                        ]
+                    ),
+                    'id': id,
+                }
+                for id, element in self.elements.iterrows()
+            ]
+            self._gdf = gpd.GeoDataFrame(data, crs=self.crs)
         return self._gdf
 
 
-class Edges:
+class Hull:
     def __init__(self, grd: 'Grd'):
         self._grd = grd
+        self.rings = Rings(self._grd)
 
-    @lru_cache(maxsize=1)
-    def __call__(self) -> gpd.GeoDataFrame:
+    @property
+    def edges(self) -> GeoDataFrame:
         data = []
-        for ring in self._grd.hull.rings().itertuples():
+        for ring in self.rings.itertuples():
             coords = ring.geometry.coords
             for i in range(1, len(coords)):
                 data.append(
@@ -297,13 +208,7 @@ class Edges:
                         'type': ring.type,
                     }
                 )
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
-
-    def exterior(self):
-        return self().loc[self()['type'] == 'exterior']
-
-    def interior(self):
-        return self().loc[self()['type'] == 'interior']
+        return GeoDataFrame(data, crs=self._grd.crs)
 
 
 class Rings:
@@ -314,14 +219,12 @@ class Rings:
     def __call__(self) -> gpd.GeoDataFrame:
         data = []
         for bnd_id, rings in self.sorted().items():
-            coords = self._grd.nodes.coord[rings['exterior'][:, 0], :]
-            geometry = LinearRing(coords)
+            geometry = LinearRing(self._grd.coords.iloc[rings['exterior'][:, 0], :].values)
             data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'exterior'})
             for interior in rings['interiors']:
-                coords = self._grd.nodes.coord[interior[:, 0], :]
-                geometry = LinearRing(coords)
+                geometry = LinearRing(self._grd.coords.iloc[interior[:, 0], :].values)
                 data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'interior'})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
     def exterior(self):
         return self().loc[self()['type'] == 'exterior']
@@ -336,25 +239,15 @@ class Rings:
         boundary_edges = []
         for i, j in idxs:
             boundary_edges.append((tri.triangles[i, j], tri.triangles[i, (j + 1) % 3]))
-        return sort_rings(edges_to_rings(boundary_edges), self._grd.nodes.coord)
+        return sort_rings(edges_to_rings(boundary_edges), self._grd.coord.values)
 
-
-class Hull:
-    def __init__(self, grd: 'Grd'):
-        self._grd = grd
-        self.edges = Edges(grd)
-        self.rings = Rings(grd)
-
-    @lru_cache(maxsize=1)
-    def __call__(self) -> gpd.GeoDataFrame:
+    @property
+    def geodataframe(self) -> GeoDataFrame:
         data = []
-        for bnd_id in np.unique(self.rings()['bnd_id'].tolist()):
-            exterior = self.rings().loc[
-                (self.rings()['bnd_id'] == bnd_id) & (self.rings()['type'] == 'exterior')
-            ]
-            interiors = self.rings().loc[
-                (self.rings()['bnd_id'] == bnd_id) & (self.rings()['type'] == 'interior')
-            ]
+        rings = self.rings
+        for bnd_id in np.unique(rings['bnd_id'].tolist()):
+            exterior = rings.loc[(rings['bnd_id'] == bnd_id) & (rings['type'] == 'exterior')]
+            interiors = rings.loc[(rings['bnd_id'] == bnd_id) & (rings['type'] == 'interior')]
             data.append(
                 {
                     'geometry': Polygon(
@@ -364,49 +257,125 @@ class Hull:
                     'bnd_id': bnd_id,
                 }
             )
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def exterior(self):
+    @property
+    def exterior(self) -> GeoDataFrame:
         data = []
         for exterior in self.rings().loc[self.rings()['type'] == 'exterior'].itertuples():
             data.append({'geometry': Polygon(exterior.geometry.coords)})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def interior(self):
+    @property
+    def interior(self) -> GeoDataFrame:
         data = []
         for interior in self.rings().loc[self.rings()['type'] == 'interior'].itertuples():
             data.append({'geometry': Polygon(interior.geometry.coords)})
-        return gpd.GeoDataFrame(data, crs=self._grd.crs)
+        return GeoDataFrame(data, crs=self._grd.crs)
 
-    @lru_cache(maxsize=1)
-    def implode(self) -> gpd.GeoDataFrame:
-        return gpd.GeoDataFrame(
-            {'geometry': MultiPolygon([polygon.geometry for polygon in self().itertuples()])},
+    @property
+    def implode(self) -> GeoDataFrame:
+        return GeoDataFrame(
+            {
+                'geometry': MultiPolygon(
+                    [polygon.geometry for polygon in self.geodataframe.itertuples()]
+                )
+            },
             crs=self._grd.crs,
         )
 
+    @property
     @lru_cache(maxsize=1)
     def multipolygon(self) -> MultiPolygon:
-        polygon_collection = []
-        for rings in self.rings.sorted().values():
-            exterior = self._grd.nodes.coord[rings['exterior'][:, 0], :]
-            interiors = []
-            for interior in rings['interiors']:
-                interiors.append(self._grd.nodes.coord[interior[:, 0], :])
-            polygon_collection.append(Polygon(exterior, interiors))
-        mp = MultiPolygon(polygon_collection)
-        if isinstance(mp, Polygon):
-            mp = MultiPolygon([mp])
-        return mp
+        triangles = self._grd.elements.triangulation.triangles
+
+        triangle_edges, counts = numpy.unique(
+            numpy.sort(
+                numpy.concatenate(
+                    [triangles[:, :2], triangles[:, 1:], triangles[:, [0, 2]]], axis=0
+                ),
+                axis=1,
+            ),
+            axis=0,
+            return_counts=True,
+        )
+        boundary_edges = triangle_edges[counts == 1]
+
+        boundary_edge_points = self._grd.nodes.iloc[:, :2].values[boundary_edges]
+
+        exterior_polygons = collect_interiors(list(polygonize(boundary_edge_points.tolist())))
+
+        coords = self._grd.nodes.values
+        x = coords[:, 0]
+        y = coords[:, 1]
+        total_triangle_area = numpy.sum(
+            numpy.abs(
+                (
+                    x[triangles[:, 0]] * (y[triangles[:, 1]] - y[triangles[:, 2]])
+                    + x[triangles[:, 1]] * (y[triangles[:, 2]] - y[triangles[:, 0]])
+                    + x[triangles[:, 2]] * (y[triangles[:, 0]] - y[triangles[:, 1]])
+                )
+                / 2
+            )
+        )
+
+        if not numpy.isclose(exterior_polygons[-1].area, total_triangle_area):
+            polygon_collection = []
+            coords = self._grd.coords.values
+            for rings in self.sorted().values():
+                exterior = coords[rings['exterior'][:, 0], :]
+                interiors = []
+                for interior in rings['interiors']:
+                    interiors.append(coords[interior[:, 0], :])
+                polygon_collection.append(Polygon(exterior, interiors))
+
+            exterior_polygons.extend(polygon_collection)
+            exterior_polygons = collect_interiors(exterior_polygons)
+
+        multipolygon = MultiPolygon(exterior_polygons)
+        if not multipolygon.is_valid:
+            try:
+                multipolygon = multipolygon.buffer(0)
+            except Exception as error:
+                logging.exception(error)
+
+        return multipolygon
 
 
 class Grd(ABC):
-    def __init__(self, nodes, elements=None, description=None, crs=None):
+    def __init__(
+        self,
+        nodes: DataFrame,
+        elements: DataFrame = None,
+        description: str = None,
+        crs: CRS = None,
+    ):
+        if isinstance(nodes, Mapping):
+            nodes = DataFrame.from_dict(nodes, orient='index')
+        if isinstance(elements, Mapping):
+            elements = DataFrame.from_dict(elements, orient='index')
 
-        self.nodes = Nodes(nodes, crs)
-        self.elements = Elements(self.nodes, elements)
+        if crs is not None and not isinstance(crs, CRS):
+            crs = CRS.from_user_input(crs)
+
+        records_with_extra_values = np.any(~pandas.isna(nodes.iloc[:, 3:]), axis=1)
+        if np.any(records_with_extra_values):
+            raise ValueError(
+                f'Coordinate vertices for a gr3 type must be 2D, but got coordinates {nodes[records_with_extra_values]}.'
+            )
+
+        nodes = nodes.loc[
+            :,
+            nodes.columns[:2].to_list()
+            + nodes.columns[2:][np.any(~pandas.isna(nodes.iloc[:, 2:]), axis=0)].to_list(),
+        ]
+
+        self._coords = nodes.iloc[:, :2]
+        self._crs = crs
+        self._values = nodes.iloc[:, 2:]
+
+        self.nodes = nodes
+        self.elements = Elements(self.nodes, elements, crs)
         self.description = "" if description is None else str(description)
         self.hull = Hull(self)
 
@@ -416,7 +385,7 @@ class Grd(ABC):
     def to_dict(self):
         return {
             'description': self.description,
-            'nodes': self.nodes.to_dict(),
+            'nodes': self.nodes,
             'elements': self.elements.elements,
             'crs': self.crs,
         }
@@ -425,34 +394,33 @@ class Grd(ABC):
         if format in ['gr3', 'grd']:
             grd.write(self.to_dict(), path, overwrite)
         elif format in ['sms', '2dm', 'sms2dm']:
+            nodes = self.nodes.copy()
+            nodes[pandas.isna(nodes)] = -99999
             sms2dm.write(
-                {
-                    'ND': {
-                        i
-                        + 1: (
-                            coord,
-                            -self.values[i] if not np.isnan(self.values[i]) else -99999,
-                        )
-                        for i, coord in enumerate(self.coords)
-                    },
-                    'E3T': {i + 1: index + 1 for i, index in enumerate(self.triangles)},
-                    'E4Q': {i + 1: index + 1 for i, index in enumerate(self.quads)},
-                },
-                path,
-                overwrite,
+                {'ND': nodes, 'E3T': self.triangles, 'E4Q': self.quads}, path, overwrite
             )
         else:
             raise ValueError(f'Unknown format {format} for hgrid output.')
 
     def get_xy(self, crs: Union[CRS, str] = None):
-        return self.nodes.get_xy(crs)
+        projected_coordinates = self.coords
+        if crs is not None:
+            crs = CRS.from_user_input(crs)
+            if not crs.equals(self.crs):
+                transformer = Transformer.from_crs(self.crs, crs, always_xy=True)
+                x, y = transformer.transform(
+                    projected_coordinates.iloc[:, 0].values,
+                    projected_coordinates.iloc[:, 1].values,
+                )
+                projected_coordinates = np.vstack([x, y]).T
+        return projected_coordinates
 
     def get_bbox(
         self, crs: Union[str, CRS] = None, output_type: str = None
     ) -> Union[Polygon, Bbox]:
         output_type = 'polygon' if output_type is None else output_type
-        xmin, xmax = np.min(self.coord[:, 0]), np.max(self.coord[:, 0])
-        ymin, ymax = np.min(self.coord[:, 1]), np.max(self.coord[:, 1])
+        xmin, xmax = np.min(self.coords.iloc[:, 0]), np.max(self.coords.iloc[:, 0])
+        ymin, ymax = np.min(self.coords.iloc[:, 1]), np.max(self.coords.iloc[:, 1])
         crs = self.crs if crs is None else crs
         if crs is not None:
             if not self.crs.equals(crs):
@@ -470,12 +438,16 @@ class Grd(ABC):
     def invert_sign(self):
         self.nodes.values[:] = -self.nodes.values
 
-    def transform_to(self, dst_crs):
+    def transform_to(self, dst_crs: CRS):
         """Transforms coordinate system of mesh in-place."""
-        self.nodes.transform_to(dst_crs)
 
-    def vertices_around_vertex(self, index):
-        return self.nodes.vertices_around_vertex(index)
+        dst_crs = CRS.from_user_input(dst_crs)
+        if not self.crs.equals(dst_crs):
+            self._coords = self.get_xy(dst_crs)
+            self._crs = dst_crs
+
+        if hasattr(self, '_gdf'):
+            del self._gdf
 
     def copy(self):
         return self.__copy__()
@@ -546,39 +518,39 @@ class Grd(ABC):
 
     @property
     def coords(self):
-        return self.nodes.coord
+        return self._coords
 
     @property
     def coord(self):
-        return self.nodes.coord
+        return self.coords
 
     @property
     def vertices(self):
-        return self.nodes.coord
+        return self.coords
 
     @property
     def vertex_id(self):
-        return self.nodes.id
+        return self.nodes.index
 
     @property
     def element_id(self):
-        return self.elements.id
+        return self.elements.index
 
     @property
     def values(self):
-        return self.nodes.values
+        return self._values
 
     @property
     def crs(self):
-        return self.nodes.crs
+        return self._crs
 
     @property
     def x(self):
-        return self.nodes.coord[:, 0]
+        return self.coords.iloc[:, 0]
 
     @property
     def y(self):
-        return self.nodes.coord[:, 1]
+        return self.coords.iloc[:, 1]
 
     @property
     def triangles(self):
@@ -600,12 +572,13 @@ class Grd(ABC):
         return self.__class__(**self.to_dict())
 
     def __eq__(self, other: 'Grd') -> bool:
-        return self.nodes == other.nodes
+        return self.nodes.equals(other.nodes)
 
 
-def edges_to_rings(edges):
+def edges_to_rings(edges: [(int, int)]) -> numpy.ndarray:
     if len(edges) == 0:
         return edges
+
     # start ordering the edges into linestrings
     edge_collection = list()
     ordered_edges = [edges.pop(-1)]
@@ -637,7 +610,7 @@ def edges_to_rings(edges):
     return edge_collection
 
 
-def sort_rings(index_rings, vertices):
+def sort_rings(index_rings: [[int]], vertices: numpy.ndarray):
     """Sorts a list of index-rings.
 
     Takes a list of unsorted index rings and sorts them into an "exterior" and
@@ -651,8 +624,9 @@ def sort_rings(index_rings, vertices):
     # sort index_rings into corresponding "polygons"
     areas = list()
     for index_ring in index_rings:
-        e0, e1 = [list(t) for t in zip(*index_ring)]
-        areas.append(float(Polygon(vertices[e0, :]).area))
+        if len(index_ring) > 2:
+            e0, e1 = [list(t) for t in zip(*index_ring)]
+            areas.append(float(Polygon(vertices[e0, :]).area))
 
     # maximum area must be main mesh
     idx = areas.index(np.max(areas))
@@ -712,3 +686,81 @@ def signed_polygon_area(vertices):
         area += vertices[i][0] * vertices[j][1]
         area -= vertices[j][0] * vertices[i][1]
         return area / 2.0
+
+
+def collect_interiors(polygons: [Polygon]) -> [Polygon]:
+    multipolygon_indices = []
+    for polygon_index in range(len(polygons)):
+        if isinstance(polygons[polygon_index], MultiPolygon):
+            polygons.extend(polygons[polygon_index])
+            multipolygon_indices.append(polygon_index)
+    for index in reversed(multipolygon_indices):
+        polygons.remove(index)
+
+    polygon_areas = {
+        polygon_index: polygon.area for polygon_index, polygon in enumerate(polygons)
+    }
+    polygons = [polygons[index] for index in sorted(polygon_areas, key=polygon_areas.get)]
+
+    containers = {polygon_index: None for polygon_index in range(len(polygons))}
+    for polygon_index, polygon in enumerate(polygons):
+        container_index = containers[polygon_index]
+        for other_index, other in (
+            (other_index, other)
+            for other_index, other in enumerate(polygons)
+            if other_index != polygon_index and other_index != container_index
+        ):
+            # find the smallest polygon containing this
+            if polygon.within(other):
+                if container_index is None or other.area < polygons[container_index].area:
+                    container_index = other_index
+        containers[polygon_index] = container_index
+
+    return create_polygons(
+        hierarchy=container_hierarchy(containers=containers), polygons=polygons,
+    )
+
+
+def container_hierarchy(
+    containers: {int: int}, global_container_index: int = None,
+) -> {int: {}}:
+    hierarchy = {}
+
+    for interior_index, container_index in containers.items():
+        if container_index is None:
+            hierarchy[interior_index] = container_hierarchy(
+                containers={
+                    k: v if v != interior_index else None
+                    for k, v in containers.items()
+                    if v is not None
+                },
+                global_container_index=interior_index,
+            )
+        elif container_index == global_container_index:
+            hierarchy[container_index] = interior_index
+
+    return hierarchy
+
+
+def create_polygons(hierarchy: {int: {}}, polygons: [Polygon]) -> [Polygon]:
+    exteriors = []
+    for exterior_index, interior_indices in hierarchy.items():
+        # construct polygon from exterior and holes
+        exteriors.append(
+            Polygon(
+                polygons[exterior_index].exterior.coords,
+                holes=list(polygons[exterior_index].interiors)
+                + [
+                    polygons[interior_index].exterior.coords
+                    for interior_index in interior_indices
+                ],
+            )
+        )
+
+        # invert interior holes into islands
+        for internal_exterior_indices in interior_indices.values():
+            exteriors.extend(
+                create_polygons(hierarchy=internal_exterior_indices, polygons=polygons)
+            )
+
+    return exteriors
