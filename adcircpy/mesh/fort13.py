@@ -1,10 +1,11 @@
 from collections import Mapping
-import logging
 import pathlib
 
 import numpy as np
 
-logger = logging.getLogger(__name__)
+from adcircpy.utilities import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 class NodalAttributes:
@@ -199,7 +200,7 @@ class NodalAttributes:
                 with open(path, 'w') as f:
                     f.write(str(self))
             else:
-                logger.warning(f'skipping existing file "{path}"')
+                LOGGER.warning(f'skipping existing file "{path}"')
         else:
             print(str(self))
 

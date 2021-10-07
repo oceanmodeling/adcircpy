@@ -1,5 +1,4 @@
 from functools import lru_cache
-import logging
 import os
 import pathlib
 from stat import S_ISDIR
@@ -10,6 +9,7 @@ import uuid
 import paramiko
 
 from adcircpy.server.base_config import BaseServerConfig
+from adcircpy.utilities import get_logger
 
 
 class SSHConfig(BaseServerConfig):
@@ -203,7 +203,7 @@ class SSHConfig(BaseServerConfig):
     @property
     @lru_cache(maxsize=None)
     def _logger(self):
-        return logging.getLogger(__name__ + '.' + self.__class__.__name__)
+        return get_logger(f'{__name__}.{self.__class__.__name__}')
 
     @property
     @lru_cache(maxsize=None)

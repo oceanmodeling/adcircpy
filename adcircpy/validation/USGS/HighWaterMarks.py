@@ -66,7 +66,7 @@ class HighWaterMarks(OrderedDict):
                 c=self[station]['value'],
                 vmin=vmin,
                 vmax=vmax,
-                **kwargs
+                **kwargs,
             )
         return axes
 
@@ -129,10 +129,7 @@ class HighWaterMarks(OrderedDict):
         else:
             eventNames = [event.capitalize() for event in list(events_dict.keys())]
             raise Exception(
-                '\nEvent name not Found!\n \
-                                    Valid event names are:\n{}'.format(
-                    eventNames
-                )
+                f'\nEvent name not Found!\n' f' Valid event names are:\n' f'{eventNames}'
             )
 
     @classmethod
