@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
-import logging
 from os import PathLike
 import pathlib
 
-_logger = logging.getLogger(__name__)
+from adcircpy.utilities import get_logger
+
+LOGGER = get_logger(__name__)
 
 
 class MeshGeometryType(Enum):
@@ -95,5 +96,5 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
 
         return 0  # for unittests
     else:
-        logging.warning(f'skipping existing file "{path}"')
+        LOGGER.warning(f'skipping existing file "{path}"')
         return 1

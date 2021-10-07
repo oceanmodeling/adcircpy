@@ -7,20 +7,21 @@ from pytz import timezone
 from adcircpy.cmd import argument_parser
 from adcircpy.cmd.basecmd import AdcircCommand
 from adcircpy.forcing.winds.best_track import BestTrackForcing
+from adcircpy.utilities import get_logger
 
-logger = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class BestTrackRunCommand(AdcircCommand):
     def __init__(self, args):
 
-        logger.info('Init BestTrackRunCommand')
+        LOGGER.info('Init BestTrackRunCommand')
         super().__init__(args)
 
-        logger.info(f'Init BestTrackForcing for {self.args.storm_id}')
+        LOGGER.info(f'Init BestTrackForcing for {self.args.storm_id}')
         bt = BestTrackForcing(self.args.storm_id)
 
-        logger.info('Clip BestTrackForcing to bbox')
+        LOGGER.info('Clip BestTrackForcing to bbox')
         if self.args.clip:
             bt.clip_to_bbox(self.mesh.get_bbox(output_type='bbox'), self.mesh.crs)
 

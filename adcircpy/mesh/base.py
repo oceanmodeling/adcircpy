@@ -2,7 +2,6 @@ from abc import ABC
 from collections import defaultdict
 from functools import lru_cache
 from itertools import permutations
-import logging
 import os
 import pathlib
 from typing import Hashable, Mapping, Union
@@ -24,8 +23,9 @@ from shapely.ops import polygonize
 
 from adcircpy.figures import figure
 from adcircpy.mesh.parsers import grd, sms2dm
+from adcircpy.utilities import get_logger
 
-_logger = logging.getLogger(__name__)
+LOGGER = get_logger(__name__)
 
 
 class Elements:
@@ -37,7 +37,7 @@ class Elements:
         check_elements: bool = False,
     ):
         if check_elements:
-            _logger.info('validating elements...')
+            LOGGER.info('validating elements...')
             vertex_id_set = nodes.index
             for id, geom in elements.iterrows():
                 if not np.all(np.in1d(geom[1:][~pandas.isna(geom[1:])].values, vertex_id_set)):

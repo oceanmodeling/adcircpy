@@ -1,13 +1,10 @@
 #! /usr/bin/env python
 import argparse
 from datetime import datetime, timedelta
-import logging
 import pathlib
 
 from adcircpy import AdcircMesh, Fort15
 from adcircpy.forcing.tides import Tides
-
-_logger = logging.getLogger(__name__)
 
 
 def parse_args():

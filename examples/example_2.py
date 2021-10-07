@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
-import logging
 from pathlib import Path
 import shutil
 
 import numpy
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.utilities import download_mesh
+from adcircpy.utilities import download_mesh, get_logger
+
+LOGGER = get_logger(__name__)
 
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
@@ -58,7 +59,7 @@ if shutil.which('padcirc') is not None:
 elif shutil.which('adcirc') is not None:
     driver.run(OUTPUT_DIRECTORY, overwrite=True, nproc=1)
 else:
-    logging.warning(
+    LOGGER.warning(
         'ADCIRC binaries were not found in PATH. '
         'ADCIRC will not run. Writing files to disk...'
     )
