@@ -94,13 +94,13 @@ def test_import_stations(shinnecock_mesh_directory):
     end_date = start_date + timedelta(days=3)
 
     driver_1 = AdcircRun(copy(mesh), start_date, end_date, spinup_time)
-    driver_1.import_stations(input_directory / 'stations_1.txt')
+    driver_1.import_stations(input_directory / 'stations_1.txt', only_within=True)
 
     driver_2 = AdcircRun(copy(mesh), start_date, end_date, spinup_time)
-    driver_2.import_stations(input_directory / 'stations_2.txt')
+    driver_2.import_stations(input_directory / 'stations_2.txt', only_within=True)
 
     driver_3 = AdcircRun(copy(mesh), start_date, end_date, spinup_time)
-    driver_3.import_stations(input_directory / 'stations_3.txt')
+    driver_3.import_stations(input_directory / 'stations_3.txt', only_within=True)
 
     driver_4 = AdcircRun(copy(mesh), start_date, end_date, spinup_time)
     driver_4.import_stations(
