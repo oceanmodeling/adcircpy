@@ -1,5 +1,4 @@
 from collections.abc import Mapping
-import logging
 import os
 from pathlib import Path
 import re
@@ -73,15 +72,20 @@ try:
     from dunamai import Version
 
     version = Version.from_any_vcs().serialize()
-except RuntimeError as error:
-    logging.exception(error)
+except (ModuleNotFoundError, RuntimeError) as error:
+    print(error)
     version = '0.0.0'
 
-logging.info(f'using version {version}')
+print(f'using version {version}')
 
 MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
+if len(MISSING_DEPENDENCIES) > 0:
+    print(f'found {len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) missing dependencies')
+
 if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
+    print(f'found conda environment at {sys.prefix}')
+
     conda_packages = []
     for dependency in list(MISSING_DEPENDENCIES):
         try:
@@ -92,6 +96,8 @@ if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
                 conda_packages.append(dependency)
         except subprocess.CalledProcessError:
             continue
+
+    print(f'found {len(conda_packages)} conda packages (out of {len(MISSING_DEPENDENCIES)})')
 
     try:
         subprocess.run(
@@ -115,6 +121,8 @@ if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
     MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if os.name == 'nt' and len(MISSING_DEPENDENCIES) > 0:
+    print(f'attempting to install {len(MISSING_DEPENDENCIES)} packages with `pipwin`')
+
     if 'pipwin' not in installed_packages():
         subprocess.run(
             f'{sys.executable} -m pip install pipwin',
