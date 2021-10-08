@@ -81,28 +81,46 @@ print(f'using version {version}')
 MISSING_DEPENDENCIES = missing_packages(DEPENDENCIES)
 
 if len(MISSING_DEPENDENCIES) > 0:
-    print(f'found {len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) missing dependencies')
+    print(
+        f'found {len(MISSING_DEPENDENCIES)} (out of {len(DEPENDENCIES)}) missing dependencies'
+    )
 
 if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
     print(f'found conda environment at {sys.prefix}')
 
     conda_packages = []
-    for dependency in list(MISSING_DEPENDENCIES):
-        try:
-            process = subprocess.run(
-                f'conda search {dependency}', check=True, shell=True, capture_output=True,
-            )
-            if 'No match found for:' not in process.stdout.decode():
-                conda_packages.append(dependency)
-        except subprocess.CalledProcessError:
-            continue
+    try:
+        subprocess.check_output(
+            f'conda install -y {" ".join(MISSING_DEPENDENCIES)}',
+            shell=True,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as error:
+        output = error.output.decode()
+        package_not_found_start = 'PackagesNotFoundError: The following packages are not available from current channels:\n\n'
+        package_not_found_stop = '\n\nCurrent channels:'
+        if package_not_found_start in output:
+            non_conda_packages = [
+                package.replace('-', '').strip()
+                for package in output[
+                    output.index(package_not_found_start) : output.index(
+                        package_not_found_stop
+                    )
+                ].splitlines()[2:]
+            ]
+            conda_packages = [
+                package
+                for package in MISSING_DEPENDENCIES
+                if package not in non_conda_packages
+            ]
 
-    print(f'found {len(conda_packages)} conda packages (out of {len(MISSING_DEPENDENCIES)})')
+            print(
+                f'found {len(conda_packages)} conda packages (out of {len(MISSING_DEPENDENCIES)})'
+            )
 
     try:
         subprocess.run(
             f'conda install -y {" ".join(conda_packages)}',
-            check=True,
             shell=True,
             stderr=subprocess.DEVNULL,
         )
@@ -110,10 +128,7 @@ if (Path(sys.prefix) / 'conda-meta').exists() and len(MISSING_DEPENDENCIES) > 0:
         for dependency in conda_packages:
             try:
                 subprocess.run(
-                    f'conda install -y {dependency}',
-                    check=True,
-                    shell=True,
-                    stderr=subprocess.DEVNULL,
+                    f'conda install -y {dependency}', shell=True, stderr=subprocess.DEVNULL,
                 )
             except subprocess.CalledProcessError:
                 continue
