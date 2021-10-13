@@ -317,7 +317,7 @@ class VortexForcing:
     @start_date.setter
     def start_date(self, start_date: datetime):
         if start_date is None:
-            start_date = self.dataframe['datetime'][0]
+            start_date = self.dataframe['datetime'].iloc[0]
         else:
             if not isinstance(start_date, datetime):
                 start_date = parse_date(start_date)
