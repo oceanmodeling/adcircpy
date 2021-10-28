@@ -76,13 +76,12 @@ def get_logger(
             if console_level != logging.NOTSET:
                 if console_level <= logging.INFO:
 
-                    class LoggingOutputFilter(logging.Filter):
-                        def filter(self, rec):
-                            return rec.levelno in (logging.DEBUG, logging.INFO)
+                    def logging_output_filter(record):
+                        return record.levelno <= logging.INFO
 
                     console_output = logging.StreamHandler(sys.stdout)
                     console_output.setLevel(console_level)
-                    console_output.addFilter(LoggingOutputFilter())
+                    console_output.addFilter(logging_output_filter)
                     logger.addHandler(console_output)
 
                 console_errors = logging.StreamHandler(sys.stderr)
