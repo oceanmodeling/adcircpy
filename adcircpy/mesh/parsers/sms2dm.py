@@ -66,33 +66,33 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
             f.write('MESH2D\n')
 
             if len(triangles) > 0:
-                _logger.info('writing triangles')
+                LOGGER.info('writing triangles')
                 start_time = datetime.now()
                 triangles.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                _logger.info(f'wrote triangles in {datetime.now() - start_time}')
+                LOGGER.info(f'wrote triangles in {datetime.now() - start_time}')
 
             if len(quadrilaterals) > 0:
-                _logger.info('writing quadrilaterals')
+                LOGGER.info('writing quadrilaterals')
                 start_time = datetime.now()
                 quadrilaterals.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                _logger.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
+                LOGGER.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
 
-            _logger.info('writing nodes')
+            LOGGER.info('writing nodes')
             start_time = datetime.now()
             nodes.to_string(
                 f, header=False, index=False, justify='left', float_format=float_format
             )
             f.write('\n')
-            _logger.info(f'wrote nodes in {datetime.now() - start_time}')
+            LOGGER.info(f'wrote nodes in {datetime.now() - start_time}')
 
             if boundaries in mesh:
-                _logger.info('writing boundaries')
+                LOGGER.info('writing boundaries')
                 start_time = datetime.now()
                 boundaries.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                _logger.info(f'wrote boundaries in {datetime.now() - start_time}')
+                LOGGER.info(f'wrote boundaries in {datetime.now() - start_time}')
 
         return 0  # for unittests
     else:
