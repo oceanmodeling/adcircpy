@@ -14,6 +14,7 @@ DEPENDENCIES = {
     'fiona': ['gdal'],
     'haversine': [],
     'matplotlib': [],
+    'modelforcings': [],
     'netCDF4': [],
     'numpy': [],
     'ordered_set': [],
