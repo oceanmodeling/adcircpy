@@ -38,7 +38,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         end_date: datetime = None,
         mode: Mode = None,
         filename: PathLike = None,
-    ) -> 'BestTrackForcing':
+    ):
         if nws is None:
             nws = 20
 
