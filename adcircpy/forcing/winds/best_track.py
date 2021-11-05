@@ -6,7 +6,9 @@ import pathlib
 from typing import Union
 
 from matplotlib import pyplot
+from matplotlib.axis import Axis
 from matplotlib.transforms import Bbox
+from modelforcings.vortex import FileDeck, Mode, read_atcf, VortexForcing
 import numpy as numpy
 from pandas import DataFrame
 import pandas.util
@@ -16,7 +18,7 @@ from shapely.geometry import Point, Polygon
 import utm
 
 from adcircpy.forcing.winds.base import WindForcing
-from adcircpy.plotting import plot_polygon, plot_polygons
+from adcircpy.plotting import plot_coastline, plot_polygon, plot_polygons
 from adcircpy.utilities import get_logger
 
 LOGGER = get_logger(__name__)
