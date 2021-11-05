@@ -189,7 +189,7 @@ class NodalAttributes:
             if attribute not in self._attributes:
                 self.add_attribute(attribute, data['units'])
             else:
-                logger.warning(f'overwriting existing attribute "{attribute}"')
+                LOGGER.warning(f'overwriting existing attribute "{attribute}"')
             self.set_attribute(attribute, full_values)
 
     def write(self, path, overwrite=False):
