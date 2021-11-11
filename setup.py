@@ -12,8 +12,10 @@ DEPENDENCIES = {
     'bs4': [],
     'eventlet': [],
     'fiona': ['gdal'],
+    'geopandas': [],
     'haversine': [],
     'matplotlib': [],
+    'modelforcings': [],
     'netCDF4': [],
     'numpy': [],
     'ordered_set': [],
@@ -22,7 +24,6 @@ DEPENDENCIES = {
     'psutil': [],
     # 'pygrib': [], # TODO: make separate install
     'pyproj>=2.6': [],
-    'geopandas': [],
     'requests': [],
     'scipy': [],
     'seaborn': [],
