@@ -1,5 +1,5 @@
-from collections import Mapping
 import pathlib
+from typing import Mapping
 
 import numpy as np
 
