@@ -200,7 +200,6 @@ setup(
     # test and development dependencies
     extras_require={
         'testing': [
-            'colored_traceback',
             'FileLock',
             'pytest',
             'pytest-cov',
