@@ -72,6 +72,7 @@ napoleon_use_rtype = False  # More legible
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinxcontrib.bibtex',
     'sphinxcontrib.programoutput',
     # Need the autodoc and autosummary packages to generate our docs.
     'sphinx.ext.autodoc',
@@ -103,3 +104,4 @@ html_static_path = ['_static']
 
 # -- Extension configuration -------------------------------------------------
 source_suffix = ['.rst', '.md']
+bibtex_bibfiles = ['references.bib']

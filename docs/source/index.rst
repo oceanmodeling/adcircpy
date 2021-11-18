@@ -3,4 +3,9 @@
 .. toctree::
    :hidden:
 
-   readme
+   abstract
+   introduction
+   basic_usage
+   python_api
+   cli
+   acknowledgments

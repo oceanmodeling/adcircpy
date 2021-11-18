@@ -209,7 +209,7 @@ setup(
         ],
         'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
         'documentation': ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme',
-                          'sphinxcontrib-programoutput'],
+                          'sphinxcontrib-programoutput','sphinxcontrib-bibtex'],
     },
     entry_points={
         'console_scripts': [
