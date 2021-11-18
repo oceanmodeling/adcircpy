@@ -9,3 +9,4 @@
    python_api
    cli
    acknowledgments
+   references
