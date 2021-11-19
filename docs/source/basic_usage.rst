@@ -70,7 +70,7 @@ Note that this setup generates model inputs based on default values. These may n
 
     driver.timestep = 2
 
-before :python:`driver.write()`. Most of the ``fort.15`` options can be overridden directly by the user, with a very small exception of parameters that should be considered "private" in the context of the ``fort.15`` file.
+before :code:`driver.write()`. Most of the ``fort.15`` options can be overridden directly by the user, with a very small exception of parameters that should be considered "private" in the context of the ``fort.15`` file.
 
 .. code-block:: python
 
