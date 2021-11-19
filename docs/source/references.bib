@@ -1,79 +1,47 @@
 % Encoding: UTF-8
 
 @Article{Egbert2002,
-  author   = {Egbert, Gary D. and Erofeeva, Svetlana Y.},
-  journal  = {Journal of Atmospheric and Oceanic Technology},
-  title    = {Efficient {Inverse} {Modeling} of {Barotropic} {Ocean} {Tides}},
-  year     = {2002},
-  issn     = {0739-0572, 1520-0426},
-  month    = feb,
-  number   = {2},
-  pages    = {183--204},
-  volume   = {19},
-  abstract = {{\textless}section class="abstract"{\textgreater}{\textless}h2 class="abstractTitle text-title my-1" id="d584e2"{\textgreater}Abstract{\textless}/h2{\textgreater}{\textless}p{\textgreater}A computationally efficient relocatable system for generalized inverse (GI) modeling of barotropic ocean tides is described. The GI penalty functional is minimized using a representer method, which requires repeated solution of the forward and adjoint linearized shallow water equations (SWEs). To make representer computations efficient, the SWEs are solved in the frequency domain by factoring the coefficient matrix for a finite-difference discretization of the second-order wave equation in elevation. Once this matrix is factored representers can be calculated rapidly. By retaining the first-order SWE system (defined in terms of both elevations and currents) in the definition of the discretized GI penalty functional, complete generality in the choice of dynamical error covariances is retained. This allows rational assumptions about errors in the SWE, with soft momentum balance constraints (e.g., to account for inaccurate parameterization of dissipation), but holds mass conservation constraints. While the dynamical calculations involve elevations alone, depth-averaged currents can be directly assimilated into the tidal model with this approach. The efficient representer calculation forms the basis for the Oregon State University (OSU) Tidal Inversion Software (OTIS). OTIS includes software for generating grids, prior model covariances, and boundary conditions; for time stepping the nonlinear shallow water equations to generate a first guess or prior solution; for preliminary processing of TOPEX/Poseidon altimeter data; for solution of the GI problem; and for computation of posterior error bars. Approximate GI solution methods, based on using a reduced set of representers, allow very large datasets to be inverted. OTIS regional and local GI tidal modeling (with grids containing up to 10$^{\textrm{5}}$ nodes) require only a few hours on a common desktop workstation. Use of OTIS is illustrated by developing a new regional-scale (1/6°) model of tides in the Indonesian Seas.{\textless}/p{\textgreater}{\textless}/section{\textgreater}},
-  doi      = {10.1175/1520-0426(2002)019<0183:EIMOBO>2.0.CO;2},
-  language = {EN},
-  url      = {https://journals.ametsoc.org/view/journals/atot/19/2/1520-0426_2002_019_0183_eimobo_2_0_co_2.xml},
-  urldate  = {2021-02-10},
-}
-
-@misc{noauthor_noaa-ocs-modelingnemspy_2021,
-	title = {noaa-ocs-modeling/nemspy},
-	copyright = {CC0-1.0 License
-        , 
-      
-        CC0-1.0 License},
-	url = {https://github.com/noaa-ocs-modeling/nemspy},
-	abstract = {NEMS configuration generation. Contribute to noaa-ocs-modeling/nemspy development by creating an account on GitHub.},
-	urldate = {2021-02-10},
-	publisher = {NOAA OCS Modeling Projects},
-	month = feb,
-	year = {2021},
-	note = {original-date: 2020-09-09T14:52:51Z},
-	keywords = {configuration-management, nems, noaa, nuopc, python},
-}
-
-@misc{noauthor_noaa-ocs-modelingcoupledmodeldriver_2021,
-	title = {noaa-ocs-modeling/{CoupledModelDriver}},
-	copyright = {CC0-1.0 License
-        , 
-      
-        CC0-1.0 License},
-	url = {https://github.com/noaa-ocs-modeling/CoupledModelDriver},
-	abstract = {coupled model configuration generation. Contribute to noaa-ocs-modeling/CoupledModelDriver development by creating an account on GitHub.},
-	urldate = {2021-02-10},
-	publisher = {NOAA OCS Modeling Projects},
-	month = feb,
-	year = {2021},
-	note = {original-date: 2021-01-25T18:45:02Z},
-	keywords = {adcirc, model-coupling, nems},
+  author    = {Egbert, Gary D. and Erofeeva, Svetlana Y.},
+  journal   = {Journal of Atmospheric and Oceanic Technology},
+  title     = {Efficient Inverse Modeling of Barotropic Ocean Tides},
+  year      = {2002},
+  issn      = {0739-0572, 1520-0426},
+  month     = feb,
+  number    = {2},
+  pages     = {183--204},
+  volume    = {19},
+  abstract  = {Abstract A computationally efficient relocatable system for generalized inverse ({GI}) modeling of barotropic ocean tides is described. The {GI} penalty functional is minimized using a representer method, which requires repeated solution of the forward and adjoint linearized shallow water equations ({SWEs}). To make representer computations efficient, the {SWEs} are solved in the frequency domain by factoring the coefficient matrix for a finite-difference discretization of the second-order wave equation in elevation. Once this matrix is factored representers can be calculated rapidly. By retaining the first-order {SWE} system (defined in terms of both elevations and currents) in the definition of the discretized {GI} penalty functional, complete generality in the choice of dynamical error covariances is retained. This allows rational assumptions about errors in the {SWE}, with soft momentum balance constraints (e.g., to account for inaccurate parameterization of dissipation), but holds mass conservation constraints. While the dynamical calculations involve elevations alone, depth-averaged currents can be directly assimilated into the tidal model with this approach. The efficient representer calculation forms the basis for the Oregon State University ({OSU}) Tidal Inversion Software ({OTIS}). {OTIS} includes software for generating grids, prior model covariances, and boundary conditions; for time stepping the nonlinear shallow water equations to generate a first guess or prior solution; for preliminary processing of {TOPEX}/Poseidon altimeter data; for solution of the {GI} problem; and for computation of posterior error bars. Approximate {GI} solution methods, based on using a reduced set of representers, allow very large datasets to be inverted. {OTIS} regional and local {GI} tidal modeling (with grids containing up to 105 nodes) require only a few hours on a common desktop workstation. Use of {OTIS} is illustrated by developing a new regional-scale (1/6°) model of tides in the Indonesian Seas.},
+  doi       = {10.1175/1520-0426(2002)019<0183:EIMOBO>2.0.CO;2},
+  language  = {EN},
+  url       = {https://journals.ametsoc.org/view/journals/atot/19/2/1520-0426_2002_019_0183_eimobo_2_0_co_2.xml},
+  urldate   = {2021-02-10},
+  date      = {2002-02-01},
+  publisher = {American Meteorological Society},
 }
 
 @Misc{JaimeCalzadaNOAA2021,
-  author    = {{Jaime Calzada}},
-  month     = feb,
-  note      = {original-date: 2018-10-29T13:44:18Z},
+  author    = {Calzada, Jaime and Burnett, Zachary},
+  month     = nov,
   title     = {ADCIRCpy},
   year      = {2021},
   abstract  = {Python library for managing input and output files for the ADCIRC model.},
-  copyright = {GPL-3.0 License , GPL-3.0 License},
-  url       = {https://github.com/JaimeCalzadaNOAA/adcircpy},
-  urldate   = {2021-02-10},
+  copyright = {GPL-3.0 License},
+  url       = {https://github.com/zacharyburnettNOAA/adcircpy},
 }
 
 @misc{noauthor_cyclomatic_2020,
-	title = {Cyclomatic complexity},
+	title     = {Cyclomatic complexity},
 	copyright = {Creative Commons Attribution-ShareAlike License},
-	url = {https://en.wikipedia.org/w/index.php?title=Cyclomatic_complexity&oldid=992651876},
-	abstract = {Cyclomatic complexity is a software metric used to indicate the complexity of a program. It is a quantitative measure of the number of linearly independent paths through a program's source code. It was developed by Thomas J. McCabe, Sr. in 1976.
+	url       = {https://en.wikipedia.org/w/index.php?title=Cyclomatic_complexity&oldid=992651876},
+	abstract  = {Cyclomatic complexity is a software metric used to indicate the complexity of a program. It is a quantitative measure of the number of linearly independent paths through a program's source code. It was developed by Thomas J. McCabe, Sr. in 1976.
 Cyclomatic complexity is computed using the control flow graph of the program: the nodes of the graph correspond to indivisible groups of commands of a program, and a directed edge connects two nodes if the second command might be executed immediately after the first command. Cyclomatic complexity may also be applied to individual functions, modules, methods or classes within a program.
 One testing strategy, called basis path testing by McCabe who first proposed it, is to test each linearly independent path through the program; in this case, the number of test cases will equal the cyclomatic complexity of the program.},
-	language = {en},
-	urldate = {2021-02-10},
-	journal = {Wikipedia},
-	month = dec,
-	year = {2020},
-	note = {Page Version ID: 992651876},
+	language  = {en},
+	urldate   = {2021-02-10},
+	journal   = {Wikipedia},
+	month     = dec,
+	year      = {2020},
+	note      = {Page Version ID: 992651876},
 }
 
 @Article{Luettich1992,
@@ -85,6 +53,9 @@ One testing strategy, called basis path testing by McCabe who first proposed it,
   pages      = {143},
   abstract   = {This report describes the theory, methodology, and verification of the ADCIRC (ADvanced CIRCulation) finite element numerical models. ADCIRC-2DDI is a two-dimensional, depth-integrated hydrodynamic model. ADCIRC-3DL is a three-dimensional model that couples the external mode solution generated by ADCIRC2DDI to a locally one-dimensional internal mode solution. The numerical internal mode solution can be obtained using either velocity or stress as the dependent variable. ADCIRC has been developed to simulate hydrodynamic circulation along shelves, coasts, and within estuaries. To allow long numerical simulations (on the order of a year) over very large computational domains (for example, the entire east coast of the United States), ADCIRC has been designed to have high computational efficiency and has been tested extensively for both hydrodynamic accuracy and numerical stability. The results of these tests are included in this report.},
   shorttitle = {{ADCIRC}},
+  rights     = {Approved for public release; distribution is unlimited.},
+  url        = {https://erdc-library.erdc.dren.mil/jspui/handle/11681/4618},
+  publisher  = {Coastal Engineering Research Center (U.S.)},
 }
 
 @Article{Taguchi2014,
@@ -102,80 +73,37 @@ One testing strategy, called basis path testing by McCabe who first proposed it,
 
 @Misc{Weiver2008,
   author       = {Robert Weiver},
-  howpublished = {https://www.dropbox.com/s/zb7xjzun7nco384/tau0{\_}gen.f},
   month        = oct,
   title        = {tau0{\_}gen.f},
   year         = {2008},
   abstract     = {this program will generate data for tau0 base to be used in the fort.13 file
-the data is formatted to be read in when the tau0 flag is set to -3.0 in the fort.15 file 
-for versions fo ADCIRC later than 47.31 and older versions of the code
-which may have been modified seperately from that kept on the svn repository
-For these versions, setting the flag of tau0 = -3.0 implies that a base value for tau0 
-will be read in from the fort.13 file.   
-
-
-For tau0 = -3  we need only one value for tau0 ( a min or base value) in the fort.13 file, 
-the variable is *primitive_weighting_in_continuity_equation*
-
-
-The simple Fortran program makes use of a subroutine from the adcirc source code, 
-to find the neighboring elements.  If the average distance between a node and its
-neighbors is less than or equal to a critical value (currently set to 1750 m) 
-then tau0 base will be set to the time varying flag value of 0.03.
-
-
-Otherwise the base value is depth dependant:
-0.005 for depths greater than 10m
-0.02  for depths less than 10m
-
-
-in order to keep the file size down, this program sets the default
-value to 0.03 and only writes out the points where the distance 
-between nodes is greater than the critical distance},
+the data is formatted to be read in when the tau0 flag is set to -3.0 in the fort.15 file for versions fo {ADCIRC} later than 47.31 and older versions of the code which may have been modified seperately from that kept on the svn repository
+For these versions, setting the flag of tau0 = -3.0 implies that a base value for tau0 will be read in from the fort.13 file.},
   url          = {https://www.dropbox.com/s/zb7xjzun7nco384/tau0_gen.f},
 }
 
 @Misc{Schureman1958,
   author    = {Schureman, Paul},
   title     = {Manual of Harmonic Analysis and Prediction of Tides. [ Revised 1940 edition reprinted 1958 with corrections, reprinted 2001]},
+  pagetotal = {346},
   year      = {1958},
   copyright = {CC0 1.0 Universal},
   doi       = {10.25607/OBP-155},
   keywords  = {Tidal analysis, Tidal currents, Harmonic analysis, Parameter Discipline::Physical oceanography},
   language  = {en},
   publisher = {United States Government Printing Office},
+  note      = {Google-Books-{ID}: {jI}8TAAAAYAAJ},
 }
 
 @TechReport{Riverside2015,
-  author      = {Riverside Technology, AECOM},
-  institution = {Riverside Technology, Inc.},
+  author      = {{Riverside Technology, Inc} and {AECOM}},  institution = {Riverside Technology, Inc.},
   title       = {Mesh development, tidal validation, and hindcast skill assessment of an {ADCIRC} model for the {H}urricane {S}torm {S}urge {O}perational {F}orecast {S}ystem on the {US} {G}ulf-{A}tlantic {C}oast},
+  rights      = {In Copyright},
   year        = {2015},
-  abstract    = {The Coast Survey Development Laboratory (CSDL) of the National Ocean Service (NOS) previously
-developed an Extratropical Surge and Tide Operational Forecast System (ESTOFS) for the US coastal
-waters (Funakoshi et al. 2013). Now, to extend the capability of ESTOFS to include tropical storm event
-simulation and ensemble prediction, CSDL is preparing a prototype Hurricane Storm Surge Operational
-Forecast System (HSSOFS). Under direction from CSDL, a technical team led by Riverside Technology,
-inc. has developed a hydrodynamic model of the US East Coast and Gulf of Mexico and has validated the
-model for 10 major tropical and extratropical events. Eventually, this model will form the basis for an
-operational system on National Centers for Environmental Prediction (NCEP) computers. The prototype
-model described in this document is called NOMAD: NOAA Operational Model with ADCIRC.
-The hydrodynamic model employed for NOMAD is the ADvanced CIRCulation (ADCIRC) finite
-element model (Luettich et al. 1992; Luettich and Westerink 2004). The ADCIRC hydrodynamic model
-has demonstrated to be effective at predicting tidal circulation and storm surge propagation in complex
-coastal systems.
-For the development of NOMAD, the project team constructed a new model grid covering all of the US
-Atlantic and Gulf coasts. Two model-run scenarios were tested: 1) astronomical tide and 2) model
-hindcast. The model results from each scenario are compared with observations using NOS’ standard skill
-assessment software. The skill assessment demonstrated that NOMAD generally predicts the surge
-reasonably well, considering the meteorological forcing.
-The target error metric was 0.2 meters RMSE (0.66 feet). With no adjustment for mean water level
-differences, the mean RMSE for all storms is about 0.26 meters (0.85 feet) with a range from
-approximately 0.1-0.7 meters (0.3-2.3 feet). At least some of the model error is due to mean water level
-differences from effects not modeled, such as seasonal water level variations. CSDL may achieve
-improved results by using a seasonal correction during operational implementation to account for steric
-effects and annual tidal signals.},
-  school   = {Riverside Technology, Inc.},
+  abstract    = {The Coast Survey Development Laboratory ({CSDL}) of the National Ocean Service ({NOS}) previously developed an Extratropical Surge and Tide Operational Forecast System ({ESTOFS}) for the {US} coastal waters (Funakoshi et al. 2013). Now, to extend the capability of {ESTOFS} to include tropical storm event simulation and ensemble prediction, {CSDL} is preparing a prototype Hurricane Storm Surge Operational Forecast System ({HSSOFS}). Under direction from {CSDL}, a technical team led by Riverside Technology, inc. has developed a hydrodynamic model of the {US} East Coast and Gulf of Mexico and has validated the model for 10 major tropical and extratropical events. Eventually, this model will form the basis for an operational system on National Centers for Environmental Prediction ({NCEP}) computers. The prototype model described in this document is called {NOMAD}: {NOAA} Operational Model with {ADCIRC}.},
+  url         = {https://cdr.lib.unc.edu/concern/articles/8336h638c?locale=en},
+  doi         = {10.17615/4Z19-Y130},
+  publisher   = {The University of North Carolina at Chapel Hill University Libraries},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
