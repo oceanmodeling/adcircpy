@@ -10,6 +10,7 @@ from setuptools import config, find_packages, setup
 DEPENDENCIES = {
     'appdirs': [],
     'bs4': [],
+    'coupledmodelvalidation': [],
     'eventlet': [],
     'fiona': ['gdal'],
     'geopandas': [],
@@ -208,6 +209,14 @@ setup(
             'pytest-xdist',
         ],
         'development': ['dunamai', 'flake8', 'isort', 'oitnb'],
+        'documentation': [
+            'dunamai',
+            'm2r2',
+            'sphinx',
+            'sphinx-rtd-theme',
+            'sphinxcontrib-programoutput',
+            'sphinxcontrib-bibtex',
+        ],
     },
     entry_points={
         'console_scripts': [

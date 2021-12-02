@@ -8,6 +8,9 @@
 [![version](https://img.shields.io/pypi/v/adcircpy)](https://pypi.org/project/adcircpy)
 [![license](https://img.shields.io/github/license/zacharyburnettNOAA/adcircpy)](https://opensource.org/licenses/gpl-license)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
+[![documentation](https://readthedocs.org/projects/adcircpy/badge/?version=latest)](https://adcircpy.readthedocs.io/en/latest/?badge=latest)
+
+Documentation can be found at https://adcircpy.readthedocs.io
 
 ### Installation notes:
 
