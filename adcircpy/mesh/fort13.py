@@ -37,7 +37,7 @@ class NodalAttributes:
         for name in self.get_attribute_names():
             attribute = self.get_attribute(name)
             fort13.extend(
-                [f'{name}', f'{len(attribute["non_default_indexes"])}',]
+                [f'{name}', f'{len(attribute["non_default_indexes"])}']
             )
             for i, values in enumerate(
                 attribute['values'][attribute['non_default_indexes'], :]
