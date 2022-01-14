@@ -5,6 +5,19 @@ import re
 import subprocess
 import sys
 
+try:
+    from importlib import metadata as importlib_metadata
+except ImportError:  # for Python<3.8
+    subprocess.run(
+        f'{sys.executable} -m pip install importlib_metadata',
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    import importlib_metadata
+
+from typing import List
+
 from setuptools import config, find_packages, setup
 
 DEPENDENCIES = {
@@ -35,12 +48,12 @@ DEPENDENCIES = {
 }
 
 
-def installed_packages() -> [str]:
+def installed_packages() -> List[str]:
+    installed_distributions = importlib_metadata.distributions()
     return [
-        re.split('#egg=', re.split('==| @ ', package.decode())[0])[-1].lower()
-        for package in subprocess.run(
-            f'{sys.executable} -m pip freeze', shell=True, capture_output=True,
-        ).stdout.splitlines()
+        distribution.metadata['Name'].lower()
+        for distribution in installed_distributions
+        if distribution.metadata['Name'] is not None
     ]
 
 
