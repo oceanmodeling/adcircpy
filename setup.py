@@ -41,7 +41,7 @@ DEPENDENCIES = {
     'scipy': [],
     'seaborn': [],
     'shapely': [],
-    'stormevents': [],
+    'stormevents>=1.1.0': [],
     'tropycal': [],
     'utm': [],
     'wget': [],
