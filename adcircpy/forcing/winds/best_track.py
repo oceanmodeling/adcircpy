@@ -8,13 +8,15 @@ from typing import Union
 from matplotlib import pyplot
 from matplotlib.axis import Axis
 from matplotlib.transforms import Bbox
-from modelforcings.vortex import FileDeck, Mode, read_atcf, VortexForcing
 import numpy as numpy
 from pandas import DataFrame
 import pandas.util
 from pyproj import CRS, Transformer
 from shapely import ops
 from shapely.geometry import Point, Polygon
+from stormevents import VortexTrack
+from stormevents.nhc.atcf import ATCF_FileDeck, ATCF_Mode
+from stormevents.nhc.track import read_atcf
 import utm
 
 from adcircpy.forcing.winds.base import WindForcing
@@ -28,7 +30,7 @@ LOGGER = get_logger(__name__)
 pandas.options.mode.chained_assignment = None  # default='warn'
 
 
-class BestTrackForcing(VortexForcing, WindForcing):
+class BestTrackForcing(VortexTrack, WindForcing):
     def __init__(
         self,
         storm: Union[str, PathLike, DataFrame, io.BytesIO],
@@ -36,7 +38,7 @@ class BestTrackForcing(VortexForcing, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
-        mode: Mode = None,
+        mode: ATCF_Mode = None,
         filename: PathLike = None,
     ):
         if nws is None:
@@ -50,12 +52,12 @@ class BestTrackForcing(VortexForcing, WindForcing):
         if interval_seconds is None:
             interval_seconds = 3600
 
-        VortexForcing.__init__(
+        VortexTrack.__init__(
             self,
             storm=storm,
             start_date=start_date,
             end_date=end_date,
-            file_deck=FileDeck.b,
+            file_deck=ATCF_FileDeck.b,
             mode=mode,
             record_type='BEST',
             filename=filename,
