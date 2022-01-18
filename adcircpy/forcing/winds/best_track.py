@@ -24,10 +24,6 @@ from adcircpy.utilities import get_logger
 
 LOGGER = get_logger(__name__)
 
-# suppress `SettingWithCopyWarning` when instantiating `VortexForcing`
-# TODO: figure out why that is happening
-pandas.options.mode.chained_assignment = None  # default='warn'
-
 
 class BestTrackForcing(VortexTrack, WindForcing):
     def __init__(
