@@ -3,9 +3,9 @@ import argparse
 import os
 from pathlib import Path
 
-from coupledmodelvalidation import COOPS
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas
+from stormevents import COOPS_Station
 
 from adcircpy.outputs import Fort61
 
@@ -52,34 +52,40 @@ def parse_args():
 def main():
     args = parse_args()
     fort61 = Fort61(args.path)
-    coops = COOPS.TidalStations()
-    coops.datum = args.vertical_datum
+
     start_date = fort61.datetime[0]
     end_date = fort61.datetime[-1]
+
     for station_id, data in fort61:
         if args.save is not None:
             fname = str(Path(str(Path(args.save)) + '/{}.png'.format(station_id)))
             if args.resume_save and os.path.isfile(fname):
                 continue
-        coops.add_station(station_id, start_date, end_date)
-        coops.station = station_id
-        if args.coops_only and not np.all(np.isnan(coops.values)):
-            plt.plot(coops.datetime, coops.values, label='COOPS', color='b', linewidth=0.7)
+
+        station = COOPS_Station(station_id)
+
+        station_data = station.get(
+            start_date=start_date, end_date=end_date, datum=args.vertical_datum
+        )
+
+        if args.coops_only and not pandas.isna(station_data['v']).all():
+            plt.plot(
+                station_data['t'], station_data['v'], label='COOPS', color='b', linewidth=0.7
+            )
+            plt.plot(
+                fort61.datetime, data['values'], label='ADCIRC', color='r', linewidth=0.7,
+            )
+        elif not args.coops_only:
             plt.plot(
                 fort61.datetime, data['values'], label='ADCIRC', color='r', linewidth=0.7,
             )
 
-        else:
-            if not args.coops_only:
-                plt.plot(
-                    fort61.datetime, data['values'], label='ADCIRC', color='r', linewidth=0.7,
-                )
         fig = plt.gcf()
         if fig.get_axes():
             fig.set_size_inches(18.5, 10.5)
             fig.gca().set_xlim(fort61.datetime[0], fort61.datetime[-1])
             plt.ylabel('water level [meters, {}]'.format(args.vertical_datum))
-            plt.title('{}\n{}'.format(station_id, coops.name))
+            plt.title('{}\n{}'.format(station.nos_id, station.name))
             plt.legend()
             if args.save is not None:
                 os.makedirs(str(Path(args.save)), exist_ok=True)
