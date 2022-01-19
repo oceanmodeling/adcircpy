@@ -23,7 +23,6 @@ from setuptools import config, find_packages, setup
 DEPENDENCIES = {
     'appdirs': [],
     'bs4': [],
-    'coupledmodelvalidation': [],
     'eventlet': [],
     'fiona': ['gdal'],
     'geopandas': [],
@@ -41,7 +40,7 @@ DEPENDENCIES = {
     'scipy': [],
     'seaborn': [],
     'shapely': [],
-    'stormevents>=1.1.2': [],
+    'stormevents>=1.1.3': [],
     'tropycal': [],
     'utm': [],
     'wget': [],
