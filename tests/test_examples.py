@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 from tests import (
     check_reference_directory,
     DATA_DIRECTORY,
@@ -10,6 +12,7 @@ from tests import (
 EXAMPLES_DIRECTORY = DATA_DIRECTORY.parent.parent / 'examples'
 
 
+@pytest.mark.skip
 def test_example_1():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_1'
     output_directory = OUTPUT_DIRECTORY / 'example_1'
@@ -25,6 +28,7 @@ def test_example_1():
     )
 
 
+@pytest.mark.skip
 def test_example_2():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_2'
     output_directory = OUTPUT_DIRECTORY / 'example_2'
@@ -55,6 +59,7 @@ def test_example_3():
     )
 
 
+@pytest.mark.skip
 def test_example_4():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_4'
     output_directory = OUTPUT_DIRECTORY / 'example_4'
