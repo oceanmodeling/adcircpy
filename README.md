@@ -271,7 +271,7 @@ from adcircpy.utilities import download_mesh
 
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_3'
+OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'test_example_3'
 
 MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
@@ -296,12 +296,12 @@ mesh.add_forcing(wind_forcing)
 slurm = SlurmConfig(
     account='account',
     ntasks=1000,
-    run_name='adcircpy/examples/example_3.py',
+    run_name='adcircpy/examples/test_example_3.py',
     partition='partition',
     walltime=timedelta(hours=8),
     mail_type='all',
     mail_user='example@email.gov',
-    log_filename='example_3.log',
+    log_filename='test_example_3.log',
     modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
     path_prefix='$HOME/adcirc/build',
 )
