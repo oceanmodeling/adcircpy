@@ -14,11 +14,9 @@ def test_example_1():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_1'
     output_directory = OUTPUT_DIRECTORY / 'example_1'
 
-    if not output_directory.exists():
-        output_directory.mkdir(exist_ok=True, parents=True)
-    else:
-        for filename in output_directory.iterdir():
-            os.remove(filename)
+    if output_directory.exists():
+        os.remove(output_directory)
+    output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_1.py').read())
 
@@ -31,11 +29,9 @@ def test_example_2():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_2'
     output_directory = OUTPUT_DIRECTORY / 'example_2'
 
-    if not output_directory.exists():
-        output_directory.mkdir(exist_ok=True, parents=True)
-    else:
-        for filename in output_directory.iterdir():
-            os.remove(filename)
+    if output_directory.exists():
+        os.remove(output_directory)
+    output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_2.py').read())
 
@@ -48,11 +44,9 @@ def test_example_3():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_3'
     output_directory = OUTPUT_DIRECTORY / 'example_3'
 
-    if not output_directory.exists():
-        output_directory.mkdir(exist_ok=True, parents=True)
-    else:
-        for filename in output_directory.iterdir():
-            os.remove(filename)
+    if output_directory.exists():
+        os.remove(output_directory)
+    output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_3.py').read())
 
@@ -65,11 +59,9 @@ def test_example_4():
     reference_directory = REFERENCE_DIRECTORY / 'test_example_4'
     output_directory = OUTPUT_DIRECTORY / 'example_4'
 
-    if not output_directory.exists():
-        output_directory.mkdir(exist_ok=True, parents=True)
-    else:
-        for filename in output_directory.iterdir():
-            os.remove(filename)
+    if output_directory.exists():
+        os.remove(output_directory)
+    output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_4.py').read())
 
