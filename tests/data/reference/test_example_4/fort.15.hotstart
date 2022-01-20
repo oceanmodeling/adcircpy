@@ -1,4 +1,4 @@
-created on 2022-01-20 09:56                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2022-01-20 10:07                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -31,38 +31,38 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
 8                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
 Q1
-0.019256 6.49585E-05 0.695 1.11281 156.163
+0.019256 6.49585E-05 0.695 1.11281 169.561
 O1
-0.100514 6.75977E-05 0.695 1.11281 47.6262
+0.100514 6.75977E-05 0.695 1.11281 61.5689
 P1
-0.046843 7.25229E-05 0.706 1 105.269
+0.046843 7.25229E-05 0.706 1 120.228
 K1
-0.141565 7.29212E-05 0.736 1.06982 157.786
+0.141565 7.29212E-05 0.736 1.06983 172.827
 N2
-0.046398 0.00013788 0.693 0.98063 311.043
+0.046398 0.00013788 0.693 0.980628 339.483
 M2
-0.242334 0.000140519 0.693 0.98063 202.506
+0.242334 0.000140519 0.693 0.980628 231.49
 S2
-0.112841 0.000145444 0.693 1 270
+0.112841 0.000145444 0.693 1 300
 K2
-0.030704 0.000145842 0.693 1.1723 134.991
+0.030704 0.000145842 0.693 1.17231 165.073
 8
 Q1
-6.49585E-05 1.11281 156.163
+6.49585E-05 1.11281 169.561
 O1
-6.75977E-05 1.11281 47.6262
+6.75977E-05 1.11281 61.5689
 P1
-7.25229E-05 1 105.269
+7.25229E-05 1 120.228
 K1
-7.29212E-05 1.06982 157.786
+7.29212E-05 1.06983 172.827
 N2
-0.00013788 0.98063 311.043
+0.00013788 0.980628 339.483
 M2
-0.000140519 0.98063 202.506
+0.000140519 0.980628 231.49
 S2
-0.000145444 1 270
+0.000145444 1 300
 K2
-0.000145842 1.1723 134.991
+0.000145842 1.17231 165.073
 Q1
 1.17940985e-02 1.73069764e+02
 1.13893401e-02 1.83698935e+02
@@ -695,6 +695,6 @@ K2
                                                                 ! NCHOST                              - PROJECT HOST
                                                                 ! NCONV                               - CONVENTIONS
                                                                 ! NCCONT                              - CONTACT INFORMATION
-2022-01-15 09:55                                                ! NCDATE                              - forcing start date
+2022-01-15 10:07                                                ! NCDATE                              - forcing start date
 &SWANOutputControl SWAN_OutputHS=False, SWAN_OutputDIR=False, SWAN_OutputTM01=False, SWAN_OutputTPS=False, SWAN_OutputWIND=False, SWAN_OutputTM02=False, SWAN_OutputTMM10=False \
 &metControl WindDragLimit=0.0025, DragLawString=default, outputWindDrag=F, invertedBarometerOnElevationBoundary=T \
