@@ -1,4 +1,4 @@
-created on 2021-11-05 11:57                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2022-02-02 14:40                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -21,7 +21,7 @@ primitive_weighting_in_continuity_equation
 10.000000                                                       ! DTDP                                - TIME STEP (IN SECONDS)
 0                                                               ! STATIM                              - STARTING TIME (IN DAYS)
 0                                                               ! REFTIM                              - REFERENCE TIME (IN DAYS)
-2012 10 28 06 18 0.9 1                                          ! WTIMINC                             - meteorological data time increment
+2018 09 17 12 06 0.9 1                                          ! WTIMINC                             - meteorological data time increment
 1                                                               ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
 0.500 0.000 0.000 0.000 0.500 0.500 1.000 0.000 0.500           ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
 0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
@@ -32,38 +32,38 @@ primitive_weighting_in_continuity_equation
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
 8                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
 Q1
-0.019256 6.49585E-05 0.695 0.91471 212.84
+0.019256 6.49585E-05 0.695 0.91442 124.682
 O1
-0.100514 6.75977E-05 0.695 0.91471 347.474
+0.100514 6.75977E-05 0.695 0.91442 272.317
 P1
-0.046843 7.25229E-05 0.706 1 322.516
+0.046843 7.25229E-05 0.706 1 93.128
 K1
-0.141565 7.29212E-05 0.736 0.947557 225.547
+0.141565 7.29212E-05 0.736 0.947379 258.815
 N2
-0.046398 0.00013788 0.693 1.02056 82.4006
+0.046398 0.00013788 0.693 1.02061 19.4861
 M2
-0.242334 0.000140519 0.693 1.02056 217.035
+0.242334 0.000140519 0.693 1.02061 167.121
 S2
-0.112841 0.000145444 0.693 1 180
+0.112841 0.000145444 0.693 1 0
 K2
-0.030704 0.000145842 0.693 0.862894 270.479
+0.030704 0.000145842 0.693 0.862537 338.248
 8
 Q1
-6.49585E-05 0.91471 212.84
+6.49585E-05 0.91442 124.682
 O1
-6.75977E-05 0.91471 347.474
+6.75977E-05 0.91442 272.317
 P1
-7.25229E-05 1 322.516
+7.25229E-05 1 93.128
 K1
-7.29212E-05 0.947557 225.547
+7.29212E-05 0.947379 258.815
 N2
-0.00013788 1.02056 82.4006
+0.00013788 1.02061 19.4861
 M2
-0.000140519 1.02056 217.035
+0.000140519 1.02061 167.121
 S2
-0.000145444 1 180
+0.000145444 1 0
 K2
-0.000145842 0.862894 270.479
+0.000145842 0.862537 338.248
 Q1
 1.17940985e-02 1.73069764e+02
 1.13893401e-02 1.83698935e+02
@@ -1094,5 +1094,5 @@ K2
                                                                 ! NCHOST                              - PROJECT HOST
                                                                 ! NCONV                               - CONVENTIONS
                                                                 ! NCCONT                              - CONTACT INFORMATION
-2012-10-28 06:00                                                ! NCDATE                              - forcing start date
+2018-09-17 12:00                                                ! NCDATE                              - forcing start date
 &metControl WindDragLimit=0.0025, DragLawString=default, outputWindDrag=F, invertedBarometerOnElevationBoundary=T \

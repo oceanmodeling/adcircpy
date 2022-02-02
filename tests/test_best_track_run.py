@@ -25,7 +25,7 @@ def test_best_track_run(shinnecock_mesh_directory, mocker):
     cmd = [
         'best_track_run',
         f'{shinnecock_mesh_directory / "fort.14"}',
-        'Sandy2012',
+        'florence2018',
         '--spinup-days=0.5',
         '--crs=EPSG:4326',
         f'--output-directory={str(output_directory)}',

@@ -232,15 +232,15 @@ class BestTrackForcing(VortexTrack, WindForcing):
         if axis is None:
             fig = pyplot.figure()
             axis = fig.add_subplot(111)
-        for i in range(len(self.speed)):
+        data = self.data
+        for i, (_, row) in enumerate(data.iterrows()):
             # when dealing with nautical degrees, U is sine and V is cosine.
-            U = self.speed.iloc[i] * numpy.sin(numpy.deg2rad(self.direction.iloc[i]))
-            V = self.speed.iloc[i] * numpy.cos(numpy.deg2rad(self.direction.iloc[i]))
-            axis.quiver(self.longitude.iloc[i], self.latitude.iloc[i], U, V, **kwargs)
+            U = row['speed'] * numpy.sin(numpy.deg2rad(row['direction']))
+            V = row['speed'] * numpy.cos(numpy.deg2rad(row['direction']))
+            axis.quiver(row['longitude'], row['latitude'], U, V, **kwargs)
             if i % 6 == 0:
                 axis.annotate(
-                    self.data['datetime'].iloc[i],
-                    (self.longitude.iloc[i], self.latitude.iloc[i]),
+                    row['datetime'], (row['longitude'], row['latitude']),
                 )
         if show:
             axis.axis('scaled')

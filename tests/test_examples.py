@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pytest
 
@@ -18,7 +19,7 @@ def test_example_1():
     output_directory = OUTPUT_DIRECTORY / 'example_1'
 
     if output_directory.exists():
-        os.remove(output_directory)
+        shutil.rmtree(output_directory)
     output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_1.py').read())
@@ -34,7 +35,7 @@ def test_example_2():
     output_directory = OUTPUT_DIRECTORY / 'example_2'
 
     if output_directory.exists():
-        os.remove(output_directory)
+        shutil.rmtree(output_directory)
     output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_2.py').read())
@@ -49,7 +50,7 @@ def test_example_3():
     output_directory = OUTPUT_DIRECTORY / 'example_3'
 
     if output_directory.exists():
-        os.remove(output_directory)
+        shutil.rmtree(output_directory)
     output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_3.py').read())
@@ -65,7 +66,7 @@ def test_example_4():
     output_directory = OUTPUT_DIRECTORY / 'example_4'
 
     if output_directory.exists():
-        os.remove(output_directory)
+        shutil.rmtree(output_directory)
     output_directory.mkdir(exist_ok=True, parents=True)
 
     exec(open(EXAMPLES_DIRECTORY / 'example_4.py').read())
