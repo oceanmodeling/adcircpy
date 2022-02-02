@@ -1,55 +1,57 @@
-created on 2022-01-20 09:55                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2022-02-02 14:49                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
 100                                                             ! NSCREEN                             - UNIT 6 OUTPUT OPTION PARAMETER
-0                                                               ! IHOT                                - HOT START PARAMETER
+567                                                             ! IHOT                                - HOT START PARAMETER
 2                                                               ! ICS                                 - COORDINATE SYSTEM SELECTION PARAMETER
-111111                                                          ! IM                                  - MODEL SELECTION PARAMETER
-2                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used
+511113                                                          ! IM                                  - MODEL SELECTION PARAMETER
+1                                                               ! NOLIBF                              - BOTTOM FRICTION TERM SELECTION PARAM; before NWP==1, '2' was used
 2                                                               ! NOLIFA                              - FINITE AMPLITUDE TERM SELECTION PARAMETER
 1                                                               ! NOLICA                              - SPATIAL DERIVATIVE CONVECTIVE SELECTION PARAMETER
 1                                                               ! NOLICAT                             - TIME DERIVATIVE CONVECTIVE TERM SELECTION PARAMETER
-0                                                               ! NWP                                 - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0
+2                                                               ! NWP                                 - VARIABLE BOTTOM FRICTION AND LATERAL VISCOSITY OPTION PARAMETER; default 0
+primitive_weighting_in_continuity_equation
+mannings_n_at_sea_floor
 1                                                               ! NCOR                                - VARIABLE CORIOLIS IN SPACE OPTION PARAMETER
 1                                                               ! NTIP                                - TIDAL POTENTIAL OPTION PARAMETER
 0                                                               ! NWS                                 - WIND STRESS AND BAROMETRIC PRESSURE OPTION PARAMETER
-1                                                               ! NRAMP                               - RAMP FUNCTION OPTION
+8                                                               ! NRAMP                               - RAMP FUNCTION OPTION
 9.81                                                            ! G                                   - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
-0.005                                                           ! TAU0                                - WEIGHTING FACTOR IN GWCE; original, 0.005
-6.000000                                                        ! DTDP                                - TIME STEP (IN SECONDS)
+-3                                                              ! TAU0                                - WEIGHTING FACTOR IN GWCE; original, 0.005
+4.000000                                                        ! DTDP                                - TIME STEP (IN SECONDS)
 0                                                               ! STATIM                              - STARTING TIME (IN DAYS)
 0                                                               ! REFTIM                              - REFERENCE TIME (IN DAYS)
 5                                                               ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
-2                                                               ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
-0.35 0.3 0.35                                                   ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
+2.000 0.000 0.000 0.000 2.000 2.000 1.000 0.000 2.000           ! DRAMP                               - DURATION OF RAMP FUNCTION (IN DAYS)
+0.5 0.5 0                                                       ! A00 B00 C00                         - TIME WEIGHTING FACTORS FOR THE GWCE EQUATION
 0.01 0 0 0.01                                                   ! H0 NODEDRYMIN NODEWETRMP VELMIN    
 -72.47588186015 40.7602221247                                   ! SLAM0 SFEA0                         - CENTER OF CPP PROJECTION (NOT USED IF ICS=1, NTIP=0, NCOR=0)
-0.0025 1 10 0.333333                                            ! CF HBREAK FTHETA FGAMMA            
-5                                                               ! ESL                                 - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
+0.0025                                                          ! FFACTOR                            
+-0.2                                                            ! smagorinsky coefficient             - LATERAL EDDY VISCOSITY COEFFICIENT; IGNORED IF NWP =1
 0                                                               ! CORI                                - CORIOLIS PARAMETER - IGNORED IF NCOR = 1
 5                                                               ! NTIF                                - NUMBER OF TIDAL POTENTIAL CONSTITUENTS BEING FORCED starting 2008082300
 M2
-0.242334 0.000140519 0.693 1.03771 289.717
+0.242334 0.000140519 0.693 1.03771 240.952
 N2
-0.046398 0.00013788 0.693 1.03771 4.91039
+0.046398 0.00013788 0.693 1.03771 289.904
 S2
 0.112841 0.000145444 0.693 1 0
 K1
-0.141565 7.29212E-05 0.736 0.882012 351.701
+0.141565 7.29212E-05 0.736 0.882022 353.662
 O1
-0.100514 6.75977E-05 0.695 0.806444 298.383
+0.100514 6.75977E-05 0.695 0.80646 247.662
 5
 M2
-0.000140519 1.03771 289.717
+0.000140519 1.03771 240.952
 N2
-0.00013788 1.03771 4.91039
+0.00013788 1.03771 289.904
 S2
 0.000145444 1 0
 K1
-7.29212E-05 0.882012 351.701
+7.29212E-05 0.882022 353.662
 O1
-6.75977E-05 0.806444 298.383
+6.75977E-05 0.80646 247.662
 M2
 4.83605669e-01 2.20112655e+02
 4.17823412e-01 3.11130902e+02
@@ -435,8 +437,8 @@ O1
 0                                                               ! NSTAE                               - TOTAL NUMBER OF ELEVATION RECORDING STATIONS
 0 0 0 0                                                         ! NOUTV TOUTSV TOUTFV NSPOOLV         - VELOCITY STATION OUTPUT INFO (UNIT 62)
 0                                                               ! NSTAV                               - TOTAL NUMBER OF VELOCITY RECORDING STATIONS
--5 0.000000 5.000000 300                                        ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE     - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)
--5 0.000000 5.000000 300                                        ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV     - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)
+-5 2.000000 5.000000 450                                        ! NOUTGE TOUTSGE TOUTFGE NSPOOLGE     - GLOBAL ELEVATION OUTPUT INFO (UNIT 63)
+-5 2.000000 5.000000 450                                        ! NOUTGV TOUTSGV TOUTFGV NSPOOLGV     - GLOBAL VELOCITY OUTPUT INFO (UNIT 64)
 0                                                               ! NFREQ                              
 0 0 0 0                                                         ! THAS THAF NHAINC FMV                - HARMONIC ANALYSIS PARAMETERS
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV             - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54

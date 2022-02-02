@@ -1,4 +1,3 @@
-import os
 import shutil
 
 import pytest
@@ -15,7 +14,7 @@ EXAMPLES_DIRECTORY = DATA_DIRECTORY.parent.parent / 'examples'
 
 @pytest.mark.skip
 def test_example_1():
-    reference_directory = REFERENCE_DIRECTORY / 'test_example_1'
+    reference_directory = REFERENCE_DIRECTORY / 'example_1'
     output_directory = OUTPUT_DIRECTORY / 'example_1'
 
     if output_directory.exists():
@@ -31,7 +30,7 @@ def test_example_1():
 
 @pytest.mark.skip
 def test_example_2():
-    reference_directory = REFERENCE_DIRECTORY / 'test_example_2'
+    reference_directory = REFERENCE_DIRECTORY / 'example_2'
     output_directory = OUTPUT_DIRECTORY / 'example_2'
 
     if output_directory.exists():
@@ -46,7 +45,7 @@ def test_example_2():
 
 
 def test_example_3():
-    reference_directory = REFERENCE_DIRECTORY / 'test_example_3'
+    reference_directory = REFERENCE_DIRECTORY / 'example_3'
     output_directory = OUTPUT_DIRECTORY / 'example_3'
 
     if output_directory.exists():
@@ -62,7 +61,7 @@ def test_example_3():
 
 @pytest.mark.skip
 def test_example_4():
-    reference_directory = REFERENCE_DIRECTORY / 'test_example_4'
+    reference_directory = REFERENCE_DIRECTORY / 'example_4'
     output_directory = OUTPUT_DIRECTORY / 'example_4'
 
     if output_directory.exists():
