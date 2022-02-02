@@ -29,8 +29,7 @@ jobs:
         if: contains(matrix.os, 'ubuntu')
         run: sudo apt-get update -y && sudo apt-get install -y libnetcdf-dev libnetcdff-dev
       - name: Install dependencies
-        run: |
-          pip install -e ".[testing,development]"
+        run: pip install ".[testing,development]"
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -38,10 +37,11 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run tests with coverage
-        run: pytest --cov=adcircpy --numprocesses auto
+        run: pytest --numprocesses auto --cov ./
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.9'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2.1.0
         with:
-          flags: python${{ matrix.python-version }}-${{ runner.os }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: .coverage
           fail_ci_if_error: true
