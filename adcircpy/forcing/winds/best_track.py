@@ -185,10 +185,10 @@ class BestTrackForcing(VortexTrack, WindForcing):
             ]
         )
         _switch = True
-        unique_dates = numpy.unique(self.dataframe['datetime'])
+        unique_dates = numpy.unique(self.data['datetime'])
         _found_start_date = False
         for _datetime in unique_dates:
-            records = self.dataframe[self.dataframe['datetime'] == _datetime]
+            records = self.data[self.data['datetime'] == _datetime]
             radii = records['radius_of_last_closed_isobar'].iloc[0]
             radii = 1852.0 * radii  # convert to meters
             lon = records['longitude'].iloc[0]
