@@ -41,7 +41,6 @@ DEPENDENCIES = {
     'seaborn': [],
     'shapely': [],
     'stormevents>=1.2': [],
-    'tropycal': [],
     'utm': [],
     'wget': [],
 }
