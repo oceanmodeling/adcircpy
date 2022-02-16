@@ -391,6 +391,6 @@ driver = AdcircRun(
 driver.write(OUTPUT_DIRECTORY, overwrite=True)
 ```
 
-### Contact
+### Acknowledgements
 
-For questions comments and suggestions, please email me at [jreniel@gmail.com](mailto:jreniel@gmail.com).
+The majority of ADCIRCpy was written by [@jreniel](https://github.com/jreniel).

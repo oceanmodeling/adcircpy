@@ -1,4 +1,5 @@
 import shutil
+import sys
 
 import pytest
 
@@ -44,6 +45,7 @@ def test_example_2():
     )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='test fails on Python < 3.7')
 def test_example_3():
     reference_directory = REFERENCE_DIRECTORY / 'example_3'
     output_directory = OUTPUT_DIRECTORY / 'example_3'

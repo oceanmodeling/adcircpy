@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 
 import shutil
+import sys
+
+import pytest
 
 from adcircpy.cmd import best_track_run
 
@@ -14,6 +17,7 @@ from tests import (
 )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='test fails on Python < 3.7')
 def test_best_track_run(shinnecock_mesh_directory, mocker):
     input_directory = INPUT_DIRECTORY / 'test_best_track_run'
     output_directory = OUTPUT_DIRECTORY / 'test_best_track_run'

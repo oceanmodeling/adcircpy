@@ -2,6 +2,9 @@
 
 from datetime import datetime, timedelta
 import shutil
+import sys
+
+import pytest
 
 from adcircpy.cmd import tidal_run
 from adcircpy.driver import AdcircRun
@@ -17,6 +20,7 @@ from tests import (
 )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='test fails on Python < 3.7')
 def test_tidal_run(shinnecock_mesh_directory):
     output_directory = OUTPUT_DIRECTORY / 'test_tidal_run'
     reference_directory = REFERENCE_DIRECTORY / 'test_tidal_run'
@@ -51,6 +55,7 @@ def test_tidal_run(shinnecock_mesh_directory):
     )
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='test fails on Python < 3.7')
 def test_tidal_run_cli(shinnecock_mesh_directory, mocker):
     output_directory = OUTPUT_DIRECTORY / 'test_tidal_run_cli'
     reference_directory = REFERENCE_DIRECTORY / 'test_tidal_run_cli'

@@ -1,6 +1,9 @@
 # ! /usr/bin/env python
 from copy import copy
 from datetime import datetime, timedelta
+import sys
+
+import pytest
 
 from adcircpy import AdcircMesh, AdcircRun
 from adcircpy.forcing.waves.ww3 import WaveWatch3DataForcing
@@ -52,6 +55,7 @@ def test_slurm_driver(shinnecock_mesh_directory):
     check_reference_directory(output_directory, reference_directory)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 7), reason='test fails on Python < 3.7')
 def test_configuration(shinnecock_mesh_directory):
     output_directory = OUTPUT_DIRECTORY / 'test_configuration'
     reference_directory = REFERENCE_DIRECTORY / 'test_configuration'

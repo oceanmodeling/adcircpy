@@ -3,9 +3,17 @@ from enum import Enum
 import math
 from os import PathLike
 import pathlib
-from typing import Any, Union
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Union
 
+from geopandas import GeoDataFrame
 import numpy as np
+import pandas
+from shapely import ops
+from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry.base import BaseGeometry
+from stormevents import coops_stations, coops_stations_within_region, VortexTrack
+import typepigeon
 
 from adcircpy.mesh.mesh import AdcircMesh
 from adcircpy.utilities import get_logger
@@ -18,6 +26,126 @@ class StationType(Enum):
     VELOCITY = 'NSTAV'
     CONCENTRATION = 'NSTAC'
     METEOROLOGICAL = 'NSTAM'
+
+
+class StationSource(Enum):
+    COOPS = 'CO-OPS'
+
+
+class Stations:
+    def __init__(
+        self,
+        station_types: Union[List[StationSource], Dict[StationSource, List[str]]] = None,
+        station_sources: List[StationSource] = None,
+        region: Polygon = None,
+    ):
+        self.station_types = station_types
+        self.station_sources = station_sources
+        self.region = region
+
+    @classmethod
+    def within_wind_swath(
+        cls,
+        track: VortexTrack,
+        wind_speed: int = None,
+        station_types: Union[List[StationSource], Dict[StationSource, List[str]]] = None,
+        station_sources: List[StationSource] = None,
+    ) -> 'Stations':
+        if wind_speed is None:
+            wind_speed = 34
+
+        combined_wind_swaths = ops.unary_union(list(track.wind_swaths(wind_speed).values()))
+
+        return cls(
+            station_types=station_types,
+            station_sources=station_sources,
+            region=combined_wind_swaths,
+        )
+
+    @property
+    def station_types(self) -> Dict[StationSource, List[str]]:
+        if self.__station_types is None:
+            self.__station_types = list(StationType)
+        if not isinstance(self.__station_types, Mapping):
+            self.__station_types = {
+                station_type: None for station_type in self.__station_types
+            }
+        self.__station_types = typepigeon.convert_value(
+            self.__station_types, {StationType: Any}
+        )
+        return self.__station_types
+
+    @station_types.setter
+    def station_types(self, types: Union[List[StationSource], Dict[StationSource, List[str]]]):
+        self.__station_types = types
+
+    @property
+    def station_sources(self) -> List[StationSource]:
+        if any(not isinstance(source, StationSource) for source in self.__station_sources):
+            self.__station_sources = typepigeon.convert_value(
+                self.__station_sources, [StationSource]
+            )
+        return self.__station_sources
+
+    @station_sources.setter
+    def station_sources(self, sources: List[StationSource]):
+        if sources is None:
+            sources = list(StationSource)
+        self.__station_sources = sources
+
+    @property
+    def region(self) -> Polygon:
+        return self.__region
+
+    @region.setter
+    def region(self, region: Polygon):
+        if not isinstance(region, BaseGeometry):
+            try:
+                region = typepigeon.convert_value(region, MultiPolygon)
+            except ValueError:
+                region = typepigeon.convert_value(region, Polygon)
+        self.__region = region
+
+    @property
+    def stations(self) -> GeoDataFrame:
+        stations = []
+        if StationSource.COOPS in self.station_sources:
+            if self.region is not None:
+                source_stations = coops_stations_within_region(region=self.region)
+            else:
+                source_stations = coops_stations()
+            stations.append(source_stations)
+        return pandas.concat(stations)
+
+    def __str__(self) -> str:
+        stations = self.stations
+
+        lines = []
+
+        for station_type in StationType:
+            if station_type in self.station_types:
+                type_stations = self.station_types[station_type]
+                if type_stations is None:
+                    type_stations = stations.index
+                type_stations = stations.loc[type_stations]
+                lines.append(fort15_line(len(type_stations), name=station_type.value))
+                type_station_locations = pandas.concat(
+                    [type_stations.geometry.x, type_stations.geometry.y], axis=1
+                )
+                lines.extend(
+                    fort15_line(f'{station[0]:<12} {station[1]:<12}', name=station_id)
+                    for station_id, station in type_station_locations.iterrows()
+                )
+
+        return '\n'.join(lines)
+
+    def write(self, path: PathLike, overwrite: bool = False):
+        if not isinstance(path, Path):
+            path = Path(path)
+
+        if not path.exists() or overwrite:
+            with open(path, 'w') as output_file:
+                output_file.write(str(self))
 
 
 class Fort15:
@@ -526,15 +654,9 @@ class Fort15:
         else:
             for index, station_type in enumerate(station_types):
                 if not isinstance(station_type, StationType):
-                    station_type = str(station_type).upper()
-                    try:
-                        station_type = StationType[station_type]
-                    except (KeyError, ValueError):
-                        try:
-                            station_type = StationType(station_type)
-                        except (KeyError, ValueError):
-                            pass
-                station_types[index] = station_type
+                    station_types[index] = typepigeon.convert_value(
+                        str(station_type).upper(), StationType
+                    )
 
         stations = {}
         with open(path, 'r') as stations_file:
