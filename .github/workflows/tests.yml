@@ -10,8 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        # TODO figure out why tests hang forever on Python 3.6
-        python-version: [ '3.7', '3.9' ]
+        python-version: [ '3.6', '3.x' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -37,11 +36,11 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Run tests with coverage
-        run: pytest --numprocesses auto --cov ./
+        run: pytest --numprocesses auto --cov ./ --cov-report xml:coverage.xml
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.9'
+        if: matrix.python-version == '3.x'
         uses: codecov/codecov-action@v2.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: .coverage
+          files: coverage.xml
           fail_ci_if_error: true
