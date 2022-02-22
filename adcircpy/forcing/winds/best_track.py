@@ -14,7 +14,7 @@ from pyproj import CRS, Transformer
 from shapely import ops
 from shapely.geometry import Point, Polygon
 from stormevents.nhc import VortexTrack
-from stormevents.nhc.atcf import ATCF_FileDeck, ATCF_Mode
+from stormevents.nhc.atcf import ATCF_Mode
 from stormevents.nhc.track import read_atcf
 import utm
 
@@ -52,7 +52,7 @@ class BestTrackForcing(VortexTrack, WindForcing):
             storm=storm,
             start_date=start_date,
             end_date=end_date,
-            file_deck=ATCF_FileDeck.b,
+            file_deck='b',
             mode=mode,
             record_type='BEST',
             filename=filename,
