@@ -3,20 +3,19 @@ name: formatting
 on: pull_request
 
 jobs:
-  run-linters:
-    name: Run formatter
+  format:
+    name: format
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: clone repository
         uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v1
-      - name: Install dependencies
-        run: |
-          pip install wheel
-          pip install -e .[development]
-      - name: Run linters / formatters
+      - name: install Python
+        uses: actions/setup-python@v2
+      - name: install dependencies
+        run: pip install ".[development]"
+      - name: run linters / formatters
         uses: wearerequired/lint-action@master
         with:
+          oitnb_command_prefix: isort --fss --fass .;
           oitnb: true
           auto_fix: true
