@@ -7,59 +7,61 @@ on:
 
 jobs:
   build_wheels:
-    name: Python ${{ matrix.python-version }} wheel on ${{ matrix.os }}
+    name: build wheel
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
         python-version: [ '3.x' ]
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v2
-      - name: Install Python
+      - name: install Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Restore cached dependencies
+      - name: load cached `~/.local`
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
-          restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      - name: Install dependencies
-        run: pip install --user --upgrade pip setuptools wheel
-      - name: Build wheel
-        run: python setup.py bdist_wheel
-      - name: Save wheel
+          path: ~/.local
+          key: ${{ runner.os }}-python${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
+          restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
+      - name: build wheel
+        run: pip wheel . -w dist --no-deps
+      - name: save wheel
         uses: actions/upload-artifact@v2
         with:
+          name: build
           path: ./dist/*.whl
   build_sdist:
     name: package source
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: checkout repository
         uses: actions/checkout@v2
-      - name: Install Python
+      - name: install Python
         uses: actions/setup-python@v2
-      - name: Package source
+      - name: install dependencies
+        run: pip install dunamai
+      - name: package source
         run: python setup.py sdist
-      - name: Save source package
+      - name: save source package
         uses: actions/upload-artifact@v2
         with:
+          name: build
           path: ./dist/*.tar.gz
   upload_pypi:
     name: publish to PyPI
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve wheel(s) and source
+      - name: retrieve wheel(s) and source
         uses: actions/download-artifact@v2
         with:
-          name: artifact
+          name: build
           path: dist
-      - name: Upload wheel(s) and source
-        uses: pypa/gh-action-pypi-publish@master
+      - name: upload wheel(s) and source
+        uses: pypa/gh-action-pypi-publish@v1.5.0
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}

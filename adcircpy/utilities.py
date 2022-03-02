@@ -5,10 +5,12 @@ from pathlib import Path
 import sys
 import tarfile
 
-import wget
+import pooch
 
 
-def download_mesh(url: str, directory: PathLike, overwrite: bool = False):
+def download_mesh(
+    url: str, directory: PathLike, known_hash: str = None, overwrite: bool = False
+):
     if not isinstance(directory, Path):
         directory = Path(directory)
     if not directory.exists():
@@ -16,13 +18,19 @@ def download_mesh(url: str, directory: PathLike, overwrite: bool = False):
 
     if not (directory / 'fort.14').exists() or overwrite:
         logging.info(f'downloading mesh files to {directory}')
-        extract_download(url, directory, ['fort.13', 'fort.14'])
+        extract_download(
+            url, directory, ['fort.13', 'fort.14'], known_hash=known_hash, overwrite=overwrite
+        )
 
     return directory
 
 
 def extract_download(
-    url: str, directory: PathLike, filenames: [str] = None, overwrite: bool = False
+    url: str,
+    directory: PathLike,
+    filenames: [str] = None,
+    known_hash: str = None,
+    overwrite: bool = False,
 ):
     if not isinstance(directory, Path):
         directory = Path(directory)
@@ -35,7 +43,7 @@ def extract_download(
 
     temporary_filename = directory / 'temp.tar.gz'
     logging.debug(f'downloading {url} -> {temporary_filename}')
-    wget.download(url, f'{temporary_filename}')
+    temporary_filename = pooch.retrieve(url, known_hash=known_hash, fname=temporary_filename)
     logging.debug(f'extracting {temporary_filename} -> {directory}')
     with tarfile.open(temporary_filename) as local_file:
         if len(filenames) > 0:
@@ -48,8 +56,6 @@ def extract_download(
                         local_file.extract(filename, directory)
         else:
             local_file.extractall(directory)
-
-    os.remove(temporary_filename)
 
 
 def get_logger(

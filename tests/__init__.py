@@ -4,7 +4,6 @@ from pathlib import Path
 import re
 from typing import Dict, List
 
-from filelock import FileLock
 import pytest
 
 from adcircpy.utilities import download_mesh
@@ -18,12 +17,11 @@ REFERENCE_DIRECTORY = DATA_DIRECTORY / 'reference'
 @pytest.fixture
 def shinnecock_mesh_directory(worker_id) -> Path:
     mesh_directory = INPUT_DIRECTORY / 'shinnecock'
-
-    with FileLock(str(mesh_directory) + '.lock'):
-        download_mesh(
-            url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
-            directory=mesh_directory,
-        )
+    download_mesh(
+        url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+        directory=mesh_directory,
+        known_hash='99d764541983bfee60d4176af48ed803d427dea61243fa22d3f4003ebcec98f4',
+    )
 
     return mesh_directory
 
