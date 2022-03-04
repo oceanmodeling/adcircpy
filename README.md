@@ -2,11 +2,11 @@
 
 ### Python library for automating ADCIRC model runs.
 
-[![tests](https://github.com/zacharyburnettNOAA/adcircpy/workflows/tests/badge.svg)](https://github.com/zacharyburnettNOAA/adcircpy/actions?query=workflow%3Atests)
-[![build](https://github.com/zacharyburnettNOAA/adcircpy/workflows/build/badge.svg)](https://github.com/zacharyburnettNOAA/adcircpy/actions?query=workflow%3Abuild)
-[![codecov](https://codecov.io/gh/zacharyburnettNOAA/adcircpy/branch/main/graph/badge.svg?token=BQWB1QKJ3Q)](https://codecov.io/gh/zacharyburnettNOAA/adcircpy)
+[![tests](https://github.com/noaa-ocs-modeling/adcircpy/workflows/tests/badge.svg)](https://github.com/noaa-ocs-modeling/adcircpy/actions?query=workflow%3Atests)
+[![build](https://github.com/noaa-ocs-modeling/adcircpy/workflows/build/badge.svg)](https://github.com/noaa-ocs-modeling/adcircpy/actions?query=workflow%3Abuild)
+[![codecov](https://codecov.io/gh/noaa-ocs-modeling/adcircpy/branch/main/graph/badge.svg?token=BQWB1QKJ3Q)](https://codecov.io/gh/noaa-ocs-modeling/adcircpy)
 [![version](https://img.shields.io/pypi/v/adcircpy)](https://pypi.org/project/adcircpy)
-[![license](https://img.shields.io/github/license/zacharyburnettNOAA/adcircpy)](https://opensource.org/licenses/gpl-license)
+[![license](https://img.shields.io/github/license/noaa-ocs-modeling/adcircpy)](https://opensource.org/licenses/gpl-license)
 [![style](https://sourceforge.net/p/oitnb/code/ci/default/tree/_doc/_static/oitnb.svg?format=raw)](https://sourceforge.net/p/oitnb/code)
 [![documentation](https://readthedocs.org/projects/adcircpy/badge/?version=latest)](https://adcircpy.readthedocs.io/en/latest/?badge=latest)
 
