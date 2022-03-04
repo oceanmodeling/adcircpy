@@ -1,6 +1,6 @@
 # ADCIRCPy
 
-## Python library for automating ADCIRC model runs.
+### Python library for automating ADCIRC model runs.
 
 [![tests](https://github.com/zacharyburnettNOAA/adcircpy/workflows/tests/badge.svg)](https://github.com/zacharyburnettNOAA/adcircpy/actions?query=workflow%3Atests)
 [![build](https://github.com/zacharyburnettNOAA/adcircpy/workflows/build/badge.svg)](https://github.com/zacharyburnettNOAA/adcircpy/actions?query=workflow%3Abuild)
@@ -12,7 +12,16 @@
 
 Documentation can be found at https://adcircpy.readthedocs.io
 
-### Installation notes:
+## Organization / Responsibility
+
+ADCIRCpy is currently maintained by the [Coastal Marine Modeling Branch (CMMB)](https://coastaloceanmodels.noaa.gov) of the
+Office of Coast Survey (OCS), a part of the [National Oceanic and Atmospheric Administration (NOAA)](https://www.noaa.gov), an
+agency of the United States federal government. It was majorly developed by [@jreniel](https://github.com/jreniel).
+
+- Zachary Burnett (**lead**) - zachary.burnett@noaa.gov
+- Jaime Calzada - jrcalzada@vims.edu
+
+## Installation
 
 Please use a virtual environment with Python>=3.6. You may use conda or the OS's Python to provide a virtual environment for
 the application.
@@ -31,7 +40,9 @@ Alternatively, you many manually install the repo by cloning it and then running
 pip install .
 ```
 
-### Command Line:
+## Usage
+
+### Command Line Interface (CLI)
 
 This program exposes a few commands available from the command line interface. You may pass the `-h` flag to any of this
 commands to explore their functionality.
@@ -45,9 +56,9 @@ commands to explore their functionality.
 * `plot_fort61`
 * `fort63`
 
-#### Command line examples:
+#### examples
 
-##### Generate tidal constituent template from command line
+##### generate tidal constituent template
 
 You can quickly create a tidal component table for your your mesh by executing the `tide_gen` command and by passing a mesh, a
 start date and number of run days as arguments. This functions sources data from
@@ -62,7 +73,7 @@ tide_gen \
     --mesh-crs='epsg:4326'
 ```
 
-##### Hurricane Sandy (AL182012)
+##### run best-track run for Hurricane Sandy (AL182012)
 
 To create the ADCIRC input files includes both tides and storm data for Hurricane Sandy:
 <!--pytest-codeblocks:skip-->
@@ -87,7 +98,7 @@ required for correct operation. [EPSG:4326](https://spatialreference.org/ref/eps
 lat/lon). Note that the backlash represents "continue on next line" for the shell. You may write the command above on a single
 line after excluding the backslashes.
 
-##### Quick plots
+##### plot results
 
 These are two examples for doing quick plots with the package. These are given here as illustrative examples only. There is
 support for more file types than this examples, but the program does not yet support every output input/output file type. As a
@@ -104,9 +115,9 @@ plot_fort61 /path/to/fort.61.nc MSL --show --coops-only
 plot_mesh /path/to/fort.14 --show-elements
 ```
 
-### Python API:
+### Python API
 
-See the [examples](examples) directory for usage examples.
+See the [examples](./examples) directory for usage examples.
 
 #### `example_1.py`
 
@@ -120,22 +131,24 @@ The following code builds a simple ADCIRC run configuration by doing the followi
 
 ```python
 from datetime import datetime, timedelta
-import logging
 from pathlib import Path
 import shutil
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.utilities import download_mesh
+from adcircpy.utilities import download_mesh, get_logger
+
+LOGGER = get_logger(__name__)
 
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input' / 'shinnecock'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_1'
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
 
 download_mesh(
-    url=MESH_URL, directory=MESH_DIRECTORY,
+    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+    directory=MESH_DIRECTORY,
+    known_hash='99d764541983bfee60d4176af48ed803d427dea61243fa22d3f4003ebcec98f4',
 )
 
 # open mesh file
@@ -176,7 +189,7 @@ if shutil.which('padcirc') is not None:
 elif shutil.which('adcirc') is not None:
     driver.run(OUTPUT_DIRECTORY, overwrite=True, nproc=1)
 else:
-    logging.warning(
+    LOGGER.warning(
         'ADCIRC binaries were not found in PATH. '
         'ADCIRC will not run. Writing files to disk...'
     )
@@ -189,24 +202,26 @@ The following code is similar to `example_1.py`, above, except it adds a static 
 
 ```python
 from datetime import datetime, timedelta
-import logging
 from pathlib import Path
 import shutil
 
 import numpy
 
 from adcircpy import AdcircMesh, AdcircRun, Tides
-from adcircpy.utilities import download_mesh
+from adcircpy.utilities import download_mesh, get_logger
+
+LOGGER = get_logger(__name__)
 
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_2'
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
 
 download_mesh(
-    url=MESH_URL, directory=MESH_DIRECTORY,
+    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+    directory=MESH_DIRECTORY,
+    known_hash='99d764541983bfee60d4176af48ed803d427dea61243fa22d3f4003ebcec98f4',
 )
 
 # open mesh file
@@ -248,7 +263,7 @@ if shutil.which('padcirc') is not None:
 elif shutil.which('adcirc') is not None:
     driver.run(OUTPUT_DIRECTORY, overwrite=True, nproc=1)
 else:
-    logging.warning(
+    LOGGER.warning(
         'ADCIRC binaries were not found in PATH. '
         'ADCIRC will not run. Writing files to disk...'
     )
@@ -271,13 +286,14 @@ from adcircpy.utilities import download_mesh
 
 DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
-OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'test_example_3'
+OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_3'
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
 
 download_mesh(
-    url=MESH_URL, directory=MESH_DIRECTORY,
+    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+    directory=MESH_DIRECTORY,
+    known_hash='99d764541983bfee60d4176af48ed803d427dea61243fa22d3f4003ebcec98f4',
 )
 
 # open mesh file
@@ -296,12 +312,12 @@ mesh.add_forcing(wind_forcing)
 slurm = SlurmConfig(
     account='account',
     ntasks=1000,
-    run_name='adcircpy/examples/test_example_3.py',
+    run_name='adcircpy/examples/example_3.py',
     partition='partition',
     walltime=timedelta(hours=8),
     mail_type='all',
     mail_user='example@email.gov',
-    log_filename='test_example_3.log',
+    log_filename='example_3.log',
     modules=['intel/2020', 'impi/2020', 'netcdf/4.7.2-parallel'],
     path_prefix='$HOME/adcirc/build',
 )
@@ -337,11 +353,12 @@ DATA_DIRECTORY = Path(__file__).parent.absolute() / 'data'
 INPUT_DIRECTORY = DATA_DIRECTORY / 'input'
 OUTPUT_DIRECTORY = DATA_DIRECTORY / 'output' / 'example_4'
 
-MESH_URL = 'https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1'
 MESH_DIRECTORY = INPUT_DIRECTORY / 'shinnecock'
 
 download_mesh(
-    url=MESH_URL, directory=MESH_DIRECTORY,
+    url='https://www.dropbox.com/s/1wk91r67cacf132/NetCDF_shinnecock_inlet.tar.bz2?dl=1',
+    directory=MESH_DIRECTORY,
+    known_hash='99d764541983bfee60d4176af48ed803d427dea61243fa22d3f4003ebcec98f4',
 )
 
 # open mesh file
@@ -391,6 +408,25 @@ driver = AdcircRun(
 driver.write(OUTPUT_DIRECTORY, overwrite=True)
 ```
 
-### Acknowledgements
+## Citation
 
-The majority of ADCIRCpy was written by [@jreniel](https://github.com/jreniel).
+```
+Calzada, J., Burnett, Z., Moghimi, S., Myers, E., & Pe’eri, S. (2021). ADCIRCpy: A Python API to generate ADCIRC model input files (Technical Memorandum No. 41; NOAA NOS OCS). National Oceanic and Atmospheric Administation.
+```
+
+```bibtex
+@techreport{calzadaADCIRCpyPythonAPI2021,
+    type = {Technical {{Memorandum}}},
+    title = {{{ADCIRCpy}}: A {{Python API}} to Generate {{ADCIRC}} Model Input Files},
+    author = {Calzada, Jaime and Burnett, Zachary and Moghimi, Saeed and Myers, Edward and Pe'eri, Shachak},
+    year = {2021},
+    month = dec,
+    number = {41},
+    institution = {{National Oceanic and Atmospheric Administation}},
+    abstract = {The Advanced Circulation Model (ADCIRC) is a Fortran program used for modeling ocean circulation due to tides, surface waves and atmospheric forcings. However, the input formats and configuration are inflexible and not straight forward for operational implementation, making rapid iteration of model testing, ensemble configuration, and model coupling complicated. Here, we introduce a flexible abstraction of model inputs and outputs written in Python, called ADCIRCpy, that provides a simpler user interface for automatically generating ADCIRC configuration to a variety of inputs and model scenarios. This documentation outlines 1. the needs for such an abstraction, 2. the peculiarities and challenges with the ADCIRC model that necessitate custom logic, and 3. methodologies for generalizing user input in such a way as to make generating model configurations consistent, fast, and efficient.}
+}
+```
+
+## Acknowledgements
+
+The majority of ADCIRCpy was written by Jaime Calzada [@jreniel](https://github.com/jreniel).
