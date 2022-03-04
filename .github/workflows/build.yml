@@ -20,12 +20,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: load cached `~/.local`
+      - name: load cached Python installation
+        id: cache
         uses: actions/cache@v2
         with:
-          path: ~/.local
-          key: ${{ runner.os }}-python${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
-          restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
+          path: ${{ env.pythonLocation }}
+          key: build-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
       - name: build wheel
         run: pip wheel . -w dist --no-deps
       - name: save wheel

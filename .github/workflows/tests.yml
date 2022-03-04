@@ -16,13 +16,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: load cached `~/.local`
+      - name: load cached Python installation
+        id: cache
         uses: actions/cache@v2
         with:
-          path: ~/.local
-          key: ${{ runner.os }}-python${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
-          restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
+          path: ${{ env.pythonLocation }}
+          key: lint-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
       - name: install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: pip install ".[development]"
       - name: lint with flake8
         run: |
@@ -45,16 +46,25 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: load cached `~/.local`
+      - name: load cached Python installation
+        id: cache
         uses: actions/cache@v2
         with:
-          path: ~/.local
-          key: ${{ runner.os }}-python${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
-          restore-keys: ${{ runner.os }}-python${{ matrix.python-version }}-
-      - name: install `pipwin` on Windows
-        if: contains(matrix.os, 'windows')
-        run: pip install pipwin
+          path: ${{ env.pythonLocation }}
+          key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
       - name: install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: pip install ".[testing]"
       - name: run tests
+        if: matrix.python-version != '3.x' || matrix.os != 'ubuntu-latest'
         run: pytest --numprocesses auto
+      - name: run tests with coverage
+        if: matrix.python-version == '3.x' && matrix.os == 'ubuntu-latest'
+        run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
+      - name: upload coverage to Codecov
+        if: matrix.python-version == '3.x' && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v2.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          fail_ci_if_error: true
