@@ -1,5 +1,6 @@
 from datetime import datetime
 import io
+import logging
 import os
 from os import PathLike
 import pathlib
@@ -20,9 +21,6 @@ import utm
 
 from adcircpy.forcing.winds.base import WindForcing
 from adcircpy.plotting import plot_coastline, plot_polygon, plot_polygons
-from adcircpy.utilities import get_logger
-
-LOGGER = get_logger(__name__)
 
 
 class BestTrackForcing(VortexTrack, WindForcing):
@@ -87,7 +85,7 @@ class BestTrackForcing(VortexTrack, WindForcing):
                 with open(output, 'w+') as fh:
                     fh.write(summary)
             else:
-                LOGGER.warning(f'skipping existing file "{output}"')
+                logging.debug(f'skipping existing file "{output}"')
         return summary
 
     @property

@@ -1,4 +1,5 @@
 from io import StringIO
+import logging
 import os
 import pathlib
 from typing import Iterable, Union
@@ -8,10 +9,6 @@ import numpy as np  # type: ignore[import]
 import pandas
 from pyproj import CRS  # type: ignore[import]
 from pyproj.exceptions import CRSError  # type: ignore[import]
-
-from adcircpy.utilities import get_logger
-
-LOGGER = get_logger(__name__)
 
 
 def read_fort14(filename: os.PathLike):
@@ -292,4 +289,4 @@ def write(grd, path, overwrite=False):
         with open(path, 'w') as f:
             f.write(to_string(**grd))
     else:
-        LOGGER.warning(f'skipping existing file "{path}"')
+        logging.debug(f'skipping existing file "{path}"')

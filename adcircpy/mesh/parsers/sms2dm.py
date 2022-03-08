@@ -1,11 +1,8 @@
 from datetime import datetime
 from enum import Enum
+import logging
 from os import PathLike
 import pathlib
-
-from adcircpy.utilities import get_logger
-
-LOGGER = get_logger(__name__)
 
 
 class MeshGeometryType(Enum):
@@ -66,35 +63,35 @@ def write(mesh: {str: {str: (float, float)}}, path: PathLike, overwrite: bool = 
             f.write('MESH2D\n')
 
             if len(triangles) > 0:
-                LOGGER.info('writing triangles')
+                logging.debug('writing triangles')
                 start_time = datetime.now()
                 triangles.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                LOGGER.info(f'wrote triangles in {datetime.now() - start_time}')
+                logging.debug(f'wrote triangles in {datetime.now() - start_time}')
 
             if len(quadrilaterals) > 0:
-                LOGGER.info('writing quadrilaterals')
+                logging.debug('writing quadrilaterals')
                 start_time = datetime.now()
                 quadrilaterals.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                LOGGER.info(f'wrote quadrilaterals in {datetime.now() - start_time}')
+                logging.debug(f'wrote quadrilaterals in {datetime.now() - start_time}')
 
-            LOGGER.info('writing nodes')
+            logging.debug('writing nodes')
             start_time = datetime.now()
             nodes.to_string(
                 f, header=False, index=False, justify='left', float_format=float_format
             )
             f.write('\n')
-            LOGGER.info(f'wrote nodes in {datetime.now() - start_time}')
+            logging.debug(f'wrote nodes in {datetime.now() - start_time}')
 
             if boundaries in mesh:
-                LOGGER.info('writing boundaries')
+                logging.debug('writing boundaries')
                 start_time = datetime.now()
                 boundaries.to_string(f, header=False, index=False, justify='left')
                 f.write('\n')
-                LOGGER.info(f'wrote boundaries in {datetime.now() - start_time}')
+                logging.debug(f'wrote boundaries in {datetime.now() - start_time}')
 
         return 0  # for unittests
     else:
-        LOGGER.warning(f'skipping existing file "{path}"')
+        logging.debug(f'skipping existing file "{path}"')
         return 1
