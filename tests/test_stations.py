@@ -1,4 +1,4 @@
-from stormevents import VortexTrack
+from stormevents.nhc import VortexTrack
 
 from adcircpy.fort15 import Stations
 from tests import check_reference_directory, OUTPUT_DIRECTORY, REFERENCE_DIRECTORY

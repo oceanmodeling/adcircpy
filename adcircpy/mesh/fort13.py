@@ -1,11 +1,8 @@
+import logging
 import pathlib
 from typing import Mapping
 
 import numpy as np
-
-from adcircpy.utilities import get_logger
-
-LOGGER = get_logger(__name__)
 
 
 class NodalAttributes:
@@ -187,7 +184,7 @@ class NodalAttributes:
             if attribute not in self._attributes:
                 self.add_attribute(attribute, data['units'])
             else:
-                LOGGER.warning(f'overwriting existing attribute "{attribute}"')
+                logging.debug(f'overwriting existing attribute "{attribute}"')
             self.set_attribute(attribute, full_values)
 
     def write(self, path, overwrite=False):
@@ -198,7 +195,7 @@ class NodalAttributes:
                 with open(path, 'w') as f:
                     f.write(str(self))
             else:
-                LOGGER.warning(f'skipping existing file "{path}"')
+                logging.debug(f'skipping existing file "{path}"')
         else:
             print(str(self))
 

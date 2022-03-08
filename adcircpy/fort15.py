@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
+import logging
 import math
 from os import PathLike
 import pathlib
@@ -12,13 +13,11 @@ import pandas
 from shapely import ops
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.geometry.base import BaseGeometry
-from stormevents import coops_stations, coops_stations_within_region, VortexTrack
+from stormevents.coops import coops_stations, coops_stations_within_region
+from stormevents.nhc import VortexTrack
 import typepigeon
 
 from adcircpy.mesh.mesh import AdcircMesh
-from adcircpy.utilities import get_logger
-
-LOGGER = get_logger(__name__)
 
 
 class StationType(Enum):
@@ -570,7 +569,7 @@ class Fort15:
             with open(path, 'w', newline='\n') as f:
                 f.write(self.fort15(runtype))
         else:
-            LOGGER.warning(f'skipping existing file "{path}"')
+            logging.debug(f'skipping existing file "{path}"')
 
     def get_tidal_forcing(self) -> str:
         f = []
