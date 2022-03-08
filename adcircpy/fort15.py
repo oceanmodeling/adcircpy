@@ -12,7 +12,8 @@ import pandas
 from shapely import ops
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.geometry.base import BaseGeometry
-from stormevents import coops_stations, coops_stations_within_region, VortexTrack
+from stormevents.coops import coops_stations, coops_stations_within_region
+from stormevents.nhc import VortexTrack
 import typepigeon
 
 from adcircpy.mesh.mesh import AdcircMesh
