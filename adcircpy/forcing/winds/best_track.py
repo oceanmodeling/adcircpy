@@ -24,43 +24,51 @@ from adcircpy.plotting import plot_coastline, plot_polygons
 
 class BestTrackForcing(VortexTrack, WindForcing):
     def __init__(
-            self,
-            storm: Union[str, PathLike, DataFrame, io.BytesIO],
-            nws: int = None,
-            interval_seconds: int = None,
-            start_date: datetime = None,
-            end_date: datetime = None,
-            mode: ATCF_Mode = None,
+        self,
+        storm: Union[str, PathLike, DataFrame, io.BytesIO],
+        nws: int = None,
+        interval_seconds: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+        mode: ATCF_Mode = None,
     ):
         if nws is None:
             nws = 20
 
         valid_nws_values = [8, 19, 20]
         assert (
-                nws in valid_nws_values
+            nws in valid_nws_values
         ), f'ATCF BestTrack can only use `nws` values in {valid_nws_values}'
 
         if interval_seconds is None:
             interval_seconds = 3600
 
         VortexTrack.__init__(
-                self,
-                storm=storm,
-                start_date=start_date,
-                end_date=end_date,
-                file_deck='b',
-                mode=mode,
-                record_type='BEST',
+            self,
+            storm=storm,
+            start_date=start_date,
+            end_date=end_date,
+            file_deck='b',
+            mode=mode,
+            record_type='BEST',
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
     @classmethod
-    def from_fort22(cls, fort22: PathLike, nws: int = None) -> 'WindForcing':
-        return cls.from_file(fort22)
+    def from_fort22(
+        cls,
+        fort22: PathLike,
+        nws: int = None,
+        interval_seconds: int = None,
+        start_date: datetime = None,
+        end_date: datetime = None,
+    ) -> 'WindForcing':
+        instance = cls.from_file(path=fort22, start_date=start_date, end_date=end_date)
+        WindForcing.__init__(instance, nws=nws, interval_seconds=interval_seconds)
+        return instance
 
     def summary(
-            self, output: Union[str, os.PathLike] = None,
-            overwrite: bool = False,
+        self, output: Union[str, os.PathLike] = None, overwrite: bool = False,
     ):
         min_storm_speed = numpy.min(self.data['speed'])
         max_storm_speed = numpy.max(self.data['speed'])
@@ -69,8 +77,7 @@ class BestTrackForcing(VortexTrack, WindForcing):
         min_central_pressure = numpy.min(self.data['central_pressure'])
         max_wind_speed = numpy.max(self.data['max_sustained_wind_speed'])
         start_loc = (self.data['longitude'][0], self.data['latitude'][0])
-        end_loc = (
-        self.data['longitude'].iloc[-1], self.data['latitude'].iloc[-1])
+        end_loc = (self.data['longitude'].iloc[-1], self.data['latitude'].iloc[-1])
         f = [
             f'Summary of storm: {self.nhc_code}',
             f'min./max. track speed: {min_storm_speed} m/s, {max_storm_speed} m/s',
@@ -136,13 +143,13 @@ class BestTrackForcing(VortexTrack, WindForcing):
         msg = f'bbox must be a {Bbox} instance.'
         assert isinstance(bbox, Bbox), msg
         bbox_pol = Polygon(
-                [
-                    [bbox.xmin, bbox.ymin],
-                    [bbox.xmax, bbox.ymin],
-                    [bbox.xmax, bbox.ymax],
-                    [bbox.xmin, bbox.ymax],
-                    [bbox.xmin, bbox.ymin],
-                ]
+            [
+                [bbox.xmin, bbox.ymin],
+                [bbox.xmax, bbox.ymin],
+                [bbox.xmax, bbox.ymax],
+                [bbox.xmin, bbox.ymax],
+                [bbox.xmin, bbox.ymin],
+            ]
         )
         _switch = True
         unique_dates = numpy.unique(self.data['datetime'])
@@ -159,8 +166,7 @@ class BestTrackForcing(VortexTrack, WindForcing):
             transformer = Transformer.from_crs(df_crs, utm_crs, always_xy=True)
             p = Point(*transformer.transform(lon, lat))
             pol = p.buffer(radii)
-            transformer = Transformer.from_crs(utm_crs, bbox_crs,
-                                               always_xy=True)
+            transformer = Transformer.from_crs(utm_crs, bbox_crs, always_xy=True)
             pol = ops.transform(transformer.transform, pol)
             if _switch is True:
                 if not pol.intersects(bbox_pol):
@@ -179,16 +185,15 @@ class BestTrackForcing(VortexTrack, WindForcing):
                     break
 
         if _found_start_date is False:
-            raise Exception(
-                f'No data within mesh bounding box for storm {self.storm_id}.')
+            raise Exception(f'No data within mesh bounding box for storm {self.storm_id}.')
 
     def plot_track(
-            self,
-            axis: Axis = None,
-            show: bool = False,
-            color: str = 'k',
-            coastline: bool = True,
-            **kwargs,
+        self,
+        axis: Axis = None,
+        show: bool = False,
+        color: str = 'k',
+        coastline: bool = True,
+        **kwargs,
     ):
         kwargs.update({'color': color})
         if axis is None:
@@ -202,7 +207,7 @@ class BestTrackForcing(VortexTrack, WindForcing):
             axis.quiver(row['longitude'], row['latitude'], U, V, **kwargs)
             if i % 6 == 0:
                 axis.annotate(
-                        row['datetime'], (row['longitude'], row['latitude']),
+                    row['datetime'], (row['longitude'], row['latitude']),
                 )
         if show:
             axis.axis('scaled')
@@ -216,6 +221,6 @@ class BestTrackForcing(VortexTrack, WindForcing):
         plot_polygons(isotachs)
         plot_polygons(swath)
         pyplot.suptitle(
-                f'{self.nhc_code} - isotach {isotach} kt ({self.start_date} - {self.end_date})'
+            f'{self.nhc_code} - isotach {isotach} kt ({self.start_date} - {self.end_date})'
         )
         pyplot.show()

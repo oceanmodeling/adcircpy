@@ -17,7 +17,7 @@ class Forcing(ABC):
 
     @interval.setter
     def interval(self, interval: timedelta):
-        if not isinstance(interval, timedelta):
+        if interval is not None and not isinstance(interval, timedelta):
             interval = timedelta(seconds=interval)
         self.__interval = interval
 
