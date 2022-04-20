@@ -53,7 +53,9 @@ class Stations:
         if wind_speed is None:
             wind_speed = 34
 
-        combined_wind_swaths = ops.unary_union(list(track.wind_swaths(wind_speed)['BEST'].values()))
+        combined_wind_swaths = ops.unary_union(
+            list(track.wind_swaths(wind_speed)['BEST'].values())
+        )
 
         return cls(
             station_types=station_types,
