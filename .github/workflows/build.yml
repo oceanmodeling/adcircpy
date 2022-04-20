@@ -6,62 +6,19 @@ on:
       - published
 
 jobs:
-  build_wheels:
-    name: build wheel
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-        python-version: [ '3.x' ]
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v2
-      - name: install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.pythonLocation }}
-          key: build-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml', 'setup.*') }}
-      - name: build wheel
-        run: pip wheel . -w dist --no-deps
-      - name: save wheel
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: ./dist/*.whl
-  build_sdist:
-    name: package source
+  publish:
+    name: publish package to PyPI
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
         uses: actions/checkout@v2
-      - name: install Python
-        uses: actions/setup-python@v2
-      - name: install dependencies
+      - name: install Poetry
+        uses: abatilo/actions-poetry@v2.1.3
+      - name: install Dunamai
         run: pip install dunamai
-      - name: package source
-        run: python setup.py sdist
-      - name: save source package
-        uses: actions/upload-artifact@v2
-        with:
-          name: build
-          path: ./dist/*.tar.gz
-  upload_pypi:
-    name: publish to PyPI
-    needs: [ build_wheels, build_sdist ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: retrieve wheel(s) and source
-        uses: actions/download-artifact@v2
-        with:
-          name: build
-          path: dist
-      - name: upload wheel(s) and source
-        uses: pypa/gh-action-pypi-publish@v1.5.0
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+      - name: extract version from VCS
+        run: poetry version $(dunamai from any)
+      - name: build wheel and source
+        run: poetry build
+      - name: upload wheel and source
+        run: poetry publish --username __token__ --password ${{ secrets.PYPI_TOKEN }}

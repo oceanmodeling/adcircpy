@@ -2,14 +2,11 @@ name: tests
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
     paths:
       - '**.py'
-      - '.github/workflows/tests.yml'
-  pull_request:
-    branches:
-      - main
+      - '.github/workflows/tests_simple.yml'
 
 jobs:
   lint:
@@ -39,35 +36,6 @@ jobs:
   test:
     needs: lint
     name: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-latest ]
-        python-version: [ '3.6', '3.7', '3.8', '3.9', '3.x' ]
-        exclude:
-          - os: macos-latest
-            python-version: '3.x'
-    steps:
-      - name: clone repository
-        uses: actions/checkout@v2
-      - name: install Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.pythonLocation }}
-          key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      - name: install dependencies
-        run: pip install ".[testing]"
-      - name: run tests
-        run: pytest --numprocesses auto
-  test_with_coverage:
-    needs: [ lint, test ]
-    name: test with coverage
     runs-on: ubuntu-latest
     steps:
       - name: clone repository
@@ -82,13 +50,5 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install dependencies
         run: pip install ".[testing]"
-      - name: run tests with coverage
-        run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
-      - name: show coverage report
-        run: coverage report
-      - name: upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
-          fail_ci_if_error: true
+      - name: run tests
+        run: pytest --numprocesses auto
