@@ -33,7 +33,7 @@ pyproj = '>=2.6'
 requests = '*'
 scipy = '*'
 shapely = '*'
-stormevents = '>=1.3.0'
+stormevents = '^1.4.0'
 utm = '*'
 isort = { version = '*', optional = true }
 oitnb = { version = '*', optional = true }
