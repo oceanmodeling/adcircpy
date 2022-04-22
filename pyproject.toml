@@ -28,6 +28,7 @@ netCDF4 = '*'
 numpy = '*'
 pandas = '*'
 paramiko = '*'
+pooch = '*'
 psutil = '*'
 pyproj = '>=2.6'
 requests = '*'
@@ -37,7 +38,6 @@ stormevents = '^1.4.0'
 utm = '*'
 isort = { version = '*', optional = true }
 oitnb = { version = '*', optional = true }
-pooch = { version = '*', optional = true }
 pytest = { version = '*', optional = true }
 pytest-cov = { version = '*', optional = true }
 pytest-mock = { version = '*', optional = true }
