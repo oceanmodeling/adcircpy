@@ -50,7 +50,7 @@ sphinxcontrib-programoutput = { version = '*', optional = true }
 sphinxcontrib-bibtex = { version = '*', optional = true }
 
 [tool.poetry.extras]
-testing = ['pooch', 'pytest', 'pytest-cov', 'pytest-mock', 'pytest-socket', 'pytest-xdist']
+testing = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-socket', 'pytest-xdist']
 development = ['isort', 'oitnb']
 documentation = ['m2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput', 'sphinxcontrib-bibtex']
 
