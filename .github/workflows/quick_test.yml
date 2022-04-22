@@ -1,4 +1,4 @@
-name: tests
+name: quick test
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - '**.py'
-      - '.github/workflows/tests_simple.yml'
+      - '.github/workflows/quick_test.yml'
       - 'pyproject.toml'
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
         run: oitnb . --check
   test:
     needs: lint
-    name: test
+    name: quick test
     runs-on: ubuntu-latest
     steps:
       - name: clone repository
