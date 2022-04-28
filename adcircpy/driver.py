@@ -38,6 +38,26 @@ class AdcircRun(Fort15):
         self._netcdf = netcdf
         self._server_config = server_config
 
+    @classmethod
+    def from_file(
+        cls,
+        filename: os.PathLike,
+        start_date: datetime = None,
+        mesh: AdcircMesh = None,
+        end_date: datetime = None,
+        spinup_time: timedelta = None,
+        netcdf: bool = True,
+        server_config: Union[int, SSHConfig, SlurmConfig] = None,
+    ) -> 'AdcircRun':
+        instance = Fort15.from_file(filename=filename)
+        instance.__class__ = cls
+        instance._start_date = start_date
+        instance._end_date = end_date
+        instance._spinup_time = spinup_time
+        instance._netcdf = netcdf
+        instance._server_config = server_config
+        return instance
+
     def add_elevation_output_station(
         self,
         station_name: str,

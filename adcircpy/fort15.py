@@ -154,6 +154,184 @@ class Fort15:
         self._mesh = mesh
         self._runtype = None
 
+    @classmethod
+    def from_file(cls, filename: PathLike, mesh: AdcircMesh = None,) -> 'Fort15':
+        instance = cls(mesh=mesh)
+        with open(filename) as input_file:
+            for line in input_file.readlines():
+                line = parse_fort15_line(line)
+                names = line['name'].split()
+                values = line['value'].split()
+                if 'RUNDES' in names:
+                    instance.RUNDES = values[0]
+                elif 'RUNID' in names:
+                    instance.RUNID = values[0]
+                elif 'NFOVER' in names:
+                    instance.NFOVER = values[0]
+                elif 'NABOUT' in names:
+                    instance.NABOUT = values[0]
+                elif 'NSCREEN' in names:
+                    instance.NSCREEN = values[0]
+                elif 'IHOT' in names:
+                    instance._IHOT = values[0]
+                elif 'ICS' in names:
+                    instance.ICS = values[0]
+                elif 'IM' in names:
+                    instance._IM = values[0]
+                elif 'IDEN' in names:
+                    instance.IDEN = values[0]
+                elif 'NOLIBF' in names:
+                    instance.NOLIBF = values[0]
+                elif 'NOLIFA' in names:
+                    instance.NOLIFA = values[0]
+                elif 'NOLICA' in names:
+                    instance.NOLICA = values[0]
+                elif 'NOLICAT' in names:
+                    instance.NOLICAT = values[0]
+                elif 'NWP' in names:
+                    instance._NWP = values[0]
+                elif 'NCOR' in names:
+                    instance.NCOR = values[0]
+                elif 'NTIP' in names:
+                    instance.NTIP = values[0]
+                elif 'NWS' in names:
+                    instance._NRS = int(values[0] / 100)
+                    instance._NWS = values[0] % 100
+                elif 'NRAMP' in names:
+                    instance._NRAMP = values[0]
+                elif 'G' in names:
+                    instance.G = values[0]
+                elif 'TAU0' in names:
+                    instance.TAU0 = values[0]
+                elif 'Tau0FullDomainMin Tau0FullDomainMax' in names:
+                    instance.Tau0FullDomainMin, instance.Tau0FullDomainMin = values
+                elif 'DTDP' in names:
+                    instance.DTDP = values[0]
+                elif 'STATIM' in names:
+                    instance.STATIM = values[0]
+                elif 'REFTIM' in names:
+                    instance.REFTIM = values[0]
+                elif 'WTIMINC' in names:
+                    instance._WTIMINC = values[0]
+                    if 'RSTIMINC' in names:
+                        instance._RSTIMINC = values[1]
+                elif 'RNDAY' in names:
+                    instance._RNDAY = values[0]
+                elif 'DRAMP' in names:
+                    instance.DRAMP = values[0]
+                elif 'A00' in names:
+                    instance._A00 = values[0]
+                elif 'H0' in names:
+                    instance.H0 = values[0]
+                elif 'SLAM0' in names:
+                    instance.SLAM0 = values[0]
+                elif 'FFACTOR' in names:
+                    instance.FFACTOR = values[0]
+                elif 'ESLM' in names:
+                    instance.ESLM = values[0]
+                elif 'CORI' in names:
+                    instance.CORI = values[0]
+                elif 'ANGINN' in names:
+                    instance.ANGINN = values[0]
+                elif 'NOUTE' in names:
+                    (
+                        instance._NOUTE,
+                        instance._TOUTSE,
+                        instance._TOUTFE,
+                        instance._NSPOOLE,
+                    ) = values
+                elif 'NSTAE' in names:
+                    instance._NSTAE = values[0]
+                elif 'NOUTV' in names:
+                    (
+                        instance._NOUTV,
+                        instance._TOUTSV,
+                        instance._TOUTFV,
+                        instance._NSPOOLV,
+                    ) = values
+                elif 'NSTAV' in names:
+                    instance._NSTAV = values[0]
+                elif 'NOUTC' in names:
+                    (
+                        instance._NOUTC,
+                        instance._TOUTSC,
+                        instance._TOUTFC,
+                        instance._NSPOOLC,
+                    ) = values
+                elif 'NSTAC' in names:
+                    instance._NSTAC = values[0]
+                elif 'NOUTM' in names:
+                    (
+                        instance._NOUTM,
+                        instance._TOUTSM,
+                        instance._TOUTFM,
+                        instance._NSPOOLM,
+                    ) = values
+                elif 'NSTAM' in names:
+                    instance._NSTAM = values[0]
+                elif 'NOUTGE' in names:
+                    (
+                        instance._NOUTGE,
+                        instance._TOUTSGE,
+                        instance._TOUTFGE,
+                        instance._NSPOOLGE,
+                    ) = values
+                elif 'NOUTGV' in names:
+                    (
+                        instance._NOUTGV,
+                        instance._TOUTSGV,
+                        instance._TOUTFGV,
+                        instance._NSPOOLGV,
+                    ) = values
+                elif 'NOUTGC' in names:
+                    (
+                        instance._NOUTGC,
+                        instance._TOUTSGC,
+                        instance._TOUTFGC,
+                        instance._NSPOOLGC,
+                    ) = values
+                elif 'NOUTGM' in names:
+                    (
+                        instance._NOUTGM,
+                        instance._TOUTSGM,
+                        instance._TOUTFGM,
+                        instance._NSPOOLGM,
+                    ) = values
+                elif 'NFREQ' in names:
+                    instance._NFREQ = values[0]
+                elif 'THAS' in names:
+                    instance.THAS, instance.THAF, instance.NHAINC, instance.FMV = values
+                elif 'NHASE' in names:
+                    instance._NHASE, instance._NHASV, instance._NHAGE, instance._NHAGV = values
+                elif 'NHSTAR' in names:
+                    instance.NHSTAR, instance.NHSINC = values
+                elif 'ITITER' in names:
+                    instance.ITITER, instance.ISLDIA, instance.CONVCR, instance.ITMAX = values
+                elif 'NCPROJ' in names:
+                    instance.NCPROJ = values[0]
+                elif 'NCINST' in names:
+                    instance.NCINST = values[0]
+                elif 'NCSOUR' in names:
+                    instance.NCSOUR = values[0]
+                elif 'NCHIST' in names:
+                    instance.NCHIST = values[0]
+                elif 'NCREF' in names:
+                    instance.NCREF = values[0]
+                elif 'NCCOM' in names:
+                    instance.NCCOM = values[0]
+                elif 'NCHOST' in names:
+                    instance.NCHOST = values[0]
+                elif 'NCONV' in names:
+                    instance.NCONV = values[0]
+                elif 'NCCONT' in names:
+                    instance.NCCONT = values[0]
+                elif 'NCDATE' in names:
+                    instance._NCDATE = values[0]
+                elif '&' in names[0]:
+                    instance.namelists[names[0].strip('&')] = dict(
+                        name.split('=') for name in names[1:-1]
+                    )
+
     @property
     def mesh(self) -> AdcircMesh:
         return self._mesh
@@ -2724,3 +2902,22 @@ def fort15_line(value: Any, name: str = None, description: str = None) -> str:
         if description is not None:
             line += f' - {description}'
     return line
+
+
+def parse_fort15_line(line: str, to_type: type = None) -> Dict[str, Any]:
+    name = None
+    description = None
+
+    if '!' in line:
+        value, comment = line.split('!')
+        comment = comment.strip()
+        if ' - ' in comment:
+            name, description = comment.split(' - ')
+    else:
+        value = line
+
+    value = value.strip()
+    if to_type is not None:
+        value = typepigeon.convert_value(value, to_type)
+
+    return {'value': value, 'name': name, 'description': description}
