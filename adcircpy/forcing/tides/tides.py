@@ -545,7 +545,7 @@ class Tides(bctypes.EtaBc):
 
     @property
     def major_constituents(self) -> [str]:
-        return ['Q1', 'O1', 'P1', 'K1', 'N2', 'S2', 'K2', 'M2']
+        return ['Q1', 'O1', 'P1', 'K1', 'N2', 'S2', 'M2']
 
     @property
     def constituents(self) -> [str]:
