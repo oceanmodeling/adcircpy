@@ -58,13 +58,13 @@ class HAMTIDE(TidalDataset):
     @property
     def x(self) -> np.ndarray:
         if not hasattr(self, '_x'):
-            self._x = Dataset(self._prepend_path('k2.hamtide11a.nc'))['LON'][:].data
+            self._x = Dataset(self._prepend_path('m2.hamtide11a.nc'))['LON'][:].data
         return self._x
 
     @property
     def y(self) -> np.ndarray:
         if not hasattr(self, '_y'):
-            self._y = Dataset(self._prepend_path('k2.hamtide11a.nc'))['LAT'][:].data
+            self._y = Dataset(self._prepend_path('m2.hamtide11a.nc'))['LAT'][:].data
         return self._y
 
     @property
