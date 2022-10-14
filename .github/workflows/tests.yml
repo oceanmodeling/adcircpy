@@ -21,12 +21,8 @@ jobs:
         uses: actions/checkout@v3
       - name: install Python
         uses: actions/setup-python@v4
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v3
         with:
-          path: ${{ env.pythonLocation }}
-          key: lint-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+          cache: 'pip'
       - name: install linters
         run: pip install flake8 oitnb
       - name: lint with flake8
@@ -55,12 +51,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.pythonLocation }}
-          key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+          cache: 'pip'
       - name: install dependencies
         run: pip install ".[testing]"
       - name: run tests
@@ -74,12 +65,8 @@ jobs:
         uses: actions/checkout@v3
       - name: install Python
         uses: actions/setup-python@v4
-      - name: load cached Python installation
-        id: cache
-        uses: actions/cache@v3
         with:
-          path: ${{ env.pythonLocation }}
-          key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+          cache: 'pip'
       - name: install dependencies
         run: pip install ".[testing]"
       - name: run tests with coverage
