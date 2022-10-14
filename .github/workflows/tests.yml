@@ -18,6 +18,6 @@ jobs:
             -O https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide//m2.hamtide11a.nc \
             -o /tmp/by_curl.nc
       - name: pytest
-        rnu: |
+        run: |
           pytest tests test_github_action.py
 
