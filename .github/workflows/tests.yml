@@ -1,76 +1,23 @@
 name: tests
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - '**.py'
-      - '.github/workflows/tests.yml'
-      - 'pyproject.toml'
-  pull_request:
-    branches:
-      - main
+on: [push]
 
 jobs:
-  lint:
-    name: lint
+  wget:
+    name: test-nc
     runs-on: ubuntu-latest
     steps:
-      - name: clone repository
-        uses: actions/checkout@v3
       - name: install Python
         uses: actions/setup-python@v4
-      - name: install linters
-        run: pip install flake8 oitnb
-      - name: lint with flake8
+      - name: install pkgs
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: lint with oitnb
-        run: oitnb . --check
-  test:
-    needs: lint
-    name: test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-latest ]
-        python-version: [ '3.7', '3.8', '3.9', '3.x' ]
-        exclude:
-          - os: macos-latest
-            python-version: '3.x'
-    steps:
-      - name: clone repository
-        uses: actions/checkout@v3
-      - name: install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: install dependencies
-        run: pip install ".[testing]"
-      - name: run tests
-        run: pytest --numprocesses auto
-  test_with_coverage:
-    needs: [ lint, test ]
-    name: test with coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: clone repository
-        uses: actions/checkout@v3
-      - name: install Python
-        uses: actions/setup-python@v4
-      - name: install dependencies
-        run: pip install ".[testing]"
-      - name: run tests with coverage
-        run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
-      - name: show coverage report
-        run: coverage report
-      - name: upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
-          fail_ci_if_error: true
+          pip install hdf5 netCDF4 xarray pytest pydap
+      - name: bare curl
+        run: |
+          curl \
+            -O https://icdc.cen.uni-hamburg.de/thredds/dodsC/ftpthredds/hamtide//m2.hamtide11a.nc \
+            -o /tmp/by_curl.nc
+      - name: pytest
+        rnu: |
+          pytest tests test_github_action.py
+
