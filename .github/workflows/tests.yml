@@ -3,7 +3,7 @@ name: tests
 on: [push]
 
 jobs:
-  wget:
+  mytest:
     name: test-nc
     runs-on: ubuntu-latest
     steps:
@@ -11,7 +11,7 @@ jobs:
         uses: actions/setup-python@v4
       - name: install pkgs
         run: |
-          pip install hdf5 netCDF4 xarray pytest pydap
+          pip install netCDF4 xarray pytest pydap
       - name: bare curl
         run: |
           curl \
