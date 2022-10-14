@@ -21,7 +21,7 @@ enable = true
 [tool.poetry.dependencies]
 python = '^3.6'
 appdirs = '*'
-geopandas = '*'
+geopandas = '<0.11'
 haversine = '*'
 matplotlib = '*'
 netCDF4 = '<1.6'
