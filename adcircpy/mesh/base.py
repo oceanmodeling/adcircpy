@@ -460,17 +460,17 @@ class Grd(ABC):
     @figure
     def tricontourf(self, axes=None, show=True, figsize=None, cbar=False, **kwargs):
         if len(self.triangles) > 0:
-            values = self.values.values # this is a numpy array
+            values = self.values.values  # this is a numpy array
             if values.shape[1] > 1:
                 values = np.linalg.norm(values, ord=2, axis=1)
             get_idx = self.elements.get_index_by_id
             ax = axes.tricontourf(
-                    self.x,
-                    self.y,
-                    [[get_idx(n_id) for n_id in tri] for tri in self.triangles.values],
-                    values.squeeze(),
-                    **kwargs
-                )
+                self.x,
+                self.y,
+                [[get_idx(n_id) for n_id in tri] for tri in self.triangles.values],
+                values.squeeze(),
+                **kwargs,
+            )
             if cbar is True:
                 plt.colorbar(ax)
         return axes
@@ -478,14 +478,17 @@ class Grd(ABC):
     @figure
     def tripcolor(self, axes=None, show=True, figsize=None, **kwargs):
         if len(self.triangles) > 0:
-            values = self.values.values # this is a numpy array
+            values = self.values.values  # this is a numpy array
             if values.shape[1] > 1:
                 values = np.linalg.norm(values, ord=2, axis=1)
             get_idx = self.elements.get_index_by_id
             axes.tripcolor(
-                self.x, self.y,
+                self.x,
+                self.y,
                 [[get_idx(n_id) for n_id in tri] for tri in self.triangles.values],
-                values.squeeze(), **kwargs)
+                values.squeeze(),
+                **kwargs,
+            )
         return axes
 
     @figure
@@ -497,9 +500,11 @@ class Grd(ABC):
             kwargs.update({'color': color})
             get_idx = self.elements.get_index_by_id
             axes.triplot(
-                self.x, self.y,
+                self.x,
+                self.y,
                 [[get_idx(n_id) for n_id in tri] for tri in self.triangles.values],
-                **kwargs)
+                **kwargs,
+            )
         return axes
 
     @figure
