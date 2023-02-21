@@ -26,14 +26,20 @@ class BaseBoundaries:
     @property
     def indexes(self):
         if not hasattr(self, '_indexes'):
-            self._indexes = [self._mesh.nodes.index[data['node_id']] for data in self._data]
-        return np.array(self._indexes)
+            self._indexes = [
+                [
+                    self._mesh.nodes.index.get_loc(int(node_id))
+                    for node_id in data['node_id']
+                ]
+                for data in self._data.values()
+            ]
+        return self._indexes
 
     @property
     def node_id(self):
         if not hasattr(self, '_node_id'):
             self._node_id = list()
-            for data in self._data:
+            for data in self._data.values():
                 self._node_id.append(data['node_id'])
         return self._node_id
 
@@ -41,11 +47,11 @@ class BaseBoundaries:
     def gdf(self):
         if not hasattr(self, '_gdf'):
             data = []
-            for i, boundary in enumerate(self._data):
+            for i, boundary in enumerate(self._data.values()):
                 data.append(
                     {
                         'geometry': LineString(
-                            self._mesh.coords.loc[self.indexes[i], :].values
+                            self._mesh.coords.iloc[self.indexes[i], :].values
                         ),
                         'key': f'{boundary.get("ibtype")}:{id}',
                         'indexes': self.indexes[i],
@@ -141,7 +147,13 @@ class Fort14Boundaries:
     @property
     def ocean(self):
         if not hasattr(self, '_ocean'):
-            self._ocean = OceanBoundaries(self._mesh, self._data.get(None, {}))
+            self._ocean = OceanBoundaries(
+                self._mesh,
+                {
+                    en: bdry
+                    for en, bdry in enumerate(self._data.get(None, []))
+                }
+            )
         return self._ocean
 
     @property
@@ -182,11 +194,12 @@ class Fort14Boundaries:
 
     def _aggregate_boundaries(self, endswith):
         boundaries = {}
+
         for ibtype, _boundaries in self._data.items():
             if ibtype is None:
                 continue
             if ibtype.endswith(endswith):
-                for bdata in list(_boundaries.values()):
+                for bdata in _boundaries:
                     boundaries.update({len(boundaries) + 1: {'ibtype': ibtype, **bdata,}})
         return boundaries
 
