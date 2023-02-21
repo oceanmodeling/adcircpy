@@ -27,10 +27,7 @@ class BaseBoundaries:
     def indexes(self):
         if not hasattr(self, '_indexes'):
             self._indexes = [
-                [
-                    self._mesh.nodes.index.get_loc(int(node_id))
-                    for node_id in data['node_id']
-                ]
+                [self._mesh.nodes.index.get_loc(int(node_id)) for node_id in data['node_id']]
                 for data in self._data.values()
             ]
         return self._indexes
@@ -148,11 +145,7 @@ class Fort14Boundaries:
     def ocean(self):
         if not hasattr(self, '_ocean'):
             self._ocean = OceanBoundaries(
-                self._mesh,
-                {
-                    en: bdry
-                    for en, bdry in enumerate(self._data.get(None, []))
-                }
+                self._mesh, {en: bdry for en, bdry in enumerate(self._data.get(None, []))}
             )
         return self._ocean
 
