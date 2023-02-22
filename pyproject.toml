@@ -35,6 +35,7 @@ requests = '*'
 scipy = '*'
 shapely = '*'
 stormevents = '^1.4.0'
+typepigeon = '<2' # newer versions require code update
 utm = '*'
 isort = { version = '*', optional = true }
 oitnb = { version = '*', optional = true }
