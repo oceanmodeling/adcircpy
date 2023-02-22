@@ -52,6 +52,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install libhdf5-dev
+          sudo apt install libnetcdf-dev
           pip install ".[testing]"
       - name: run tests
         run: pytest --numprocesses auto

@@ -83,6 +83,7 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install libhdf5-dev
+          sudo apt install libnetcdf-dev
           pip install ".[testing]"
       - name: run tests with coverage
         run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
