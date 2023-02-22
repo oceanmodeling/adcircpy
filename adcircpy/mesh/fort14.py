@@ -44,13 +44,13 @@ class BaseBoundaries:
     def gdf(self):
         if not hasattr(self, '_gdf'):
             data = []
-            for i, boundary in enumerate(self._data.values()):
+            for i, (bnd_id, boundary) in enumerate(self._data.items()):
                 data.append(
                     {
                         'geometry': LineString(
                             self._mesh.coords.iloc[self.indexes[i], :].values
                         ),
-                        'key': f'{boundary.get("ibtype")}:{id}',
+                        'key': f'{boundary.get("ibtype")}:{bnd_id}',
                         'indexes': self.indexes[i],
                         **boundary,
                     }
