@@ -463,9 +463,7 @@ class Grd(ABC):
             values = self.values.values  # this is a numpy array
             if values.shape[1] > 1:
                 values = np.linalg.norm(values, ord=2, axis=1)
-            # TODO: This might be wrong, we need NODE index from ID, not
-            # ELEMENT's
-            get_idx = self.elements.get_index_by_id
+            get_idx = self.nodes.index.get_loc
             ax = axes.tricontourf(
                 self.x,
                 self.y,
@@ -483,9 +481,7 @@ class Grd(ABC):
             values = self.values.values  # this is a numpy array
             if values.shape[1] > 1:
                 values = np.linalg.norm(values, ord=2, axis=1)
-            # TODO: This might be wrong, we need NODE index from ID, not
-            # ELEMENT's
-            get_idx = self.elements.get_index_by_id
+            get_idx = self.nodes.index.get_loc
             axes.tripcolor(
                 self.x,
                 self.y,
@@ -502,9 +498,7 @@ class Grd(ABC):
         if len(self.triangles) > 0:
             kwargs.update({'linewidth': linewidth})
             kwargs.update({'color': color})
-            # TODO: This might be wrong, we need NODE index from ID, not
-            # ELEMENT's
-            get_idx = self.elements.get_index_by_id
+            get_idx = self.nodes.index.get_loc
             axes.triplot(
                 self.x,
                 self.y,
