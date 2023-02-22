@@ -82,7 +82,7 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install dependencies
         run: |
-          apt install libhdf5-dev
+          sudo apt install libhdf5-dev
           pip install ".[testing]"
       - name: run tests with coverage
         run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
