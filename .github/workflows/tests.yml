@@ -62,7 +62,10 @@ jobs:
           path: ${{ env.pythonLocation }}
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install dependencies
-        run: pip install ".[testing]"
+        run: |
+          sudo apt install libhdf5-dev
+          sudo apt install libnetcdf-dev
+          pip install ".[testing]"
       - name: run tests
         run: pytest --numprocesses auto
   test_with_coverage:
