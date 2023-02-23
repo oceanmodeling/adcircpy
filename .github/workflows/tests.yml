@@ -61,11 +61,18 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      - name: install dependencies
+      - name: install linux dependencies
         run: |
           sudo apt install libhdf5-dev
           sudo apt install libnetcdf-dev
-          pip install ".[testing]"
+        if: runner.os == 'Linux'
+      - name: install macos dependencies
+        run: |
+          brew install hdf5
+          brew install netcdf
+        if: runner.os == 'macOS'
+      - name: install repo
+        run: pip install ".[testing]"
       - name: run tests
         run: pytest --numprocesses auto
   test_with_coverage:
@@ -83,11 +90,18 @@ jobs:
         with:
           path: ${{ env.pythonLocation }}
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      - name: install dependencies
+      - name: install linux dependencies
         run: |
           sudo apt install libhdf5-dev
           sudo apt install libnetcdf-dev
-          pip install ".[testing]"
+        if: runner.os == 'Linux'
+      - name: install macos dependencies
+        run: |
+          brew install hdf5
+          brew install netcdf
+        if: runner.os == 'macOS'
+      - name: install repo
+        run: pip install ".[testing]"
       - name: run tests with coverage
         run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
       - name: show coverage report
