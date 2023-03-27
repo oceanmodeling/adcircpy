@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'adcircpy'
-version = '0.0.0'
+version = '1.2.3'
 description = 'Python package for working with ADCIRC input and output files'
 authors = ['Zach Burnett <zachary.burnett@noaa.gov>', 'Jaime R Calzada <jreniel@gmail.com>']
 license = 'GPL-3.0-or-later'
@@ -34,7 +34,7 @@ pyproj = '>=2.6'
 requests = '*'
 scipy = '*'
 shapely = '*'
-stormevents = '^1.4.0'
+stormevents = '>=1.4.0'
 typepigeon = '<2' # newer versions require code update
 utm = '*'
 isort = { version = '*', optional = true }
