@@ -63,6 +63,7 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install linux dependencies
         run: |
+          sudo apt update
           sudo apt install libhdf5-dev
           sudo apt install libnetcdf-dev
         if: runner.os == 'Linux'
@@ -92,6 +93,7 @@ jobs:
           key: test-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
       - name: install linux dependencies
         run: |
+          sudo apt update
           sudo apt install libhdf5-dev
           sudo apt install libnetcdf-dev
         if: runner.os == 'Linux'
