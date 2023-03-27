@@ -5,7 +5,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import pandas
-from stormevents.coops import COOPS_Station
+from searvey.coops import COOPS_Station
 
 from adcircpy.outputs import Fort61
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'adcircpy'
-version = '1.2.3'
+version = '0.0.0'
 description = 'Python package for working with ADCIRC input and output files'
 authors = ['Zach Burnett <zachary.burnett@noaa.gov>', 'Jaime R Calzada <jreniel@gmail.com>']
 license = 'GPL-3.0-or-later'
@@ -19,7 +19,7 @@ build-backend = 'poetry.core.masonry.api'
 enable = true
 
 [tool.poetry.dependencies]
-python = '^3.6'
+python = '^3.8'
 appdirs = '*'
 geopandas = '<0.11'
 haversine = '*'
@@ -33,8 +33,9 @@ psutil = '*'
 pyproj = '>=2.6'
 requests = '*'
 scipy = '*'
+searvey = '*'
 shapely = '*'
-stormevents = '>=1.4.0'
+stormevents = '>=2'
 typepigeon = '<2' # newer versions require code update
 utm = '*'
 isort = { version = '*', optional = true }
