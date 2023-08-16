@@ -224,7 +224,7 @@ class AdcircMesh(metaclass=AdcircMeshMeta):
                 for idx in v:
                     x1, y1 = points.iloc[idx].values
                     self._node_distances_in_meters[k][idx] = haversine(
-                        (x0, y0), (x1, y1), unit=Unit.METERS
+                        (y0, x0), (y1, x1), unit=Unit.METERS
                     )
         return self._node_distances_in_meters
 
