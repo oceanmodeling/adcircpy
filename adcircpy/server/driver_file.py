@@ -164,6 +164,8 @@ class DriverFile:
                     'aswip\n'
                     f'mv NWS_{self._driver.NWS}_fort.22 fort.22\n'
                 )
+            elif self._driver.NWS in [8]:
+                f += 'ln -sf ../fort.22 ./fort.22\n'
             else:
                 msg = f'unsupported NWS value {self._driver.NWS}'
                 raise NotImplementedError(msg)
