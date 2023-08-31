@@ -29,6 +29,8 @@ class BestTrackForcing(VortexTrack, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
+        *args,
+        **kwargs,
     ):
         if nws is None:
             nws = 20
