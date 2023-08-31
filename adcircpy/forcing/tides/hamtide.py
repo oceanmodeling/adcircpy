@@ -113,21 +113,25 @@ class HAMTIDE(TidalDataset):
         dy = (self.y[-1] - self.y[0]) / len(self.y)
         yidx = np.logical_and(self.y >= np.min(yq) - 2.0 * dy, self.y <= np.max(yq) + 2.0 * dy)
         xi, yi = np.meshgrid(self.x[xidx], self.y[yidx])
-        xi = xi.flatten()
-        yi = yi.flatten()
         dataset = self._get_dataset(variable, constituent)
-        zi = dataset[netcdf_variable][yidx, xidx].flatten()
+        zi = dataset[netcdf_variable][yidx, xidx]
+        mask = ~zi.mask
+        if mask.size == 1:
+            mask = np.array(zi * mask, dtype=bool)
+        xi = xi[mask].flatten()
+        yi = yi[mask].flatten()
+        zi = zi[mask].flatten()
         values = griddata(
-            (xi[~zi.mask], yi[~zi.mask]),
-            zi[~zi.mask],
+            (xi, yi),
+            zi,
             (xq, yq),
             method='linear',
             fill_value=np.nan,
         )
         nan_idxs = np.where(np.isnan(values))
         values[nan_idxs] = griddata(
-            (xi[~zi.mask], yi[~zi.mask]),
-            zi[~zi.mask],
+            (xi, yi),
+            zi,
             (xq[nan_idxs], yq[nan_idxs]),
             method='nearest',
         )
