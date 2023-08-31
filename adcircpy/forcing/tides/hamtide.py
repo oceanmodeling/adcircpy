@@ -121,19 +121,10 @@ class HAMTIDE(TidalDataset):
         xi = xi[mask].flatten()
         yi = yi[mask].flatten()
         zi = zi[mask].flatten()
-        values = griddata(
-            (xi, yi),
-            zi,
-            (xq, yq),
-            method='linear',
-            fill_value=np.nan,
-        )
+        values = griddata((xi, yi), zi, (xq, yq), method='linear', fill_value=np.nan,)
         nan_idxs = np.where(np.isnan(values))
         values[nan_idxs] = griddata(
-            (xi, yi),
-            zi,
-            (xq[nan_idxs], yq[nan_idxs]),
-            method='nearest',
+            (xi, yi), zi, (xq[nan_idxs], yq[nan_idxs]), method='nearest',
         )
         return values
 
