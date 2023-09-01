@@ -1,4 +1,4 @@
-created on 2023-02-23 16:47                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2023-09-01 11:20                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER
@@ -17,7 +17,7 @@ Shinacock Inlet Coarse Grid                                     ! RUNID         
 1                                                               ! NRAMP                               - RAMP FUNCTION OPTION
 9.81                                                            ! G                                   - ACCELERATION DUE TO GRAVITY - DETERMINES UNITS
 0.005                                                           ! TAU0                                - WEIGHTING FACTOR IN GWCE; original, 0.005
-2.510781                                                        ! DTDP                                - TIME STEP (IN SECONDS)
+2.613217                                                        ! DTDP                                - TIME STEP (IN SECONDS)
 0                                                               ! STATIM                              - STARTING TIME (IN DAYS)
 0                                                               ! REFTIM                              - REFERENCE TIME (IN DAYS)
 15                                                              ! RNDAY                               - TOTAL LENGTH OF SIMULATION (IN DAYS)
@@ -680,7 +680,7 @@ K2
 0                                                               ! NFREQ                              
 0 0 0 0                                                         ! THAS THAF NHAINC FMV                - HARMONIC ANALYSIS PARAMETERS
 0 0 0 0                                                         ! NHASE NHASV NHAGE NHAGV             - CONTROL HARMONIC ANALYSIS AND OUTPUT TO UNITS 51,52,53,54
-5 516174                                                        ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
+5 495940                                                        ! NHSTAR NHSINC                       - HOT START FILE GENERATION PARAMETERS
 1 0 1E-08 25                                                    ! ITITER ISLDIA CONVCR ITMAX          - ALGEBRAIC SOLUTION PARAMETERS
                                                                 ! NCPROJ                              - PROJECT TITLE
                                                                 ! NCINST                              - PROJECT INSTITUTION
