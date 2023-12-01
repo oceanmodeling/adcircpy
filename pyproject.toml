@@ -54,7 +54,7 @@ sphinxcontrib-bibtex = { version = '*', optional = true }
 [tool.poetry.extras]
 testing = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-socket', 'pytest-xdist']
 development = ['isort', 'oitnb']
-documentation = ['m2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput', 'sphinxcontrib-bibtex']
+documentation = ['dunamai', 'm2r2', 'sphinx', 'sphinx-rtd-theme', 'sphinxcontrib-programoutput', 'sphinxcontrib-bibtex']
 
 [tool.poetry.scripts]
 tidal_run = 'adcircpy.cmd.tidal_run:main'
