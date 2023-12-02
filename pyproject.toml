@@ -2,7 +2,11 @@
 name = 'adcircpy'
 version = '0.0.0'
 description = 'Python package for working with ADCIRC input and output files'
-authors = ['Zach Burnett <zachary.burnett@noaa.gov>', 'Jaime R Calzada <jreniel@gmail.com>']
+authors = [
+    'Zach Burnett <zachary.r.burnett@gmail.com>',
+    'Jaime R Calzada <jreniel@gmail.com>',
+    'Soroosh Mani <Soroosh.Mani@noaa.gov>',
+]
 license = 'GPL-3.0-or-later'
 readme = 'README.md'
 repository = 'https://github.com/noaa-ocs-modeling/adcircpy.git'
@@ -21,6 +25,7 @@ enable = true
 [tool.poetry.dependencies]
 python = '^3.8'
 appdirs = '*'
+dunamai = { version = '*', optional = true }
 geopandas = '<0.11'
 haversine = '*'
 matplotlib = '*'
