@@ -18,6 +18,3 @@ python:
       path: .
       extra_requirements:
         - documentation
-
-formats:
-  - pdf
