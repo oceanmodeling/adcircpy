@@ -75,7 +75,9 @@ jobs:
           brew install netcdf
         if: runner.os == 'macOS'
       - name: install repo
-        run: pip install ".[testing]"
+        run: |
+          pip install ".[testing]"
+          python -m pip install --upgrade --force-reinstall --no-deps --no-cache-dir netcdf4 --no-binary netcdf4
       - name: run tests
         run: pytest --numprocesses auto
   test_with_coverage:
