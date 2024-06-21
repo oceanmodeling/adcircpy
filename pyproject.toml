@@ -28,7 +28,7 @@ appdirs = '*'
 dunamai = { version = '*', optional = true }
 geopandas = '<0.11'
 haversine = '*'
-matplotlib = '*'
+matplotlib = '<3.9'
 netCDF4 = '*'
 numpy = '*'
 pandas = '*'
