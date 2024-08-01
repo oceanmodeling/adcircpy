@@ -55,7 +55,9 @@ class BaseBoundaries:
                         **boundary,
                     }
                 )
-            self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
+            self._gdf = GeoDataFrame()
+            if len(data) > 0:
+                self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
     def __eq__(self, other: 'BaseBoundaries') -> bool:
@@ -97,7 +99,9 @@ class BarrierBaseBoundaries(BaseBoundaries):
                         **boundary,
                     }
                 )
-            self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
+            self._gdf = GeoDataFrame()
+            if len(data) > 0:
+                self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
 

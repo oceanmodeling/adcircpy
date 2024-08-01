@@ -7,8 +7,7 @@ import os
 import pathlib
 from typing import Hashable, Mapping, Union
 
-import geopandas as gpd
-from geopandas import GeoDataFrame
+from geopandas import tools, GeoDataFrame
 from matplotlib.collections import PolyCollection
 from matplotlib.path import Path
 import matplotlib.pyplot as plt
@@ -187,7 +186,9 @@ class Elements:
                 }
                 for id, element in self.elements.iterrows()
             ]
-            self._gdf = gpd.GeoDataFrame(data, crs=self.crs)
+            self._gdf = GeoDataFrame()
+            if len(data) > 0:
+                self._gdf = GeoDataFrame(data, crs=self.crs)
         return self._gdf
 
 
@@ -209,6 +210,8 @@ class Hull:
                         'type': ring.type,
                     }
                 )
+        if len(data) == 0:
+            return GeoDataFrame()
         return GeoDataFrame(data, crs=self._grd.crs)
 
 
@@ -217,7 +220,7 @@ class Rings:
         self._grd = grd
 
     @lru_cache(maxsize=1)
-    def __call__(self) -> gpd.GeoDataFrame:
+    def __call__(self) -> GeoDataFrame:
         data = []
         for bnd_id, rings in self.sorted().items():
             geometry = LinearRing(self._grd.coords.iloc[rings['exterior'][:, 0], :].values)
@@ -225,6 +228,8 @@ class Rings:
             for interior in rings['interiors']:
                 geometry = LinearRing(self._grd.coords.iloc[interior[:, 0], :].values)
                 data.append({'geometry': geometry, 'bnd_id': bnd_id, 'type': 'interior'})
+        if len(data) == 0:
+            return GeoDataFrame()
         return GeoDataFrame(data, crs=self._grd.crs)
 
     def exterior(self):
@@ -258,6 +263,8 @@ class Rings:
                     'bnd_id': bnd_id,
                 }
             )
+        if len(data) == 0:
+            return GeoDataFrame()
         return GeoDataFrame(data, crs=self._grd.crs)
 
     @property
@@ -265,6 +272,8 @@ class Rings:
         data = []
         for exterior in self.rings().loc[self.rings()['type'] == 'exterior'].itertuples():
             data.append({'geometry': Polygon(exterior.geometry.coords)})
+        if len(data) == 0:
+            return GeoDataFrame()
         return GeoDataFrame(data, crs=self._grd.crs)
 
     @property
@@ -272,18 +281,14 @@ class Rings:
         data = []
         for interior in self.rings().loc[self.rings()['type'] == 'interior'].itertuples():
             data.append({'geometry': Polygon(interior.geometry.coords)})
+        if len(data) == 0:
+            return GeoDataFrame()
         return GeoDataFrame(data, crs=self._grd.crs)
 
     @property
     def implode(self) -> GeoDataFrame:
-        return GeoDataFrame(
-            {
-                'geometry': MultiPolygon(
-                    [polygon.geometry for polygon in self.geodataframe.itertuples()]
-                )
-            },
-            crs=self._grd.crs,
-        )
+        return tools.collect(self.geodataframe)
+
 
     @property
     @lru_cache(maxsize=1)
