@@ -26,9 +26,9 @@ enable = true
 python = '^3.8, <3.12'
 appdirs = '*'
 dunamai = { version = '*', optional = true }
-geopandas = '<0.11'
+geopandas = '*'
 haversine = '*'
-matplotlib = '<3.9'
+matplotlib = '*'
 netCDF4 = '*'
 numpy = '*'
 pandas = '*'
