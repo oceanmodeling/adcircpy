@@ -1,6 +1,6 @@
 from typing import Union
 
-import geopandas as gpd
+from geopandas import GeoDataFrame
 from matplotlib.cm import ScalarMappable
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -57,7 +57,7 @@ class BaseBoundaries:
                 )
             self._gdf = GeoDataFrame()
             if len(data) > 0:
-                self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
+                self._gdf = GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
     def __eq__(self, other: 'BaseBoundaries') -> bool:
@@ -101,7 +101,7 @@ class BarrierBaseBoundaries(BaseBoundaries):
                 )
             self._gdf = GeoDataFrame()
             if len(data) > 0:
-                self._gdf = gpd.GeoDataFrame(data, crs=self._mesh.crs)
+                self._gdf = GeoDataFrame(data, crs=self._mesh.crs)
         return self._gdf
 
 
