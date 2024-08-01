@@ -8,7 +8,7 @@ import appdirs
 import geopandas
 from matplotlib import pyplot
 from matplotlib.axes import Axes
-from matplotlib.cm import get_cmap
+from matplotlib import colormaps
 import numpy
 import requests
 from shapely.geometry import MultiPoint, MultiPolygon, Polygon
@@ -92,7 +92,7 @@ def plot_polygons(
         colors = [kwargs['c'] for _ in range(len(geometries))]
     elif colors is None:
         colors = [
-            get_cmap('gist_rainbow')(color_index / len(geometries))
+            colormaps['gist_rainbow'](color_index / len(geometries))
             for color_index in range(len(geometries))
         ]
 
