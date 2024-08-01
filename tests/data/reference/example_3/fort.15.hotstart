@@ -1,4 +1,4 @@
-created on 2023-09-01 11:21                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
+created on 2024-08-01 09:48                                     ! RUNDES                              - 32 CHARACTER ALPHANUMERIC RUN DESCRIPTION
 Shinacock Inlet Coarse Grid                                     ! RUNID                               - 24 CHARACTER ALPANUMERIC RUN IDENTIFICATION
 1                                                               ! NFOVER                              - NONFATAL ERROR OVERRIDE OPTION
 1                                                               ! NABOUT                              - ABREVIATED OUTPUT OPTION PARAMETER

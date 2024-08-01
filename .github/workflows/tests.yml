@@ -22,7 +22,7 @@ jobs:
       - name: install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'
       - name: load cached Python installation
         id: cache
         uses: actions/cache@v3
@@ -46,10 +46,10 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
-        python-version: [ '3.8', '3.9', '3.10', '3.x' ]
+        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
         exclude:
           - os: macos-latest
-            python-version: '3.x'
+            python-version: '3.11'
     steps:
       - name: clone repository
         uses: actions/checkout@v3
@@ -75,7 +75,9 @@ jobs:
           brew install netcdf
         if: runner.os == 'macOS'
       - name: install repo
-        run: pip install ".[testing]"
+        run: |
+          pip install ".[testing]"
+          python -m pip install --upgrade --force-reinstall --no-deps --no-cache-dir netcdf4 --no-binary netcdf4
       - name: run tests
         run: pytest --numprocesses auto
   test_with_coverage:
@@ -88,7 +90,7 @@ jobs:
       - name: install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: '3.11'
       - name: load cached Python installation
         id: cache
         uses: actions/cache@v3
@@ -107,7 +109,9 @@ jobs:
           brew install netcdf
         if: runner.os == 'macOS'
       - name: install repo
-        run: pip install ".[testing]"
+        run: |
+          pip install ".[testing]"
+          python -m pip install --upgrade --force-reinstall --no-deps --no-cache-dir netcdf4 --no-binary netcdf4
       - name: run tests with coverage
         run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
       - name: show coverage report
