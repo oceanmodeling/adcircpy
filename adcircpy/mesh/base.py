@@ -289,7 +289,6 @@ class Rings:
     def implode(self) -> GeoDataFrame:
         return tools.collect(self.geodataframe)
 
-
     @property
     @lru_cache(maxsize=1)
     def multipolygon(self) -> MultiPolygon:
