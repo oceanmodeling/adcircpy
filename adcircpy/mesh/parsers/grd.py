@@ -21,7 +21,7 @@ def read_fort14(filename: os.PathLike):
         with StringIO('\n'.join(file.readline() for _ in range(num_nodes))) as nodes_stream:
             output['nodes'] = pandas.read_csv(
                 nodes_stream,
-                delim_whitespace=True,
+                sep='\s+',
                 index_col=0,
                 names=[
                     'id',
@@ -36,7 +36,7 @@ def read_fort14(filename: os.PathLike):
         ) as elements_stream:
             output['elements'] = pandas.read_csv(
                 elements_stream,
-                delim_whitespace=True,
+                sep='\s+',
                 index_col=0,
                 names=['id', 'n', *(f'node_{node_index}' for node_index in range(1, 10))],
             )
