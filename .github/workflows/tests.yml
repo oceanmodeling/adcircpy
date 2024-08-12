@@ -116,9 +116,8 @@ jobs:
         run: pytest --numprocesses auto --cov . --cov-report xml:coverage.xml
       - name: show coverage report
         run: coverage report
-      - name: upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
           fail_ci_if_error: true
