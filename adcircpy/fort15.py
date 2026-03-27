@@ -171,10 +171,10 @@ class Fort15:
         f.extend(
             [
                 fort15_line(
-                    self.RUNDES, 'RUNDES', '32 CHARACTER ALPHANUMERIC RUN DESCRIPTION'
+                    self.RUNDES
                 ),
                 fort15_line(
-                    self.RUNID, 'RUNID', '24 CHARACTER ALPANUMERIC RUN IDENTIFICATION'
+                    self.RUNID
                 ),
                 fort15_line(f'{self.NFOVER}', 'NFOVER', 'NONFATAL ERROR OVERRIDE OPTION'),
                 fort15_line(
@@ -544,26 +544,34 @@ class Fort15:
             raise NotImplementedError('3D runs not yet implemented')
         f.extend(
             [
-                fort15_line(self.NCPROJ, 'NCPROJ', 'PROJECT TITLE'),
-                fort15_line(self.NCINST, 'NCINST', 'PROJECT INSTITUTION'),
-                fort15_line(self.NCSOUR, 'NCSOUR', 'PROJECT SOURCE'),
-                fort15_line(self.NCHIST, 'NCHIST', 'PROJECT HISTORY'),
-                fort15_line(self.NCREF, 'NCREF', 'PROJECT REFERENCES'),
-                fort15_line(self.NCCOM, 'NCCOM', 'PROJECT COMMENTS'),
-                fort15_line(self.NCHOST, 'NCHOST', 'PROJECT HOST'),
-                fort15_line(self.NCCONV, 'NCONV', 'CONVENTIONS'),
-                fort15_line(self.NCCONT, 'NCCONT', 'CONTACT INFORMATION'),
-                fort15_line(self.NCDATE, 'NCDATE', 'forcing start date'),
+                fort15_line(self.NCPROJ),
+                fort15_line(self.NCINST),
+                fort15_line(self.NCSOUR),
+                fort15_line(self.NCHIST),
+                fort15_line(self.NCREF),
+                fort15_line(self.NCCOM),
+                fort15_line(self.NCHOST),
+                fort15_line(self.NCCONV),
+                fort15_line(self.NCCONT),
+                fort15_line(self.NCDATE),
             ]
         )
         del self._outputs
 
+        def _format_namelist_value(value):
+            if isinstance(value, bool):
+                return 'T' if value else 'F'
+            elif isinstance(value, str):
+                return f'"{value}"'
+            else:
+                return str(value)
+
         for name, namelist in self.namelists.items():
-            f.append(
-                f'&{name} '
-                + ', '.join([f'{key}={value}' for key, value in namelist.items()])
-                + ' \\'
-            )
+            f.append(f'! -- Begin {name} Namelist --')
+            f.append(f'&{name}')
+            for key, value in namelist.items():
+                f.append(f'   {key} = {_format_namelist_value(value)},')
+            f.append(f"/ ! End {name} Namelist")
         f.append("")
         return '\n'.join(f)
 
@@ -1597,7 +1605,13 @@ class Fort15:
 
     @property
     def WTIMINC(self) -> Union[int, str]:
-        if self.NWS in [8, 19, 20]:
+        if self.NWS in [8, 19]:
+            return (
+                f'{self.forcing_start_date:%Y %m %d %H} '
+                f'{self.wind_forcing.data["storm_number"].iloc[0]} '
+                f'{self.wind_forcing.BLADj} '
+            )
+        elif self.NWS in [20]:
             return (
                 f'{self.forcing_start_date:%Y %m %d %H} '
                 f'{self.wind_forcing.data["storm_number"].iloc[0]} '
@@ -1628,7 +1642,7 @@ class Fort15:
                 RNDAY = self.end_date - self.start_date
         else:
             RNDAY = self.end_date - self.forcing_start_date
-        return RNDAY / timedelta(days=1)
+        return np.floor((RNDAY / timedelta(days=1))*10)/10
 
     @property
     def DRAMP(self) -> str:
@@ -2615,7 +2629,7 @@ class Fort15:
 
     @property
     def NCDATE(self) -> str:
-        return f'{self.forcing_start_date:%Y-%m-%d %H:%M}'
+        return f'{self.forcing_start_date:%Y-%m-%d %H:%M:%S}'
 
     @property
     def FortranNamelists(self) -> str:
