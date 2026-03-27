@@ -4,7 +4,7 @@ import logging
 import os
 from os import PathLike
 import pathlib
-from typing import Union
+from typing import Union, Optional, List
 
 from matplotlib import pyplot
 from matplotlib.axis import Axis
@@ -29,11 +29,16 @@ class BestTrackForcing(VortexTrack, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
+        file_deck: str = 'b',
+        advisories: Optional[List[str]] = None,
         *args,
         **kwargs,
     ):
         if nws is None:
             nws = 20
+
+        if advisories is None:
+            advisories=['BEST']
 
         valid_nws_values = [8, 19, 20]
         assert (
@@ -48,8 +53,8 @@ class BestTrackForcing(VortexTrack, WindForcing):
             storm=storm,
             start_date=start_date,
             end_date=end_date,
-            file_deck='b',
-            advisories=['BEST'],
+            file_deck=file_deck,
+            advisories=advisories,
         )
         WindForcing.__init__(self, nws=nws, interval_seconds=interval_seconds)
 
@@ -61,9 +66,20 @@ class BestTrackForcing(VortexTrack, WindForcing):
         interval_seconds: int = None,
         start_date: datetime = None,
         end_date: datetime = None,
+        file_deck: Optional[str] = None,
+        advisories: Optional[List[str]] = None,
     ) -> 'WindForcing':
-        instance = cls.from_file(path=fort22, start_date=start_date, end_date=end_date)
-        WindForcing.__init__(instance, nws=nws, interval_seconds=interval_seconds)
+        if file_deck is None:
+            file_deck='b'
+        if advisories is None:
+            advisories=['BEST']
+
+        instance = cls.from_file(path=fort22, start_date=start_date, \
+                end_date=end_date, file_deck=file_deck,\
+                advisories=advisories)
+
+        WindForcing.__init__(instance, nws=nws, \
+                interval_seconds=interval_seconds)
         return instance
 
     def summary(
@@ -71,8 +87,11 @@ class BestTrackForcing(VortexTrack, WindForcing):
     ):
         min_storm_speed = numpy.min(self.data['speed'])
         max_storm_speed = numpy.max(self.data['speed'])
-        track_length = self.distance
-        duration = self.duration
+        track_length=0
+        for key in self.distances.keys():
+            for key2 in self.distances[key].keys():
+                track_length+=self.distances[key][key2]
+        duration = self.duration.total_seconds()/86400 # seconds to days
         min_central_pressure = numpy.min(self.data['central_pressure'])
         max_wind_speed = numpy.max(self.data['max_sustained_wind_speed'])
         start_loc = (self.data['longitude'][0], self.data['latitude'][0])

@@ -410,6 +410,9 @@ class AdcircRun(Fort15):
             script = DriverFile(self, nproc)
             script.write(output_directory / driver, overwrite)
 
+        if self.wave_forcing is not None:
+            self.wave_forcing.write(output_directory,overwrite)
+
     def import_stations(
         self,
         fort15: os.PathLike,

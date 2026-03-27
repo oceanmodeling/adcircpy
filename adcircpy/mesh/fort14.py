@@ -221,6 +221,33 @@ class Fort14(Grd):
         _grd['nodes'].iloc[:, 2:] *= -1
         return cls(**_grd)
 
+    def update_bathymetry(self, new_values):
+        """
+        Update the bathymetry (values column) of the Fort14 mesh.
+
+        Parameters
+        ----------
+        new_values : array-like
+            Array of bathymetry values aligned to the node index order.
+        """
+        if len(new_values) != len(self._values):
+            raise ValueError("new_values must be same length as number of nodes")
+
+        # update internal values DataFrame
+        self._values.iloc[:, 0] = new_values
+
+        # keep 'nodes' table synchronized
+        self.nodes.iloc[:, 2] = new_values
+
+    @property
+    def bathymetry(self):
+        '''Returns the primary bathymetry column as a numpy array'''
+        return self._values.iloc[:,0].to_numpy()
+
+    @bathymetry.setter
+    def bathymetry(self, new_values):
+        self.update_bathymetry(new_values)
+
     def write(self, path, overwrite=False, format='fort.14'):
         if format in ['fort.14']:
             _grd = self.to_dict()

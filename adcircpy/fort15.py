@@ -19,6 +19,7 @@ import typepigeon
 
 from adcircpy.mesh.mesh import AdcircMesh
 
+from adcircpy.warnings import warn_adcirc, ModelSetupWarning
 
 class StationType(Enum):
     ELEVATION = 'NSTAE'
@@ -154,6 +155,9 @@ class Fort15:
         self._mesh = mesh
         self._runtype = None
 
+        # initialize user-defined nameilsts
+        self._custom_namelists: dict[str, dict[str,str]] = {}
+
     @property
     def mesh(self) -> AdcircMesh:
         return self._mesh
@@ -167,10 +171,10 @@ class Fort15:
         f.extend(
             [
                 fort15_line(
-                    self.RUNDES, 'RUNDES', '32 CHARACTER ALPHANUMERIC RUN DESCRIPTION'
+                    self.RUNDES
                 ),
                 fort15_line(
-                    self.RUNID, 'RUNID', '24 CHARACTER ALPANUMERIC RUN IDENTIFICATION'
+                    self.RUNID
                 ),
                 fort15_line(f'{self.NFOVER}', 'NFOVER', 'NONFATAL ERROR OVERRIDE OPTION'),
                 fort15_line(
@@ -540,26 +544,34 @@ class Fort15:
             raise NotImplementedError('3D runs not yet implemented')
         f.extend(
             [
-                fort15_line(self.NCPROJ, 'NCPROJ', 'PROJECT TITLE'),
-                fort15_line(self.NCINST, 'NCINST', 'PROJECT INSTITUTION'),
-                fort15_line(self.NCSOUR, 'NCSOUR', 'PROJECT SOURCE'),
-                fort15_line(self.NCHIST, 'NCHIST', 'PROJECT HISTORY'),
-                fort15_line(self.NCREF, 'NCREF', 'PROJECT REFERENCES'),
-                fort15_line(self.NCCOM, 'NCCOM', 'PROJECT COMMENTS'),
-                fort15_line(self.NCHOST, 'NCHOST', 'PROJECT HOST'),
-                fort15_line(self.NCCONV, 'NCONV', 'CONVENTIONS'),
-                fort15_line(self.NCCONT, 'NCCONT', 'CONTACT INFORMATION'),
-                fort15_line(self.NCDATE, 'NCDATE', 'forcing start date'),
+                fort15_line(self.NCPROJ),
+                fort15_line(self.NCINST),
+                fort15_line(self.NCSOUR),
+                fort15_line(self.NCHIST),
+                fort15_line(self.NCREF),
+                fort15_line(self.NCCOM),
+                fort15_line(self.NCHOST),
+                fort15_line(self.NCCONV),
+                fort15_line(self.NCCONT),
+                fort15_line(self.NCDATE),
             ]
         )
         del self._outputs
 
+        def _format_namelist_value(value):
+            if isinstance(value, bool):
+                return 'T' if value else 'F'
+            elif isinstance(value, str):
+                return f'"{value}"'
+            else:
+                return str(value)
+
         for name, namelist in self.namelists.items():
-            f.append(
-                f'&{name} '
-                + ', '.join([f'{key}={value}' for key, value in namelist.items()])
-                + ' \\'
-            )
+            f.append(f'! -- Begin {name} Namelist --')
+            f.append(f'&{name}')
+            for key, value in namelist.items():
+                f.append(f'   {key} = {_format_namelist_value(value)},')
+            f.append(f"/ ! End {name} Namelist")
         f.append("")
         return '\n'.join(f)
 
@@ -637,7 +649,44 @@ class Fort15:
             'outputWindDrag': 'F',
             'invertedBarometerOnElevationBoundary': 'T',
         }
+
+        # Handle user-defined namelist values/additions
+        for name, overrides in self._custom_namelists.items():
+            namelists.setdefault(name, {}).update(overrides)
+
         return namelists
+
+    def add_namelist(
+            self, 
+            name: str, 
+            entries: dict[str,str] | None=None
+        ) -> None:
+        '''
+        Adds or updates a namelist to the fort.15 structure
+        '''
+        if name not in self._custom_namelists:
+            self._custom_namelists[name] = {}
+        if entries:
+            self._custom_namelists[name].update(entries)
+
+    def set_namelist_values(
+            self, 
+            block: str, 
+            key: str, 
+            value: str | float | int
+        ) -> None:
+        '''
+        Sets or updates a single value within a custom namelist
+        '''
+        if block not in self._custom_namelists:
+            self._custom_namelists[block] = {}
+        self._custom_namelists[block][key] = value
+
+    def clear_namelists(self) -> None:
+        '''
+        Deletes all custom namelist entries
+        '''
+        self._custom_namelists.clear()
 
     def set_time_weighting_factors_in_gwce(self, A00: float, B00: float, C00: float):
         A00 = float(A00)
@@ -962,7 +1011,7 @@ class Fort15:
     @property
     def RUNDES(self) -> str:
         try:
-            self.__RUNDES
+            return self.__RUNDES
         except AttributeError:
             return datetime.now().strftime('created on %Y-%m-%d %H:%M')
 
@@ -973,7 +1022,7 @@ class Fort15:
     @property
     def RUNID(self) -> str:
         try:
-            self.__RUNID
+            return self.__RUNID
         except AttributeError:
             return self.mesh.description
 
@@ -1409,7 +1458,12 @@ class Fort15:
                 try:
                     self.fort24
                 except AttributeError:
-                    raise Exception('Must generate fort.24 file.')
+                    warn_adcirc(
+                "NTIP is presently set to 2 but no self attraction"
+                " and loading data is present and thus no fort.24 will be"
+                " generated.",
+                ModelSetupWarning
+                )
             return NTIP
         except AttributeError:
             return 1
@@ -1551,7 +1605,13 @@ class Fort15:
 
     @property
     def WTIMINC(self) -> Union[int, str]:
-        if self.NWS in [8, 19, 20]:
+        if self.NWS in [8, 19]:
+            return (
+                f'{self.forcing_start_date:%Y %m %d %H} '
+                f'{self.wind_forcing.data["storm_number"].iloc[0]} '
+                f'{self.wind_forcing.BLADj} '
+            )
+        elif self.NWS in [20]:
             return (
                 f'{self.forcing_start_date:%Y %m %d %H} '
                 f'{self.wind_forcing.data["storm_number"].iloc[0]} '
@@ -1582,7 +1642,7 @@ class Fort15:
                 RNDAY = self.end_date - self.start_date
         else:
             RNDAY = self.end_date - self.forcing_start_date
-        return RNDAY / timedelta(days=1)
+        return np.floor((RNDAY / timedelta(days=1))*10)/10
 
     @property
     def DRAMP(self) -> str:
@@ -2569,7 +2629,7 @@ class Fort15:
 
     @property
     def NCDATE(self) -> str:
-        return f'{self.forcing_start_date:%Y-%m-%d %H:%M}'
+        return f'{self.forcing_start_date:%Y-%m-%d %H:%M:%S}'
 
     @property
     def FortranNamelists(self) -> str:
