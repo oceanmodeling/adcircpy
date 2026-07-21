@@ -47,7 +47,7 @@ class FixPointNormalize(Normalize):
     """
     This class is used for plotting. The reason it is declared here is that
     it is used by more than one submodule. In the future, this class will be
-    native part of matplotlib. This definiton will be removed once the native
+    native part of matplotlib. This definition will be removed once the native
     matplotlib definition becomes available.
     Inspired by https://stackoverflow.com/questions/20144529/shifted-colorbar-matplotlib
     Subclassing Normalize to obtain a colormap with a fixpoint
